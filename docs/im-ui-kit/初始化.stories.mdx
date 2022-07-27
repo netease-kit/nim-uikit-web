@@ -1,0 +1,54 @@
+import { Canvas, Meta, Story } from '@storybook/addon-docs'
+
+<Meta title="IM UI Kit/初始化" />
+
+# 初始化
+
+在使用 SDK 其它功能前，必须先进行初始化。本文中将详细说明 IM UI Kit 初始化的方法。
+
+对于首次使用的用户，我们建议先阅读 [IM UI Kit 快速上手](?path=/docs/im-ui-kit-快速上手--page)。
+
+> 注意事项：
+
+1. 在应用生命周期内，只需初始化一次。
+2. 您必须拥有正确的 App Key，才能进行初始化。您可以登录云信开发者后台，查看您已创建的各个应用的 App Key。
+3. `Provider` 内部管理着 IM 的连接和断开连接，一般无需开发者关心。如果需要手动连接和断开连接，请参考[连接相关](?path=/docs/im-ui-kit-连接相关--page)。
+4. `Provider` 内部管理着全局的状态，一般无需开发者关心。如需访问内部状态，请参考 [内部状态](?path=/docs/im-ui-kit-内部状态--page)。
+
+## 参数说明
+
+| 参数               | 类型              | 必填 | 说明                                                                                                                                                                                                    |
+| ------------------ | ----------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sdkVersion         | Number            | 是   | 使用的 IM SDK 版本。1 为 [IM SDK](https://doc.yunxin.163.com/docs/TM5MzM5Njk/DU1MTQxNDU?platformId=60179)；2 为 [IM SDK Elite](https://doc.yunxin.163.com/docs/TM5MzM5Njk/DY0MzYxNDc?platformId=120901) |
+| initOptions        | Object            | 是   | IM SDK 初始化参数。详见 [IM SDK 初始化参数说明](https://doc.yunxin.163.com/docs/interface/IM_WEB_ELITE/nim/modules/NIMInterface.html#NIMInitializeOptions)                                              |
+| otherOptions       | Object            | 否   | IM SDK 初始化其他参数。详见 [IM SDK 其他初始化参数说明](https://doc.yunxin.163.com/docs/interface/IM_WEB_ELITE/nim/modules/NIMInterface.html#NIMOtherOptions)                                           |
+| funcOptions        | Object            | 否   | IM SDK 初始化回调函数，只有当 sdkVersion 为 1 时才生效。详见 [IM SDK 初始化](https://doc.yunxin.163.com/docs/TM5MzM5Njk/zE0NDY4Njc?platformId=60179)                                                    |
+| localeConfig       | Object            | 否   | 自定义文案。详细配置参考 [语言设置](?path=/docs/im-ui-kit-语言设置--page)                                                                                                                               |
+| renderIdle         | () => JSX.Element | 否   | 连接前的渲染函数，不传默认为 null                                                                                                                                                                       |
+| renderConnecting   | () => JSX.Element | 否   | 连接中的渲染函数，不传默认为 `<span>Loading……</span>`                                                                                                                                                   |
+| renderDisconnected | () => JSX.Element | 否   | 连接断开时的渲染函数，不传默认为 `<span>当前网络不可用，请检查网络设置，刷新页面</span>`                                                                                                                |
+
+> 如果您之前接过 IM SDK，并且在自己的代码中拥有 IM SDK 实例，请参考 [IM 兼容](?path=/docs/im-ui-kit-im-兼容--page)
+
+## 代码示例
+
+```tsx
+import React from 'react'
+import { Provider } from '@xkit-yx/im-kit-ui'
+
+const App = () => {
+  const initOptions = {
+    appkey: '',
+    account: '',
+    token: '',
+    debugLevel: 'debug',
+    // ……
+  }
+
+  return (
+    <Provider initOptions={initOptions} sdkVersion={2}>
+      <div className="app">……</div>
+    </Provider>
+  )
+}
+```

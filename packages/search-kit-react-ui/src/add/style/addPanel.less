@@ -1,0 +1,40 @@
+@import '../style/theme.less';
+
+@add-prefix-panel-cls: ~'@{add-prefix}-panel';
+
+.@{ant-prefix}-popover-arrow {
+  display: none;
+}
+
+.@{ant-prefix}-popover-inner {
+  background: @yx-primary-color;
+  border: 1px solid @yx-border-color-8;
+  box-shadow: 0px 4px 7px rgba(133, 136, 140, 0.25);
+  border-radius: @yx-border-radius-8;
+}
+
+.@{ant-prefix}-popover-placement-bottom {
+  padding-top: 0px;
+}
+
+.@{add-prefix-panel-cls} {
+  display: inline-block;
+}
+
+.@{add-prefix-panel-cls}-btn {
+  display: flex;
+  width: 32px;
+  height: 32px;
+  background: @yx-background-color-6;
+  border-radius: @yx-primary-border-radius;
+  justify-content: center;
+  align-items: center;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  &-img {
+    font-size: @yx-font-size-18;
+  }
+}

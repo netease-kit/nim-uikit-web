@@ -1,0 +1,27 @@
+@import '../style/theme.less';
+
+@add-prefix-item-cls: ~'@{add-prefix}-item';
+
+.@{add-prefix-item-cls} {
+  display: flex;
+  width: 76px;
+  height: 16px;
+  cursor: pointer;
+
+  &-icon {
+    display: block;
+    font-size: @yx-primary-font-size;
+  }
+
+  &-content {
+    width: 56px;
+    height: 16px;
+    margin-left: 6px;
+    font-family: 'PingFang SC';
+    font-style: normal;
+    font-weight: 400;
+    font-size: @yx-primary-font-size;
+    line-height: 16px;
+    color: @yx-primary-text-color;
+  }
+}

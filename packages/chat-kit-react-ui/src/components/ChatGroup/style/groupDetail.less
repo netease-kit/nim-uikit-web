@@ -1,0 +1,55 @@
+@import '~antd/lib/style/themes/variable.less';
+@import '../../../style/theme.less';
+
+@prefix-cls: ~'@{chat-prefix}-group-detail';
+
+.@{prefix-cls}-wrap {
+  padding: 0 16px;
+
+  .@{ant-prefix}-form-item {
+    margin-bottom: 16px;
+    border-top: 1px solid @yx-border-color-3;
+  }
+
+  .@{ant-prefix}-form-item:nth-of-type(1) {
+    border-top: none;
+    margin: 10px 0;
+  }
+
+  .@{ant-prefix}-form-item:nth-last-child(1) {
+    padding-bottom: 16px;
+  }
+
+  .@{ant-prefix}-form-item-label {
+    font-weight: bold;
+    line-height: 18px;
+    padding: 16px 0;
+  }
+
+  .@{prefix-cls}-form-input {
+    border-radius: @yx-primary-border-radius;
+    outline: none;
+
+    textarea {
+      resize: none;
+    }
+  }
+
+  .@{prefix-cls}-avatar-box {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+
+    .@{ant-prefix}-form-item-label {
+      margin-right: 10px;
+    }
+
+    .@{ant-prefix}-form-item-control-input {
+      text-align: end;
+    }
+  }
+
+  .@{prefix-cls}-save-btn {
+    margin-top: 16px;
+  }
+}

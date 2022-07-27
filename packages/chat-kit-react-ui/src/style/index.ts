@@ -1,0 +1,17 @@
+import '../components/ChatActionBar/style'
+import '../components/ChatSetting/style'
+import '../components/ChatHeader/style'
+import '../components/ChatMessageList/style'
+import '../components/ChatMessageItem/style'
+import '../components/ChatMessageInput/style'
+import '../components/ChatAddMembers/style'
+import '../components/ChatCreateTeam/style'
+
+import '@xkit-yx/common-ui/es/components/FriendSelect/style'
+import '@xkit-yx/common-ui/es/components/GroupAvatarSelect/style'
+import '@xkit-yx/common-ui/es/components/CrudeAvatar/style'
+import '@xkit-yx/common-ui/es/components/ComplexAvatar/style'
+import '@xkit-yx/common-ui/es/components/CommonParseSession/style'
+import '@xkit-yx/common-ui/es/components/Welcome/style'
+
+import './index.less'

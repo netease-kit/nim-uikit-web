@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "target": "ES5",
+    "rootDir": "./src",
+    "declarationDir": "./dist/types",
+    "types": ["node", "jest", "miniprogram-api-typings"]
+  },
+  "include": ["./src/**/*.ts"]
+}

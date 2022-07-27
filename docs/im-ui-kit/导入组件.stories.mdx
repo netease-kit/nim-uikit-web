@@ -1,0 +1,38 @@
+import { Canvas, Meta, Story } from '@storybook/addon-docs'
+
+<Meta title="IM UI Kit/导入组件" />
+
+# 导入组件
+
+> 环境说明：
+
+- React 16.8.0 及以上
+- React DOM 16.8.0 及以上
+- IM UI Kit 不支持 H5 界面搭建，仅支持 Web 浏览器界面搭建。
+
+## 依赖安装
+
+目前仅支持 NPM 方式集成，暂不支持 CDN 方式集成。
+
+```bash
+$ npm install @xkit-yx/im-kit-ui --save
+```
+
+在 React 项目中引入
+
+```tsx
+import {
+  Provider,
+  ChatProvider,
+  ConversationContainer,
+  ChatContainer,
+  AddContainer,
+  SearchContainer,
+  ContactListContainer,
+  FriendListContainer,
+  GroupListContainer,
+  BlackListContainer,
+} from '@xkit-yx/im-kit-ui'
+
+import '@xkit-yx/im-kit-ui/es/style'
+```

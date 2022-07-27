@@ -1,0 +1,19 @@
+@import './theme.less';
+
+@welcome-prefix-cls: ~'@{welcome-prefix}-wrap';
+
+.@{welcome-prefix-cls} {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  height: 100%;
+  color: @yx-text-color-1;
+  background-color: @yx-primary-color;
+
+  img {
+    max-width: 100px;
+    margin-bottom: 6px;
+  }
+}

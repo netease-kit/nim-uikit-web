@@ -1,0 +1,29 @@
+@import './theme.less';
+
+@prefix: ~'@{parse-session-cls}';
+
+.@{prefix}-emoji-icon {
+  font-size: @yx-font-size-18;
+}
+
+.@{prefix}-image {
+  img {
+    max-width: 231px;
+  }
+}
+
+.@{prefix}-file-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .@{prefix}-file-icon {
+    font-size: @yx-font-size-32;
+  }
+
+  .@{prefix}-file-info {
+    padding-left: 16px;
+    display: flex;
+    flex-direction: column;
+  }
+}

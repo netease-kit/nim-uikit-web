@@ -1,0 +1,105 @@
+import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs'
+import {
+  ContactListContainer,
+  FriendListContainer,
+  GroupListContainer,
+  BlackListContainer,
+} from './index'
+
+<Meta title="IM UI Kit/通讯录组件" />
+
+# 通讯录组件
+
+通讯录组件负责显示当前用户的好友、黑名单以及群组关系
+
+通讯录组件由 4 个子组件组成：
+
+- `ContactList` 关系导航组件
+- `FriendList` 好友列表组件
+- `GroupList` 群组列表组件
+- `BlackList` 黑名单列表组件
+
+其中 `FriendList` 与 `BlackList` 可以点击头像查看用户资料卡片，并进行相关的操作。目前用户资料卡片支持以下几种操作：
+
+- 拉黑好友
+- 解除拉黑好友
+- 删除好友
+- 发送消息
+
+下面对每个子组件的参数做详细说明。
+
+## 参数说明
+
+### ContactList 关系导航组件
+
+<ArgsTable of={ContactListContainer} />
+
+### FriendList 好友列表组件
+
+<ArgsTable of={FriendListContainer} />
+
+### GroupList 群组列表组件
+
+<ArgsTable of={GroupListContainer} />
+
+### BlackList 黑名单列表组件
+
+<ArgsTable of={BlackListContainer} />
+
+## 代码示例
+
+```tsx
+import React from 'react'
+import {
+  ContactListContainer,
+  FriendListContainer,
+  GroupListContainer,
+  BlackListContainer,
+  useStateContext,
+} from '@xkit-yx/im-kit-ui'
+
+import '@xkit-yx/im-kit-ui/es/style'
+
+const ContactInfo = ({ prefix }) => {
+  const { state } = useStateContext()
+
+  return (
+    <div>
+      {(() => {
+        switch (state.selectedContactType) {
+          case 'friendList':
+            return <FriendListContainer prefix={prefix} />
+          case 'blackList':
+            return <BlackListContainer prefix={prefix} />
+          case 'groupList':
+            return <GroupListContainer prefix={prefix} />
+          default:
+            return null
+        }
+      })()}
+    </div>
+  )
+}
+
+const Page1 = () => {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        width: 1000,
+        height: 400,
+        alignItems: 'center',
+      }}
+    >
+      <div style={{ width: 300, height: '100%' }}>
+        <ContactListContainer {...args} />
+      </div>
+      <div style={{ flex: 1, height: '100%', overflowY: 'auto' }}>
+        <ContactInfo prefix={args.prefix} />
+      </div>
+    </div>
+  )
+}
+```
+
+> 补充说明：关于 `useStateContext` 的详细说明请参考 [内部状态](?path=/docs/im-ui-kit-内部状态--page)。

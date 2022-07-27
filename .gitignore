@@ -1,0 +1,18 @@
+coverage/
+node_modules
+.idea
+junit.xml
+.history
+.DS_Store
+dist
+*-error.log
+es
+lib
+yarn.lock
+storybook-static
+# umi
+.umi
+.umi-production
+.umi-test
+.env.local
+.npmrc

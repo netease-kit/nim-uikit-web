@@ -1,0 +1,113 @@
+@import '~@xkit-yx/common-ui/es/themes/variables.less';
+
+.login {
+  box-sizing: border-box;
+  width: 400px;
+  height: 640px;
+  background-color: @yx-primary-color;
+  border: 1px solid @yx-border-color-9;
+  box-shadow: 0px 2px 6px rgba(23, 23, 26, 0.1);
+  border-radius: @yx-border-radius-8;
+  padding: 74px 30px 80px;
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+}
+
+.login-center {
+  text-align: center;
+}
+
+.login-img-wrap {
+  margin-bottom: 66px;
+}
+
+.login-logo {
+  width: 50px;
+  height: 50px;
+}
+
+.company-name {
+  width: auto;
+  height: 34px;
+  margin-left: 10px;
+}
+
+.login-img-small {
+  margin-top: 140px;
+
+  .login-logo {
+    width: 14px;
+    height: 14px;
+  }
+
+  .company-name {
+    width: auto;
+    height: 12px;
+    margin-left: 3px;
+  }
+}
+
+.login-title {
+  text-align: center;
+  font-size: @yx-font-size-24;
+  font-weight: 500;
+}
+
+.login-sub-title {
+  text-align: center;
+  color: @yx-text-color-1;
+  font-size: @yx-primary-font-size;
+  margin-bottom: 30px;
+}
+
+.login-form {
+  position: relative;
+
+  .login-back-icon {
+    height: 20px;
+    position: absolute;
+    left: 0;
+    top: 10px;
+    cursor: pointer;
+  }
+
+  .mobile {
+    position: relative;
+  }
+
+  .area-code {
+    width: 40px;
+    border-right: 1px solid @yx-border-color-4;
+    color: @yx-text-color-1;
+  }
+
+  .sms-code-text {
+    position: absolute;
+    right: 0;
+    top: 4px;
+    color: @yx-primary-button-color;
+    cursor: pointer;
+  }
+
+  .ant-form-item {
+    margin-bottom: 0;
+  }
+}
+
+.login-input {
+  padding-bottom: 12px;
+}
+
+.login-btn {
+  height: 50px;
+}
+
+.login-btn.primary {
+  color: @yx-primary-color;
+  background-color: @yx-primary-button-color;
+}
+
+.text-justify {
+  text-align: justify;
+}

@@ -1,0 +1,11 @@
+coverage/
+node_modules
+lib
+dist
+es
+junit.xml
+.storybook
+tsconfig.json
+sdk
+3rd
+meeting-web-ui

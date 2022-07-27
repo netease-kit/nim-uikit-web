@@ -1,0 +1,23 @@
+@import './theme.less';
+
+@friend-item-prefix-cls: ~'@{friend-list-prefix}-item';
+
+.@{friend-item-prefix-cls} {
+  cursor: pointer;
+  padding: 5px 8px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+  width: 100%;
+  border-radius: @yx-primary-border-radius;
+
+  &:hover {
+    background-color: @yx-background-color-4;
+  }
+
+  &-label {
+    margin-left: 12px;
+    font-size: @yx-primary-font-size;
+    color: @yx-primary-text-color;
+  }
+}
