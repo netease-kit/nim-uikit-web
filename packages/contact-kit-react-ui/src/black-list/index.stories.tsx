@@ -11,7 +11,7 @@ export default {
 
 const Template: ComponentStory<typeof BlackListContainer> = (args) => {
   return (
-    <Provider>
+    <Provider sdkVersion={2} initOptions={process.env.INIT_OPTIONS as any}>
       <BlackListContainer
         onItemClick={(account) => {
           console.log('黑名单列表被点击了：', account)

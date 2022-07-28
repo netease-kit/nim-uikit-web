@@ -17,7 +17,7 @@ export default {
 
 const Template: ComponentStory<typeof ComplexAvatarContainer> = (args) => {
   return (
-    <Provider>
+    <Provider sdkVersion={2} initOptions={process.env.INIT_OPTIONS as any}>
       <ComplexAvatarContainer {...args} />
     </Provider>
   )
@@ -34,5 +34,4 @@ Primary.args = {
   signature:
     '你来自来，去自去，你是自由的，风 都无法将你圈养你来自来，去自去，你是自由的，风都无法将你圈养都无',
   prefix: 'common',
-  relation: 'friend',
 }

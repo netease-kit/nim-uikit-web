@@ -10,19 +10,10 @@ export default {
   title: 'chat-kit/Demo',
 }
 
-const initOptions = {
-  appkey: '45c6af3c98409b18a84451215d0bdd6e',
-  token: 'e10adc3949ba59abbe56e057f20f883e',
-  account: 'cs1',
-  debugLevel: 'debug',
-  lbsUrls: ['https://lbs.netease.im/lbs/webconf.jsp'],
-  linkUrl: 'weblink.netease.im',
-}
-
 const Template: ComponentStory<typeof ChatContainer> = (args) => {
   return (
     <div id="app" style={{ width: 800, height: 600 }}>
-      <Provider initOptions={initOptions} sdkVersion={2}>
+      <Provider sdkVersion={2} initOptions={process.env.INIT_OPTIONS as any}>
         <ChatProvider>
           <ChatContainer {...args} />
         </ChatProvider>

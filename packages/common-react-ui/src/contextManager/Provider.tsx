@@ -41,19 +41,9 @@ export interface ProviderProps {
 
 export const Context = createContext<ContextProps>({})
 
-// 开发调试用，生产环境以及开源请删除
-const testInitOptions = {
-  appkey: '45c6af3c98409b18a84451215d0bdd6e',
-  token: 'e10adc3949ba59abbe56e057f20f883e',
-  account: 'cs1',
-  debugLevel: 'debug',
-  lbsUrls: ['https://lbs.netease.im/lbs/webconf.jsp'],
-  linkUrl: 'weblink.netease.im',
-}
-
 export const Provider: FC<ProviderProps> = ({
   children,
-  initOptions = testInitOptions,
+  initOptions,
   otherOptions,
   funcOptions,
   nimKitCore,
@@ -68,6 +58,8 @@ export const Provider: FC<ProviderProps> = ({
     let _nim: NimKitCoreTypes.INimKitCore
     if (nimKitCore) {
       _nim = nimKitCore
+    } else if (!initOptions) {
+      throw Error('请传入 initOptions')
     } else {
       const NIM = NimKitCoreFactory(sdkVersion)
       _nim = new NIM({ initOptions, otherOptions, funcOptions })

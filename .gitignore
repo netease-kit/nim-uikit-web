@@ -16,3 +16,4 @@ storybook-static
 .umi-test
 .env.local
 .npmrc
+build_tools

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, useEffect } from 'react'
 import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import ChatActionBar from './components/ChatActionBar'
 import ChatHeader from './components/ChatHeader'
@@ -8,7 +8,6 @@ import ChatSetting from './components/ChatSetting'
 import GroupAddMemebers from './components/ChatAddMembers'
 import GroupCreate from './components/ChatCreateTeam'
 import classNames from 'classnames'
-import { useUpdateEffect } from 'ahooks'
 import { Spin } from 'antd'
 import { SCROLL_MSG_TYPE } from './constant'
 import { debounce } from '@xkit-yx/utils'
@@ -143,7 +142,7 @@ const ChatKit: React.FC<ChatKitProps> = ({
     }
   }
 
-  useUpdateEffect(() => {
+  useEffect(() => {
     if (msgLoading) {
       return
     }

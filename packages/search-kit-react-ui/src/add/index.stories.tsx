@@ -11,7 +11,7 @@ export default {
 
 const Template: ComponentStory<typeof AddContainer> = (args) => {
   return (
-    <Provider>
+    <Provider sdkVersion={2} initOptions={process.env.INIT_OPTIONS as any}>
       <AddContainer
         {...args}
         onClickChat={() => {

@@ -19,7 +19,7 @@ const Template: ComponentStory<typeof MyUserCard> = (args) => {
   }
 
   return (
-    <Provider>
+    <Provider sdkVersion={2} initOptions={process.env.INIT_OPTIONS as any}>
       <MyUserCard onSave={handleSave} onCancel={hanleCancel} {...args} />
     </Provider>
   )

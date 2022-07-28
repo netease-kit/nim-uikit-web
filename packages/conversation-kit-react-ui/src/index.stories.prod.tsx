@@ -17,7 +17,7 @@ export default {
 
 const Template: ComponentStory<typeof ConversationContainer> = (args) => {
   return (
-    <Provider>
+    <Provider sdkVersion={2} initOptions={process.env.INIT_OPTIONS as any}>
       <div style={{ width: '30vw', height: '100%' }}>
         <ConversationContainer {...args} />
       </div>

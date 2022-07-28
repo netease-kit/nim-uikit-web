@@ -17,7 +17,7 @@ export default {
 
 const Template: ComponentStory<typeof UserCard> = (args) => {
   return (
-    <Provider>
+    <Provider sdkVersion={2} initOptions={process.env.INIT_OPTIONS as any}>
       <UserCard
         onAddFriendClick={() => {
           console.log('添加好友')

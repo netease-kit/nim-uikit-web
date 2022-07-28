@@ -38,7 +38,7 @@ const ContactInfo = ({ prefix }) => {
 
 const Template: ComponentStory<typeof ContactListContainer> = (args) => {
   return (
-    <Provider>
+    <Provider sdkVersion={2} initOptions={process.env.INIT_OPTIONS as any}>
       <div
         style={{
           display: 'flex',

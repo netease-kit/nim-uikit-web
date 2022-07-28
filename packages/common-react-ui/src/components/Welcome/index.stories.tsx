@@ -11,7 +11,7 @@ export default {
 
 const Template: ComponentStory<typeof Welcome> = (args) => {
   return (
-    <Provider>
+    <Provider sdkVersion={2} initOptions={process.env.INIT_OPTIONS as any}>
       <div style={{ width: 420, height: 310, border: '1px solid #333' }}>
         <Welcome {...args} />
       </div>

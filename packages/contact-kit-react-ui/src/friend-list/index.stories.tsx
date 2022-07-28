@@ -11,7 +11,7 @@ export default {
 
 const Template: ComponentStory<typeof FriendListContainer> = (args) => {
   return (
-    <Provider>
+    <Provider sdkVersion={2} initOptions={process.env.INIT_OPTIONS as any}>
       <FriendListContainer
         onItemClick={(account) => {
           console.log('好友列表被点击了：', account)

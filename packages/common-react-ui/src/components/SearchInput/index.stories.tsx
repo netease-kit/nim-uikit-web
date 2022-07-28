@@ -11,7 +11,7 @@ export default {
 
 export const Primary = () => {
   return (
-    <Provider>
+    <Provider sdkVersion={2} initOptions={process.env.INIT_OPTIONS as any}>
       <SearchInput />
     </Provider>
   )
@@ -19,7 +19,7 @@ export const Primary = () => {
 
 export const Disabled = () => {
   return (
-    <Provider>
+    <Provider sdkVersion={2} initOptions={process.env.INIT_OPTIONS as any}>
       <SearchInput disabled />
     </Provider>
   )

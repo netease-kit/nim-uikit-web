@@ -11,7 +11,7 @@ export default {
 
 const Template: ComponentStory<typeof GroupListContainer> = (args) => {
   return (
-    <Provider>
+    <Provider sdkVersion={2} initOptions={process.env.INIT_OPTIONS as any}>
       <GroupListContainer
         onItemClick={(teamId) => {
           console.log('群组列表被点击了：', teamId)
