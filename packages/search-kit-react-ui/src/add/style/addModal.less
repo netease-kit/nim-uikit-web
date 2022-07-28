@@ -1,0 +1,106 @@
+@import '../style/theme.less';
+@add-prefix-modal-cls: ~'@{add-prefix}-modal';
+
+.@{add-prefix-modal-cls} {
+  .@{ant-prefix}-modal-content {
+    border-radius: @yx-border-radius-8;
+
+    .@{ant-prefix}-modal-header {
+      border-radius: @yx-border-radius-8 @yx-border-radius-8 0 0;
+    }
+
+    .@{ant-prefix}-modal-body {
+      margin-top: 13px;
+    }
+
+    .@{ant-prefix}-modal-footer {
+      padding: 10px 24px;
+      border-top: none;
+
+      .@{ant-prefix}-btn {
+        width: 72px;
+        height: 32px;
+        border-radius: @yx-primary-border-radius;
+      }
+
+      .@{ant-prefix}-btn-primary {
+        margin-left: 16px;
+        background: @yx-primary-button-color;
+      }
+    }
+  }
+
+  &-empty-content {
+    margin-top: 16px;
+    position: absolute;
+    width: 70px;
+    height: 16px;
+    font-family: 'PingFang SC';
+    font-style: normal;
+    font-weight: 400;
+    font-size: @yx-primary-font-size;
+    line-height: 16px;
+    color: @yx-primary-content-empty-color;
+  }
+
+  &-item {
+    display: flex;
+    width: 412px;
+    height: 40px;
+    margin-top: 24px;
+    align-items: center;
+
+    &-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: @yx-border-radius-18;
+      text-align: center;
+      line-height: 36px;
+      color: @yx-primary-color;
+    }
+
+    &-info {
+      height: 36px;
+      margin: 0 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex: 1;
+      min-width: 0;
+
+      &-name {
+        height: 16px;
+        font-family: 'PingFang SC';
+        font-style: normal;
+        font-weight: 400;
+        font-size: @yx-primary-font-size;
+        line-height: 16px;
+        color: @yx-primary-text-color;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      &-account {
+        height: 14px;
+        font-family: 'PingFang SC';
+        font-style: normal;
+        font-weight: 400;
+        font-size: @yx-font-size-12;
+        line-height: 14px;
+        color: @yx-text-color-2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    .@{ant-prefix}-btn {
+      width: 72px;
+      height: 32px;
+      border-radius: @yx-primary-border-radius;
+      background: @yx-primary-button-color;
+    }
+  }
+}

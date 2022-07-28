@@ -1,0 +1,33 @@
+@import './theme.less';
+
+@friend-list-prefix-cls: ~'@{friend-list-prefix}-wrapper';
+@friend-title-prefix-cls: ~'@{friend-list-prefix}-title';
+@friend-subtitle-prefix-cls: ~'@{friend-list-prefix}-subtitle';
+
+.@{friend-list-prefix-cls} {
+  background-color: @yx-background-color-1;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.@{friend-title-prefix-cls} {
+  color: @yx-primary-text-color;
+  font-size: @yx-font-size-16;
+  font-weight: 500;
+  border-bottom: 1px solid @yx-border-color-7;
+  padding: 22px 16px;
+}
+
+.@{friend-subtitle-prefix-cls} {
+  padding: 8px;
+
+  &-item {
+    padding: 8px 0;
+    margin: 0 8px;
+    border-bottom: 1px solid @yx-border-color-7;
+    font-size: @yx-primary-font-size;
+    color: @yx-text-color-3;
+    margin-bottom: 10px;
+  }
+}

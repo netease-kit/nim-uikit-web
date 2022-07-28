@@ -1,0 +1,28 @@
+@import './theme.less';
+
+@group-avatar-select-prefix-cls: ~'@{group-avatar-select-prefix}';
+
+.@{group-avatar-select-prefix-cls} {
+  &-main {
+    cursor: pointer;
+    width: fit-content;
+  }
+
+  &-wrapper {
+    width: fit-content;
+  }
+
+  &-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  &-btn {
+    height: fit-content;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px;
+  }
+}

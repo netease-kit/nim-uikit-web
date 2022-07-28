@@ -1,0 +1,47 @@
+@import '../../../style/theme.less';
+
+@prefix-cls: ~'@{chat-prefix}-group-item';
+
+.@{prefix-cls}-wrap {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+  width: 100%;
+  border-radius: @yx-primary-border-radius;
+
+  .@{prefix-cls}-avatar-box {
+    display: flex;
+    align-items: center;
+  }
+
+  .@{prefix-cls}-label {
+    margin-left: 12px;
+    max-width: 60%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .@{prefix-cls}-owner,
+  .@{prefix-cls}-manager {
+    background-color: @yx-border-color-5;
+    padding: 2px 12px;
+    border-radius: @yx-primary-border-radius;
+    font-size: @yx-font-size-12;
+    color: @yx-text-color-4;
+    text-align: center;
+    margin-left: 8px;
+  }
+
+  .@{prefix-cls}-remove-member {
+    color: @yx-text-color-4;
+    font-size: @yx-font-size-12;
+    cursor: pointer;
+  }
+}
+
+.@{prefix-cls}-active {
+  background-color: @yx-primary-color-hover;
+}

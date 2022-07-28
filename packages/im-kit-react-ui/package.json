@@ -1,0 +1,56 @@
+{
+  "name": "@xkit-yx/im-kit-ui",
+  "version": "0.0.6",
+  "description": "云信即时通讯组件",
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "typings": "lib/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "start": "rollup -cw --environment DEV",
+    "dev": "gulp watch",
+    "build": "gulp",
+    "p": "npm run build && npm publish"
+  },
+  "files": [
+    "dist",
+    "lib",
+    "es"
+  ],
+  "author": "",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^17.1.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^11.2.0",
+    "del": "^6.0.0",
+    "gulp": "^4.0.2",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "less": "^4.1.1",
+    "nim-web-sdk-ng": "^0.6.1",
+    "postcss": "^8.3.5",
+    "postcss-nested": "^5.0.5",
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0",
+    "rollup": "^2.39.0",
+    "rollup-plugin-postcss": "^4.0.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-typescript2": "^0.30.0",
+    "typescript": "^4.6.4"
+  },
+  "peerDependencies": {
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0"
+  },
+  "dependencies": {
+    "@xkit-yx/chat-kit-ui": "^0.1.4",
+    "@xkit-yx/common-ui": "^0.1.3",
+    "@xkit-yx/contact-kit-ui": "^0.1.3",
+    "@xkit-yx/conversation-kit-ui": "^0.1.3",
+    "@xkit-yx/core-kit": "^0.2.0",
+    "@xkit-yx/search-kit-ui": "^0.1.3",
+    "@xkit-yx/utils": "^0.4.0",
+    "antd": "^4.16.3"
+  }
+}

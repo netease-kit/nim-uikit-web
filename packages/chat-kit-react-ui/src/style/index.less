@@ -1,0 +1,35 @@
+@import './theme.less';
+@prefix: chat;
+
+.@{prefix}-wrap {
+  height: 100%;
+  width: 100%;
+  background: @yx-background-color-1;
+  display: flex;
+}
+
+.@{prefix}-content {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+
+  .@{prefix}-message-input {
+    padding: 16px;
+  }
+}
+
+.@{prefix}-message-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+
+  .@{prefix}-message-tip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: @yx-text-color-2;
+  }
+}

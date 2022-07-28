@@ -1,0 +1,107 @@
+@import '~antd/lib/style/themes/variable.less';
+@import '../../../style/theme.less';
+
+@prefix-cls: ~'@{chat-prefix}-message-input';
+
+.@{prefix-cls}-wrap {
+  background: @yx-primary-color;
+  border: 1px solid @yx-border-color-4;
+  border-radius: @yx-primary-border-radius;
+  display: flex;
+  position: relative;
+
+  // .@{prefix-cls}-msg-tip {
+  //   position: absolute;
+  //   top: -100%;
+  //   right: 0;
+  //   border: 1px solid @yx-text-color-3;
+  //   border-radius: @yx-border-radius-14;
+  //   padding: 6px 10px;
+  //   background: @yx-primary-color;
+  //   cursor: pointer;
+  //   &-icon {
+  //     margin-right: 4px;
+  //   }
+  // }
+
+  .@{prefix-cls}-textarea {
+    resize: 'none';
+    line-height: '22px';
+    padding: 12px;
+    border: none;
+    outline: none;
+  }
+
+  .@{prefix-cls}-icon-box {
+    padding: 6px 0 2px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    .@{ant-prefix}-btn {
+      padding: 0;
+      padding: 0;
+      border: none;
+      height: auto;
+      margin-right: 12px;
+      background: none;
+    }
+
+    .@{prefix-cls}-loading-spin {
+      font-size: @yx-font-size-17;
+    }
+
+    .@{prefix-cls}-icon-emoji,
+    .@{prefix-cls}-icon-image,
+    .@{prefix-cls}-icon-file {
+      cursor: pointer;
+      color: @yx-icon-color-1;
+    }
+
+    .@{prefix-cls}-icon-upload {
+      line-height: 0px;
+
+      .@{ant-prefix}-upload {
+        line-height: 0px;
+      }
+    }
+
+    .@{prefix-cls}-icon-emoji {
+      font-size: @yx-font-size-20;
+    }
+
+    .@{prefix-cls}-icon-image {
+      font-size: @yx-font-size-20;
+    }
+
+    .@{prefix-cls}-icon-file {
+      font-size: @yx-font-size-18;
+    }
+  }
+}
+
+.@{prefix-cls}-emoji-box {
+  overflow: hidden;
+
+  .@{ant-prefix}-popover-inner-content {
+    width: 414px;
+    max-height: 327px;
+    padding: 16px 14px;
+  }
+
+  .@{prefix-cls}-emoji-item {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    margin: 7px 10px;
+    cursor: pointer;
+
+    .@{prefix-cls}-emoji-item-icon {
+      font-size: @yx-font-size-23;
+    }
+  }
+
+  .@{prefix-cls}-emoji-item:hover {
+    background: @yx-background-color-5;
+  }
+}

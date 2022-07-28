@@ -1,0 +1,73 @@
+@import '~antd/lib/style/themes/variable.less';
+@import './theme.less';
+
+@mycard-modal-prefix-cls: ~'@{mycard-prefix}-modal';
+@mycard-header-prefix-cls: ~'@{mycard-prefix}-header';
+@mycard-content-prefix-cls: ~'@{mycard-prefix}-content';
+
+.@{mycard-modal-prefix-cls} {
+  .@{ant-prefix}-modal {
+    width: 352px !important;
+
+    &-body {
+      padding: 0;
+    }
+
+    &-footer {
+      border-top: none;
+      padding: 0 24px 24px;
+    }
+  }
+}
+
+.@{mycard-header-prefix-cls} {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: url('https://yx-web-nosdn.netease.im/common/7ff58b88ee91e4abe3fc6374296827fb/user-background.png')
+    no-repeat 0 -50px;
+  width: 100%;
+  height: 100px;
+  min-width: 0;
+  padding: 0 30px;
+
+  &-avatar {
+    margin-right: 15px;
+    cursor: pointer;
+  }
+
+  &-nick {
+    font-size: @yx-font-size-22;
+    color: @yx-primary-color;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+.@{mycard-content-prefix-cls} {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+
+  &-form-item {
+    display: flex;
+    align-items: flex-start;
+
+    &:not(:first-child) {
+      margin-top: 16px;
+    }
+
+    label {
+      color: @yx-text-color-1;
+      margin-right: 16px;
+      font-size: @yx-primary-font-size;
+      white-space: nowrap;
+    }
+
+    &-text {
+      font-size: @yx-primary-font-size;
+      color: @yx-primary-text-color;
+    }
+  }
+}
