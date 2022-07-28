@@ -11,6 +11,7 @@ module.exports = {
     APPKEY: _config.appKey,
     BASEURL: _config.baseUrl,
     INIT_OPTIONS: _config.initOptions,
+    LOGIN_OPTIONS: _config.loginOptions,
   }),
   babel: async (options) => {
     /*
