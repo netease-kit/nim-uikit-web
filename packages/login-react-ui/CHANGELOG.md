@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits] for commit guidelines.
 
+## [0.2.2] (2022-07-27)
+
+### Bug Fixes
+
+- **workspace:** 🐛 解决幽灵依赖和无用依赖 
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
 ## [0.2.1] (2022-07-26)
 
 ### Bug Fixes

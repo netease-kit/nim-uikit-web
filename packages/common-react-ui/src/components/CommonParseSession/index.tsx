@@ -5,6 +5,7 @@ import CommonIcon from '../CommonIcon'
 import { getFileType, parseFileSize, addUrlSearch } from '@xkit-yx/utils'
 import { EMOJI_ICON_MAP_CONFIG, INPUT_EMOJI_SYMBOL_REG } from '../../constant'
 import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
+import { useTranslation } from '../../index'
 
 // 对话框中要展示的文件icon标识
 const fileIconMap = {
@@ -28,6 +29,8 @@ export const ParseSession: React.FC<IParseSessionProps> = ({
   msg,
 }) => {
   const _prefix = `${prefix}-parse-session`
+  const { t } = useTranslation()
+  const notSuportMessageText = t('notSuportMessageText')
 
   const renderCustomText = (msg) => {
     const text = reactStringReplace(
@@ -104,9 +107,21 @@ export const ParseSession: React.FC<IParseSessionProps> = ({
           case 'file':
             return renderFile(msg)
           case 'notification':
-            return renderNotification(msg)
+            return `[${t('notiMsgText')}]，${notSuportMessageText}`
+          case 'audio':
+            return `[${t('audioMsgText')}]，${notSuportMessageText}`
+          case 'g2':
+            return `[${t('callMsgText')}]，${notSuportMessageText}`
+          case 'geo':
+            return `[${t('geoMsgText')}]，${notSuportMessageText}`
+          case 'robot':
+            return `[${t('robotMsgText')}]，${notSuportMessageText}`
+          case 'tip':
+            return `[${t('tipMsgText')}]，${notSuportMessageText}`
+          case 'video':
+            return `[${t('videoMsgText')}]，${notSuportMessageText}`
           default:
-            return null
+            return `[${t('unknowMsgText')}]，${notSuportMessageText}`
         }
       })()}
     </>

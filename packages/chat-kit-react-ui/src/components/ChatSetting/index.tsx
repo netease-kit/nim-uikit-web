@@ -103,7 +103,7 @@ const ChatSetting: React.FC<SettingModalProps> = ({
       return (
         <PersonContainer
           prefix={prefix}
-          myUserInfo={myUserInfo}
+          selectedSession={selectedSession as NimKitCoreTypes.P2PSession}
           onCreateGroupClick={onCreateGroupClick}
         />
       )

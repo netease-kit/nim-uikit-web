@@ -3,6 +3,35 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits] for commit guidelines.
 
+## [0.1.3] (2022-07-28)
+
+**Note:** Version bump only for package @xkit-yx/search-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.1.2] (2022-07-27)
+
+**Note:** Version bump only for package @xkit-yx/search-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.1.1] (2022-07-27)
+
+### Bug Fixes
+
+- **workspace:** 🐛 解决幽灵依赖和无用依赖
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
 # 0.1.0 (2022-07-26)
 
 ### Bug Fixes

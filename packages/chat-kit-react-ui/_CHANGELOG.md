@@ -3,11 +3,43 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [0.1.1](https://g.hz.netease.com/yunxin-app/xkit-fe/compare/@xkit-yx/chat-kit-ui@0.1.0...@xkit-yx/chat-kit-ui@0.1.1) (2022-07-26)
+## [0.1.4](https://g.hz.netease.com/yunxin-app/xkit-fe/compare/@xkit-yx/chat-kit-ui@0.1.3...@xkit-yx/chat-kit-ui@0.1.4) (2022-07-28)
+
+**Note:** Version bump only for package @xkit-yx/chat-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.1.3] (2022-07-27)
 
 ### Bug Fixes
 
-- 样式添加、依赖添加 ([e8f5b43](https://g.hz.netease.com/yunxin-app/xkit-fe/commits/e8f5b4368a6edfb700b395bd6e25be4c099328f4))
+- **workspace:** 🐛 头像更改、不支持类型消息提示
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.1.2] (2022-07-27)
+
+### Bug Fixes
+
+- **chat-kit-react-ui:** 🐛 去除 ahooks 的依赖
+- **workspace:** 🐛 解决幽灵依赖和无用依赖
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.1.1] (2022-07-26)
+
+### Bug Fixes
+
+- 样式添加、依赖添加
 
 # Change Log
 

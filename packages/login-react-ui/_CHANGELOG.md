@@ -1,13 +1,24 @@
 # Change Log
 
 All notable changes to this project will be documented in this file.
-See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+See [Conventional Commits] for commit guidelines.
 
-## [0.2.1](https://g.hz.netease.com/yunxin-app/xkit-fe/compare/@xkit-yx/login-react-ui@0.2.0...@xkit-yx/login-react-ui@0.2.1) (2022-07-26)
+## [0.2.2] (2022-07-27)
 
 ### Bug Fixes
 
-- 样式添加、依赖添加 ([e8f5b43](https://g.hz.netease.com/yunxin-app/xkit-fe/commits/e8f5b4368a6edfb700b395bd6e25be4c099328f4))
+- **workspace:** 🐛 解决幽灵依赖和无用依赖 
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.2.1] (2022-07-26)
+
+### Bug Fixes
+
+- 样式添加、依赖添加
 
 # Change Log
 

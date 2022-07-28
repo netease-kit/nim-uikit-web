@@ -3,11 +3,40 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [0.0.3](https://g.hz.netease.com/yunxin-app/xkit-fe/compare/@xkit-yx/im-kit-ui@0.0.2...@xkit-yx/im-kit-ui@0.0.3) (2022-07-26)
+## [0.0.6](https://g.hz.netease.com/yunxin-app/xkit-fe/compare/@xkit-yx/im-kit-ui@0.0.5...@xkit-yx/im-kit-ui@0.0.6) (2022-07-28)
+
+**Note:** Version bump only for package @xkit-yx/im-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.0.5] (2022-07-27)
+
+**Note:** Version bump only for package @xkit-yx/im-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.0.4] (2022-07-27)
 
 ### Bug Fixes
 
-- 样式添加、依赖添加 ([e8f5b43](https://g.hz.netease.com/yunxin-app/xkit-fe/commits/e8f5b4368a6edfb700b395bd6e25be4c099328f4))
+- **workspace:** 🐛 解决幽灵依赖和无用依赖
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.0.3] (2022-07-26)
+
+### Bug Fixes
+
+- 样式添加、依赖添加
 
 # Change Log
 
