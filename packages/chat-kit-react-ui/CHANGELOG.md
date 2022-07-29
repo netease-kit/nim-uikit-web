@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits] for commit guidelines.
 
+## [0.1.5] (2022-07-29)
+
+**Note:** Version bump only for package @xkit-yx/chat-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
 ## [0.1.4] (2022-07-28)
 
 **Note:** Version bump only for package @xkit-yx/chat-kit-ui

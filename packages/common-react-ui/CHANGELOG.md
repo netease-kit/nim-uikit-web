@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits] for commit guidelines.
 
+## [0.1.4] (2022-07-29)
+
+### Bug Fixes
+
+- **core-kit:** 🐛 修复 getNIM 返回类型问题;hijack 代码优化;init 参数必传; 
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
 ## [0.1.3] (2022-07-28)
 
 **Note:** Version bump only for package @xkit-yx/common-ui

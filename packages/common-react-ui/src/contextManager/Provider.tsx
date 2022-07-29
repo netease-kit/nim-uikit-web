@@ -28,7 +28,7 @@ export interface ContextProps {
 export interface ProviderProps {
   children: ReactNode
   sdkVersion?: 1 | 2
-  initOptions?: NIMInitializeOptions
+  initOptions: NIMInitializeOptions
   otherOptions?: OtherOptions
   funcOptions?: { [key: string]: (...args: any) => void }
   nimKitCore?: NimKitCoreTypes.INimKitCore
@@ -58,8 +58,6 @@ export const Provider: FC<ProviderProps> = ({
     let _nim: NimKitCoreTypes.INimKitCore
     if (nimKitCore) {
       _nim = nimKitCore
-    } else if (!initOptions) {
-      throw Error('请传入 initOptions')
     } else {
       const NIM = NimKitCoreFactory(sdkVersion)
       _nim = new NIM({ initOptions, otherOptions, funcOptions })
