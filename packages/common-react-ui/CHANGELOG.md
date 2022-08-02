@@ -7,7 +7,7 @@ See [Conventional Commits] for commit guidelines.
 
 ### Bug Fixes
 
-- **core-kit:** 🐛 修复 getNIM 返回类型问题;hijack 代码优化;init 参数必传; 
+- **core-kit:** 🐛 修复 getNIM 返回类型问题;hijack 代码优化;init 参数必传;
 
 # Change Log
 

@@ -9,3 +9,4 @@ tsconfig.json
 sdk
 3rd
 meeting-web-ui
+packages/room-kit/examples
