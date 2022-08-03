@@ -9,6 +9,7 @@ import classNames from 'classnames'
 import moment from 'moment'
 import {
   ParseSession,
+  CrudeAvatar,
   ComplexAvatarContainer,
   useTranslation,
 } from '@xkit-yx/common-ui'
@@ -152,17 +153,25 @@ export const ChatMessageItem: React.FC<MessageItemProps> = ({
         })}
       >
         <div className={`${_prefix}-avatar`}>
-          <ComplexAvatarContainer
-            prefix={commonPrefix}
-            size={36}
-            account={norMsg.from}
-            nick={norMsg.fromNick || norMsg.nick}
-            gender={norMsg.gender}
-            signature={norMsg.signature}
-            tel={norMsg.tel}
-            email={norMsg.email}
-            avatar={norMsg.avatar}
-          />
+          {isSelf ? (
+            <CrudeAvatar
+              avatar={norMsg.avatar}
+              account={norMsg.from}
+              nick={norMsg.nick}
+            />
+          ) : (
+            <ComplexAvatarContainer
+              prefix={commonPrefix}
+              size={36}
+              account={norMsg.from}
+              nick={norMsg.fromNick || norMsg.nick}
+              gender={norMsg.gender}
+              signature={norMsg.signature}
+              tel={norMsg.tel}
+              email={norMsg.email}
+              avatar={norMsg.avatar}
+            />
+          )}
         </div>
         <Dropdown
           key={key}

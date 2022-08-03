@@ -322,8 +322,13 @@ export const ConversationContainer: FC<ConversationContainerProps> = ({
 
   const conversationListRenderer = useMemo(() => {
     if (sessionListLoading) {
-      return <Spin />
+      return (
+        <div className={`${prefix}-list-loading`}>
+          <Spin />
+        </div>
+      )
     }
+
     if (!state.sessions.length) {
       return renderSessionListEmpty ? renderSessionListEmpty() : null
     }

@@ -5,6 +5,8 @@ import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 import { FriendProfile } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/FriendServiceInterface'
 import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 
+// TODO search 组件整体数据流动有些混乱，需要重构
+
 //Promise<Team | FriendProfile | UserNameCard[] | void >
 interface AddModalItemProps {
   account: string
@@ -156,6 +158,9 @@ const AddModal: React.FC<AddModalProps> = ({
   }
 
   const handleSearch = () => {
+    setAccount('')
+    setAvatar('')
+    setName('')
     const res = handleOk(state, searchValue) as Promise<
       Team | UserNameCard[] | undefined
     >

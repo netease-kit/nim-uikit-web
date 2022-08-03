@@ -60,8 +60,6 @@ const nim = nimKitCore.getNIM()
 
 - 传入 IM UI Kit，将 IM UI Kit 初始化
 
-> 此时初始化可以不传入其它初始化参数
-
 ```tsx
 import React from 'react'
 import { Provider } from '@xkit-yx/im-kit-ui'
@@ -74,7 +72,7 @@ const nimKitCore = new NimKitCore({
 
 const App = () => {
   return (
-    <Provider nimKitCore={nimKitCore}>
+    <Provider nimKitCore={nimKitCore} initOptions={initOptions}>
       <div className="app">……</div>
     </Provider>
   )

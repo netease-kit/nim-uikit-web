@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits] for commit guidelines.
 
+## [0.1.5] (2022-08-03)
+
+**Note:** Version bump only for package @xkit-yx/contact-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.1.4] (2022-07-29)
+
+**Note:** Version bump only for package @xkit-yx/contact-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
 ## [0.1.3] (2022-07-28)
 
 **Note:** Version bump only for package @xkit-yx/contact-kit-ui

@@ -83,14 +83,8 @@ export const GroupItem: FC<GroupItemProps> = ({
         <span className={`${_prefix}-label`}>
           {props.nickInTeam || props.nick || props.teamId || ''}
         </span>
-        {props.type === 'owner' && (
-          <span className={`${_prefix}-owner`}>{t('teamOwnerText')}</span>
-        )}
-        {props.type === 'manager' && (
-          <span className={`${_prefix}-owner`}>{t('teamManagerText')}</span>
-        )}
       </div>
-      {isActive && (isGroupOwner || isGroupManager) && (
+      {isActive && (isGroupOwner || isGroupManager) ? (
         <a
           type="link"
           className={`${_prefix}-remove-member`}
@@ -108,6 +102,15 @@ export const GroupItem: FC<GroupItemProps> = ({
         >
           {t('removeTeamMemberText')}
         </a>
+      ) : (
+        <>
+          {props.type === 'owner' && (
+            <span className={`${_prefix}-owner`}>{t('teamOwnerText')}</span>
+          )}
+          {props.type === 'manager' && (
+            <span className={`${_prefix}-owner`}>{t('teamManagerText')}</span>
+          )}
+        </>
       )}
     </div>
   )
