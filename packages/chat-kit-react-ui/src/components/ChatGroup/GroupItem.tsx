@@ -21,6 +21,8 @@ export interface GroupItemProps extends NimKitCoreTypes.ITeamMemberInfo {
   initOptions: NIMInitializeOptions
   onRemoveTeamMemberClick: (memberInfo: NimKitCoreTypes.ITeamMemberInfo) => void
   afterSendMsgClick?: () => void
+  isGroupOwner: boolean
+  isGroupManager: boolean
 }
 
 const { confirm } = Modal
@@ -35,6 +37,8 @@ export const GroupItem: FC<GroupItemProps> = ({
   onRemoveTeamMemberClick,
   afterSendMsgClick,
   teamInfo,
+  isGroupOwner,
+  isGroupManager,
   ...props
 }) => {
   const _prefix = `${prefix}-group-item`
@@ -45,11 +49,6 @@ export const GroupItem: FC<GroupItemProps> = ({
   const isActive = useMemo(() => {
     return curGroupItemIndex === index
   }, [curGroupItemIndex, index])
-
-  const isManager = useMemo(
-    () => ['owner', 'manager'].includes(props.type),
-    [props.type]
-  )
 
   return (
     <div
@@ -85,7 +84,7 @@ export const GroupItem: FC<GroupItemProps> = ({
           {props.nickInTeam || props.nick || props.teamId || ''}
         </span>
       </div>
-      {isActive && !isManager ? (
+      {isActive && (isGroupOwner || isGroupManager) ? (
         <a
           type="link"
           className={`${_prefix}-remove-member`}

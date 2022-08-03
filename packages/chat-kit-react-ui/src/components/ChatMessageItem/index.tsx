@@ -86,8 +86,6 @@ export const ChatMessageItem: React.FC<MessageItemProps> = ({
       : date.format('YYYY-MM-DD HH:mm:ss')
   }
 
-  // 能出现撤回的消息类型
-  const canRecallMsgTypes = ['text', 'custom']
   const renderMenuItmes = (msg) => {
     const menuItems = [
       // {
@@ -96,7 +94,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = ({
       //   icon: <CopyOutlined />,
       // },
       {
-        show: canRecallMsgTypes.includes(msg.type) && msg.showRecall ? 1 : 0,
+        show: msg.showRecall ? 1 : 0,
         label: t('recallText'),
         key: 'recall',
         icon: <RollbackOutlined />,

@@ -726,6 +726,12 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       body,
       specialType: 'reedit',
     }
+
+    if (!['text', 'custom'].includes(type)) {
+      payload.specialType = 'recall'
+      return payload
+    }
+
     setTimeout(() => {
       payload.specialType = 'recall'
       chatDispatch({

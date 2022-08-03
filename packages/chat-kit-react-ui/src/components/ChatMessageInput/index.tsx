@@ -113,7 +113,6 @@ const ChatMessageInput: React.FC<MessageProps> = ({
     const input = inputRef.current.resizableTextArea.textArea
     input?.focus()
     input?.setRangeText(tag, input.selectionStart, input.selectionEnd, 'end')
-    input?.blur()
     setValue(input.value)
   }
 

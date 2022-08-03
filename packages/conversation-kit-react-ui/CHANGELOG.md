@@ -7,7 +7,7 @@ See [Conventional Commits] for commit guidelines.
 
 ### Bug Fixes
 
-- 添加对话加载默认 loading 
+- 添加对话加载默认 loading
 
 # Change Log
 

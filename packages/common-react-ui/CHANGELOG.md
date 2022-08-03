@@ -7,8 +7,8 @@ See [Conventional Commits] for commit guidelines.
 
 ### Bug Fixes
 
-- 撤回、重新编辑样式和逻辑整理 
-- 去掉多余字 
+- 撤回、重新编辑样式和逻辑整理
+- 去掉多余字
 
 # Change Log
 

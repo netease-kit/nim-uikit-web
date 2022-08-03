@@ -13,6 +13,8 @@ interface GroupListProps {
   initOptions: NIMInitializeOptions
   onRemoveTeamMemberClick: (memberInfo: NimKitCoreTypes.ITeamMemberInfo) => void
   afterSendMsgClick?: () => void
+  isGroupOwner: boolean
+  isGroupManager: boolean
 }
 
 const GroupList: FC<GroupListProps> = ({
@@ -24,6 +26,8 @@ const GroupList: FC<GroupListProps> = ({
   onRemoveTeamMemberClick,
   afterSendMsgClick,
   teamInfo,
+  isGroupOwner,
+  isGroupManager,
 }) => {
   const _prefix = `${prefix}-group-list`
 
@@ -41,6 +45,8 @@ const GroupList: FC<GroupListProps> = ({
           onRemoveTeamMemberClick={onRemoveTeamMemberClick}
           afterSendMsgClick={afterSendMsgClick}
           list={list}
+          isGroupOwner={isGroupOwner}
+          isGroupManager={isGroupManager}
           {...item}
         />
       ))}
