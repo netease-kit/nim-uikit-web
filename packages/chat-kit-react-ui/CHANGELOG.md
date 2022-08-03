@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits] for commit guidelines.
 
+# [0.2.0] (2022-08-03)
+
+### Bug Fixes
+
+- 撤回、重新编辑样式和逻辑整理 
+- 撤回消息未选中聊天的人不显示撤回信息 
+- 去掉多余字 
+- 暂不支持对话中修改自己改资料 
+- placeholder 添加换行测试 
+
+### Features
+
+- 代码整理和 hooks 封装 
+- 兼容 account 不存在情况、添加超出样式 
+- 修改宽度，添加省略点点点 
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
 ## [0.1.5] (2022-07-29)
 
 **Note:** Version bump only for package @xkit-yx/chat-kit-ui

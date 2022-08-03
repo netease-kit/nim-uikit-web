@@ -1,0 +1,42 @@
+import { Canvas, Meta, Story } from '@storybook/addon-docs'
+
+<Meta title="IM UI Kit/全局上下文" />
+
+# 全局上下文
+
+IM UI Kit 提供 `useStateContext` hooks 函数，可让您访问 IM UI Kit 的全局上下文。
+
+## 返回值说明
+
+| 返回值      | 类型   | 说明                                  |
+| ----------- | ------ | ------------------------------------- |
+| nim         | Object | IM SDK 实例的封装，开发者一般无需关心 |
+| state       | Object | 内部 store                            |
+| initOptions | Object | 初始化时传入的初始化参数              |
+
+### state 详细说明
+
+| 返回值              | 类型                                                                 | 说明             |
+| ------------------- | -------------------------------------------------------------------- | ---------------- |
+| connectState        | 'connecting' \| 'connected' \| 'disconnected' \| 'idle' \| undefined | IM 连接状态      |
+| sessions            | ObjectArray                                                          | 会话列表         |
+| selectedSession     | Object                                                               | 选中的会话       |
+| blackList           | ObjectArray                                                          | 黑名单列表       |
+| groupList           | ObjectArray                                                          | 群组列表         |
+| friendList          | ObjectArray                                                          | 好友列表         |
+| selectedContactType | 'blackList' \| 'groupList' \| 'friendList' \| undefined              | 选中的通讯录导航 |
+
+## 代码示例
+
+```tsx
+import React from 'react'
+import { useStateContext } from '@xkit-yx/im-kit-ui'
+
+const Page1 = () => {
+  const { state } = useStateContext()
+
+  console.log(state)
+
+  return <div>……</div>
+}
+```

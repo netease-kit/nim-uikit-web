@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits] for commit guidelines.
 
+## [0.1.5] (2022-08-03)
+
+### Bug Fixes
+
+- 添加对话加载默认 loading 
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
 ## [0.1.4] (2022-07-29)
 
 **Note:** Version bump only for package @xkit-yx/conversation-kit-ui

@@ -81,6 +81,7 @@ const ChatKit: React.FC<ChatKitProps> = ({
   commonPrefix = 'common',
   className,
   onSend,
+  onChange,
   selectedSession,
   teamInfo,
   myUserInfo,
@@ -215,6 +216,7 @@ const ChatKit: React.FC<ChatKitProps> = ({
           <MessageInput
             prefix={prefix}
             onSend={onSend}
+            onChange={onChange}
             isGroupOwner={isGroupOwner}
             isGroupManager={isGroupManager}
             inputValue={inputValue}

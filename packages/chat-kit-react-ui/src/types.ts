@@ -22,13 +22,11 @@ export interface ICustomMessageInfo {
   specialType: 'recall' | 'reedit'
   idClient: string
   fromNick?: string
-  timer?: number | null
 }
 
 export type IMMessageInfo = IMMessage &
   Partial<UserNameCard> & {
-    showRecall?: boolean | undefined
-    showRecallTimer?: number | null
+    showRecall?: boolean
   }
 
 export type IMessage = IMMessageInfo | ICustomMessageInfo

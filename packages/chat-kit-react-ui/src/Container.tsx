@@ -15,27 +15,17 @@ import {
 import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import ChatKit from './main'
 import { message } from 'antd'
-import {
-  SHOW_RECALL_BTN_MSG_TIME,
-  MIN_VALUE,
-  SCROLL_MSG_TYPE,
-} from './constant'
+import { REEDIT_RECALL_MSG_TIME, MIN_VALUE, SCROLL_MSG_TYPE } from './constant'
 import useCommonSessionInfo from './hooks/useCommonSessionInfo'
 import useMemberListInfo from './hooks/useMemberListInfo'
+import useSendMessageCallback from './hooks/useSendMessageCallback'
+import useGetHistoryMsgs from './hooks/useGetHistoryMsgs'
 import { logger } from './logger'
 import * as ActionTypes from './contextManager/actionTypes'
 import { ChatContext } from './contextManager/Provider'
 import packageJson from '../package.json'
 import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
-import { GetHistoryMsgsOptions } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgLogServiceInterface'
-import { IBaseUploadFileOptions } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/types'
-import {
-  ISendProps,
-  ITeamInfo,
-  IMessage,
-  IMMessageInfo,
-  ICustomMessageInfo,
-} from './types'
+import { ITeamInfo, IMessage, IMMessageInfo, ICustomMessageInfo } from './types'
 import { IMessageCbProps } from './components/ChatMessageList'
 
 const { confirm } = Modal
@@ -127,7 +117,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   const [groupAddMembersVisible, setGroupAddMembersVisible] =
     useState<boolean>(false)
   const [groupCreateVisible, setGroupCreateVisible] = useState<boolean>(false)
-
   const [settingBarVisible, setSettingBarVisible] = useState<boolean>(false)
   const [action, setAction] = useState<string>('')
   const [inputValue, setInputValue] = useState<string>('')
@@ -137,6 +126,20 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     SCROLL_MSG_TYPE.send
   )
   const [chatMsgPos, setChatMsgPos] = useState<number>(0)
+
+  const { onSendHandler, onResendHandler } = useSendMessageCallback(
+    { setScrollMsgType, setInputValue },
+    {
+      nim,
+      chatDispatch,
+      ActionTypes,
+    }
+  )
+
+  const getHistoryMsgs = useGetHistoryMsgs(
+    { currentSession, setScrollMsgType, teamId },
+    { nim, chatDispatch, ActionTypes }
+  )
 
   useEffect(() => {
     if (!(messages.length && memberList.length)) {
@@ -150,11 +153,11 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     })
 
     const accounts: string[] = []
-    messages.map((item) => {
+    messages.forEach((item) => {
       const account = item[fromKey] as string
       const exist = map.get(account)
       if (!exist) {
-        !accounts.includes(account) && accounts.push(account)
+        account && !accounts.includes(account) && accounts.push(account)
       }
     })
 
@@ -177,7 +180,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         })
       })
       .catch(() => {
-        logger.log('获取不在群中的成员信息失败!')
+        logger.error('获取不在群中的成员信息失败!')
       })
   }, [notExitTeamAccounts, nim, chatDispatch])
 
@@ -223,58 +226,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     setCurrentActionIndex(MIN_VALUE)
     setAction('')
   }, [])
-
-  const getHistoryMsgs = useCallback(
-    async (finMsg?: IMMessageInfo) => {
-      if (!currentSession) {
-        return
-      }
-      setScrollMsgType(SCROLL_MSG_TYPE.history)
-
-      const { scene, to } = currentSession as NimKitCoreTypes.P2PSession
-
-      const params: GetHistoryMsgsOptions = {
-        scene,
-        to: scene === 'p2p' ? to : teamId,
-        beginTime: 0,
-        endTime: (finMsg as IMMessageInfo)?.time || Date.now(),
-        reverse: false,
-      }
-      if (finMsg?.idServer) {
-        params.lastMsgId = finMsg.idServer
-      }
-      try {
-        chatDispatch({
-          type: ActionTypes.UPDATE_MSG_LOADING,
-          payload: true,
-        })
-        const list = await nim.getHistoryMsgs(params)
-        chatDispatch({
-          type: ActionTypes.UPDATE_MSG_LOADING,
-          payload: false,
-        })
-        const msgList = list
-          .filter((item) => item.type !== 'notification')
-          .reverse()
-        if (!msgList.length && finMsg?.idServer) {
-          return chatDispatch({
-            type: ActionTypes.UPDATE_MSG_NO_DATA,
-            payload: true,
-          })
-        }
-        chatDispatch({
-          type: ActionTypes.ADD_HISTORY_MESSAGES,
-          payload: msgList,
-        })
-      } catch (error) {
-        chatDispatch({
-          type: ActionTypes.UPDATE_MSG_LOADING,
-          payload: false,
-        })
-      }
-    },
-    [currentSession?.id, chatDispatch, nim, teamId]
-  )
 
   const createTeamSuccessHandler = useCallback(
     (team, isSelected) => {
@@ -596,10 +547,9 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     const onMsg = async (msg: IMMessage) => {
       if ((currentSession as NimKitCoreTypes.ISession)?.to === msg.target) {
         setScrollMsgType(SCROLL_MSG_TYPE.receive)
-        const newMsg = await getMsgUserCardInfo(msg)
         chatDispatch({
           type: ActionTypes.ADD_MESSAGES,
-          payload: [newMsg],
+          payload: [msg],
         })
       }
     }
@@ -684,26 +634,32 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         case 'recallMsgP2p':
         case 'recallMsgTeam':
         case 'recallMsgSuperTeam': {
+          const { from } = params
           const {
             idClient,
             fromNick = '',
             opeAccount,
           } = params.recallMessageInfo
+          const account = opeAccount || from
+
           chatDispatch({
             type: ActionTypes.DELETE_MESSAGES,
             payload: [idClient],
           })
-          chatDispatch({
-            type: ActionTypes.ADD_MESSAGES,
-            payload: [
-              {
-                from: opeAccount,
-                specialType: 'recall',
-                idClient,
-                fromNick,
-              },
-            ],
-          })
+          // 暂时使用兜底逻辑，判断当前消息列表中是否有此撤回的消息id来决定渲染
+          if (messages.find((item) => item.idClient === idClient)) {
+            chatDispatch({
+              type: ActionTypes.ADD_MESSAGES,
+              payload: [
+                {
+                  from: account,
+                  specialType: 'recall',
+                  idClient,
+                  fromNick,
+                },
+              ],
+            })
+          }
         }
       }
     }
@@ -713,7 +669,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     return () => {
       nim.off('sysMsg', onSysMsg)
     }
-  }, [chatDispatch, nim])
+  }, [chatDispatch, nim, messages])
 
   useEffect(() => {
     if (!memberList.length) {
@@ -755,207 +711,9 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     return t('teamMutePlaceholder')
   }, [teamInfo, isGroupOwner, isGroupManager, nickName, t])
 
-  const getRecallBtnMsgInfo = useCallback((msg) => {
-    const finMsg: IMMessageInfo = {
-      ...msg,
-      showRecall: true,
-      showRecallTimer: window.setTimeout(() => {
-        finMsg.showRecall = false
-        clearTimeout(finMsg.showRecallTimer as number)
-        finMsg.showRecallTimer = null
-        chatDispatch({
-          type: ActionTypes.UPDATE_MESSAGES,
-          payload: finMsg,
-        })
-      }, SHOW_RECALL_BTN_MSG_TIME),
-    }
-    return finMsg
+  const onSetInputValueHandler = useCallback((value) => {
+    setInputValue(value)
   }, [])
-
-  const getMsgUserCardInfo = useCallback(async (msg) => {
-    const { from } = msg
-    const [userCardInfo] = await nim.getUsersNameCardFromServer({
-      accounts: [from],
-    })
-
-    return {
-      ...msg,
-      ...(userCardInfo || {}),
-    }
-  }, [])
-
-  const sendHandler = ({ type, body = '', to, scene, file }: ISendProps) => {
-    setScrollMsgType(SCROLL_MSG_TYPE.send)
-    switch (type) {
-      case 'text':
-        nim
-          .sendTextMsg({
-            body,
-            scene,
-            to,
-            onSendBefore: async (msg) => {
-              const newMsg = await getMsgUserCardInfo(msg)
-              chatDispatch({
-                type: ActionTypes.ADD_MESSAGES,
-                payload: [newMsg as IMMessageInfo],
-              })
-            },
-          })
-          .then((textMsg) => {
-            const finMsg = getRecallBtnMsgInfo(textMsg)
-            chatDispatch({
-              type: ActionTypes.UPDATE_MESSAGES,
-              payload: finMsg,
-            })
-          })
-          .catch((error) => {
-            chatDispatch({
-              type: ActionTypes.UPDATE_MESSAGES,
-              payload: error.msg,
-            })
-          })
-        break
-      case 'image':
-        nim
-          .sendImageMsg({
-            scene,
-            to,
-            file: file as IBaseUploadFileOptions['file'],
-            onUploadStart() {
-              chatDispatch({
-                type: ActionTypes.UPDATE_UPLOAD_IMAGE_LOADING,
-                payload: true,
-              })
-            },
-            onUploadDone() {
-              chatDispatch({
-                type: ActionTypes.UPDATE_UPLOAD_IMAGE_LOADING,
-                payload: false,
-              })
-            },
-            onSendBefore: async (msg) => {
-              const newMsg = await getMsgUserCardInfo(msg)
-              chatDispatch({
-                type: ActionTypes.ADD_MESSAGES,
-                payload: [newMsg as IMMessageInfo],
-              })
-            },
-          })
-          .then((imageMsg) => {
-            const finMsg = getRecallBtnMsgInfo(imageMsg)
-            chatDispatch({
-              type: ActionTypes.UPDATE_MESSAGES,
-              payload: finMsg,
-            })
-          })
-          .catch((error) => {
-            chatDispatch({
-              type: ActionTypes.UPDATE_MESSAGES,
-              payload: error.msg,
-            })
-          })
-        break
-      case 'file':
-        nim
-          .sendFileMsg({
-            scene,
-            to,
-            file: file as IBaseUploadFileOptions['file'],
-            onUploadStart() {
-              chatDispatch({
-                type: ActionTypes.UPDATE_UPLOAD_FILE_LOADING,
-                payload: true,
-              })
-            },
-            onUploadDone() {
-              chatDispatch({
-                type: ActionTypes.UPDATE_UPLOAD_FILE_LOADING,
-                payload: false,
-              })
-            },
-            onSendBefore: async (msg) => {
-              const newMsg = await getMsgUserCardInfo(msg)
-              chatDispatch({
-                type: ActionTypes.ADD_MESSAGES,
-                payload: [newMsg as IMMessageInfo],
-              })
-            },
-          })
-          .then((fileMsg) => {
-            const finMsg = getRecallBtnMsgInfo(fileMsg)
-            chatDispatch({
-              type: ActionTypes.UPDATE_MESSAGES,
-              payload: finMsg,
-            })
-          })
-          .catch((error) => {
-            chatDispatch({
-              type: ActionTypes.UPDATE_MESSAGES,
-              payload: error.msg,
-            })
-          })
-        break
-      case 'custom':
-        nim
-          .sendCustomMsg({
-            scene,
-            to,
-            body,
-            attach: body,
-            onSendBefore: async (msg) => {
-              const newMsg = await getMsgUserCardInfo(msg)
-              chatDispatch({
-                type: ActionTypes.ADD_MESSAGES,
-                payload: [newMsg as IMMessageInfo],
-              })
-            },
-          })
-          .then((customMsg) => {
-            const finMsg = getRecallBtnMsgInfo(customMsg)
-            chatDispatch({
-              type: ActionTypes.UPDATE_MESSAGES,
-              payload: finMsg,
-            })
-          })
-          .catch((error) => {
-            chatDispatch({
-              type: ActionTypes.UPDATE_MESSAGES,
-              payload: error.msg,
-            })
-          })
-        break
-      default:
-        return
-    }
-  }
-
-  const resendHandler = async (msg) => {
-    setScrollMsgType(SCROLL_MSG_TYPE.resend)
-    chatDispatch({
-      type: ActionTypes.UPDATE_MESSAGES,
-      payload: {
-        ...msg,
-        status: 'sending',
-      } as IMMessageInfo,
-    })
-    nim
-      .resendMsg({
-        msg,
-      })
-      .then((newMsg) => {
-        const finMsg = getRecallBtnMsgInfo(newMsg)
-        chatDispatch({
-          type: ActionTypes.UPDATE_MESSAGES,
-          payload: finMsg,
-        })
-      })
-      .catch((error) => {
-        chatDispatch({
-          type: ActionTypes.UPDATE_MESSAGES,
-          payload: error.msg,
-        })
-      })
-  }
 
   const showReeditMsgBtnHandler = (msg) => {
     const { idClient, type, body } = msg
@@ -967,21 +725,15 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       type,
       body,
       specialType: 'reedit',
-      timer: window.setTimeout(() => {
-        clearTimeout(payload.timer as number)
-        payload.timer = null
-        payload.specialType = 'recall'
-        chatDispatch({
-          type: ActionTypes.UPDATE_MESSAGES,
-          payload,
-        })
-      }, SHOW_RECALL_BTN_MSG_TIME),
     }
+    setTimeout(() => {
+      payload.specialType = 'recall'
+      chatDispatch({
+        type: ActionTypes.UPDATE_MESSAGES,
+        payload,
+      })
+    }, REEDIT_RECALL_MSG_TIME)
     return payload
-  }
-
-  const onReeditClickHandler = (body) => {
-    setInputValue(body)
   }
 
   const onMessageActionHandler = async (action: string, msg: IMMessageInfo) => {
@@ -1036,7 +788,10 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
           headerSubTitle={groupTitle}
           placeholder={placeholder}
           memberList={memberList}
-          onSend={sendHandler}
+          onSend={onSendHandler}
+          onResend={onResendHandler}
+          onChange={onSetInputValueHandler}
+          onReeditClick={onSetInputValueHandler}
           selectedSession={currentSession}
           teamInfo={teamInfo}
           myUserInfo={state.myUserInfo}
@@ -1048,8 +803,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
           scrollMsgType={scrollMsgType}
           initOptions={initOptions}
           inputValue={inputValue}
-          onResend={resendHandler}
-          onReeditClick={onReeditClickHandler}
           groupCreateVisible={groupCreateVisible}
           setGroupCreateVisible={setGroupCreateVisible}
           groupAddMembersVisible={groupAddMembersVisible}

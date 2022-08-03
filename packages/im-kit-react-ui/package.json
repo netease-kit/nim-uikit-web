@@ -1,6 +1,6 @@
 {
   "name": "@xkit-yx/im-kit-ui",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "云信即时通讯组件",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -28,7 +28,7 @@
     "gulp": "^4.0.2",
     "gulp-typescript": "^6.0.0-alpha.1",
     "less": "^4.1.1",
-    "nim-web-sdk-ng": "^0.6.1",
+    "nim-web-sdk-ng": "0.7.1",
     "postcss": "^8.3.5",
     "postcss-nested": "^5.0.5",
     "react": "^16.8.0",
@@ -44,12 +44,12 @@
     "react-dom": "^16.8.0"
   },
   "dependencies": {
-    "@xkit-yx/chat-kit-ui": "^0.1.5",
-    "@xkit-yx/common-ui": "^0.1.4",
-    "@xkit-yx/contact-kit-ui": "^0.1.4",
-    "@xkit-yx/conversation-kit-ui": "^0.1.4",
-    "@xkit-yx/core-kit": "^0.2.1",
-    "@xkit-yx/search-kit-ui": "^0.1.4",
+    "@xkit-yx/chat-kit-ui": "^0.2.0",
+    "@xkit-yx/common-ui": "^0.1.5",
+    "@xkit-yx/contact-kit-ui": "^0.1.5",
+    "@xkit-yx/conversation-kit-ui": "^0.1.5",
+    "@xkit-yx/core-kit": "^0.2.2",
+    "@xkit-yx/search-kit-ui": "^0.2.0",
     "@xkit-yx/utils": "^0.4.0",
     "antd": "^4.16.3"
   }

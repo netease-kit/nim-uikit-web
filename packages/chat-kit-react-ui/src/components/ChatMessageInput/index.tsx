@@ -36,6 +36,7 @@ const ChatMessageInput: React.FC<MessageProps> = ({
   uploadImageLoading,
   uploadFileLoading,
   onSend,
+  onChange,
 }) => {
   const { t } = useTranslation()
   const _prefix = `${prefix}-message-input`
@@ -49,6 +50,10 @@ const ChatMessageInput: React.FC<MessageProps> = ({
   useEffect(() => {
     setValue(inputValue)
   }, [inputValue])
+
+  useEffect(() => {
+    setValue('')
+  }, [selectedSession.id])
 
   const onPressEnterHandler = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const trimValue = value.trim()
@@ -155,7 +160,9 @@ const ChatMessageInput: React.FC<MessageProps> = ({
         value={value}
         disabled={isMute}
         onChange={(e) => {
-          setValue(e.target.value)
+          const val = e.target.value
+          setValue(val)
+          onChange?.(val)
         }}
         onPressEnter={onPressEnterHandler}
         autoSize={{ maxRows: 5 }}

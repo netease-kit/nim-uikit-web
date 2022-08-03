@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits] for commit guidelines.
 
+## [0.1.5] (2022-08-03)
+
+### Bug Fixes
+
+- 撤回、重新编辑样式和逻辑整理 
+- 去掉多余字 
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
 ## [0.1.4] (2022-07-29)
 
 ### Bug Fixes

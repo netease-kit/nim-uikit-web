@@ -219,8 +219,6 @@ export const GroupContainer: FC<GroupContainerProps> = ({
               teamInfo={teamInfo}
               list={list}
               initOptions={initOptions}
-              isGroupOwner={isGroupOwner}
-              isGroupManager={isGroupManager}
               onRemoveTeamMemberClick={onRemoveTeamMemberClick}
               afterSendMsgClick={afterSendMsgClick}
             />

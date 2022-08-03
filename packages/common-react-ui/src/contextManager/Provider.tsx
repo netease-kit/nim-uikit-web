@@ -1,6 +1,6 @@
 import {
   NIMInitializeOptions,
-  OtherOptions,
+  NIMOtherOptions,
 } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/NIMInterface'
 import React, {
   FC,
@@ -29,7 +29,7 @@ export interface ProviderProps {
   children: ReactNode
   sdkVersion?: 1 | 2
   initOptions: NIMInitializeOptions
-  otherOptions?: OtherOptions
+  otherOptions?: NIMOtherOptions
   funcOptions?: { [key: string]: (...args: any) => void }
   nimKitCore?: NimKitCoreTypes.INimKitCore
   locale?: 'zh' | 'en'

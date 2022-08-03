@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits] for commit guidelines.
 
+# [0.2.0] (2022-08-03)
+
+### Bug Fixes
+
+- 撤回消息未选中聊天的人不显示撤回信息 
+- **search-kit-react-ui:** 🐛 修复搜索前没有重置变量导致的问题 
+
+### Features
+
+- 兼容 account 不存在情况、添加超出样式 
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
 ## [0.1.4] (2022-07-29)
 
 **Note:** Version bump only for package @xkit-yx/search-kit-ui
