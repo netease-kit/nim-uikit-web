@@ -24,6 +24,9 @@ $ npm i yarn -g
 $ yarn bootstrap
 ```
 
+### 配置 HTTPS 秘钥
+在根目录下创建 `ssl` 文件夹，并在其中中放入您的 https 秘钥证书：`cert.crt`、`cert.pem`、`key.pem`
+
 ### 开发调试
 
 ```sh
