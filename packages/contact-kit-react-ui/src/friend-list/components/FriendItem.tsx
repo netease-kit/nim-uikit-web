@@ -16,7 +16,6 @@ export const FriendItem: FC<FriendItemProps> = ({
   afterSendMsgClick,
   prefix = 'contact',
   commonPrefix = 'common',
-  ...props
 }) => {
   const _prefix = `${prefix}-friend-item`
 
@@ -29,12 +28,9 @@ export const FriendItem: FC<FriendItemProps> = ({
       }}
     >
       <ComplexAvatarContainer
-        size={36}
         account={account}
-        nick={nick}
         prefix={commonPrefix}
         afterSendMsgClick={afterSendMsgClick}
-        {...props}
       />
       <span className={`${_prefix}-label`}>{nick || account || ''}</span>
     </div>

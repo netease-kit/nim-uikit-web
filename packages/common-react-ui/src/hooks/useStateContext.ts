@@ -1,14 +1,14 @@
 import { useContext } from 'react'
-import { Context, ContextProps } from '../contextManager'
+import { Context, ContextProps } from '../contextManager/Provider'
 
 export const useStateContext = (): Required<
-  Pick<ContextProps, 'state' | 'nim' | 'initOptions'>
+  Pick<ContextProps, 'nim' | 'store' | 'initOptions'>
 > => {
-  const { nim, state, initOptions } = useContext(Context)
+  const { store, nim, initOptions } = useContext<ContextProps>(Context)
 
-  if (!nim || !state || !initOptions) {
-    throw new Error('Please use Provider to wrap useStateContext.')
+  if (!nim || !store || !initOptions) {
+    throw new Error('Please use Provider to wrap UI Kit.')
   }
 
-  return { nim, state, initOptions }
+  return { nim, store, initOptions }
 }

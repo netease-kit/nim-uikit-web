@@ -30,7 +30,9 @@ export const ComplexAvatarUI: FC<ComplexAvatarProps> = ({
 
   return (
     <div
-      className={`${_prefix}-wrapper`}
+      className={`${_prefix}-wrapper ${
+        !onAvatarClick ? `${_prefix}-wrapper-nocursor` : ''
+      }`}
       onClick={(e) => {
         e.stopPropagation()
       }}

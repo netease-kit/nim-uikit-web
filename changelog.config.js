@@ -12,6 +12,11 @@ module.exports = {
     'test',
     'feat',
     'fix',
+    'api',
+    'dependency',
+    'compat',
+    'known',
+    'behavior',
     'chore',
     'docs',
     'refactor',
@@ -20,7 +25,7 @@ module.exports = {
     'perf',
   ],
   effects: scopes,
-  maxMessageLength: 64,
+  maxMessageLength: 200,
   minMessageLength: 3,
   questions: [
     'type',
@@ -33,6 +38,49 @@ module.exports = {
   ],
   scopes: scopes,
   types: {
+    feat: {
+      description: 'A new feature',
+      title: 'New Features',
+      emoji: '🎸',
+      value: 'feat',
+    },
+    fix: {
+      description: 'A bug fix',
+      emoji: '🐛',
+      title: 'Bug Fixes',
+      value: 'fix',
+    },
+    api: {
+      description: 'api变更',
+      title: 'API Changes',
+      emoji: '🛠',
+      value: 'api',
+    },
+    dependency: {
+      description: '依赖库变更说明',
+      title: 'Dependency Updates',
+      emoji: '📚',
+      value: 'dependency',
+    },
+    compat: {
+      description:
+        '目前兼容的im和rtc版本, 如Compatible with NERTC version 1.0.0',
+      title: 'Compatibility',
+      emoji: '⚙️',
+      value: 'compat',
+    },
+    known: {
+      description: '已知问题说明',
+      title: 'Known issues',
+      emoji: '📦',
+      value: 'known',
+    },
+    behavior: {
+      description: '行为变更',
+      title: 'Behavior changes',
+      emoji: '♻️',
+      value: 'behavior',
+    },
     chore: {
       description: 'Build process or auxiliary tool changes',
       emoji: '🤖',
@@ -47,16 +95,6 @@ module.exports = {
       description: 'Documentation only changes',
       emoji: '✏️',
       value: 'docs',
-    },
-    feat: {
-      description: 'A new feature',
-      emoji: '🎸',
-      value: 'feat',
-    },
-    fix: {
-      description: 'A bug fix',
-      emoji: '🐛',
-      value: 'fix',
     },
     perf: {
       description: 'A code change that improves performance',

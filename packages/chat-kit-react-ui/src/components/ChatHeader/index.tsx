@@ -1,38 +1,37 @@
 import React from 'react'
-import classNames from 'classnames'
-import { CrudeAvatar } from '@xkit-yx/common-ui'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 
 export interface ChatHeaderProps {
-  prefix?: string
+  avatar: React.ReactNode
   title: string
   subTitle?: string
-  selectedSession: NimKitCoreTypes.ISession
-  className?: string
+
+  prefix?: string
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
-  prefix = 'chat',
+  avatar,
   title,
-  subTitle,
-  className,
-  selectedSession,
+  subTitle = '',
+
+  prefix = 'chat',
 }) => {
   const _prefix = `${prefix}-header`
 
   return (
-    <div className={classNames(className, `${_prefix}-wrap`)}>
+    <div className={`${_prefix}-wrap`}>
       <div className={`${_prefix}-avatar`}>
-        <CrudeAvatar
-          size={36}
-          avatar={selectedSession.avatar}
-          key={selectedSession.id}
-          nick={title}
-          account={title}
-        />
+        {/* 换回 CrudeAvatar */}
+        {/* <ComplexAvatarContainer
+          account={account}
+          canClick={false}
+          prefix={commonPrefix}
+        /> */}
+        {avatar}
       </div>
       <div className={`${_prefix}-title`}>{title}</div>
-      <div className={`${_prefix}-sub-title`}>{subTitle}</div>
+      {subTitle ? (
+        <div className={`${_prefix}-sub-title`}>{subTitle}</div>
+      ) : null}
     </div>
   )
 }

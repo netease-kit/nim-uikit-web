@@ -1,6 +1,5 @@
-import React, { useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Form, Modal, Input } from 'antd'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import {
   urls,
   GroupAvatarSelect,
@@ -8,54 +7,81 @@ import {
   useTranslation,
 } from '@xkit-yx/common-ui'
 
-interface GroupCreateProps {
+export interface GroupCreateFormParams {
+  name: string
+}
+
+// TODO 抽到 common 中，跟 search-kit 复用
+export interface GroupCreateProps {
+  defaultAccounts?: string[]
+  visible: boolean
+  onCancel: () => void
+  onGroupCreate: (
+    params: GroupCreateFormParams & {
+      selectedAccounts: string[]
+      avatar: string
+    }
+  ) => void
+
   prefix?: string
   commonPrefix?: string
-  visible?: boolean
-  onCancel?: () => void
-  selectedAccounts: string[]
-  setSelectedAccounts: React.Dispatch<
-    React.SetStateAction<NimKitCoreTypes.IFriendInfo[]>
-  >
-  onGroupCreate: (formValues) => void
 }
 
 const GroupCreate: React.FC<GroupCreateProps> = ({
-  prefix = 'chat',
-  commonPrefix = 'common',
-  selectedAccounts,
-  setSelectedAccounts,
+  defaultAccounts = [],
   onGroupCreate,
   visible,
   onCancel,
+
+  prefix = 'chat',
+  commonPrefix = 'common',
 }) => {
   const { t } = useTranslation()
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<GroupCreateFormParams>()
   const _prefix = `${prefix}-group-create`
-  const avatar = urls[Math.floor(Math.random() * 5)]
+
+  const [avatar, setAvatar] = useState(urls[Math.floor(Math.random() * 5)])
+  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([])
 
   useEffect(() => {
-    form.setFieldsValue({
-      avatar,
-    })
-  }, [])
+    // TODO 这边没有考虑 defaultAccounts 减少的情况
+    setSelectedAccounts((value) => [...new Set(value.concat(defaultAccounts))])
+  }, [defaultAccounts])
+
+  const handleOk = () => {
+    form
+      .validateFields()
+      .then((values) => {
+        onGroupCreate({
+          ...values,
+          selectedAccounts,
+          avatar,
+        })
+        resetState()
+      })
+      .catch(() => {
+        //
+      })
+  }
+
+  const handleCancel = () => {
+    resetState()
+    onCancel()
+  }
+
+  const resetState = () => {
+    form.resetFields()
+    setAvatar(urls[Math.floor(Math.random() * 5)])
+    setSelectedAccounts([])
+  }
 
   return (
     <Modal
       className={`${_prefix}-wrap`}
       title={t('createTeamText')}
       forceRender
-      onOk={() => {
-        form
-          .validateFields()
-          .then((values) => {
-            onGroupCreate(values)
-          })
-          .catch(() => {
-            //
-          })
-      }}
-      onCancel={() => onCancel?.()}
+      onOk={handleOk}
+      onCancel={handleCancel}
       visible={visible}
       width={630}
       style={{ height: 500 }}
@@ -82,23 +108,21 @@ const GroupCreate: React.FC<GroupCreateProps> = ({
         <Form.Item
           name="avatar"
           label={t('teamAvatarText')}
-          rules={[{ required: true, message: t('teamAvatarConfirmText') }]}
+          // rules={[{ required: true, message: t('teamAvatarConfirmText') }]}
         >
           <GroupAvatarSelect
             prefix={commonPrefix}
             avatar={avatar}
             account={''}
-            onSelect={(avatar) => {
-              form.setFieldsValue({
-                avatar,
-              })
-            }}
+            onSelect={setAvatar}
           />
         </Form.Item>
         <div style={{ height: 450 }}>
           <FriendSelectContainer
             prefix={commonPrefix}
-            onSelect={(accounts) => setSelectedAccounts(accounts)}
+            onSelect={(accounts) =>
+              setSelectedAccounts(accounts.map((item) => item.account))
+            }
             selectedAccounts={selectedAccounts}
           />
         </div>

@@ -1,10 +1,11 @@
 import { Popover } from 'antd'
 import React, { useState } from 'react'
-import AddList from '../AddList'
+import AddList, { AddListProps } from '../AddList'
 import { CommonIcon, useTranslation } from '@xkit-yx/common-ui'
+import { PanelScene } from '../../Container'
 export interface AddPanelProps {
   trigger: string // hover || focus || click
-  onClick: (id: number) => void
+  onClick: (scene: PanelScene) => void
   prefix?: string
 }
 
@@ -21,33 +22,34 @@ const AddPanel: React.FC<AddPanelProps> = ({
   const handleVisibleChange = (newVisible: boolean) => {
     setVisible(newVisible)
   }
-  const friend = {
-    id: 0,
-    icon: 'icon-tianjiahaoyou',
-    content: t('addFriendText'),
-    onClick: onClick,
-  }
-  const groupChat = {
-    id: 1,
-    icon: 'icon-chuangjianqunzu',
-    content: t('createTeamText'),
-    onClick: onClick,
-  }
 
-  const group = {
-    id: 2,
-    icon: 'icon-jiaruqunzu',
-    content: t('joinTeamText'),
-    onClick: onClick,
-  }
-
-  const props = {
-    list: [friend, groupChat, group],
+  const props: AddListProps = {
+    list: [
+      {
+        scene: 'addFriend',
+        icon: 'icon-tianjiahaoyou',
+        content: t('addFriendText'),
+        onClick,
+      },
+      {
+        scene: 'createTeam',
+        icon: 'icon-chuangjianqunzu',
+        content: t('createTeamText'),
+        onClick,
+      },
+      {
+        scene: 'joinTeam',
+        icon: 'icon-jiaruqunzu',
+        content: t('joinTeamText'),
+        onClick,
+      },
+    ],
+    prefix,
   }
 
   const content = (
     <div onClick={() => setVisible(false)}>
-      <AddList {...props} prefix={prefix} />
+      <AddList {...props} />
     </div>
   )
   return (

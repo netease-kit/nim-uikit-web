@@ -3,6 +3,44 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits] for commit guidelines.
 
+## [0.2.4] (2022-08-24)
+
+**Note:** Version bump only for package @xkit-yx/search-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.2.3] (2022-08-19)
+
+**Note:** Version bump only for package @xkit-yx/search-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.2.2] (2022-08-16)
+
+**Note:** Version bump only for package @xkit-yx/search-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.2.1] (2022-08-16)
+
+### Bug Fixes
+
+- 优化和 bug 修复
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
 # [0.2.0] (2022-08-03)
 
 ### Bug Fixes

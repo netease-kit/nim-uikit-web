@@ -1,8 +1,8 @@
 import React, { FC } from 'react'
 import { ComplexAvatarContainer } from '@xkit-yx/common-ui'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
+import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 
-export interface BlackItemProps extends NimKitCoreTypes.IBlackInfo {
+export interface BlackItemProps extends UserNameCard {
   onItemClick?: (account: string) => void
   afterSendMsgClick?: () => void
   prefix?: string
@@ -16,7 +16,6 @@ export const BlackItem: FC<BlackItemProps> = ({
   afterSendMsgClick,
   prefix = 'contact',
   commonPrefix = 'common',
-  ...props
 }) => {
   const _prefix = `${prefix}-black-item`
   return (
@@ -28,12 +27,9 @@ export const BlackItem: FC<BlackItemProps> = ({
       }}
     >
       <ComplexAvatarContainer
-        size={36}
         account={account}
-        nick={nick}
         prefix={commonPrefix}
         afterSendMsgClick={afterSendMsgClick}
-        {...props}
       />
       <span className={`${_prefix}-label`}>{nick || account || ''}</span>
     </div>

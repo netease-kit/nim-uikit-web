@@ -2,9 +2,6 @@ interface IKeyMap {
   [key: string]: string
 }
 
-export const INPUT_EMOJI_SYMBOL_REG =
-  /(\[[\u4E00-\u9FA5\uF900-\uFA2D]+\]|\[[A-Z]+\])/g
-
 export const EMOJI_ICON_MAP_CONFIG: IKeyMap = {
   '[大笑]': 'icon-a-1',
   '[开心]': 'icon-a-2',
@@ -76,3 +73,18 @@ export const EMOJI_ICON_MAP_CONFIG: IKeyMap = {
   '[救护车]': 'icon-a-68',
   '[便便]': 'icon-a-70',
 }
+
+// TODO react-string-replace 的行为不是那么的好理解，比如像下面这个正则就一定要加 '()'，后面最好干掉自己实现
+export const INPUT_EMOJI_SYMBOL_REG = new RegExp(
+  '(' +
+    Object.keys(EMOJI_ICON_MAP_CONFIG)
+      .map((item) => {
+        const left = `\\${item.slice(0, 1)}`
+        const right = `\\${item.slice(-1)}`
+        const mid = item.slice(1, -1)
+        return `${left}${mid}${right}`
+      })
+      .join('|') +
+    ')',
+  'g'
+)

@@ -5,8 +5,30 @@
   "useWorkspaces": true,
   "command": {
     "version": {
-      "message": "ci(workspace): publish"
+      "message": "ci(workspace): publish",
+      "changelogPreset": {
+        "name": "conventionalcommits",
+        "types": [
+          {
+            "type": "feat",
+            "section": "Features"
+          },
+          {
+            "type": "fix",
+            "section": "Bug Fixes"
+          },
+          {
+            "type": "compat",
+            "section": "Compatibility"
+          }
+        ]
+      }
     }
   },
-  "ignoreChanges": ["**/*.stories.*", "**/__test__/**", "**/*.md"]
+  "ignoreChanges": [
+    "**/*.stories.*",
+    "**/__test__/**",
+    "**/*.md",
+    "packages/room-kit/examples"
+  ]
 }

@@ -22,7 +22,7 @@ IM UI Kit 包含以下功能模块
 
 - `conversation-kit`：会话组件，负责会话列表的展示与相关操作
 - `chat-kit`：聊天组件，负责单聊、群聊相关的操作以及相关的权限管理
-- `contact-kit`：通讯录组件，内含 `contact-list`、`friend-list`、`black-list`、`group-list` 等四个子组件，负责通讯录导航、好友列表、黑名单列表以及群组列表
+- `contact-kit`：通讯录组件，内含 `contact-list`、`contact-info` 等子组件，负责通讯录导航、好友列表、黑名单列表以及群组列表
 - `search-kit`：搜索组件，内含 `search`、`add` 等两个子组件，负责搜索好友、群组以及添加好友、群组
 
 ## 导入组件
@@ -90,7 +90,6 @@ import {
   Provider,
   ConversationContainer,
   ChatContainer,
-  ChatProvider,
 } from '@xkit-yx/im-kit-ui'
 
 import '@xkit-yx/im-kit-ui/es/style'
@@ -115,9 +114,7 @@ const App = () => {
           <ConversationContainer />
         </div>
         <div className="chat">
-          <ChatProvider>
-            <ChatContainer />
-          </ChatProvider>
+          <ChatContainer />
         </div>
       </div>
     </Provider>

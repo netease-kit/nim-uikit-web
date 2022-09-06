@@ -1,6 +1,6 @@
 import React from 'react'
 import { ComplexAvatarContainer } from './index'
-import { Provider } from '../../contextManager'
+import { Provider } from '../../contextManager/Provider'
 import { ComponentStory } from '@storybook/react'
 
 import './style'
@@ -26,12 +26,10 @@ const Template: ComponentStory<typeof ComplexAvatarContainer> = (args) => {
 export const Primary = Template.bind({})
 
 Primary.args = {
+  canClick: true,
   account: 'cs1',
-  nick: 'Jack',
-  gender: 'male',
   count: 10,
   dot: true,
-  signature:
-    '你来自来，去自去，你是自由的，风 都无法将你圈养你来自来，去自去，你是自由的，风都无法将你圈养都无',
+  size: 36,
   prefix: 'common',
 }

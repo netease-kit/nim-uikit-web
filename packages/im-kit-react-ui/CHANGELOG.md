@@ -3,6 +3,42 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits] for commit guidelines.
 
+## [0.0.13] (2022-08-24)
+
+**Note:** Version bump only for package @xkit-yx/im-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.0.12] (2022-08-19)
+
+**Note:** Version bump only for package @xkit-yx/im-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.0.11] (2022-08-16)
+
+**Note:** Version bump only for package @xkit-yx/im-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.0.10] (2022-08-16)
+
+**Note:** Version bump only for package @xkit-yx/im-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
 ## [0.0.9] (2022-08-03)
 
 **Note:** Version bump only for package @xkit-yx/im-kit-ui

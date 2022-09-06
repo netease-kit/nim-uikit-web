@@ -1,16 +1,17 @@
 import React from 'react'
 import { CommonIcon } from '@xkit-yx/common-ui'
+import { PanelScene } from '../../Container'
 
 export interface AddItemProps {
-  id: number
+  scene: PanelScene
   icon: string
   content: string
-  onClick: (id: number) => void
+  onClick: (scene: PanelScene) => void
   prefix: string
 }
 
 const AddItem: React.FC<AddItemProps> = ({
-  id,
+  scene,
   icon,
   content,
   onClick,
@@ -18,7 +19,7 @@ const AddItem: React.FC<AddItemProps> = ({
 }) => {
   const _prefix = `${prefix}-add-item`
   return (
-    <div className={_prefix} onClick={() => onClick(id)}>
+    <div className={_prefix} onClick={() => onClick(scene)}>
       <CommonIcon className={`${_prefix}-icon`} type={icon} />
       <div className={`${_prefix}-content`}>{content}</div>
     </div>

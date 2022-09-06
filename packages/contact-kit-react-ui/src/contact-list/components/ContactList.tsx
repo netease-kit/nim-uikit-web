@@ -4,7 +4,7 @@ import { ContactItemProps, ContactItem } from './ContactItem'
 import { ContextManagerTypes, useTranslation } from '@xkit-yx/common-ui'
 
 export interface ContactListProps {
-  selectedContactType?: ContextManagerTypes.ContactType
+  selectedContactType: ContextManagerTypes.ContactType | ''
   onItemClick: (contactType: ContextManagerTypes.ContactType) => void
   renderCustomContact?: (
     contactType: ContextManagerTypes.ContactType

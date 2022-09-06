@@ -11,32 +11,44 @@ IM UI Kit 提供 `useStateContext` hooks 函数，可让您访问 IM UI Kit 的�
 | 返回值      | 类型   | 说明                                  |
 | ----------- | ------ | ------------------------------------- |
 | nim         | Object | IM SDK 实例的封装，开发者一般无需关心 |
-| state       | Object | 内部 store                            |
+| store       | Object | 内部 store                            |
 | initOptions | Object | 初始化时传入的初始化参数              |
 
-### state 详细说明
+### store 说明
 
-| 返回值              | 类型                                                                 | 说明             |
-| ------------------- | -------------------------------------------------------------------- | ---------------- |
-| connectState        | 'connecting' \| 'connected' \| 'disconnected' \| 'idle' \| undefined | IM 连接状态      |
-| sessions            | ObjectArray                                                          | 会话列表         |
-| selectedSession     | Object                                                               | 选中的会话       |
-| blackList           | ObjectArray                                                          | 黑名单列表       |
-| groupList           | ObjectArray                                                          | 群组列表         |
-| friendList          | ObjectArray                                                          | 好友列表         |
-| selectedContactType | 'blackList' \| 'groupList' \| 'friendList' \| undefined              | 选中的通讯录导航 |
+store 提供 UI Kit 内部数据驱动的能力，由 `Mobx` 提供数据和 UI 双向绑定的能力。如果需要使用 store 中的数据自行渲染，请使用 `mobx-react` 提供的 `observer` 包裹您的 `React 组件`。具体使用请参考 [Mobx](https://zh.mobx.js.org/README.html)。
+
+#### store 功能列表
+
+| 返回值          | 类型   | 说明                                                      |
+| --------------- | ------ | --------------------------------------------------------- |
+| uiStore         | Object | Mobx 可观察对象，负责 UI 会用到的属性的子 store           |
+| connectStore    | Object | Mobx 可观察对象，负责连接的子 store                       |
+| msgStore        | Object | Mobx 可观察对象，负责管理会话消息的子 store               |
+| sysMsgStore     | Object | Mobx 可观察对象，负责管理系统消息的子 store               |
+| sessionStore    | Object | Mobx 可观察对象，负责管理会话列表的子 store               |
+| friendStore     | Object | Mobx 可观察对象，负责管理好友信息的子 store               |
+| userStore       | Object | Mobx 可观察对象，负责管理用户信息（包含陌生人）的子 store |
+| relationStore   | Object | Mobx 可观察对象，负责管理黑名单和静音列表的子 store       |
+| teamStore       | Object | Mobx 可观察对象，负责管理群组的子 store                   |
+| teamMemberStore | Object | Mobx 可观察对象，负责管理群组成员的子 store               |
 
 ## 代码示例
 
 ```tsx
 import React from 'react'
+import { observer } from 'mobx-react'
 import { useStateContext } from '@xkit-yx/im-kit-ui'
 
 const Page1 = () => {
-  const { state } = useStateContext()
+  const { store } = useStateContext()
 
-  console.log(state)
+  console.log(store)
 
-  return <div>……</div>
+  return (
+    <observer>
+      <div>当前的连接状态是：{store.connectStore.connectState}</div>
+    </observer>
+  )
 }
 ```

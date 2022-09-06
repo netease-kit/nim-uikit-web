@@ -1,34 +1,28 @@
 import React from 'react'
 import { SettingOutlined } from '@ant-design/icons'
 import classNames from 'classnames'
-import { CHAT_ACTION } from '../../constant'
+import { ChatAction } from '../../types'
 
 export interface ChatActionBarProps {
   prefix?: string
-  className?: string
-  currentActionIndex: number
-  setCurrentActionIndex: (index: number) => void
-  onSettingBtnClick: (action: string) => void
+  action?: ChatAction
+  onActionClick: (action: ChatAction) => void
 }
 
 const ChatActionBar: React.FC<ChatActionBarProps> = ({
   prefix = 'chat',
-  className,
-  onSettingBtnClick,
-  currentActionIndex,
-  setCurrentActionIndex,
+  action = '',
+  onActionClick,
 }) => {
   const _prefix = `${prefix}-action`
 
   type IconsProps = {
-    key: number
-    action: string
+    action: ChatAction
     content: JSX.Element
   }
   const ChatBarIcons: IconsProps[] = [
     {
-      key: 0,
-      action: CHAT_ACTION.chatSetting,
+      action: 'chatSetting',
       content: (
         <SettingOutlined
           className={`${_prefix}-icon`}
@@ -44,8 +38,7 @@ const ChatActionBar: React.FC<ChatActionBarProps> = ({
       ),
     },
     // {
-    //   key: 1,
-    //   action: CHAT_ACTION.chatRecord,
+    //   action: 'chatRecord',
     //   content: (
     //     <CommentOutlined
     //       className={`${_prefix}-icon`}
@@ -64,19 +57,16 @@ const ChatActionBar: React.FC<ChatActionBarProps> = ({
   ]
 
   return (
-    <div className={classNames(className, `${_prefix}-wrap`)}>
+    <div className={`${_prefix}-wrap`}>
       {ChatBarIcons.map((item) => (
         <div
-          key={item.key}
+          key={item.action}
           onClick={() => {
-            setCurrentActionIndex(item.key)
-            onSettingBtnClick?.(item.action)
+            onActionClick(item.action)
           }}
           className={classNames(
             `${_prefix}-setting`,
-            `${
-              currentActionIndex === item.key ? `${_prefix}-setting-active` : ''
-            }`
+            `${action === item.action ? `${_prefix}-setting-active` : ''}`
           )}
         >
           {item.content}

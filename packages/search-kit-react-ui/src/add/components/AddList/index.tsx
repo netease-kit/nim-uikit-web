@@ -11,7 +11,7 @@ const AddList: React.FC<AddListProps> = ({ list, prefix }) => {
   return (
     <div className={_prefix}>
       {list.map((item) => {
-        return <AddItem {...item} prefix={prefix} key={item.id} />
+        return <AddItem {...item} prefix={prefix} key={item.scene} />
       })}
     </div>
   )

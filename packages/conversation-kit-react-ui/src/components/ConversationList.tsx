@@ -2,8 +2,9 @@ import React from 'react'
 import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import { P2PItem } from './P2PItem'
 import { GroupItem } from './GroupItem'
+import { Spin, Empty } from 'antd'
 
-export type ISeessionProps = {
+export type ConversationCallbackProps = {
   onSessionItemClick: (session: NimKitCoreTypes.ISession) => void
   onSessionItemDeleteClick: (session: NimKitCoreTypes.ISession) => void
   onSessionItemMuteChange: (
@@ -14,40 +15,47 @@ export type ISeessionProps = {
 
 export type ConversationListProps = {
   sessions: NimKitCoreTypes.ISession[]
-  selectedSession?: NimKitCoreTypes.ISession
+  loading?: boolean
+  selectedSession?: string
   renderCustomTeamSession?: (
     options: { session: NimKitCoreTypes.TeamSession } & Omit<
-      ISeessionProps,
+      ConversationCallbackProps,
       'onSessionItemMuteChange'
     >
   ) => JSX.Element
   renderCustomP2pSession?: (
-    options: { session: NimKitCoreTypes.P2PSession } & ISeessionProps
+    options: { session: NimKitCoreTypes.P2PSession } & ConversationCallbackProps
   ) => JSX.Element
+  renderSessionListEmpty?: () => JSX.Element
   prefix?: string
   commonPrefix?: string
-} & ISeessionProps
+} & ConversationCallbackProps
 
 export const ConversationList: React.FC<ConversationListProps> = ({
   sessions,
+  loading = false,
   selectedSession,
   onSessionItemClick,
   onSessionItemDeleteClick,
   onSessionItemMuteChange,
   renderCustomP2pSession,
   renderCustomTeamSession,
+  renderSessionListEmpty,
   prefix = 'conversation',
   commonPrefix = 'common',
 }) => {
   return (
     <div className={`${prefix}-list-wrapper`}>
-      {sessions
-        .sort(
-          (a, b) =>
-            (b.lastMsg?.time || b.updateTime) -
-            (a.lastMsg?.time || a.updateTime)
+      {loading ? (
+        <Spin />
+      ) : !sessions.length ? (
+        renderSessionListEmpty ? (
+          renderSessionListEmpty()
+        ) : (
+          <Empty style={{ marginTop: 10 }} />
         )
-        .map((item) => {
+      ) : (
+        sessions.map((item) => {
           return item.scene === 'p2p' ? (
             renderCustomP2pSession ? (
               renderCustomP2pSession({
@@ -62,7 +70,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                 key={item.id}
                 prefix={prefix}
                 commonPrefix={commonPrefix}
-                isSelected={selectedSession?.id === item.id}
+                isSelected={selectedSession === item.id}
                 onItemClick={() => {
                   onSessionItemClick(item)
                 }}
@@ -86,7 +94,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               key={item.id}
               prefix={prefix}
               commonPrefix={commonPrefix}
-              isSelected={selectedSession?.id === item.id}
+              isSelected={selectedSession === item.id}
               onItemClick={() => {
                 onSessionItemClick(item)
               }}
@@ -95,7 +103,8 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               }}
             />
           )
-        })}
+        })
+      )}
     </div>
   )
 }

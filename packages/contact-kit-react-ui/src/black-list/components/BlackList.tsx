@@ -1,21 +1,26 @@
 import React, { FC } from 'react'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import { BlackItem } from './BlackItem'
 import { useTranslation } from '@xkit-yx/common-ui'
+import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
+import { Spin, Empty } from 'antd'
 
 export interface BlackListProps {
-  list: NimKitCoreTypes.IBlackInfo[]
+  list: UserNameCard[]
+  loading?: boolean
   onItemClick?: (account: string) => void
   afterSendMsgClick?: () => void
-  renderBlackListHeader?: () => React.ReactNode
+  renderBlackListHeader?: () => JSX.Element
+  renderBlackListEmpty?: () => JSX.Element
   prefix?: string
   commonPrefix?: string
 }
 
 export const BlackList: FC<BlackListProps> = ({
   list,
+  loading = false,
   onItemClick,
   afterSendMsgClick,
+  renderBlackListEmpty,
   renderBlackListHeader,
   prefix = 'contact',
   commonPrefix = 'common',
@@ -39,16 +44,26 @@ export const BlackList: FC<BlackListProps> = ({
         )}
       </div>
       <div className={`${_prefix}-content`}>
-        {list.map((item) => (
-          <BlackItem
-            key={item.account}
-            prefix={prefix}
-            commonPrefix={commonPrefix}
-            onItemClick={onItemClick}
-            afterSendMsgClick={afterSendMsgClick}
-            {...item}
-          />
-        ))}
+        {loading ? (
+          <Spin />
+        ) : !list.length ? (
+          renderBlackListEmpty ? (
+            renderBlackListEmpty()
+          ) : (
+            <Empty style={{ marginTop: 10 }} />
+          )
+        ) : (
+          list.map((item) => (
+            <BlackItem
+              key={item.account}
+              prefix={prefix}
+              commonPrefix={commonPrefix}
+              onItemClick={onItemClick}
+              afterSendMsgClick={afterSendMsgClick}
+              {...item}
+            />
+          ))
+        )}
       </div>
     </div>
   )

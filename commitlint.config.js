@@ -25,7 +25,10 @@ module.exports = {
         'docs',
         'feat',
         'fix',
-        'perf',
+        'api',
+        'dependency',
+        'compat',
+        'knownIssues',
         'refactor',
         'revert',
         'style',
@@ -40,13 +43,34 @@ module.exports = {
         enum: {
           feat: {
             description: 'A new feature',
-            title: 'Features',
+            title: 'New Features',
             emoji: '✨',
           },
           fix: {
             description: 'A bug fix',
             title: 'Bug Fixes',
             emoji: '🐛',
+          },
+          api: {
+            description: 'api变更',
+            title: 'API Changes',
+            emoji: '📦',
+          },
+          dependency: {
+            description: '依赖库变更说明',
+            title: 'Dependency Updates',
+            emoji: '📦',
+          },
+          compatibility: {
+            description:
+              '兼容im和rtc版本, 如Compatible with NERTC version 1.0.0',
+            title: 'Compatibility',
+            emoji: '📦',
+          },
+          knownIssues: {
+            description: '已知问题说明',
+            title: 'Known issues',
+            emoji: '📦',
           },
           docs: {
             description: 'Documentation only changes',

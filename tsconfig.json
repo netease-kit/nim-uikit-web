@@ -8,6 +8,7 @@
     "strict": true,
     "declaration": true,
     "downlevelIteration": true,
+    "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "typeRoots": ["./node_modules/@types"],
     "resolveJsonModule": true,

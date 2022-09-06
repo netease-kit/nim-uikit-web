@@ -1,16 +1,12 @@
 import React from 'react'
 import { ContactListContainer } from './contact-list/Container'
+import { ContactInfoContainer } from './contact-info/Container'
 import { ComponentStory } from '@storybook/react'
-import { Provider, useStateContext } from '@xkit-yx/common-ui'
-import { FriendListContainer } from './friend-list/Container'
-import { BlackListContainer } from './black-list/Container'
-import { GroupListContainer } from './group-list/Container'
+import { Provider } from '@xkit-yx/common-ui'
 import Docs from './index.stories.prod.mdx'
 
-import './friend-list/style'
-import './black-list/style'
-import './group-list/style'
 import './contact-list/style'
+import './contact-info/style'
 
 export default {
   title: 'IM UI Kit/通讯录组件',
@@ -19,27 +15,6 @@ export default {
       page: Docs,
     },
   },
-}
-
-const ContactInfo = ({ prefix }) => {
-  const { state } = useStateContext()
-
-  return (
-    <div>
-      {(() => {
-        switch (state.selectedContactType) {
-          case 'friendList':
-            return <FriendListContainer prefix={prefix} />
-          case 'blackList':
-            return <BlackListContainer prefix={prefix} />
-          case 'groupList':
-            return <GroupListContainer prefix={prefix} />
-          default:
-            return null
-        }
-      })()}
-    </div>
-  )
 }
 
 const Template: ComponentStory<typeof ContactListContainer> = (args) => {
@@ -57,7 +32,7 @@ const Template: ComponentStory<typeof ContactListContainer> = (args) => {
           <ContactListContainer {...args} />
         </div>
         <div style={{ flex: 1, height: '100%', overflowY: 'auto' }}>
-          <ContactInfo prefix={args.prefix} />
+          <ContactInfoContainer prefix={args.prefix} />
         </div>
       </div>
     </Provider>

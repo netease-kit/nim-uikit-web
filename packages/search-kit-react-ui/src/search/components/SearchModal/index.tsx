@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Modal } from 'antd'
 import { SearchInput, CrudeAvatar, useTranslation } from '@xkit-yx/common-ui'
 import { CrudeAvatarProps } from '@xkit-yx/common-ui/lib/components/CrudeAvatar'
@@ -6,7 +6,7 @@ import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 
 export interface SearchItemProps extends CrudeAvatarProps {
-  onClick?: (id: string) => void
+  onClick: () => void
   prefix?: string
 }
 
@@ -18,10 +18,8 @@ const SearchItem: React.FC<SearchItemProps> = ({
   const _prefix = `${prefix}-search-modal`
 
   return (
-    <div
-      className={`${_prefix}-content-section-item`}
-      onClick={() => onClick?.(props.account)}
-    >
+    <div className={`${_prefix}-content-section-item`} onClick={onClick}>
+      {/* TODO CrudeAvatar 可以不用了，p2p 都用 ComplexAvatar */}
       <CrudeAvatar {...props} />
       <span className={`${_prefix}-content-section-item-name`}>
         {props.nick || props.account}
@@ -39,19 +37,24 @@ export type Section = {
 }
 
 export interface SearchModalProps {
-  visible?: boolean
-  dataSource?: Section[]
-  onCancel?: () => void
-  onResultItemClick?: (item: SectionListItem) => void
+  visible: boolean
+  friends: NimKitCoreTypes.IFriendInfo[]
+  teams: Team[]
+  onCancel: () => void
+  onResultItemClick: (item: SectionListItem) => void
+  renderEmpty?: () => JSX.Element
+
   prefix?: string
   commonPrefix?: string
 }
 
 const SearchModal: React.FC<SearchModalProps> = ({
-  visible = false,
-  dataSource,
+  visible,
+  friends,
+  teams,
   onCancel,
   onResultItemClick,
+  renderEmpty,
   prefix = 'search',
   commonPrefix = 'common',
 }) => {
@@ -59,35 +62,69 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
   const { t } = useTranslation()
 
-  const [isEmpty, setIsEmpty] = useState(!dataSource || dataSource.length === 0)
   const [searchText, setSearchText] = useState('')
-  const [searchResult, setSearchResult] = useState<Section[]>([])
 
-  useEffect(() => {
-    if (!visible) return
-    const _searchResult: Section[] = []
-    dataSource?.forEach((section) => {
-      const _section = {
-        ...section,
-        list: section.list.filter((item) => {
-          if ((item as NimKitCoreTypes.IFriendInfo).account) {
-            // @ts-ignore
-            return (item.nick || item.account).includes(searchText)
-          } else if ((item as Team).teamId) {
-            // @ts-ignore
-            return (item.name || item.teamId).includes(searchText)
+  const sections: Section[] = useMemo(() => {
+    return [
+      {
+        id: 'friends',
+        title: t('searchFriendTitle'),
+        list: friends,
+      },
+      {
+        id: 'groups',
+        title: t('searchTeamTitle'),
+        list: teams,
+      },
+    ].filter((item) => !!item.list.length)
+  }, [friends, teams, t])
+
+  const searchedSections: Section[] = useMemo(() => {
+    return sections
+      .map((item) => {
+        if (item.id === 'friends') {
+          return {
+            ...item,
+            list: item.list.filter((item) => {
+              return (
+                (item as NimKitCoreTypes.IFriendInfo).nick ||
+                (item as NimKitCoreTypes.IFriendInfo).account
+              ).includes(searchText)
+            }),
           }
-          return false
-        }),
-      }
-      if (_section.list.length !== 0) _searchResult.push(_section)
-    })
-    if (_searchResult.length === 0) setIsEmpty(true)
-    else {
-      setIsEmpty(false)
-      setSearchResult(_searchResult)
-    }
-  }, [visible, dataSource, searchText])
+        }
+        if (item.id === 'groups') {
+          return {
+            ...item,
+            list: item.list.filter((item) => {
+              return ((item as Team).name || (item as Team).teamId).includes(
+                searchText
+              )
+            }),
+          }
+        }
+        return { ...item }
+      })
+      .filter((item) => !!item.list.length)
+  }, [sections, searchText])
+
+  const handleSearchChange = (value: string) => {
+    setSearchText(value)
+  }
+
+  const handleItemClick = (data: SectionListItem) => {
+    onResultItemClick(data)
+    resetState()
+  }
+
+  const handleCancel = () => {
+    onCancel()
+    resetState()
+  }
+
+  const resetState = () => {
+    setSearchText('')
+  }
 
   return (
     <Modal
@@ -96,23 +133,25 @@ const SearchModal: React.FC<SearchModalProps> = ({
         <SearchInput
           value={searchText}
           prefix={commonPrefix}
-          onChange={setSearchText}
+          onChange={handleSearchChange}
         />
       }
-      onCancel={() => onCancel?.()}
+      onCancel={handleCancel}
       visible={visible}
       width={630}
       footer={null}
-      afterClose={() => {
-        setSearchText('')
-        setSearchResult([])
-      }}
     >
-      {isEmpty ? (
-        <div className={`${_prefix}-empty`}>{t('searchEmptyText')}</div>
+      {!sections.length ? (
+        renderEmpty ? (
+          renderEmpty()
+        ) : (
+          <div className={`${_prefix}-empty`}>{t('searchEmptyText')}</div>
+        )
+      ) : !searchedSections.length ? (
+        <div className={`${_prefix}-empty`}>{t('searchNoResText')}</div>
       ) : (
         <div className={`${_prefix}-content`}>
-          {searchResult.map((section) => (
+          {searchedSections.map((section) => (
             <div className={`${_prefix}-content-section`} key={section.id}>
               <div className={`${_prefix}-content-section-title`}>
                 {section.title}
@@ -121,7 +160,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                 <SearchItem
                   // @ts-ignore
                   key={item.account || item.teamId}
-                  onClick={() => onResultItemClick?.(item)}
+                  onClick={() => handleItemClick(item)}
                   prefix={prefix}
                   // @ts-ignore
                   account={item.account || item.teamId}

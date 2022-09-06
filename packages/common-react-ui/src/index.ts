@@ -1,5 +1,6 @@
 import * as Utils from './utils'
 import * as Constant from './constant'
+import * as ContextManagerTypes from './contextManager/types'
 
 export { CrudeAvatar } from './components/CrudeAvatar'
 export { default as SearchInput } from './components/SearchInput'
@@ -8,15 +9,13 @@ export {
   ComplexAvatarUI,
   ComplexAvatarContainer,
 } from './components/ComplexAvatar'
+export { MyAvatarContainer } from './components/MyAvatar/Container'
 export {
+  Context,
   Provider,
   ProviderProps,
-  Context,
   ContextProps,
-  ContextManagerTypes,
-  initialState,
-  reducer,
-} from './contextManager'
+} from './contextManager/Provider'
 export { UserCard } from './components/UserCard'
 export { MyUserCard } from './components/MyUserCard'
 export { GroupAvatarSelect, urls } from './components/GroupAvatarSelect'
@@ -31,3 +30,4 @@ export {
 } from './hooks/useEventTracking'
 export { Utils }
 export { Constant }
+export { ContextManagerTypes }

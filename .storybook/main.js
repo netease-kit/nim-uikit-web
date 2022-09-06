@@ -10,6 +10,10 @@ module.exports = {
     ...config,
     APPKEY: _config.appKey,
     BASEURL: _config.baseUrl,
+    ROOMKITAPPKEY: _config.roomkitAppKey,
+    ROOMKITBASEURL: _config.roomkitBaseUrl,
+    CHATROOMTOKEN: _config.chatroomToken,
+    CHATROOMACCOUNT: _config.chatroomAccount,
     INIT_OPTIONS: _config.initOptions,
     LOGIN_OPTIONS: _config.loginOptions,
   }),
@@ -26,6 +30,10 @@ module.exports = {
     */
     return {
       ...options,
+      plugins: options.plugins.filter(
+        (x) =>
+          !(typeof x === 'string' && x.includes('plugin-transform-classes'))
+      ),
       // any extra options you want to set
     }
   },
