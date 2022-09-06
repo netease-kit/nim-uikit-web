@@ -17,3 +17,5 @@ storybook-static
 .env.local
 .npmrc
 build_tools
+*-debug.log
+miniprogram_dist

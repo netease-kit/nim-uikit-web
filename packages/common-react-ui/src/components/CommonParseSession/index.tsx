@@ -30,23 +30,25 @@ export const ParseSession: React.FC<IParseSessionProps> = ({
 }) => {
   const _prefix = `${prefix}-parse-session`
   const { t } = useTranslation()
-  const notSuportMessageText = t('notSuportMessageText')
+  const notSupportMessageText = t('notSupportMessageText')
 
-  const renderCustomText = (msg) => {
+  const { type, body, idClient } = msg
+
+  const renderCustomText = () => {
     const text = reactStringReplace(
-      msg.body?.trim(),
-      /(https?:\/\/\S+)/g,
+      body?.trim(),
+      /(https?:\/\/\S+)/gi,
       (match, i) => (
-        <a key={match + i} href={match}>
+        <a key={idClient + match + i} href={match} target="_blank">
           {match}
         </a>
       )
     )
 
-    return reactStringReplace(text, INPUT_EMOJI_SYMBOL_REG, (match) => {
+    return reactStringReplace(text, INPUT_EMOJI_SYMBOL_REG, (match, i) => {
       return (
         <CommonIcon
-          key={msg.idClient}
+          key={idClient + match + i}
           className={`${_prefix}-emoji-icon`}
           type={EMOJI_ICON_MAP_CONFIG[match]}
         />
@@ -54,7 +56,7 @@ export const ParseSession: React.FC<IParseSessionProps> = ({
     })
   }
 
-  const renderImage = (msg) => {
+  const renderImage = () => {
     return (
       <Image
         rootClassName={`${_prefix}-image`}
@@ -65,7 +67,7 @@ export const ParseSession: React.FC<IParseSessionProps> = ({
     )
   }
 
-  const renderFile = (msg) => {
+  const renderFile = () => {
     return (
       <div className={`${_prefix}-file-box`}>
         <CommonIcon
@@ -91,37 +93,37 @@ export const ParseSession: React.FC<IParseSessionProps> = ({
     )
   }
 
-  const renderNotification = (msg) => {
+  const renderNotification = () => {
     return null
   }
 
   return (
     <>
       {(() => {
-        switch (msg.type) {
+        switch (type) {
           case 'text':
           case 'custom':
-            return renderCustomText(msg)
+            return renderCustomText()
           case 'image':
-            return renderImage(msg)
+            return renderImage()
           case 'file':
-            return renderFile(msg)
+            return renderFile()
           case 'notification':
-            return `[${t('notiMsgText')}]，${notSuportMessageText}`
+            return `[${t('notiMsgText')}，${notSupportMessageText}]`
           case 'audio':
-            return `[${t('audioMsgText')}]，${notSuportMessageText}`
+            return `[${t('audioMsgText')}，${notSupportMessageText}]`
           case 'g2':
-            return `[${t('callMsgText')}]，${notSuportMessageText}`
+            return `[${t('callMsgText')}，${notSupportMessageText}]`
           case 'geo':
-            return `[${t('geoMsgText')}]，${notSuportMessageText}`
+            return `[${t('geoMsgText')}，${notSupportMessageText}]`
           case 'robot':
-            return `[${t('robotMsgText')}]，${notSuportMessageText}`
+            return `[${t('robotMsgText')}，${notSupportMessageText}]`
           case 'tip':
-            return `[${t('tipMsgText')}]，${notSuportMessageText}`
+            return `[${t('tipMsgText')}，${notSupportMessageText}]`
           case 'video':
-            return `[${t('videoMsgText')}]，${notSuportMessageText}`
+            return `[${t('videoMsgText')}，${notSupportMessageText}]`
           default:
-            return `[${t('unknowMsgText')}]，${notSuportMessageText}`
+            return `[${t('unknowMsgText')}，${notSupportMessageText}]`
         }
       })()}
     </>

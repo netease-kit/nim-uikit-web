@@ -2,6 +2,7 @@ export { BlackListContainer } from './black-list/Container'
 export { FriendListContainer } from './friend-list/Container'
 export { GroupListContainer } from './group-list/Container'
 export { ContactListContainer } from './contact-list/Container'
+export { ContactInfoContainer } from './contact-info/Container'
 
 export { BlackItem } from './black-list/components/BlackItem'
 export { ContactItem } from './contact-list/components/ContactItem'

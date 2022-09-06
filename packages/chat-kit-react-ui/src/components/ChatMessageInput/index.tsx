@@ -1,83 +1,60 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { Input, Upload, Popover, message, Button } from 'antd'
+import React, { useState, useEffect, useRef } from 'react'
+import { Input, Upload, Popover, message, Button, Spin } from 'antd'
 import { CommonIcon, Constant, useTranslation } from '@xkit-yx/common-ui'
 import { MAX_UPLOAD_FILE_SIZE } from '../../constant'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
-import { NIMInitializeOptions } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/NIMInterface'
-import { ISendProps, ITeamInfo } from '../../types'
 import { LoadingOutlined } from '@ant-design/icons'
-import { Spin } from 'antd'
 
 const { TextArea } = Input
 export interface MessageProps {
   prefix?: string
   placeholder?: string
-  selectedSession: NimKitCoreTypes.ISession
-  teamInfo: ITeamInfo
-  initOptions: NIMInitializeOptions
-  onChange?: (val: string) => void
-  onSend: (props: ISendProps) => void
-  inputValue: string
-  isGroupOwner: boolean
-  isGroupManager: boolean
-  uploadImageLoading: boolean
-  uploadFileLoading: boolean
+  mute?: boolean
+  inputValue?: string
+  uploadImageLoading?: boolean
+  uploadFileLoading?: boolean
+  setInputValue: (value: string) => void
+  onSendText: (value: string) => void
+  onSendFile: (file: File) => void
+  onSendImg: (file: File) => void
 }
 
 const ChatMessageInput: React.FC<MessageProps> = ({
   prefix = 'chat',
   placeholder = '',
-  selectedSession,
-  teamInfo,
-  initOptions,
-  inputValue,
-  isGroupOwner,
-  isGroupManager,
-  uploadImageLoading,
-  uploadFileLoading,
-  onSend,
-  onChange,
+  mute = false,
+  inputValue = '',
+  uploadImageLoading = false,
+  uploadFileLoading = false,
+  setInputValue,
+  onSendText,
+  onSendFile,
+  onSendImg,
 }) => {
   const { t } = useTranslation()
   const _prefix = `${prefix}-message-input`
   const inputRef = useRef<any>(null)
-  const [value, setValue] = useState<string>('')
   const [visible, setVisible] = useState<boolean>(false)
-  const { to, scene } = selectedSession
-  const { account: from } = initOptions
   const antIcon = <LoadingOutlined className={`${_prefix}-loading-spin`} spin />
 
-  useEffect(() => {
-    setValue(inputValue)
-  }, [inputValue])
-
-  useEffect(() => {
-    setValue('')
-  }, [selectedSession.id])
+  const onInputChangeHandler = (e: any) => {
+    setInputValue(e.target.value)
+  }
 
   const onPressEnterHandler = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    const trimValue = value.trim()
-    if (!e.shiftKey && !trimValue) {
-      e.preventDefault()
-      return message.warning(t('sendEmptyText'))
-    }
-    // if (e.keyCode === 13) {
+    const trimValue = inputValue.trim()
     if (!e.shiftKey) {
       e.preventDefault()
-      // divRef?.current.innerHTML = null
-      onSend({
-        body: trimValue,
-        type: 'text',
-        from,
-        to,
-        scene,
-      })
-      setValue('')
+      if (!trimValue) {
+        message.warning(t('sendEmptyText'))
+        return
+      }
+      onSendText(trimValue)
+      setInputValue('')
     }
   }
 
   const onBeforeUploadHandler = (
-    file
+    file: File
   ): boolean | Promise<void | Blob | File> => {
     const isLimit = file.size / 1024 / 1000 > MAX_UPLOAD_FILE_SIZE
 
@@ -90,30 +67,19 @@ const ChatMessageInput: React.FC<MessageProps> = ({
     return !isLimit
   }
 
-  const onUploadImgHandler = (file): any => {
-    onSend({
-      file,
-      type: 'image',
-      from,
-      to,
-      scene,
-    })
+  const onUploadImgHandler = (file: any): any => {
+    onSendImg(file)
   }
-  const onUploadFileHandler = (file): any => {
-    onSend({
-      file,
-      type: 'file',
-      from,
-      to,
-      scene,
-    })
+  const onUploadFileHandler = (file: any): any => {
+    onSendFile(file)
   }
 
-  const onEmojiClick = (tag: string) => {
+  const onEmojiClickHandler = (tag: string) => {
     const input = inputRef.current.resizableTextArea.textArea
     input?.focus()
     input?.setRangeText(tag, input.selectionStart, input.selectionEnd, 'end')
-    setValue(input.value)
+    setInputValue(input.value)
+    setVisible(false)
   }
 
   const handleVisibleChange = (newVisible: boolean) => {
@@ -125,12 +91,11 @@ const ChatMessageInput: React.FC<MessageProps> = ({
       {Object.keys(Constant.EMOJI_ICON_MAP_CONFIG).map((tag: string, index) => (
         <span
           onClick={() => {
-            onEmojiClick(tag)
-            setVisible(false)
+            onEmojiClickHandler(tag)
           }}
           className={`${_prefix}-emoji-item`}
           title={tag}
-          key={index}
+          key={tag}
         >
           <CommonIcon
             className={`${_prefix}-emoji-item-icon`}
@@ -141,97 +106,90 @@ const ChatMessageInput: React.FC<MessageProps> = ({
     </>
   )
 
-  const isMute = useMemo(() => {
-    return (teamInfo as ITeamInfo).mute && !isGroupOwner && !isGroupManager
-  }, [teamInfo, isGroupOwner, isGroupManager])
+  // const isMute = useMemo(() => {
+  //   return (teamInfo as ITeamInfo).mute && !isGroupOwner && !isGroupManager
+  // }, [teamInfo, isGroupOwner, isGroupManager])
 
   return (
-    <div className={`${_prefix}-wrap`}>
-      {/* <div className={`${_prefix}-msg-tip`}>
-        <ArrowDownOutlined className={`${_prefix}-msg-tip-icon`} />
-        您有新消息
-      </div> */}
-      <TextArea
-        ref={inputRef}
-        bordered={false}
-        className={`${_prefix}-textarea`}
-        placeholder={placeholder}
-        value={value}
-        disabled={isMute}
-        onChange={(e) => {
-          const val = e.target.value
-          setValue(val)
-          onChange?.(val)
-        }}
-        onPressEnter={onPressEnterHandler}
-        autoSize={{ maxRows: 5 }}
-      />
-      <div className={`${_prefix}-icon-box`}>
-        <Button type="text" disabled={isMute}>
-          <Popover
-            // placement="right"
-            // getPopupContainer={() =>
-            //   document.getElementById('chat-kit-app') || false
-            // }
-            trigger="click"
-            visible={visible}
-            overlayClassName={`${_prefix}-emoji-box`}
-            content={emojiContent}
-            onVisibleChange={handleVisibleChange}
-          >
-            <CommonIcon
-              className={`${_prefix}-icon-emoji`}
-              type="icon-biaoqing"
-            />
-            {/* <Icon
+    <div className={`${prefix}-message-input`}>
+      <div className={`${_prefix}-wrap`}>
+        <TextArea
+          ref={inputRef}
+          bordered={false}
+          className={`${_prefix}-textarea`}
+          placeholder={placeholder}
+          value={inputValue}
+          disabled={mute}
+          onChange={onInputChangeHandler}
+          onPressEnter={onPressEnterHandler}
+          autoSize={{ maxRows: 2 }}
+        />
+        <div className={`${_prefix}-icon-box`}>
+          <Button type="text" disabled={mute}>
+            <Popover
+              // placement="right"
+              // getPopupContainer={() =>
+              //   document.getElementById('chat-kit-app') || false
+              // }
+              trigger="click"
+              visible={visible}
+              overlayClassName={`${_prefix}-emoji-box`}
+              content={emojiContent}
+              onVisibleChange={handleVisibleChange}
+            >
+              <CommonIcon
+                className={`${_prefix}-icon-emoji`}
+                type="icon-biaoqing"
+              />
+              {/* <Icon
                       className={`${_prefix}-icon-btn`}
                       type="icon-biaoqing"
                       width={18}
                       height={18}
                       onClick={() => setVisible(true)}
                     /> */}
-          </Popover>
-        </Button>
+            </Popover>
+          </Button>
 
-        <Button size="small" disabled={isMute}>
-          {uploadImageLoading ? (
-            <Spin indicator={antIcon} />
-          ) : (
-            <Upload
-              beforeUpload={onBeforeUploadHandler}
-              showUploadList={false}
-              accept=".jpg,.png,.jpeg,.gif"
-              action={onUploadImgHandler}
-              className={`${_prefix}-icon-upload`}
-            >
-              <CommonIcon
-                className={`${_prefix}-icon-image`}
-                type="icon-tupian"
-              />
-            </Upload>
-          )}
-        </Button>
+          <Button size="small" disabled={mute}>
+            {uploadImageLoading ? (
+              <Spin indicator={antIcon} />
+            ) : (
+              <Upload
+                beforeUpload={onBeforeUploadHandler}
+                showUploadList={false}
+                accept=".jpg,.png,.jpeg,.gif"
+                action={onUploadImgHandler}
+                className={`${_prefix}-icon-upload`}
+              >
+                <CommonIcon
+                  className={`${_prefix}-icon-image`}
+                  type="icon-tupian"
+                />
+              </Upload>
+            )}
+          </Button>
 
-        <Button size="small" disabled={isMute}>
-          {uploadFileLoading ? (
-            <Spin indicator={antIcon} />
-          ) : (
-            <Upload
-              beforeUpload={onBeforeUploadHandler}
-              showUploadList={false}
-              disabled={isMute}
-              action={onUploadFileHandler}
-              className={`${_prefix}-icon-upload`}
-            >
-              <CommonIcon
-                className={`${_prefix}-icon-file`}
-                type="icon-wenjian"
-              />
-            </Upload>
-          )}
-        </Button>
-      </div>
-      {/* <div
+          <Button size="small" disabled={mute}>
+            {uploadFileLoading ? (
+              <Spin indicator={antIcon} />
+            ) : (
+              <Upload
+                beforeUpload={onBeforeUploadHandler}
+                showUploadList={false}
+                disabled={mute}
+                action={onUploadFileHandler}
+                className={`${_prefix}-icon-upload`}
+              >
+                <CommonIcon
+                  className={`${_prefix}-icon-file`}
+                  type="icon-wenjian"
+                />
+              </Upload>
+            )}
+          </Button>
+        </div>
+        {/* <div
         contentEditable="true"
         ref={divRef}
         className={`${_prefix}-textarea`}
@@ -240,6 +198,7 @@ const ChatMessageInput: React.FC<MessageProps> = ({
         }}
         onKeyUp={onPressEnterHandler}
       ></div> */}
+      </div>
     </div>
   )
 }

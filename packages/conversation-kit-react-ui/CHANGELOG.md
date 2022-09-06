@@ -3,6 +3,44 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits] for commit guidelines.
 
+## [0.1.9] (2022-08-24)
+
+**Note:** Version bump only for package @xkit-yx/conversation-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.1.8] (2022-08-19)
+
+**Note:** Version bump only for package @xkit-yx/conversation-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.1.7] (2022-08-16)
+
+**Note:** Version bump only for package @xkit-yx/conversation-kit-ui
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
+## [0.1.6] (2022-08-16)
+
+### Bug Fixes
+
+- 优化和 bug 修复
+
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits] for commit guidelines.
+
 ## [0.1.5] (2022-08-03)
 
 ### Bug Fixes

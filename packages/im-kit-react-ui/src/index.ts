@@ -6,13 +6,12 @@ import {
   CommonIcon,
   ComplexAvatarUI,
   ComplexAvatarContainer,
+  MyAvatarContainer,
+  Context,
   Provider,
   ProviderProps,
-  Context,
   ContextProps,
   ContextManagerTypes,
-  initialState,
-  reducer,
   UserCard,
   MyUserCard,
   GroupAvatarSelect,
@@ -34,12 +33,9 @@ import {
   BlackListContainer,
   FriendListContainer,
   GroupListContainer,
+  ContactInfoContainer,
 } from '@xkit-yx/contact-kit-ui'
-import {
-  ChatProvider,
-  useStateContext as useChatStateContext,
-  ChatContainer,
-} from '@xkit-yx/chat-kit-ui'
+import { ChatContainer, ChatMessageItem } from '@xkit-yx/chat-kit-ui'
 import { AddContainer, SearchContainer } from '@xkit-yx/search-kit-ui'
 
 export {
@@ -50,13 +46,12 @@ export {
   CommonIcon,
   ComplexAvatarUI,
   ComplexAvatarContainer,
+  MyAvatarContainer,
+  Context,
   Provider,
   ProviderProps,
-  Context,
   ContextProps,
   ContextManagerTypes,
-  initialState,
-  reducer,
   UserCard,
   MyUserCard,
   GroupAvatarSelect,
@@ -75,9 +70,9 @@ export {
   BlackListContainer,
   FriendListContainer,
   GroupListContainer,
-  ChatProvider,
-  useChatStateContext,
+  ContactInfoContainer,
   ChatContainer,
+  ChatMessageItem,
   AddContainer,
   SearchContainer,
 }

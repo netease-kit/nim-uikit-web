@@ -1,6 +1,6 @@
 import React from 'react'
 import { Provider } from '@xkit-yx/common-ui'
-import { ChatContainer, ChatProvider, ChatMessageItem } from './index'
+import { ChatContainer } from './index'
 import { ComponentStory } from '@storybook/react'
 import Docs from './index.stories.prod.mdx'
 import './style'
@@ -46,9 +46,7 @@ const Template: ComponentStory<typeof ChatContainer> = (args) => {
   return (
     <div id="app" style={{ width: 800, height: 600 }}>
       <Provider sdkVersion={2} initOptions={process.env.INIT_OPTIONS as any}>
-        <ChatProvider>
-          <ChatContainer {...args} />
-        </ChatProvider>
+        <ChatContainer {...args} />
       </Provider>
     </div>
   )
@@ -59,15 +57,5 @@ export const Primary = Template.bind({})
 Primary.args = {
   prefix: 'chat',
   commonPrefix: 'common',
-  selectedSession: {
-    id: '123456789',
-    scene: 'p2p',
-    to: 'cs8',
-    unread: 0,
-    name: 'hello',
-    account: 'cs1',
-    createTime: Date.now(),
-    updateTime: Date.now(),
-    isMute: false,
-  },
+  selectedSession: 'p2p-cs8',
 }

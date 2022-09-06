@@ -1,12 +1,13 @@
-import React, { FC, useContext, useEffect, useMemo, useCallback } from 'react'
+import React, { FC } from 'react'
 import { ContactList } from './components/ContactList'
 import { logger } from '../logger'
 import {
-  Context,
   ContextManagerTypes,
   useEventTracking,
+  useStateContext,
 } from '@xkit-yx/common-ui'
 import packageJson from '../../package.json'
+import { observer } from 'mobx-react'
 
 export interface ContactListContainerProps {
   /**
@@ -21,46 +22,29 @@ export interface ContactListContainerProps {
   ) => JSX.Element
 }
 
-export const ContactListContainer: FC<ContactListContainerProps> = ({
-  prefix = 'contact',
-  renderCustomContact,
-}) => {
-  // 在这里汇聚所有需要用到的 Context，并完成数据的操作传递给纯渲染组件
-  const { nim, state, dispatch, initOptions } = useContext(Context)
+export const ContactListContainer: FC<ContactListContainerProps> = observer(
+  ({ prefix = 'contact', renderCustomContact }) => {
+    const { nim, store, initOptions } = useStateContext()
 
-  // 这里需要对用到的 Context 中的值判空并做好提示
-  if (!nim || !state || !dispatch || !initOptions) {
-    throw new Error('Please use Provider to wrap ContactListContainer.')
-  }
+    useEventTracking({
+      appkey: initOptions.appkey,
+      version: packageJson.version,
+      component: 'contact-kit',
+      imVersion: nim.version,
+    })
 
-  useEventTracking({
-    appkey: initOptions.appkey,
-    version: packageJson.version,
-    component: 'contact-kit',
-    imVersion: nim.version,
-  })
-
-  const handleItemClick = useCallback(
-    (contactType: ContextManagerTypes.ContactType) => {
+    const handleItemClick = (contactType: ContextManagerTypes.ContactType) => {
       logger.log('选中通讯录：', contactType)
-      dispatch({
-        type: 'selectContactType',
-        payload: contactType,
-      })
-    },
-    [dispatch]
-  )
+      store.uiStore.selectContactType(contactType)
+    }
 
-  const contactListRenderer = useMemo(() => {
     return (
       <ContactList
-        selectedContactType={state.selectedContactType}
+        selectedContactType={store.uiStore.selectedContactType}
         onItemClick={handleItemClick}
         renderCustomContact={renderCustomContact}
         prefix={prefix}
       />
     )
-  }, [state.selectedContactType, prefix, handleItemClick, renderCustomContact])
-
-  return contactListRenderer
-}
+  }
+)

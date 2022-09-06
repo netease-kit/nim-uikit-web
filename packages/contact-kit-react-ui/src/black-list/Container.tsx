@@ -1,9 +1,8 @@
-import React, { FC, useContext, useMemo, useEffect, useState } from 'react'
-import { Spin } from 'antd'
+import React, { FC } from 'react'
 import { BlackList } from './components/BlackList'
-import { Context, useEventTracking } from '@xkit-yx/common-ui'
-import { logger } from '../logger'
+import { useEventTracking, useStateContext } from '@xkit-yx/common-ui'
 import packageJson from '../../package.json'
+import { observer } from 'mobx-react'
 
 export interface BlackListContainerProps {
   /**
@@ -32,77 +31,35 @@ export interface BlackListContainerProps {
   commonPrefix?: string
 }
 
-export const BlackListContainer: FC<BlackListContainerProps> = ({
-  onItemClick,
-  afterSendMsgClick,
-  renderBlackListEmpty,
-  renderBlackListHeader,
-  prefix = 'contact',
-  commonPrefix = 'common',
-}) => {
-  // 在这里汇聚所有需要用到的 Context，并完成数据的操作传递给纯渲染组件
-  const { nim, state, dispatch, initOptions } = useContext(Context)
+export const BlackListContainer: FC<BlackListContainerProps> = observer(
+  ({
+    onItemClick,
+    afterSendMsgClick,
+    renderBlackListEmpty,
+    renderBlackListHeader,
+    prefix = 'contact',
+    commonPrefix = 'common',
+  }) => {
+    const { store, initOptions, nim } = useStateContext()
 
-  // 这里需要对用到的 Context 中的值判空并做好提示
-  if (!nim || !state || !dispatch || !initOptions) {
-    throw new Error('Please use Provider to wrap BlackListContainer.')
-  }
-  const [blackListLoading, setBlackListLoading] = useState<boolean>(false)
-
-  useEventTracking({
-    appkey: initOptions.appkey,
-    version: packageJson.version,
-    component: 'contact-kit',
-    imVersion: nim.version,
-  })
-
-  useEffect(() => {
-    setBlackListLoading(true)
-    nim
-      .getBlackList()
-      .then((list) => {
-        logger.log('获取黑名单列表成功：', list)
-        dispatch({
-          type: 'updateBlacks',
-          payload: list,
-        })
-      })
-      .catch((err) => {
-        logger.error('获取黑名单列表失败：', err)
-      })
-      .finally(() => {
-        setBlackListLoading(false)
-      })
-  }, [nim, dispatch])
-
-  const blackListRenderer = useMemo(() => {
-    if (blackListLoading) {
-      return <Spin />
-    }
-    if (!state.blackList.length) {
-      return renderBlackListEmpty ? renderBlackListEmpty() : null
-    }
+    useEventTracking({
+      appkey: initOptions.appkey,
+      version: packageJson.version,
+      component: 'contact-kit',
+      imVersion: nim.version,
+    })
 
     return (
       <BlackList
-        list={state.blackList}
+        list={store.uiStore.blacklistWithUserCard}
+        // loading={loading}
         onItemClick={onItemClick}
         afterSendMsgClick={afterSendMsgClick}
         renderBlackListHeader={renderBlackListHeader}
+        renderBlackListEmpty={renderBlackListEmpty}
         prefix={prefix}
         commonPrefix={commonPrefix}
       />
     )
-  }, [
-    state.blackList,
-    prefix,
-    commonPrefix,
-    onItemClick,
-    afterSendMsgClick,
-    blackListLoading,
-    renderBlackListEmpty,
-    renderBlackListHeader,
-  ])
-
-  return blackListRenderer
-}
+  }
+)

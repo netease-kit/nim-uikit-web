@@ -29,54 +29,18 @@ import { ChatContainer } from './index'
 
 <ArgsTable of={ChatContainer} />
 
-## 上下文
-
-Chat Kit 提供了自己的上下文 `ChatContext`，您可以通过 `useChatStateContext` hooks 函数访问。
-
-### 详细说明
-
-| 返回值                  | 类型        | 说明                           |
-| ----------------------- | ----------- | ------------------------------ |
-| messages                | ObjectArray | 选中会话的聊天消息列表         |
-| memberList              | ObjectArray | 单聊/群聊成员列表              |
-| managers                | ObjectArray | 群聊管理员列表                 |
-| muted                   | Boolean     | 群禁言状态                     |
-| msgNoData               | Boolean     | 历史消息是否无数据状态         |
-| msgLoading              | Boolean     | 历史消息 loading 状态          |
-| notExitTeamAccounts     | StringArray | 不在群成员列表中的用户 id 列表 |
-| notExitTeamAccountsInfo | ObjectArray | 不在群成员列表中的用户信息列表 |
-| uploadImageLoading      | Boolean     | 上传图片 loading 状态          |
-| uploadFileLoading       | Boolean     | 上传文件 loading 状态          |
-
-### 代码示例
-
-```tsx
-import React from 'react'
-import { useChatStateContext } from '@xkit-yx/im-kit-ui'
-
-const Page = () => {
-  const { chatState } = useChatStateContext()
-
-  console.log(chatState)
-
-  return <div>……</div>
-}
-```
-
 ## 代码示例
 
 ```tsx
 import React from 'react'
-import { ChatContainer, ChatProvider } from '@xkit-yx/im-kit-ui'
+import { ChatContainer } from '@xkit-yx/im-kit-ui'
 
 import '@xkit-yx/im-kit-ui/es/style'
 
 const Page1 = () => {
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
-      <ChatProvider>
-        <ChatContainer />
-      </ChatProvider>
+      <ChatContainer />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { FriendSelectContainer } from './Container'
-import { Provider } from '../../contextManager'
+import { Provider } from '../../contextManager/Provider'
 import { ComponentStory } from '@storybook/react'
 import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 

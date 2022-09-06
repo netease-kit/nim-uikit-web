@@ -30,3 +30,9 @@ export type IMMessageInfo = IMMessage &
   }
 
 export type IMessage = IMMessageInfo | ICustomMessageInfo
+
+export type ChatSettingType = 'group' | 'person'
+
+export type ChatAction = 'chatSetting' | 'chatRecord'
+
+export type GroupSettingType = 'home' | 'list' | 'detail' | 'power'

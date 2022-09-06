@@ -9,8 +9,7 @@ import {
 import { CrudeAvatar } from '../CrudeAvatar'
 import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 import { useTranslation } from '../../hooks/useTranslation'
-
-export type Relation = 'friend' | 'stranger' | 'blacklist'
+import { Relation } from '../../contextManager/types'
 
 export interface UserCardProps
   extends Omit<UserNameCard, 'createTime' | 'updateTime'> {

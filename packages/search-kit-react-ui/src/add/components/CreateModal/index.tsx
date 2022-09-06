@@ -1,37 +1,25 @@
 import { Button, message, Modal, Input } from 'antd'
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   urls,
   FriendSelectContainer,
   GroupAvatarSelect,
   useTranslation,
+  useStateContext,
 } from '@xkit-yx/common-ui'
 import { NimKitCoreTypes } from '@xkit-yx/core-kit'
-import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
-export interface TeamInfo {
-  selectedList: NimKitCoreTypes.IFriendInfo[]
-  avatarUrl: string
-  groupName: string
-}
+
 export interface CreateModalProps {
-  title: string
   visible: boolean
-  handleOk: (
-    state: string,
-    teamInfo: TeamInfo,
-    teamId?: string
-  ) => Promise<void | Team>
-  onCancel?: () => void
-  placeholder?: string
+  onChat: (teamId: string) => void
+  onCancel: () => void
   prefix?: string
   commonPrefix?: string
 }
 
 const CreateModal: React.FC<CreateModalProps> = ({
-  title,
-  visible = false,
-  placeholder,
-  handleOk,
+  visible,
+  onChat,
   onCancel,
   prefix = 'search',
   commonPrefix = 'common',
@@ -39,120 +27,126 @@ const CreateModal: React.FC<CreateModalProps> = ({
   const _prefix = `${prefix}-add-create-modal`
 
   const { t } = useTranslation()
-  const avatar = urls[Math.floor(Math.random() * 5)]
 
-  placeholder = placeholder || t('searchTeamPlaceholder')
+  const { store } = useStateContext()
+
   const [selectedList, setSelectedList] = useState<
     NimKitCoreTypes.IFriendInfo[]
   >([])
   const [groupName, setGroupName] = useState('')
-  const [avatarUrl, setAvatarUrl] = useState(avatar)
-  const [btnContent, setBtnContent] = useState(t('createButtonText'))
-  const [btnOpacity, setBtnOpacity] = useState(0.5)
+  const [avatarUrl, setAvatarUrl] = useState(
+    urls[Math.floor(Math.random() * 5)]
+  )
   const [teamId, setTeamId] = useState('')
+  const [creating, setCreating] = useState(false)
 
-  useEffect(() => {
-    if (groupName.trim() !== '' && selectedList.length !== 0) {
-      setBtnOpacity(1)
-    } else {
-      setBtnOpacity(0.5)
-    }
-  }, [groupName, selectedList])
-
-  const onClick = () => {
-    if (btnContent === t('createButtonText')) {
-      if (selectedList.length !== 0 && groupName.trim() !== '') {
-        const res = handleOk('create', {
-          selectedList,
-          groupName,
-          avatarUrl,
-        }) as Promise<Team>
-
-        res
-          .then((res) => {
-            message.success(t('createTeamSuccessText'))
-            setBtnContent(t('chatButtonText'))
-            setTeamId(res.teamId)
-          })
-          .catch((error) => {
-            message.error(t('createTeamFailedText'))
-            console.error('创建群组失败：', error)
-          })
-      }
-    } else if (btnContent === t('chatButtonText')) {
-      handleOk('chat', { selectedList, groupName, avatarUrl }, teamId)
+  const handleCreate = async () => {
+    try {
+      setCreating(true)
+      const team = await store.teamStore.createTeamActive({
+        accounts: selectedList.map((item) => item.account),
+        avatar: avatarUrl,
+        name: groupName,
+      })
+      message.success(t('createTeamSuccessText'))
+      setTeamId(team.teamId)
+      setCreating(false)
+    } catch (error) {
+      message.error(t('createTeamFailedText'))
+      setCreating(false)
     }
   }
+
+  const handleChat = async () => {
+    if (teamId) {
+      await store.sessionStore.insertSessionActive('team', teamId)
+      onChat(teamId)
+      resetState()
+    }
+  }
+
+  const handleCancel = () => {
+    onCancel()
+    resetState()
+  }
+
+  const resetState = () => {
+    setSelectedList([])
+    setGroupName('')
+    setAvatarUrl(urls[Math.floor(Math.random() * 5)])
+    setTeamId('')
+    setCreating(false)
+  }
+
   const footer = (
     <div className={`${_prefix}-footer`}>
-      <Button onClick={() => onCancel?.()}>{t('cancelText')}</Button>
-      <Button
-        onClick={() => onClick()}
-        type="primary"
-        style={{ opacity: btnOpacity }}
-      >
-        {btnContent}
-      </Button>
+      <Button onClick={handleCancel}>{t('cancelText')}</Button>
+      {teamId ? (
+        <Button onClick={handleChat} type="primary">
+          {t('chatButtonText')}
+        </Button>
+      ) : (
+        <Button
+          onClick={handleCreate}
+          type="primary"
+          disabled={!groupName || !selectedList.length}
+          loading={creating}
+        >
+          {t('createButtonText')}
+        </Button>
+      )}
     </div>
   )
-  const init = () => {
-    setBtnContent(t('createButtonText'))
-    setSelectedList([])
-    setBtnOpacity(0.5)
-  }
-  return (
-    <div>
-      <Modal
-        className={_prefix}
-        title={title}
-        visible={visible}
-        onCancel={() => onCancel?.()}
-        width={530}
-        destroyOnClose={true}
-        footer={footer}
-        afterClose={init}
-      >
-        <div className={`${_prefix}-group-name`}>
-          <div className={`${_prefix}-group-name-content`}>
-            {t('teamTitle')}
-          </div>
-          <Input
-            placeholder={placeholder}
-            maxLength={30}
-            onBlur={(e) => {
-              setGroupName(e.target.value)
-            }}
-          />
-        </div>
-        <div className={`${_prefix}-group-avatar`}>
-          <div className={`${_prefix}-group-avatar-content`}>
-            {t('teamAvatarText')}
-          </div>
-          <GroupAvatarSelect
-            avatar={avatarUrl}
-            onSelect={(url) => {
-              setAvatarUrl(url)
-            }}
-            account={''}
-            prefix={commonPrefix}
-          />
-        </div>
 
-        <div className={`${_prefix}-group-friendList`}>
-          <div className={`${_prefix}-group-friendList-content`}>
-            {t('addTeamMemberText')}
-          </div>
-          <FriendSelectContainer
-            onSelect={(list) => {
-              setSelectedList(list)
-            }}
-            max={10}
-            selectedAccounts={selectedList.map((item) => item.account)}
-            prefix={commonPrefix}
-          />
+  return (
+    <Modal
+      className={_prefix}
+      title={t('createTeamText')}
+      visible={visible}
+      onCancel={handleCancel}
+      width={530}
+      footer={footer}
+    >
+      <div className={`${_prefix}-group-name`}>
+        <div className={`${_prefix}-group-name-content`}>{t('teamTitle')}</div>
+        <Input
+          className={`${_prefix}-group-name-input`}
+          placeholder={t('searchTeamPlaceholder')}
+          maxLength={30}
+          value={groupName}
+          onChange={(e) => {
+            setGroupName(e.target.value.trim())
+          }}
+        />
+      </div>
+      <div className={`${_prefix}-group-avatar`}>
+        <div className={`${_prefix}-group-avatar-content`}>
+          {t('teamAvatarText')}
         </div>
-      </Modal>
-    </div>
+        <GroupAvatarSelect
+          avatar={avatarUrl}
+          onSelect={(url) => {
+            setAvatarUrl(url)
+          }}
+          account={''}
+          prefix={commonPrefix}
+        />
+      </div>
+
+      <div className={`${_prefix}-group-friendList`}>
+        <div className={`${_prefix}-group-friendList-content`}>
+          {t('addTeamMemberText')}
+        </div>
+        <FriendSelectContainer
+          onSelect={(list) => {
+            setSelectedList(list)
+          }}
+          max={10}
+          selectedAccounts={selectedList.map((item) => item.account)}
+          prefix={commonPrefix}
+        />
+      </div>
+    </Modal>
   )
 }
 

@@ -85,6 +85,20 @@ export const MyUserCard: FC<MyUserCardProps> = ({
     }
   }, [props.signature])
 
+  const resetState = () => {
+    setNick(props.nick)
+    setAvatar(props.avatar)
+    setGender(props.gender)
+    setTel(props.tel)
+    setEmail(props.email)
+    setSignature(props.signature)
+  }
+
+  const handleCancel = () => {
+    resetState()
+    onCancel?.()
+  }
+
   const handleSave = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
     if (
       email &&
@@ -225,7 +239,7 @@ export const MyUserCard: FC<MyUserCardProps> = ({
       okText={t('saveText')}
       cancelText={t('cancelText')}
       onOk={handleSave}
-      onCancel={onCancel}
+      onCancel={handleCancel}
     >
       {contentRenderer()}
     </Modal>
