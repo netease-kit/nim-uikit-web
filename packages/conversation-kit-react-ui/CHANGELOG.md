@@ -1,94 +1,60 @@
-# Change Log
 
-All notable changes to this project will be documented in this file.
+
+
 See [Conventional Commits] for commit guidelines.
 
-## [0.1.9] (2022-08-24)
+### [0.2.1] (2022-10-13)
 
 **Note:** Version bump only for package @xkit-yx/conversation-kit-ui
 
-# Change Log
+## v0.2.0(2022-09-06)
 
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
+### NEW Features
 
-## [0.1.8] (2022-08-19)
+- **common-react-ui:** 🎸 增加 mobx;store 重新规划;
+- **workspace:** 🎸 完成 conversation-kit 和 contact-kit 的改造
 
-**Note:** Version bump only for package @xkit-yx/conversation-kit-ui
-
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.7] (2022-08-16)
+## v0.1.9(2022-08-24)
 
 **Note:** Version bump only for package @xkit-yx/conversation-kit-ui
 
-# Change Log
+## v0.1.8(2022-08-19)
 
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
+**Note:** Version bump only for package @xkit-yx/conversation-kit-ui
 
-## [0.1.6] (2022-08-16)
+## v0.1.7(2022-08-16)
+
+**Note:** Version bump only for package @xkit-yx/conversation-kit-ui
+
+## v0.1.6(2022-08-16)
 
 ### Bug Fixes
 
 - 优化和 bug 修复
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.5] (2022-08-03)
+## v0.1.5(2022-08-03)
 
 ### Bug Fixes
 
 - 添加对话加载默认 loading
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.4] (2022-07-29)
+## v0.1.4(2022-07-29)
 
 **Note:** Version bump only for package @xkit-yx/conversation-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.3] (2022-07-28)
+## v0.1.3(2022-07-28)
 
 **Note:** Version bump only for package @xkit-yx/conversation-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.2] (2022-07-27)
+## v0.1.2(2022-07-27)
 
 **Note:** Version bump only for package @xkit-yx/conversation-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.1] (2022-07-27)
+## v0.1.1(2022-07-27)
 
 ### Bug Fixes
 
 - **workspace:** 🐛 解决幽灵依赖和无用依赖
-
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
 
 # 0.1.0 (2022-07-26)
 
@@ -113,7 +79,7 @@ See [Conventional Commits] for commit guidelines.
 - **core-kit:** 🐛 relation 不再需要外部传给 avatar, avatar 内部消化
 - **workspace:** 🐛 增加更新我的资料回调;增加样式引用
 
-### Features
+### NEW Features
 
 - 路径修改
 - 属性 boolean 提示 warning，修改为 number
@@ -133,11 +99,6 @@ See [Conventional Commits] for commit guidelines.
 - **workspace:** 🎸 迁移 IM UI Kit
 - **workspace:** 🎸 UI Kit 增加初始化埋点
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
 # [0.2.0] (2022-06-30)
 
 ### Bug Fixes
@@ -151,7 +112,7 @@ See [Conventional Commits] for commit guidelines.
 - **conversation-kit-react-ui:** 🐛 被移出群和群解散逻辑挪到 conversation-kit
 - 样式优化
 
-### Features
+### NEW Features
 
 - **conversation-kit-react-ui:** 🎸 去除会话列表点击头像出现卡片的逻辑
 - **workspace:** 🎸 UI Kit 增加初始化埋点
@@ -169,7 +130,7 @@ See [Conventional Commits] for commit guidelines.
 - **conversation-kit-react-ui:** 🐛 被移出群和群解散逻辑挪到 conversation-kit
 - 样式优化
 
-### Features
+### NEW Features
 
 - **conversation-kit-react-ui:** 🎸 去除会话列表点击头像出现卡片的逻辑
 - **workspace:** 🎸 UI Kit 增加初始化埋点

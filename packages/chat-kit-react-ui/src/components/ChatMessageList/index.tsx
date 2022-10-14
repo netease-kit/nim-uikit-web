@@ -12,8 +12,9 @@ export interface RenderCustomMessageOptions
 
 export interface MessageListProps extends Omit<MessageItemProps, 'msg'> {
   msgs: IMMessage[]
-  // TODO 类似的 render 函数返回值友好一些，当返回 null 或 undefined 的时候，走默认逻辑
-  renderCustomMessage?: (options: RenderCustomMessageOptions) => JSX.Element
+  renderCustomMessage?: (
+    options: RenderCustomMessageOptions
+  ) => JSX.Element | false | void | null
   loadingMore: boolean
   noMore: boolean
   receiveMsgBtnVisible?: boolean
@@ -55,16 +56,7 @@ const ChatMessageList = forwardRef<HTMLDivElement, MessageListProps>(
         </div>
         <div className={`${_prefix}-content`}>
           {msgs.map((msg) => {
-            if (renderCustomMessage) {
-              return renderCustomMessage({
-                msg,
-                onResend,
-                onReeditClick,
-                onMessageAction,
-              })
-            }
-
-            return (
+            const defaultRenderer = (
               <MessageListItem
                 key={msg.idClient}
                 prefix={prefix}
@@ -76,6 +68,20 @@ const ChatMessageList = forwardRef<HTMLDivElement, MessageListProps>(
                 onReeditClick={onReeditClick}
               />
             )
+
+            if (renderCustomMessage) {
+              const renderRes = renderCustomMessage({
+                msg,
+                onResend,
+                onReeditClick,
+                onMessageAction,
+              })
+              if (renderRes === void 0 || renderRes === false) {
+                return defaultRenderer
+              }
+              return renderRes
+            }
+            return defaultRenderer
           })}
         </div>
         {receiveMsgBtnVisible ? (

@@ -12,6 +12,7 @@ import {
 } from '@xkit-yx/core-kit/dist/types/nim-kit-core/types'
 import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 import { logger } from '../../utils'
+import { debounce } from '@xkit-yx/utils'
 import {
   Team,
   TeamMember,
@@ -39,7 +40,7 @@ export class UiStore {
 
     this.friendsWithoutBlacklistHandler = reaction(
       () => ({
-        friends: [...this.rootStore.friendStore.friends.values()],
+        friends: this.friends,
         blacklist: this.rootStore.relationStore.blacklist,
       }),
       this.getFriendsWithoutBlacklist.bind(this)
@@ -52,12 +53,12 @@ export class UiStore {
 
     this.sessionListHandler = reaction(
       () => ({
-        sessions: [...this.rootStore.sessionStore.sessions.values()],
-        users: [...this.rootStore.userStore.users.values()],
+        sessions: this.sessions,
+        users: this.users,
         teams: this.teamList,
         mutes: this.rootStore.relationStore.mutes,
       }),
-      this.getSessionList.bind(this)
+      debounce(this.getSessionList.bind(this), 300)
     )
   }
 
@@ -164,6 +165,18 @@ export class UiStore {
       ...(this.rootStore.teamMemberStore.teamMembers.get(teamId)?.values() ||
         []),
     ]
+  }
+
+  get friends(): FriendProfile[] {
+    return [...this.rootStore.friendStore.friends.values()]
+  }
+
+  get sessions(): Session[] {
+    return [...this.rootStore.sessionStore.sessions.values()]
+  }
+
+  get users(): UserNameCard[] {
+    return [...this.rootStore.userStore.users.values()]
   }
 
   get teamList(): Team[] {

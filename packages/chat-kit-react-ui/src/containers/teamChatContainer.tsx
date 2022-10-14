@@ -20,6 +20,7 @@ import {
   CrudeAvatar,
 } from '@xkit-yx/common-ui'
 import { LeftOutlined } from '@ant-design/icons'
+import { Action } from '../Container'
 import ChatTeamSetting, { HistoryStack } from '../components/ChatTeamSetting'
 import { Session } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/SessionServiceInterface'
 import { debounce } from '@xkit-yx/utils'
@@ -39,7 +40,15 @@ import { observer } from 'mobx-react'
 export interface TeamChatContainerProps {
   scene: TMsgScene
   to: string
-  renderCustomMessage?: (options: RenderCustomMessageOptions) => JSX.Element
+  actions?: Action[]
+  onSendText?: (data: {
+    value: string
+    scene: TMsgScene
+    to: string
+  }) => Promise<void>
+  renderCustomMessage?: (
+    options: RenderCustomMessageOptions
+  ) => JSX.Element | false | void | null
   renderHeader?: (session: Session) => JSX.Element
   renderTeamInputPlaceHolder?: (params: {
     session: Session
@@ -54,6 +63,8 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
   ({
     scene,
     to,
+    actions,
+    onSendText: onSendTextFromProps,
     renderCustomMessage,
     renderHeader,
     renderTeamInputPlaceHolder,
@@ -208,11 +219,19 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
 
     const onSendText = async (value: string) => {
       try {
-        await store.msgStore.sendTextMsgActive({
-          scene,
-          to,
-          body: value,
-        })
+        if (onSendTextFromProps) {
+          await onSendTextFromProps({
+            value,
+            scene,
+            to,
+          })
+        } else {
+          await store.msgStore.sendTextMsgActive({
+            scene,
+            to,
+            body: value,
+          })
+        }
       } catch (error) {
         // message.error(t('sendMsgFailedText'))
       } finally {
@@ -457,6 +476,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
                 ? t('teamMutePlaceholder')
                 : `${t('sendToText')} ${teamNameOrTeamId}${t('sendUsageText')}`
             }
+            scene={scene}
+            to={to}
+            actions={actions}
             inputValue={inputValue}
             mute={teamMute}
             uploadImageLoading={store.uiStore.uploadImageLoading}

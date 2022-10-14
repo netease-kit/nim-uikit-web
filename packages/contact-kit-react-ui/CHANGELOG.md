@@ -1,90 +1,56 @@
-# Change Log
 
-All notable changes to this project will be documented in this file.
+
+
 See [Conventional Commits] for commit guidelines.
 
-## [0.1.9] (2022-08-24)
+### [0.2.1] (2022-10-13)
 
 **Note:** Version bump only for package @xkit-yx/contact-kit-ui
 
-# Change Log
+## v0.2.0(2022-09-06)
 
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
+### NEW Features
 
-## [0.1.8] (2022-08-19)
+- **common-react-ui:** 🎸 增加 mobx;store 重新规划;
+- **workspace:** 🎸 完成 conversation-kit 和 contact-kit 的改造
 
-**Note:** Version bump only for package @xkit-yx/contact-kit-ui
-
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.7] (2022-08-16)
+## v0.1.9(2022-08-24)
 
 **Note:** Version bump only for package @xkit-yx/contact-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.6] (2022-08-16)
+## v0.1.8(2022-08-19)
 
 **Note:** Version bump only for package @xkit-yx/contact-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.5] (2022-08-03)
+## v0.1.7(2022-08-16)
 
 **Note:** Version bump only for package @xkit-yx/contact-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.4] (2022-07-29)
+## v0.1.6(2022-08-16)
 
 **Note:** Version bump only for package @xkit-yx/contact-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.3] (2022-07-28)
+## v0.1.5(2022-08-03)
 
 **Note:** Version bump only for package @xkit-yx/contact-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.2] (2022-07-27)
+## v0.1.4(2022-07-29)
 
 **Note:** Version bump only for package @xkit-yx/contact-kit-ui
 
-# Change Log
+## v0.1.3(2022-07-28)
 
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
+**Note:** Version bump only for package @xkit-yx/contact-kit-ui
 
-## [0.1.1] (2022-07-27)
+## v0.1.2(2022-07-27)
+
+**Note:** Version bump only for package @xkit-yx/contact-kit-ui
+
+## v0.1.1(2022-07-27)
 
 ### Bug Fixes
 
 - **workspace:** 🐛 解决幽灵依赖和无用依赖
-
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
 
 # 0.1.0 (2022-07-26)
 
@@ -98,7 +64,7 @@ See [Conventional Commits] for commit guidelines.
 - **core-kit:** 🐛 relation 不再需要外部传给 avatar, avatar 内部消化
 - **workspace:** 🐛 增加更新我的资料回调;增加样式引用
 
-### Features
+### NEW Features
 
 - 部分主题补充、支持 prefix 统一样式前缀
 - 路径修改
@@ -119,12 +85,7 @@ See [Conventional Commits] for commit guidelines.
 - **workspace:** 🎸 迁移 IM UI Kit
 - **workspace:** 🎸 UI Kit 增加初始化埋点
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.1] (2022-06-30)
+## v0.1.1(2022-06-30)
 
 **Note:** Version bump only for package @xkit-yx/contact-kit-ui
 
@@ -134,6 +95,6 @@ See [Conventional Commits] for commit guidelines.
 
 - **conversation-kit-react-ui:** 🐛 修复撤回消息会话消失的问题
 
-### Features
+### NEW Features
 
 - **workspace:** 🎸 UI Kit 增加初始化埋点

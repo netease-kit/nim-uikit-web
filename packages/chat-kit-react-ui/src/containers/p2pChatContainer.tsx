@@ -13,6 +13,7 @@ import {
   useTranslation,
   ComplexAvatarContainer,
 } from '@xkit-yx/common-ui'
+import { Action } from '../Container'
 import ChatP2pSetting from '../components/ChatP2pSetting'
 import { Session } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/SessionServiceInterface'
 import { debounce } from '@xkit-yx/utils'
@@ -28,7 +29,15 @@ import { observer } from 'mobx-react'
 export interface P2pChatContainerProps {
   scene: TMsgScene
   to: string
-  renderCustomMessage?: (options: RenderCustomMessageOptions) => JSX.Element
+  actions?: Action[]
+  onSendText?: (data: {
+    value: string
+    scene: TMsgScene
+    to: string
+  }) => Promise<void>
+  renderCustomMessage?: (
+    options: RenderCustomMessageOptions
+  ) => JSX.Element | false | void | null
   renderHeader?: (session: Session) => JSX.Element
   renderP2pInputPlaceHolder?: (session: Session) => string
 
@@ -40,6 +49,8 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
   ({
     scene,
     to,
+    actions,
+    onSendText: onSendTextFromProps,
     renderCustomMessage,
     renderHeader,
     renderP2pInputPlaceHolder,
@@ -130,11 +141,19 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
 
     const onSendText = async (value: string) => {
       try {
-        await store.msgStore.sendTextMsgActive({
-          scene,
-          to,
-          body: value,
-        })
+        if (onSendTextFromProps) {
+          await onSendTextFromProps({
+            value,
+            scene,
+            to,
+          })
+        } else {
+          await store.msgStore.sendTextMsgActive({
+            scene,
+            to,
+            body: value,
+          })
+        }
       } catch (error) {
         // message.error(t('sendMsgFailedText'))
       } finally {
@@ -332,6 +351,9 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
                 ? renderP2pInputPlaceHolder(session!)
                 : `${t('sendToText')} ${userNickOrAccount}${t('sendUsageText')}`
             }
+            scene={scene}
+            to={to}
+            actions={actions}
             inputValue={inputValue}
             uploadImageLoading={store.uiStore.uploadImageLoading}
             uploadFileLoading={store.uiStore.uploadFileLoading}

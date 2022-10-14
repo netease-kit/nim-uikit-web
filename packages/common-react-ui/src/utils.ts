@@ -87,3 +87,81 @@ export const groupByPy = <T>(
 
   return sortData.concat(otherData)
 }
+
+export const frequencyControl = <
+  P extends string,
+  R extends { account: string }
+>(
+  fn: (params: P[]) => Promise<R[]>,
+  delay: number,
+  limit: number
+): ((params: P) => Promise<R>) => {
+  const promiseQueue: { args: P; queue: { resolve: any; reject: any }[] }[] = []
+  let requesting = false
+  let timer: any
+
+  return function (args) {
+    return new Promise((resolve, reject) => {
+      const p = promiseQueue.find((item) => item.args === args)
+      if (p) {
+        p.queue.push({ resolve, reject })
+      } else {
+        promiseQueue.push({ args, queue: [{ resolve, reject }] })
+      }
+
+      if (requesting) {
+        return
+      }
+
+      const handler = (
+        pq: { args: P; queue: { resolve: any; reject: any }[] }[]
+      ) => {
+        if (!pq.length) {
+          return
+        }
+        requesting = true
+        fn.call(
+          // @ts-ignore
+          this,
+          pq.map((item) => item.args)
+        )
+          .then((res) => {
+            while (pq.length) {
+              const p = pq.shift()
+              if (p) {
+                const _ = res.find((j) => j.account === p.args)
+                if (_) {
+                  p.queue.forEach((j) => j.resolve(_))
+                }
+              }
+            }
+          })
+          .catch((err) => {
+            while (pq.length) {
+              const p = pq.shift()
+              if (p) {
+                p.queue.forEach((item) => item.reject(err))
+              }
+            }
+          })
+          .finally(() => {
+            requesting = false
+            if (promiseQueue.length) {
+              handler(promiseQueue.splice(0, limit))
+            }
+          })
+      }
+
+      // 如果参数数量到达 limit，立即执行
+      if (promiseQueue.length >= limit) {
+        clearTimeout(timer)
+        handler(promiseQueue.splice(0, limit))
+      } else {
+        clearTimeout(timer)
+        timer = setTimeout(() => {
+          handler(promiseQueue.splice(0, limit))
+        }, delay)
+      }
+    })
+  }
+}

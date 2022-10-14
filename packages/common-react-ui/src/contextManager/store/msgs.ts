@@ -157,14 +157,31 @@ export class MsgStore {
     }
   }
 
+  async sendCustomMsgBySDK(
+    cb: (nim: any) => Promise<IMMessage>
+  ): Promise<void> {
+    try {
+      logger.log('sendCustomMsgBySDK')
+      const res = await cb(this.nim.getNIM())
+      this._handleSendMsgSuccess(res)
+      logger.log('sendCustomMsgBySDK success', res)
+    } catch (error: any) {
+      this._handleSendMsgFail(error.msg)
+      logger.error('sendCustomMsgBySDK failed: ', error)
+      throw error
+    }
+  }
+
   async sendCustomMsgActive({
     scene,
     to,
     body,
+    attach,
   }: {
     scene: TMsgScene
     to: string
     body: string
+    attach: string
   }): Promise<void> {
     try {
       logger.log('sendCustomMsgActive', { scene, to, body })
@@ -172,7 +189,7 @@ export class MsgStore {
         scene,
         to,
         body,
-        attach: body,
+        attach,
         onSendBefore: (msg) => {
           this.addMsg(msg.sessionId, [msg])
         },
@@ -394,26 +411,30 @@ export class MsgStore {
 
   private _handleSendMsgSuccess(msg: IMMessage) {
     // 两分钟之内可以撤回，记录到消息的 attach 中
-    const canRecallMsg = {
-      ...msg,
-      attach: {
-        ...msg.attach,
-        canRecall: true,
-        reCallTimer: setTimeout(() => {
-          this.addMsg(msg.sessionId, [msg])
-        }, RECALL_TIME),
-      },
+    if (msg && msg.sessionId) {
+      const canRecallMsg = {
+        ...msg,
+        attach: {
+          ...msg.attach,
+          canRecall: true,
+          reCallTimer: setTimeout(() => {
+            this.addMsg(msg.sessionId, [msg])
+          }, RECALL_TIME),
+        },
+      }
+      this.addMsg(msg.sessionId, [canRecallMsg])
     }
-    this.addMsg(msg.sessionId, [canRecallMsg])
   }
 
   private _handleSendMsgFail(msg: IMMessage) {
     // 发送失败，拉黑的情况不能撤回、可以删除；网络情况不能撤回、不能删除
     // 因此删除那边做一下 try catch 处理，忽略错误消息
     // 先清除老消息的定时器，再更新消息
-    const oldMsg = this.getMsg(msg.sessionId, [msg.idClient])[0]
-    this._handleClearMsgTimer(oldMsg)
-    this.addMsg(msg.sessionId, [msg])
+    if (msg && msg.sessionId) {
+      const oldMsg = this.getMsg(msg.sessionId, [msg.idClient])[0]
+      this._handleClearMsgTimer(oldMsg)
+      this.addMsg(msg.sessionId, [msg])
+    }
   }
 
   private _handleClearMsgTimer(msg?: IMMessage) {
