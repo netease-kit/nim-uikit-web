@@ -1,45 +1,36 @@
-# Change Log
 
-All notable changes to this project will be documented in this file.
+
+
 See [Conventional Commits] for commit guidelines.
 
-## [0.2.4] (2022-08-24)
+### [0.3.1] (2022-10-13)
 
 **Note:** Version bump only for package @xkit-yx/search-kit-ui
 
-# Change Log
+## v0.3.0(2022-09-06)
 
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
+### NEW Features
 
-## [0.2.3] (2022-08-19)
+- **common-react-ui:** 🎸 增加 mobx;store 重新规划;
+- **workspace:** 🎸 完成 conversation-kit 和 contact-kit 的改造
 
-**Note:** Version bump only for package @xkit-yx/search-kit-ui
-
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.2.2] (2022-08-16)
+## v0.2.4(2022-08-24)
 
 **Note:** Version bump only for package @xkit-yx/search-kit-ui
 
-# Change Log
+## v0.2.3(2022-08-19)
 
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
+**Note:** Version bump only for package @xkit-yx/search-kit-ui
 
-## [0.2.1] (2022-08-16)
+## v0.2.2(2022-08-16)
+
+**Note:** Version bump only for package @xkit-yx/search-kit-ui
+
+## v0.2.1(2022-08-16)
 
 ### Bug Fixes
 
 - 优化和 bug 修复
-
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
 
 # [0.2.0] (2022-08-03)
 
@@ -48,52 +39,27 @@ See [Conventional Commits] for commit guidelines.
 - 撤回消息未选中聊天的人不显示撤回信息
 - **search-kit-react-ui:** 🐛 修复搜索前没有重置变量导致的问题
 
-### Features
+### NEW Features
 
 - 兼容 account 不存在情况、添加超出样式
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.4] (2022-07-29)
+## v0.1.4(2022-07-29)
 
 **Note:** Version bump only for package @xkit-yx/search-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.3] (2022-07-28)
+## v0.1.3(2022-07-28)
 
 **Note:** Version bump only for package @xkit-yx/search-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.2] (2022-07-27)
+## v0.1.2(2022-07-27)
 
 **Note:** Version bump only for package @xkit-yx/search-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.1] (2022-07-27)
+## v0.1.1(2022-07-27)
 
 ### Bug Fixes
 
 - **workspace:** 🐛 解决幽灵依赖和无用依赖
-
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
 
 # 0.1.0 (2022-07-26)
 
@@ -120,7 +86,7 @@ See [Conventional Commits] for commit guidelines.
 - **search-kit-react-ui:** 🐛 修复 ts 报错
 - **workspace:** 🐛 增加更新我的资料回调;增加样式引用
 
-### Features
+### NEW Features
 
 - 部分主题补充、支持 prefix 统一样式前缀
 - 路径修改
@@ -145,12 +111,7 @@ See [Conventional Commits] for commit guidelines.
 - **workspace:** 🎸 迁移 IM UI Kit
 - **workspace:** 🎸 UI Kit 增加初始化埋点
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.1] (2022-06-30)
+## v0.1.1(2022-06-30)
 
 **Note:** Version bump only for package @xkit-yx/search-kit-ui
 
@@ -167,6 +128,6 @@ See [Conventional Commits] for commit guidelines.
 - **search-kit-react-ui:** 🐛 成员选择最多选择 10 人
 - 关闭时清空文案
 
-### Features
+### NEW Features
 
 - **workspace:** 🎸 UI Kit 增加初始化埋点

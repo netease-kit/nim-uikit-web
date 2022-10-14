@@ -1,54 +1,45 @@
-# Change Log
 
-All notable changes to this project will be documented in this file.
+
+
 See [Conventional Commits] for commit guidelines.
 
-## [0.2.5] (2022-08-24)
+## v0.4.0(2022-10-13)
+
+### NEW Features
+
+- **chat-kit-react-ui:** 🎸 增加自定义消息发送的口子;优化自定义消息解析流程 
+
+### Bug Fixes
+
+- **chat-kit-react-ui:** 🐛 自定义消息修复自测 bug 
+
+## v0.3.0(2022-09-06)
+
+### NEW Features
+
+- **common-react-ui:** 🎸 增加 mobx;store 重新规划;
+
+## v0.2.5(2022-08-24)
 
 **Note:** Version bump only for package @xkit-yx/chat-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.2.4] (2022-08-19)
+## v0.2.4(2022-08-19)
 
 **Note:** Version bump only for package @xkit-yx/chat-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.2.3] (2022-08-16)
+## v0.2.3(2022-08-16)
 
 **Note:** Version bump only for package @xkit-yx/chat-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.2.2] (2022-08-16)
+## v0.2.2(2022-08-16)
 
 **Note:** Version bump only for package @xkit-yx/chat-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.2.1] (2022-08-03)
+## v0.2.1(2022-08-03)
 
 ### Bug Fixes
 
 - 优化和 bug 修复
-
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
 
 # [0.2.0] (2022-08-03)
 
@@ -60,68 +51,38 @@ See [Conventional Commits] for commit guidelines.
 - 暂不支持对话中修改自己改资料
 - placeholder 添加换行测试
 
-### Features
+### NEW Features
 
 - 代码整理和 hooks 封装
 - 兼容 account 不存在情况、添加超出样式
 - 修改宽度，添加省略点点点
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.5] (2022-07-29)
+## v0.1.5(2022-07-29)
 
 **Note:** Version bump only for package @xkit-yx/chat-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.4] (2022-07-28)
+## v0.1.4(2022-07-28)
 
 **Note:** Version bump only for package @xkit-yx/chat-kit-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.3] (2022-07-27)
+## v0.1.3(2022-07-27)
 
 ### Bug Fixes
 
 - **workspace:** 🐛 头像更改、不支持类型消息提示
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.2] (2022-07-27)
+## v0.1.2(2022-07-27)
 
 ### Bug Fixes
 
 - **chat-kit-react-ui:** 🐛 去除 ahooks 的依赖
 - **workspace:** 🐛 解决幽灵依赖和无用依赖
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.1] (2022-07-26)
+## v0.1.1(2022-07-26)
 
 ### Bug Fixes
 
 - 样式添加、依赖添加
-
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
 
 # 0.1.0 (2022-07-26)
 
@@ -159,7 +120,7 @@ See [Conventional Commits] for commit guidelines.
 - eslint 修复
 - **workspace:** 🐛 增加更新我的资料回调;增加样式引用
 
-### Features
+### NEW Features
 
 - 部分主题补充、支持 prefix 统一样式前缀
 - 初步代码和功能迁移
@@ -216,11 +177,6 @@ See [Conventional Commits] for commit guidelines.
 - **workspace:** 🎸 迁移 IM UI Kit
 - **workspace:** 🎸 UI Kit 增加初始化埋点
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
 # [0.2.0] (2022-06-30)
 
 ### Bug Fixes
@@ -245,7 +201,7 @@ See [Conventional Commits] for commit guidelines.
 - 添加非重复 key、滚动位置逻辑添加
 - 移除群成员和添加群成员增加提示
 
-### Features
+### NEW Features
 
 - **workspace:** 🎸 UI Kit 增加初始化埋点
 - 主动离群功能、删除 2 次确认等功能添加
@@ -286,7 +242,7 @@ See [Conventional Commits] for commit guidelines.
 - 添加非重复 key、滚动位置逻辑添加
 - 移除群成员和添加群成员增加提示
 
-### Features
+### NEW Features
 
 - **workspace:** 🎸 UI Kit 增加初始化埋点
 - 主动离群功能、删除 2 次确认等功能添加

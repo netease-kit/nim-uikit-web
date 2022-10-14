@@ -6,7 +6,7 @@ import {
   UserNameCard,
 } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 import RootStore from '.'
-import { logger } from '../../utils'
+import { logger, frequencyControl } from '../../utils'
 
 export class UserStore {
   users: Map<string, UserNameCard> = new Map()
@@ -15,6 +15,8 @@ export class UserStore {
     createTime: Date.now(),
     updateTime: Date.now(),
   }
+
+  private _getUserInfo = frequencyControl(this._getUserInfos, 1000, 100)
 
   constructor(
     private rootStore: RootStore,
@@ -83,16 +85,20 @@ export class UserStore {
   async getUserForceActive(account: string): Promise<UserNameCard> {
     try {
       logger.log('getUserForceActive', account)
-      const users = await this.nim.getUsersNameCardFromServer({
-        accounts: [account],
-      })
-      this.addUsers(users)
-      logger.log('getUserForceActive success', account, users)
-      return users[0]
+      const user = await this._getUserInfo(account)
+      this.addUsers([user])
+      logger.log('getUserForceActive success', account, user)
+      return user
     } catch (error) {
       logger.error('getUserForceActive failed: ', account, error)
       throw error
     }
+  }
+
+  private _getUserInfos(accounts: string[]) {
+    return this.nim.getUsersNameCardFromServer({
+      accounts,
+    })
   }
 
   private _onUsers(data: UserNameCard[]) {

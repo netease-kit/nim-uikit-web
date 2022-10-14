@@ -1,13 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useRef, Fragment } from 'react'
 import { Input, Upload, Popover, message, Button, Spin } from 'antd'
 import { CommonIcon, Constant, useTranslation } from '@xkit-yx/common-ui'
+import { Action } from '../../Container'
 import { MAX_UPLOAD_FILE_SIZE } from '../../constant'
 import { LoadingOutlined } from '@ant-design/icons'
+import { TMsgScene } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 
 const { TextArea } = Input
-export interface MessageProps {
+export interface ChatMessageInputProps {
   prefix?: string
   placeholder?: string
+  scene: TMsgScene
+  to: string
+  actions?: Action[]
   mute?: boolean
   inputValue?: string
   uploadImageLoading?: boolean
@@ -18,23 +23,135 @@ export interface MessageProps {
   onSendImg: (file: File) => void
 }
 
-const ChatMessageInput: React.FC<MessageProps> = ({
-  prefix = 'chat',
-  placeholder = '',
-  mute = false,
-  inputValue = '',
-  uploadImageLoading = false,
-  uploadFileLoading = false,
-  setInputValue,
-  onSendText,
-  onSendFile,
-  onSendImg,
-}) => {
+const mergeActions = (
+  defaultActions: Action[] = [],
+  propsActions: Action[] = []
+) => {
+  return propsActions.map((i) => {
+    const defaultAction = defaultActions.find((j) => i.action === j.action)
+    if (defaultAction) {
+      return {
+        ...defaultAction,
+        ...i,
+      }
+    } else {
+      return i
+    }
+  })
+}
+
+const ChatMessageInput: React.FC<ChatMessageInputProps> = (props) => {
+  const {
+    prefix = 'chat',
+    placeholder = '',
+    actions,
+    mute = false,
+    inputValue = '',
+    uploadImageLoading = false,
+    uploadFileLoading = false,
+    setInputValue,
+    onSendText,
+    onSendFile,
+    onSendImg,
+  } = props
+
   const { t } = useTranslation()
   const _prefix = `${prefix}-message-input`
   const inputRef = useRef<any>(null)
   const [visible, setVisible] = useState<boolean>(false)
   const antIcon = <LoadingOutlined className={`${_prefix}-loading-spin`} spin />
+
+  const defaultActions: Action[] = [
+    {
+      action: 'emoji',
+      visible: true,
+      render: () => {
+        return (
+          <Button type="text" disabled={mute}>
+            <Popover
+              // placement="right"
+              // getPopupContainer={() =>
+              //   document.getElementById('chat-kit-app') || false
+              // }
+              trigger="click"
+              visible={visible}
+              overlayClassName={`${_prefix}-emoji-box`}
+              content={emojiContent}
+              onVisibleChange={handleVisibleChange}
+            >
+              <CommonIcon
+                className={`${_prefix}-icon-emoji`}
+                type="icon-biaoqing"
+              />
+              {/* <Icon
+                    className={`${_prefix}-icon-btn`}
+                    type="icon-biaoqing"
+                    width={18}
+                    height={18}
+                    onClick={() => setVisible(true)}
+                  /> */}
+            </Popover>
+          </Button>
+        )
+      },
+    },
+    {
+      action: 'sendImg',
+      visible: true,
+      render: () => {
+        return (
+          <Button size="small" disabled={mute}>
+            {uploadImageLoading ? (
+              <Spin indicator={antIcon} />
+            ) : (
+              <Upload
+                beforeUpload={onBeforeUploadHandler}
+                showUploadList={false}
+                accept=".jpg,.png,.jpeg,.gif"
+                action={onUploadImgHandler}
+                className={`${_prefix}-icon-upload`}
+              >
+                <CommonIcon
+                  className={`${_prefix}-icon-image`}
+                  type="icon-tupian"
+                />
+              </Upload>
+            )}
+          </Button>
+        )
+      },
+    },
+    {
+      action: 'sendFile',
+      visible: true,
+      render: () => {
+        return (
+          <Button size="small" disabled={mute}>
+            {uploadFileLoading ? (
+              <Spin indicator={antIcon} />
+            ) : (
+              <Upload
+                beforeUpload={onBeforeUploadHandler}
+                showUploadList={false}
+                disabled={mute}
+                action={onUploadFileHandler}
+                className={`${_prefix}-icon-upload`}
+              >
+                <CommonIcon
+                  className={`${_prefix}-icon-file`}
+                  type="icon-wenjian"
+                />
+              </Upload>
+            )}
+          </Button>
+        )
+      },
+    },
+  ]
+
+  const finalActions = actions
+    ? mergeActions(defaultActions, actions)
+    : defaultActions
 
   const onInputChangeHandler = (e: any) => {
     setInputValue(e.target.value)
@@ -125,69 +242,16 @@ const ChatMessageInput: React.FC<MessageProps> = ({
           autoSize={{ maxRows: 2 }}
         />
         <div className={`${_prefix}-icon-box`}>
-          <Button type="text" disabled={mute}>
-            <Popover
-              // placement="right"
-              // getPopupContainer={() =>
-              //   document.getElementById('chat-kit-app') || false
-              // }
-              trigger="click"
-              visible={visible}
-              overlayClassName={`${_prefix}-emoji-box`}
-              content={emojiContent}
-              onVisibleChange={handleVisibleChange}
-            >
-              <CommonIcon
-                className={`${_prefix}-icon-emoji`}
-                type="icon-biaoqing"
-              />
-              {/* <Icon
-                      className={`${_prefix}-icon-btn`}
-                      type="icon-biaoqing"
-                      width={18}
-                      height={18}
-                      onClick={() => setVisible(true)}
-                    /> */}
-            </Popover>
-          </Button>
-
-          <Button size="small" disabled={mute}>
-            {uploadImageLoading ? (
-              <Spin indicator={antIcon} />
-            ) : (
-              <Upload
-                beforeUpload={onBeforeUploadHandler}
-                showUploadList={false}
-                accept=".jpg,.png,.jpeg,.gif"
-                action={onUploadImgHandler}
-                className={`${_prefix}-icon-upload`}
-              >
-                <CommonIcon
-                  className={`${_prefix}-icon-image`}
-                  type="icon-tupian"
-                />
-              </Upload>
-            )}
-          </Button>
-
-          <Button size="small" disabled={mute}>
-            {uploadFileLoading ? (
-              <Spin indicator={antIcon} />
-            ) : (
-              <Upload
-                beforeUpload={onBeforeUploadHandler}
-                showUploadList={false}
-                disabled={mute}
-                action={onUploadFileHandler}
-                className={`${_prefix}-icon-upload`}
-              >
-                <CommonIcon
-                  className={`${_prefix}-icon-file`}
-                  type="icon-wenjian"
-                />
-              </Upload>
-            )}
-          </Button>
+          {finalActions.map((item) =>
+            item.render && item.visible ? (
+              <Fragment key={item.action}>
+                {item.render({
+                  ...props,
+                  prefix: _prefix,
+                })}
+              </Fragment>
+            ) : null
+          )}
         </div>
         {/* <div
         contentEditable="true"

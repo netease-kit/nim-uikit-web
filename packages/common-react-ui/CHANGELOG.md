@@ -1,99 +1,75 @@
-# Change Log
 
-All notable changes to this project will be documented in this file.
+
+
 See [Conventional Commits] for commit guidelines.
 
-## [0.1.9] (2022-08-24)
+## v0.3.0(2022-10-13)
+
+### NEW Features
+
+- **chat-kit-react-ui:** 🎸 增加自定义消息发送的口子;优化自定义消息解析流程 
+
+### Bug Fixes
+
+- **chat-kit-react-ui:** 🐛 自定义消息修复自测 bug 
+- **common-react-ui:** 🐛 更新会话列表增加 debounce 防抖 
+- **common-react-ui:** 🐛 获取陌生人接口增加频率控制 
+
+## v0.2.0(2022-09-06)
+
+### NEW Features
+
+- **common-react-ui:** 🎸 增加 mobx;store 重新规划;
+- **common-react-ui:** 🎸 msgStore 增加消息的主动操作
+- **common-react-ui:** 🎸 store 增加目前功能的主动操作
+- **workspace:** 🎸 完成 conversation-kit 和 contact-kit 的改造
+
+## v0.1.9(2022-08-24)
 
 **Note:** Version bump only for package @xkit-yx/common-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.8] (2022-08-19)
+## v0.1.8(2022-08-19)
 
 **Note:** Version bump only for package @xkit-yx/common-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.7] (2022-08-16)
+## v0.1.7(2022-08-16)
 
 **Note:** Version bump only for package @xkit-yx/common-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.6] (2022-08-16)
+## v0.1.6(2022-08-16)
 
 ### Bug Fixes
 
 - 优化和 bug 修复
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.5] (2022-08-03)
+## v0.1.5(2022-08-03)
 
 ### Bug Fixes
 
 - 撤回、重新编辑样式和逻辑整理
 - 去掉多余字
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.4] (2022-07-29)
+## v0.1.4(2022-07-29)
 
 ### Bug Fixes
 
 - **core-kit:** 🐛 修复 getNIM 返回类型问题;hijack 代码优化;init 参数必传;
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.3] (2022-07-28)
+## v0.1.3(2022-07-28)
 
 **Note:** Version bump only for package @xkit-yx/common-ui
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.2] (2022-07-27)
+## v0.1.2(2022-07-27)
 
 ### Bug Fixes
 
 - **workspace:** 🐛 头像更改、不支持类型消息提示
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
-## [0.1.1] (2022-07-27)
+## v0.1.1(2022-07-27)
 
 ### Bug Fixes
 
 - **workspace:** 🐛 解决幽灵依赖和无用依赖
-
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
 
 # 0.1.0 (2022-07-26)
 
@@ -131,7 +107,7 @@ See [Conventional Commits] for commit guidelines.
 - **search-kit-react-ui:** 🐛 升级 log 库,补充 search-kit 缺失的样式
 - **search-kit-react-ui:** 🐛 hover 样式优化
 
-### Features
+### NEW Features
 
 - 部分主题补充、支持 prefix 统一样式前缀
 - 初步代码和功能迁移
@@ -177,11 +153,6 @@ See [Conventional Commits] for commit guidelines.
 - **workspace:** 🎸 国际化配置
 - **workspace:** 🎸 迁移 IM UI Kit
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits] for commit guidelines.
-
 # [0.2.0] (2022-06-30)
 
 ### Bug Fixes
@@ -202,7 +173,7 @@ See [Conventional Commits] for commit guidelines.
 - 历史记录功能传参修正、store 从 common 迁移、发送 bug 修复
 - 添加非重复 key、滚动位置逻辑添加
 
-### Features
+### NEW Features
 
 - **common-react-ui:** 🎸 随机头像颜色固定存储
 - groupBy 按照 nick 排序
@@ -231,7 +202,7 @@ See [Conventional Commits] for commit guidelines.
 - 历史记录功能传参修正、store 从 common 迁移、发送 bug 修复
 - 添加非重复 key、滚动位置逻辑添加
 
-### Features
+### NEW Features
 
 - **common-react-ui:** 🎸 随机头像颜色固定存储
 - groupBy 按照 nick 排序
