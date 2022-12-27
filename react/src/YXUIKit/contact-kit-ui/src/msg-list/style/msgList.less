@@ -1,0 +1,24 @@
+@import './theme.less';
+
+@msg-list-prefix-cls: ~'@{msg-list-prefix}-wrapper';
+@msg-title-prefix-cls: ~'@{msg-list-prefix}-title';
+@msg-content-prefix-cls: ~'@{msg-list-prefix}-content';
+
+.@{msg-list-prefix-cls} {
+  background-color: @yx-background-color-1;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.@{msg-title-prefix-cls} {
+  color: @yx-primary-text-color;
+  font-size: @yx-font-size-16;
+  font-weight: 500;
+  border-bottom: 1px solid @yx-border-color-7;
+  padding: 22px 16px;
+}
+
+.@{msg-content-prefix-cls} {
+  padding: 4px 16px;
+}
