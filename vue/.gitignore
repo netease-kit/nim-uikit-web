@@ -26,13 +26,3 @@ coverage
 *.njsproj
 *.sln
 *.sw?
-
-
-react/node_modules
-react/.env.local
-react/.umirc.local.ts
-react/config/config.local.ts
-react/src/.umi
-react/src/.umi-production
-react/src/.umi-test
-react/dist
