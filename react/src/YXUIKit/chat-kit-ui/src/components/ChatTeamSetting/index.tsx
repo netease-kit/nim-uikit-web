@@ -1,5 +1,5 @@
 import React, { FC, useState, useEffect, useMemo } from 'react'
-import { Modal, Button } from 'antd'
+import { Modal, Button, Input } from 'antd'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { RightOutlined, PlusOutlined } from '@ant-design/icons'
 import {
@@ -16,6 +16,8 @@ import {
   TeamMember,
 } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 import { FriendProfile } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/FriendServiceInterface'
+import { UpdateMyMemberInfoOptions } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+import { GroupItemProps } from './GroupItem'
 
 export interface HistoryStack {
   path: GroupSettingType
@@ -35,12 +37,13 @@ export interface ChatTeamSettingProps {
   onAddMembersClick: () => void
   onRemoveTeamMemberClick: (member: TeamMember) => void
   onUpdateTeamInfo: (team: Partial<Team>) => void
+  onUpdateMyMemberInfo: (params: UpdateMyMemberInfoOptions) => void
   onTeamMuteChange: (mute: boolean) => void
   afterSendMsgClick?: () => void
   setNavHistoryStack: (stack: HistoryStack[]) => void
-  renderTeamMemberItem?: (params: {
-    member: TeamMember & Partial<FriendProfile>
-  }) => JSX.Element | null | undefined
+  renderTeamMemberItem?: (
+    params: GroupItemProps
+  ) => JSX.Element | null | undefined
 
   prefix?: string
   commonPrefix?: string
@@ -61,6 +64,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
   onAddMembersClick,
   onRemoveTeamMemberClick,
   onUpdateTeamInfo,
+  onUpdateMyMemberInfo,
   onTeamMuteChange,
   afterSendMsgClick,
   setNavHistoryStack,
@@ -71,6 +75,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
 }) => {
   const { t } = useTranslation()
   const _prefix = `${prefix}-group-setting`
+  const [nickInTeam, setNickInTeam] = useState('')
 
   const path = navHistoryStack[navHistoryStack.length - 1]?.path || 'home'
 
@@ -92,6 +97,17 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
         title: GROUP_SETTING_NAV_TITLE[path],
       })
     )
+  }
+
+  const handleChangeNickInTeam = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNickInTeam(e.target.value.trim())
+  }
+
+  const handleUpdateMyMemberInfo = (e: React.FocusEvent<HTMLInputElement>) => {
+    onUpdateMyMemberInfo({
+      teamId: team.teamId,
+      nickInTeam,
+    })
   }
 
   const showDismissConfirm = () => {
@@ -137,6 +153,14 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
     )
     return [...owner, ...manager, ...other]
   }, [members])
+
+  const myMemberInfo = useMemo(() => {
+    return members.find((item) => item.account === myAccount)
+  }, [myAccount, members])
+
+  useEffect(() => {
+    setNickInTeam(myMemberInfo?.nickInTeam || '')
+  }, [myMemberInfo?.nickInTeam])
 
   useEffect(() => {
     if (!navHistoryStack.length) {
@@ -195,6 +219,18 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
                 )
               })}
             </div>
+          </div>
+          <div className={`${_prefix}-item`}>
+            <b>{t('nickInTeamText')}</b>
+            <Input
+              className={`${_prefix}-nickinteam`}
+              value={nickInTeam}
+              allowClear
+              maxLength={15}
+              onChange={handleChangeNickInTeam}
+              onBlur={handleUpdateMyMemberInfo}
+              placeholder={t('editNickInTeamText')}
+            />
           </div>
           {team.type !== 'normal' ? (
             <div

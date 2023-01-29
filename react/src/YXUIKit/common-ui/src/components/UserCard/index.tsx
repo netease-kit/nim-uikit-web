@@ -107,11 +107,11 @@ export const UserCard: FC<UserCardProps> = ({
   }, [props.alias])
 
   const handleChangeAlias = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAlias(e.target.value)
+    setAlias(e.target.value.trim())
   }
 
   const handleBlurAlias = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChangeAlias?.(e.target.value || '')
+    onChangeAlias?.(e.target.value.trim())
   }
 
   const contentRenderer = () => {

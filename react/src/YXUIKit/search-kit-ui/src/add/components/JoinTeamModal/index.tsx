@@ -70,7 +70,12 @@ const JoinTeamModal: React.FC<JoinTeamModalProps> = ({
         }
         setAdding(true)
         await store.teamStore.applyTeamActive(searchRes.teamId)
-        setInTeam(true)
+        if (store.teamStore.teams.get(searchRes.teamId)) {
+          setInTeam(true)
+          message.success(t('joinTeamSuccessText'))
+        } else {
+          message.success(t('applyTeamSuccessText'))
+        }
       }
       setAdding(false)
     } catch (error) {

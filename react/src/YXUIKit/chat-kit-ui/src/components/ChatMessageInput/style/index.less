@@ -11,8 +11,32 @@
   background: @yx-primary-color;
   border: 1px solid @yx-border-color-4;
   border-radius: @yx-primary-border-radius;
-  display: flex;
-  position: relative;
+  .@{prefix-cls}-reply-wrap {
+    padding: 12px 15px 0;
+    .@{prefix-cls}-reply-container {
+      height: 30px;
+      background: @yx-background-color-6;
+      border-radius: @yx-primary-border-radius;
+      color: @yx-text-color-2;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-size: 12px;
+      .@{prefix-cls}-reply-content {
+        border-left: 1px solid @yx-border-color-4;
+        margin-left: 8px;
+        padding-left: 5px;
+        overflow: hidden; //超出的文本隐藏
+        text-overflow: ellipsis; //溢出用省略号显示
+        white-space: nowrap; //溢出不换行
+        flex: 1;
+      }
+    }
+  }
+  .@{prefix-cls}-content {
+    display: flex;
+    position: relative;
+  }
 
   // .@{prefix-cls}-msg-tip {
   //   position: absolute;

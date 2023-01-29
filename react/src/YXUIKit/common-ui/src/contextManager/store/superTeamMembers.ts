@@ -10,6 +10,7 @@ import {
 import zh from '../../locales/zh'
 import RootStore from '.'
 import { message } from 'antd'
+import { parseSessionId } from '../../utils'
 
 export class SuperTeamMemberStore {
   teamMembers: Map<string, Map<string, SuperTeamMember>> = new Map()
@@ -167,7 +168,7 @@ export class SuperTeamMemberStore {
     const members = data.members.map((item) => ({
       ...item,
       // 这里 SDK 返回的内容中没有 account，先自行处理一下
-      account: item.id.split('-')[1],
+      account: parseSessionId(item.id).to,
     }))
     // @ts-ignore SDK 问题，先忽略
     this.updateSuperTeamMember(data.team.teamId, members)

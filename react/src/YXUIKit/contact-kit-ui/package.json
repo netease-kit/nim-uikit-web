@@ -1,6 +1,6 @@
 {
   "name": "@xkit-yx/contact-kit-ui",
-  "version": "0.3.1",
+  "version": "0.4.1",
   "description": "通讯录组件",
   "license": "MIT",
   "main": "lib/index.js",
@@ -52,11 +52,11 @@
     "react-dom": ">=16.8.0"
   },
   "dependencies": {
-    "@xkit-yx/common-ui": "^0.5.1",
-    "@xkit-yx/core-kit": "^0.7.0",
+    "@xkit-yx/common-ui": "^0.6.1",
+    "@xkit-yx/core-kit": "^0.8.0",
     "antd": "^4.16.3",
     "mobx": "^6.6.1",
     "mobx-react": "^7.5.2"
   },
-  "gitHead": "7e7dcfd37b7b3cf860cad94a21cc22cdc9cd5957"
+  "gitHead": "e49d831a053536bb2a91ce0b9d8599d9c5cb755b"
 }

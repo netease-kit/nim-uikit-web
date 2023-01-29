@@ -7,11 +7,11 @@ export interface GroupAvatarSelectProps extends CrudeAvatarProps {
 }
 
 export const urls = [
-  'https://yx-web-nosdn.netease.im/common/1c12d39e5a00f6e9e37cd7c110d8b4f0/头像1.png',
-  'https://yx-web-nosdn.netease.im/common/0602f7ead8e878b2beb4e3c17aa32584/头像2.png',
-  'https://yx-web-nosdn.netease.im/common/0782789dabb67f098fa4a80aab4194f6/头像3.png',
-  'https://yx-web-nosdn.netease.im/common/4779f3843a6c67013b3f546a7343e1df/头像4.png',
-  'https://yx-web-nosdn.netease.im/common/415cabb01d1931282fe5ee28fc50251a/头像5.png',
+  'https://yx-web-nosdn.netease.im/common/2425b4cc058e5788867d63c322feb7ac/groupAvatar1.png',
+  'https://yx-web-nosdn.netease.im/common/62c45692c9771ab388d43fea1c9d2758/groupAvatar2.png',
+  'https://yx-web-nosdn.netease.im/common/d1ed3c21d3f87a41568d17197760e663/groupAvatar3.png',
+  'https://yx-web-nosdn.netease.im/common/e677d8551deb96723af2b40b821c766a/groupAvatar4.png',
+  'https://yx-web-nosdn.netease.im/common/fd6c75bb6abca9c810d1292e66d5d87e/groupAvatar5.png',
 ]
 
 export const GroupAvatarSelect: FC<GroupAvatarSelectProps> = ({
@@ -36,7 +36,7 @@ export const GroupAvatarSelect: FC<GroupAvatarSelectProps> = ({
             type="text"
             className={`${_prefix}-btn`}
           >
-            <img src={url} />
+            <img className={`${_prefix}-btn-img`} src={url} />
           </Button>
         ))}
       </div>

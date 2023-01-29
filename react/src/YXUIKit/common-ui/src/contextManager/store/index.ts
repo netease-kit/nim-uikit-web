@@ -39,13 +39,13 @@ import {
   Relations,
   UpdateRelationsOptions,
 } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
-import { ConnectState } from '../types'
 import { ContactType, Relation } from '../types'
 import { FriendProfile } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/FriendServiceInterface'
 import { Session } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/SessionServiceInterface'
 import { SystemMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/SystemMessageServiceInterface'
 import { IUploadFileOptions } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/types'
 import { IMEventSyncFriendResult } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/NIMInterface'
+import { logger } from '../../utils'
 
 class RootStore {
   static ins: RootStore
@@ -89,6 +89,7 @@ class RootStore {
    * 销毁根store实例
    */
   destroy(): void {
+    logger.log('store destroyed')
     this.connectStore.destroy()
     this.friendStore.destroy()
     this.msgStore.destroy()
@@ -136,7 +137,6 @@ export {
   RejectTeamApplyOptions,
   RejectTeamInviteOptions,
   UpdateTeamInfoOptions,
-  ConnectState,
   Relations,
   UpdateRelationsOptions,
 }

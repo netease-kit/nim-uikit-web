@@ -4,7 +4,7 @@ import { TeamMember } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInter
 import MessageListItem, { MessageItemProps } from '../ChatMessageItem'
 import { Alert, Spin } from 'antd'
 import { ArrowDownOutlined } from '@ant-design/icons'
-import { useTranslation } from '../../../../common-ui/src'
+import { ReadPercent, useTranslation } from '../../../../common-ui/src'
 import { FriendProfile } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/FriendServiceInterface'
 
 export interface RenderTeamCustomMessageOptions
@@ -15,7 +15,9 @@ export interface RenderTeamCustomMessageOptions
 export interface ChatTeamMessageListProps
   extends Omit<MessageItemProps, 'msg' | 'alias'> {
   msgs: IMMessage[]
+  teamId: string
   members: (TeamMember & Partial<FriendProfile>)[]
+  teamMsgReceiptVisible?: boolean
   renderTeamCustomMessage?: (
     options: RenderTeamCustomMessageOptions
   ) => JSX.Element | null | undefined
@@ -37,7 +39,9 @@ const ChatTeamMessageList = forwardRef<
       prefix = 'chat',
       commonPrefix = 'common',
       msgs,
+      teamId,
       members,
+      teamMsgReceiptVisible,
       receiveMsgBtnVisible = false,
       strangerNotiVisible = false,
       strangerNotiText = '',
@@ -66,7 +70,9 @@ const ChatTeamMessageList = forwardRef<
           {msgs.map((msg) => {
             const msgItem = renderTeamCustomMessage?.({
               msg,
+              msgs,
               members,
+              teamId,
               onResend,
               onReeditClick,
               onMessageAction,
@@ -76,7 +82,18 @@ const ChatTeamMessageList = forwardRef<
                 prefix={prefix}
                 commonPrefix={commonPrefix}
                 msg={msg}
-                alias={members.find((item) => item.account === msg.from)?.alias}
+                msgs={msgs}
+                teamId={teamId}
+                normalStatusRenderer={
+                  teamMsgReceiptVisible ? (
+                    <ReadPercent
+                      unread={msg.attach?.yxUnread || 0}
+                      read={msg.attach?.yxRead || 0}
+                      hoverable
+                      prefix={commonPrefix}
+                    />
+                  ) : null
+                }
                 myAccount={myAccount}
                 onResend={onResend}
                 onMessageAction={onMessageAction}

@@ -7,8 +7,6 @@
 
 .@{mycard-modal-prefix-cls} {
   .@{ant-prefix}-modal {
-    width: 352px !important;
-
     &-body {
       padding: 0;
     }
@@ -24,8 +22,8 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  background: url('https://yx-web-nosdn.netease.im/common/7ff58b88ee91e4abe3fc6374296827fb/user-background.png')
-    no-repeat 0 -50px;
+  background: url('https://yx-web-nosdn.netease.im/common/7ff58b88ee91e4abe3fc6374296827fb/user-background.png') no-repeat;
+  background-size: 100% 100%;
   width: 100%;
   height: 100px;
   min-width: 0;
@@ -48,7 +46,7 @@
 .@{mycard-content-prefix-cls} {
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: 24px 24px 24px 0px;
 
   &-form-item {
     display: flex;

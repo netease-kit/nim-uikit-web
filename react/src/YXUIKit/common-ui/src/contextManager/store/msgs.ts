@@ -3,17 +3,22 @@ import { makeAutoObservable, runInAction } from 'mobx'
 import { GetHistoryMsgsOptions } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgLogServiceInterface'
 import {
   DeleteSelfMsgsResult,
+  GetTeamMsgReadResult,
   IMMessage,
+  TeamMsgReceipt,
+  teamMsgReceipt,
   TMsgScene,
 } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import RootStore from '.'
 import zh from '../../locales/zh'
-import { logger } from '../../utils'
+import { parseSessionId, logger } from '../../utils'
 
 const RECALL_TIME = 2 * 60 * 1000
 /**Mobx 可观察对象，负责管理会话消息的子 store */
 export class MsgStore {
-  msgs: Map<string, Map<string, IMMessage>> = new Map()
+  msgs: Map<string, IMMessage[]> = new Map()
+  /** 回复消息 */
+  replyMsgs: Map<string, IMMessage> = new Map()
 
   constructor(
     private rootStore: RootStore,
@@ -26,6 +31,7 @@ export class MsgStore {
     this._onMsg = this._onMsg.bind(this)
     // this._onSyncOfflineMsgs = this._onSyncOfflineMsgs.bind(this)
     // this._onSyncRoamingMsgs = this._onSyncRoamingMsgs.bind(this)
+    this._onTeamMsgReceipts = this._onTeamMsgReceipts.bind(this)
     this._onDeleteSelfMsgs = this._onDeleteSelfMsgs.bind(this)
 
     // 收到消息
@@ -35,7 +41,7 @@ export class MsgStore {
     // 同步时漫游消息
     // nim.on('syncRoamingMsgs', this._onSyncRoamingMsgs)
     // 群已读
-    // nim.on('teamMsgReceipts', (data) => {})
+    nim.on('teamMsgReceipts', this._onTeamMsgReceipts)
     // 多端同步单向删除某消息的通知
     nim.on('deleteSelfMsgs', this._onDeleteSelfMsgs)
   }
@@ -46,11 +52,26 @@ export class MsgStore {
     this.nim.off('msg', this._onMsg)
     // this.nim.off('syncOfflineMsgs', this._onSyncOfflineMsgs)
     // this.nim.off('syncRoamingMsgs', this._onSyncRoamingMsgs)
+    this.nim.off('teamMsgReceipts', this._onTeamMsgReceipts)
     this.nim.off('deleteSelfMsgs', this._onDeleteSelfMsgs)
 
     this.getMsg().forEach((msg) => {
       this._handleClearMsgTimer(msg)
     })
+  }
+  /**
+   * 回复消息
+   * @param msg 消息对象
+   */
+  replyMsgActive(msg: IMMessage): void {
+    this.replyMsgs.set(msg.sessionId, msg)
+  }
+  /**
+   * 回复消息
+   * @param msg 消息对象
+   */
+  reomveReplyMsgActive(sessionId: string): void {
+    this.replyMsgs.delete(sessionId)
   }
   /**
    * 撤回消息
@@ -79,7 +100,7 @@ export class MsgStore {
 
       const recallMsg: IMMessage = {
         ...msg,
-        idClient: `recall-${(Math.random() + '').slice(-6)}`,
+        idClient: msg.idClient,
         status: 'sent',
         time: Date.now(),
         userUpdateTime: Date.now(),
@@ -99,7 +120,6 @@ export class MsgStore {
    * 插入一条对方撤回的自定义消息
    * @param __namedParameters.scene - 场景
    * @param __namedParameters.from - 消息发送方帐号
-   * @param __namedParameters.fromNick - 消息发送方的昵称
    * @param __namedParameters.to - 接收方, 对方帐号或者群id
    * @param __namedParameters.idClient - 端测生成的消息id, 可作为消息唯一主键使用
    * @param __namedParameters.time - 消息发送成功的时间戳(单位毫秒)
@@ -107,14 +127,12 @@ export class MsgStore {
   beReCallMsgActive({
     scene,
     from,
-    fromNick,
     to,
     idClient,
     time,
   }: {
     scene: TMsgScene
     from: string
-    fromNick: string
     to: string
     idClient: string
     time: number
@@ -122,18 +140,17 @@ export class MsgStore {
     logger.log('beReCallMsgActive', {
       scene,
       from,
-      fromNick,
       to,
       idClient,
       time,
     })
     const sessionId = this.rootStore.sessionStore.getSessionId(scene, from, to)
     this.removeMsg(sessionId, [idClient])
-    // 可能是多端同步过来的消息
-    const isSelf = this.rootStore.userStore.myUserInfo?.account === from
+    // // 可能是多端同步过来的消息
+    // const isSelf = this.rootStore.userStore.myUserInfo?.account === from
     // 插入一条对方撤回的自定义消息。目前是直接插入内存，如果需要记录到服务端，各端统一好格式，发送一条真实的自定义消息。
     const beRecallMsg: IMMessage = {
-      idClient: `berecall-${(Math.random() + '').slice(-6)}`,
+      idClient: idClient,
       target: to,
       flow: 'in',
       sessionId,
@@ -144,9 +161,11 @@ export class MsgStore {
       time,
       userUpdateTime: Date.now(),
       type: 'custom',
-      body: `${isSelf ? this.t('you') : fromNick || from} ${this.t(
-        'recallMessageText'
-      )}`,
+      // 因为还要考虑群昵称、备注、昵称这些复杂情况，这边不再提供 body，渲染者自行渲染
+      body: '',
+      // body: `${isSelf ? this.t('you') : fromNick || from} ${this.t(
+      //   'recallMessageText'
+      // )}`,
       feature: 'default',
       attach: {
         type: 'beReCallMsg',
@@ -215,8 +234,13 @@ export class MsgStore {
       const res = await this.nim.sendCustomMsg({
         scene,
         to,
+        ext: this._getExtByReplyMsgs(`${scene}-${to}`),
         body,
         attach,
+        // @ts-ignore
+        teamSpecializationInfo: {
+          needACK: true,
+        },
         onSendBefore: (msg) => {
           this.addMsg(msg.sessionId, [msg])
         },
@@ -227,6 +251,8 @@ export class MsgStore {
       this._handleSendMsgFail(error.msg)
       logger.error('sendCustomMsgActive failed: ', { scene, to, body }, error)
       throw error
+    } finally {
+      this.reomveReplyMsgActive(`${scene}-${to}`)
     }
   }
   /**
@@ -249,7 +275,12 @@ export class MsgStore {
       const res = await this.nim.sendFileMsg({
         scene,
         to,
+        ext: this._getExtByReplyMsgs(`${scene}-${to}`),
         file,
+        // @ts-ignore
+        teamSpecializationInfo: {
+          needACK: true,
+        },
         onUploadStart: () => {
           this.rootStore.uiStore.setUploadFileLoading(true)
         },
@@ -266,6 +297,8 @@ export class MsgStore {
       this._handleSendMsgFail(error.msg)
       logger.error('sendFileMsgActive failed: ', { scene, to, file }, error)
       throw error
+    } finally {
+      this.reomveReplyMsgActive(`${scene}-${to}`)
     }
   }
   /**
@@ -288,7 +321,12 @@ export class MsgStore {
       const res = await this.nim.sendImageMsg({
         scene,
         to,
+        ext: this._getExtByReplyMsgs(`${scene}-${to}`),
         file,
+        // @ts-ignore
+        teamSpecializationInfo: {
+          needACK: true,
+        },
         onUploadStart: () => {
           this.rootStore.uiStore.setUploadImageLoading(true)
         },
@@ -305,6 +343,8 @@ export class MsgStore {
       this._handleSendMsgFail(error.msg)
       logger.error('sendImageMsgActive failed: ', { scene, to, file }, error)
       throw error
+    } finally {
+      this.reomveReplyMsgActive(`${scene}-${to}`)
     }
   }
   /**
@@ -327,7 +367,12 @@ export class MsgStore {
       const res = await this.nim.sendTextMsg({
         scene,
         to,
+        ext: this._getExtByReplyMsgs(`${scene}-${to}`),
         body,
+        // @ts-ignore
+        teamSpecializationInfo: {
+          needACK: true,
+        },
         onSendBefore: (msg) => {
           this.addMsg(msg.sessionId, [msg])
         },
@@ -338,6 +383,8 @@ export class MsgStore {
       this._handleSendMsgFail(error.msg)
       logger.error('sendTextMsgActive failed: ', { scene, to, body }, error)
       throw error
+    } finally {
+      this.reomveReplyMsgActive(`${scene}-${to}`)
     }
   }
   /**
@@ -357,6 +404,62 @@ export class MsgStore {
     }
   }
   /**
+   * 发送 p2p 消息已读回执
+   * @param msg 消息对象
+   */
+  async sendMsgReceiptActive(msg: IMMessage): Promise<void> {
+    try {
+      logger.log('sendMsgReceiptActive', msg)
+      await this.nim.sendMsgReceipt({
+        msg,
+      })
+      logger.log('sendMsgReceiptActive success', msg)
+    } catch (error) {
+      logger.error('sendMsgReceiptActive failed: ', msg, error)
+      throw error
+    }
+  }
+  /**
+   * 发送群组消息已读回执
+   * @param options 参考 https://doc.yunxin.163.com/messaging-enhanced/api-refer/web/typedoc/Latest/zh/NIM/modules/MsgServiceInterface.html#teamMsgReceipt-2
+   */
+  async sendTeamMsgReceiptActive(options: teamMsgReceipt[]): Promise<void> {
+    try {
+      logger.log('sendTeamMsgReceiptActive', options)
+      if (options.length) {
+        await this.nim.sendTeamMsgReceipt({
+          teamMsgReceipts: options,
+        })
+      }
+      logger.log('sendTeamMsgReceiptActive success', options)
+    } catch (error) {
+      logger.error('sendTeamMsgReceiptActive failed: ', options, error)
+      throw error
+    }
+  }
+  /**
+   * 获取群组消息已读未读数
+   * @param options 参考 https://doc.yunxin.163.com/messaging-enhanced/api-refer/web/typedoc/Latest/zh/NIM/modules/MsgServiceInterface.html#teamMsgReceipt-2
+   */
+  async getTeamMsgReadsActive(
+    options: teamMsgReceipt[]
+  ): Promise<GetTeamMsgReadResult[]> {
+    try {
+      logger.log('getTeamMsgReadsActive', options)
+      if (!options.length) {
+        return []
+      }
+      const res = await this.nim.getTeamMsgReads({
+        teamMsgReceipts: options,
+      })
+      logger.log('getTeamMsgReadsActive success', res)
+      return res
+    } catch (error) {
+      logger.error('getTeamMsgReadsActive failed: ', options, error)
+      throw error
+    }
+  }
+  /**
    * 获取历史消息
    * @param options.sessionId - 消息所属的会话的ID
    * @param options.endTime - 结束时间戳, 精确到 ms, 默认为服务器的当前时间
@@ -372,7 +475,7 @@ export class MsgStore {
     try {
       logger.log('getHistoryMsgActive', options)
       const { sessionId, endTime, lastMsgId, limit = 100 } = options
-      const [scene, to] = sessionId.split('-')
+      const { scene, to } = parseSessionId(sessionId)
 
       const finalParams: GetHistoryMsgsOptions = {
         scene: scene as any,
@@ -386,7 +489,34 @@ export class MsgStore {
       }
 
       const msgs = await this.nim.getHistoryMsgs(finalParams)
-      this.addMsg(sessionId, msgs)
+      // 如果是群组消息，需要获取下自己发出的消息已读未读数，拼接到 attach 中用来渲染
+      if (scene === 'team') {
+        const myMsgs = msgs.filter(
+          (item) => item.from === this.rootStore.userStore.myUserInfo.account
+        )
+        const teamMsgReceipts: teamMsgReceipt[] = myMsgs.map((item) => ({
+          teamId: to,
+          idClient: item.idClient,
+          idServer: item.idServer!,
+        }))
+        let res: GetTeamMsgReadResult[] = []
+        try {
+          res = await this.getTeamMsgReadsActive(teamMsgReceipts)
+        } catch (error) {
+          // 兼容老用户，忽略这个报错
+        }
+        const newMsgs = msgs.map((item) => {
+          const teamMsgReceipt = res.find((j) => j.idClient === item.idClient)
+          if (teamMsgReceipt) {
+            return this._updateReceiptMsg(item, teamMsgReceipt)
+          }
+          return item
+        })
+        this.addMsg(sessionId, newMsgs)
+      } else {
+        this.addMsg(sessionId, msgs)
+      }
+
       logger.log('getHistoryMsgActive success', options, finalParams, msgs)
       return msgs
     } catch (error: any) {
@@ -400,24 +530,24 @@ export class MsgStore {
    * @param msgs- 消息对象数组
    */
   addMsg(sessionId: string, msgs: IMMessage[]): void {
-    let _msgs = this.msgs.get(sessionId)
-    if (!_msgs) {
-      _msgs = new Map<string, IMMessage>()
+    const sortFunc = (a: IMMessage, b: IMMessage) => {
+      return a.time - b.time
     }
+    const _msgs = this.msgs.get(sessionId) || []
     msgs
       .filter((item) => !!item.idClient)
       .forEach((item) => {
-        const _msg = _msgs!.get(item.idClient)
+        const _msg = _msgs.find((msg) => msg.idClient === item.idClient)
         // SDK 可能会返回多条 idClient 相同的数据，此时取 time 最新的
         if (_msg) {
           if (_msg.time <= item.time || _msg.status === 'sending') {
-            _msgs!.set(item.idClient, item)
+            _msgs.splice(_msgs.indexOf(_msg), 1, item)
           }
         } else {
-          _msgs!.set(item.idClient, item)
+          _msgs.push(item)
         }
       })
-    this.msgs.set(sessionId, _msgs)
+    this.msgs.set(sessionId, [..._msgs].sort(sortFunc))
   }
   /**
    * MsgStore删除消息处理函数（MsgStore内部使用，外层不太推荐直接使用）
@@ -436,12 +566,16 @@ export class MsgStore {
       this.msgs.delete(sessionId)
       return
     }
-    idClients.forEach((item) => {
-      const msg = msgs.get(item)
-      this._handleClearMsgTimer(msg)
-      msgs.delete(item)
-    })
-    this.msgs.set(sessionId, msgs)
+    this.msgs.set(
+      sessionId,
+      msgs.filter((msg) => {
+        const isDelete = idClients.includes(msg.idClient)
+        if (isDelete) {
+          this._handleClearMsgTimer(msg)
+        }
+        return !isDelete
+      })
+    )
   }
   /**
    * MsgStore获取消息函数（MsgStore内部使用，外层不太推荐直接使用）
@@ -449,27 +583,16 @@ export class MsgStore {
    * @param idClients - 端测生成的消息id数组
    */
   getMsg(sessionId?: string, idClients?: string[]): IMMessage[] {
-    const sortFunc = (a: IMMessage, b: IMMessage) => {
-      return a.time - b.time
-    }
     if (!sessionId) {
-      return [...this.msgs.values()]
-        .map((item) => [...item.values()])
-        .flat()
-        .sort(sortFunc)
+      return [...this.msgs.values()].flat()
     }
-    const msgs = this.msgs.get(sessionId)
-    if (!msgs) {
-      return []
-    }
-    if (!idClients || !idClients.length) {
-      return [...msgs.values()].sort(sortFunc)
-    }
+    const msgs = this.msgs.get(sessionId) || []
 
-    return idClients
-      .map((item) => msgs.get(item)!)
-      .filter((item) => !!item)
-      .sort(sortFunc)
+    if (!idClients || !idClients.length) {
+      return msgs
+    }
+    // 如果有 idClients，只返回 idClients 中的消息，新数组
+    return msgs.filter((item) => idClients.includes(item.idClient))
   }
 
   private _handleSendMsgSuccess(msg: IMMessage) {
@@ -481,7 +604,17 @@ export class MsgStore {
           ...msg.attach,
           canRecall: true,
           reCallTimer: setTimeout(() => {
-            this.addMsg(msg.sessionId, [msg])
+            // 从内存中取最新的，因为中间可能有其他更新
+            const _msg = this.getMsg(msg.sessionId, [msg.idClient])[0]
+            if (_msg) {
+              const _attach = _msg.attach
+              if (_attach) {
+                delete _attach.canRecall
+                delete _attach.reCallTimer
+              }
+              _msg.attach = _attach
+              this.addMsg(msg.sessionId, [_msg])
+            }
           }, RECALL_TIME),
         },
       }
@@ -516,6 +649,18 @@ export class MsgStore {
 
   // private _onSyncRoamingMsgs(data: SyncRoamingMsgsResult) {}
 
+  private _onTeamMsgReceipts(data: TeamMsgReceipt[]): void {
+    logger.log('_onTeamMsgReceipts: ', data)
+    data.forEach((item) => {
+      const sessionId = `team-${item.teamId}`
+      const msg = this.getMsg(sessionId, [item.idClient])[0]
+      if (msg) {
+        const newMsg = this._updateReceiptMsg(msg, item)
+        this.addMsg(sessionId, [newMsg])
+      }
+    })
+  }
+
   private _onDeleteSelfMsgs(data: DeleteSelfMsgsResult[]) {
     logger.log('_onDeleteSelfMsgs: ', data)
     const res: { [key: string]: DeleteSelfMsgsResult[] } = {}
@@ -537,5 +682,46 @@ export class MsgStore {
         res[sessionId].map((item) => item.idClient)
       )
     })
+  }
+
+  private _getExtByReplyMsgs(sessionId: string): string | undefined {
+    let ext
+    const replyMsg = this.replyMsgs.get(sessionId)
+    if (replyMsg) {
+      // 记录部分信息，过多ext会导致发送不成功
+      // 'type' | 'body' | 'attach' | 'idClient' | 'fromNick' | 'from'
+      const yxReplyMsg = {
+        sessionId: replyMsg.sessionId,
+        fromNick: replyMsg.fromNick,
+        flow: replyMsg.flow,
+        from: replyMsg.from,
+        type: replyMsg.type,
+        body: replyMsg.body,
+        idClient: replyMsg.idClient,
+        idServer: replyMsg.idServer,
+      }
+      ext = JSON.stringify({
+        yxReplyMsg: yxReplyMsg,
+      })
+    }
+    return ext
+  }
+
+  private _updateReceiptMsg(
+    originMsg: IMMessage,
+    data: {
+      unread: number
+      read: number
+    }
+  ): IMMessage {
+    return {
+      ...originMsg,
+      // 在 attach 中存一下，这样不用改 ts 定义
+      attach: {
+        ...originMsg.attach,
+        yxUnread: Number(data.unread),
+        yxRead: Number(data.read),
+      },
+    }
   }
 }

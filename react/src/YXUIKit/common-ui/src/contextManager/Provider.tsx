@@ -26,27 +26,27 @@ import {
 
 export interface LocalOptions {
   /**
-   添加好友模式
+   添加好友模式，默认需要验证
    */
   addFriendNeedVerify?: boolean
   /**
-   群组邀请模式
+   群组邀请模式，默认管理员可邀请
    */
   teamInviteMode?: TeamInviteMode
   /**
-   群组加入模式
+   群组加入模式，默认无需验证
    */
   teamJoinMode?: TeamJoinMode
   /**
-   群组被邀请模式
+   群组被邀请模式，默认需要验证
    */
   teamBeInviteMode?: TeamBeInviteMode
   /**
-   群组更新模式
+   群组更新模式，默认管理员可修改
    */
   teamUpdateTeamMode?: TeamUpdateTeamMode
   /**
-   群组更新自定义字段模式
+   群组更新自定义字段模式，默认管理员可修改
    */
   teamUpdateExtMode?: TeamUpdateExtMode
 }
@@ -96,7 +96,7 @@ export const Provider: FC<ProviderProps> = memo(
     nimKitCore,
     sdkVersion = 1,
     locale = 'zh',
-    localeConfig,
+    localeConfig = zh,
     renderImIdle,
     renderImDisConnected,
     renderImConnecting,
@@ -168,11 +168,17 @@ export const Provider: FC<ProviderProps> = memo(
       return () => {
         if (!singleton) {
           rootStore.destroy()
+        }
+      }
+    }, [rootStore, singleton])
+
+    useEffect(() => {
+      return () => {
+        if (!singleton) {
           nim.destroy()
         }
       }
-    }, [nim, rootStore, singleton])
-
+    }, [nim, singleton])
     return (
       <Context.Provider
         value={{

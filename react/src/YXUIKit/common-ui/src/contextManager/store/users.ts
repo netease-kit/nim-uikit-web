@@ -82,6 +82,7 @@ export class UserStore {
       logger.log('saveMyUserInfoActive', params)
       const res = await this.nim.saveMyUserInfo(params)
       this.myUserInfo = res
+      this.addUsers([res])
       logger.log('saveMyUserInfoActive success', params, res)
       return res
     } catch (error) {
@@ -137,10 +138,12 @@ export class UserStore {
   private _onSyncMyNameCard(data: UserNameCard) {
     logger.log('_onSyncMyNameCard: ', data)
     this.myUserInfo = data
+    this.addUsers([data])
   }
 
   private _onUpdateMyNameCard(data: UserNameCard) {
     logger.log('_onUpdateMyNameCard: ', data)
     this.myUserInfo = data
+    this.addUsers([data])
   }
 }

@@ -8,6 +8,7 @@ import {
 import zh from '../../locales/zh'
 import RootStore from '.'
 import { message } from 'antd'
+import { parseSessionId } from '../../utils'
 
 export class SuperTeamStore {
   superTeams: Map<string, SuperTeam> = new Map()
@@ -120,8 +121,8 @@ export class SuperTeamStore {
   }) {
     this.addSuperTeam([data.team])
     const members = [
-      { ...data.from, account: data.from.id.split('-')[1] },
-      { ...data.to, account: data.to.id.split('-')[1] },
+      { ...data.from, account: parseSessionId(data.from.id).to },
+      { ...data.to, account: parseSessionId(data.to.id).to },
     ]
     this.rootStore.superTeamMemberStore.updateSuperTeamMember(
       data.team.teamId,
