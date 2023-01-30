@@ -4,7 +4,7 @@ import classnames from 'classnames'
 import { useTranslation } from '../../../../common-ui/src'
 import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 
-interface GroupPowerProps {
+export interface GroupPowerProps {
   onUpdateTeamInfo: (team: Partial<Team>) => void
   onTeamMuteChange: (mute: boolean) => void
   team: Team

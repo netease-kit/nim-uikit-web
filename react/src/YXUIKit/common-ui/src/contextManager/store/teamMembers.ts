@@ -13,7 +13,8 @@ import {
 import zh from '../../locales/zh'
 import RootStore from '.'
 import { message } from 'antd'
-import { logger } from '../../utils'
+import { parseSessionId, logger } from '../../utils'
+import { UpdateMyMemberInfoOptions } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 /**Mobx 可观察对象，负责管理群组成员的子 store*/
 export class TeamMemberStore {
   teamMembers: Map<string, Map<string, TeamMember>> = new Map()
@@ -108,24 +109,21 @@ export class TeamMemberStore {
     }
   }
   /**
-   * 群消息免打扰
-   * @param teamId - 群id
-   * @param bitConfigMask -  * 提醒策略  0 开启提醒  1 关闭消息提醒   2 只接受管理员的消息的提醒
+   * 更新我在群中的信息
+   * @param options
+   * options.teamId - 群id <br>
+   * options.nickInTeam - 群昵称 <br>
+   * options.muteTeam - 是否关闭此群的消息提醒, true表示关闭提醒, 但是SDK仍然会收到这个群的消息, SDK只是记录这个设置, 具体根据这个设置要执行的操作由第三方APP决定 <br>
+   * options.bitConfigMask - 提醒策略: 0 开启提醒；1 关闭消息提醒；2 只接受管理员的消息的提醒 <br>
+   * options.ext - 扩展字段 <br>
    */
-  // 群消息免打扰
-  async muteTeamNotiActive(
-    teamId: string,
-    bitConfigMask: number
-  ): Promise<void> {
+  async updateMyMemberInfo(options: UpdateMyMemberInfoOptions): Promise<void> {
     try {
-      logger.log('muteTeamNotiActive', teamId, bitConfigMask)
-      await this.nim.updateMyMemberInfo({
-        teamId,
-        bitConfigMask,
-      })
-      logger.log('muteTeamNotiActive success: ', teamId, bitConfigMask)
+      logger.log('updateMyMemberInfo', options)
+      await this.nim.updateMyMemberInfo(options)
+      logger.log('updateMyMemberInfo success: ', options)
     } catch (error) {
-      logger.error('muteTeamNotiActive failed: ', teamId, error)
+      logger.error('updateMyMemberInfo failed: ', options, error)
       throw error
     }
   }
@@ -186,17 +184,25 @@ export class TeamMemberStore {
     this.teamMembers.set(teamId, teamMembers)
   }
 
-  private _onAddTeamMembers(data: {
+  private async _onAddTeamMembers(data: {
     team: Team
+    // 以下两个参数是增量
     accounts: string[]
     members: TeamMember[]
   }) {
     logger.log('_onAddTeamMembers: ', data)
     this.rootStore.teamStore.addTeam([data.team])
     this.addTeamMember(data.team.teamId, data.members)
-    // 如果是选中的会话，就给个提示
     const sessionId = `team-${data.team.teamId}`
-    if (this.rootStore.uiStore.selectedSession === sessionId) {
+    // 如果是自己进群，就插入一条临时会话
+    if (data.accounts.includes(this.rootStore.userStore.myUserInfo.account)) {
+      await this.rootStore.sessionStore.insertSessionActive(
+        'team',
+        data.team.teamId
+      )
+    }
+    // 如果是选中的会话，就给个提示
+    else if (this.rootStore.uiStore.selectedSession === sessionId) {
       const nicks = data.members.map((item) => item.nickInTeam || item.account)
       message.info(`${nicks.join('，')}${this.t('enterTeamText')}`)
     }
@@ -246,7 +252,7 @@ export class TeamMemberStore {
     const members = data.members.map((item) => ({
       ...item,
       // 这里 SDK 返回的内容中没有 account，先自行处理一下
-      account: item.id.split('-')[1],
+      account: parseSessionId(item.id).to,
     }))
     // @ts-ignore SDK 问题，先忽略
     this.updateTeamMember(data.team.teamId, members)

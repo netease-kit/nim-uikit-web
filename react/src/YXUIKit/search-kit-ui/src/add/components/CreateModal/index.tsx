@@ -46,7 +46,7 @@ const CreateModal: React.FC<CreateModalProps> = ({
       const team = await store.teamStore.createTeamActive({
         accounts: selectedList.map((item) => item.account),
         avatar: avatarUrl,
-        name: groupName,
+        name: groupName.trim(),
       })
       message.success(t('createTeamSuccessText'))
       setTeamId(team.teamId)
@@ -115,7 +115,7 @@ const CreateModal: React.FC<CreateModalProps> = ({
           maxLength={30}
           value={groupName}
           onChange={(e) => {
-            setGroupName(e.target.value.trim())
+            setGroupName(e.target.value)
           }}
         />
       </div>

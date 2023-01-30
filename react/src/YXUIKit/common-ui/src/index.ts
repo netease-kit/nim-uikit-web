@@ -17,7 +17,11 @@ export { MyUserCard } from './components/MyUserCard'
 export { GroupAvatarSelect, urls } from './components/GroupAvatarSelect'
 export { FriendSelectContainer } from './components/FriendSelect/Container'
 export { Welcome } from './components/Welcome'
-export { ParseSession } from './components/CommonParseSession'
+export { ReadPercent } from './components/ReadPercent'
+export {
+  ParseSession,
+  getMsgContentTipByType,
+} from './components/CommonParseSession'
 export { useStateContext } from './hooks/useStateContext'
 export { useTranslation } from './hooks/useTranslation'
 export { useEventTracking } from './hooks/useEventTracking'

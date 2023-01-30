@@ -8,7 +8,7 @@ import { ContactType, Relation } from '../types'
 import RootStore from '.'
 import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
-import { logger } from '../../utils'
+import { parseSessionId, logger } from '../../utils'
 import { debounce } from '@xkit-yx/utils'
 import {
   Team,
@@ -23,18 +23,15 @@ export class UiStore {
   selectedContactType: ContactType | '' = ''
   selectedSession = ''
   selectedP2PSessionRelation: Relation = 'stranger'
-  friendsWithoutBlacklist: NimKitCoreTypes.IFriendInfo[] = []
-  blacklistWithUserCard: NimKitCoreTypes.IFriendInfo[] = []
   p2pSessionList: NimKitCoreTypes.P2PSession[] = []
   teamSessionList: NimKitCoreTypes.TeamSession[] = []
   applyMsgList: SystemMessage[] = []
   // sessionList: NimKitCoreTypes.ISession[] = []
-  systemMsgUnread = 0
 
   uploadFileLoading = false
   uploadImageLoading = false
 
-  private friendsAndBlacklistHandler: IReactionDisposer
+  // private friendsAndBlacklistHandler: IReactionDisposer
   // private sessionListHandler: IReactionDisposer
   private p2pSessionListHandler: IReactionDisposer
   private teamSessionListHandler: IReactionDisposer
@@ -43,14 +40,13 @@ export class UiStore {
 
   constructor(private rootStore: RootStore) {
     makeAutoObservable(this)
-
-    this.friendsAndBlacklistHandler = reaction(
-      () => ({
-        friends: this.friends,
-        blacklist: this.rootStore.relationStore.blacklist,
-      }),
-      this.watchFriendsAndBlacklist.bind(this)
-    )
+    // this.friendsAndBlacklistHandler = reaction(
+    //   () => ({
+    //     friends: this.friends,
+    //     blacklist: this.rootStore.relationStore.blacklist,
+    //   }),
+    //   this.watchFriendsAndBlacklist.bind(this)
+    // )
 
     this.p2pSessionListHandler = reaction(
       () => ({
@@ -104,7 +100,7 @@ export class UiStore {
    * 销毁UiStore，使UI重置
    */
   destroy(): void {
-    this.friendsAndBlacklistHandler()
+    // this.friendsAndBlacklistHandler()
     // this.sessionListHandler()
     this.p2pSessionListHandler()
     this.teamSessionListHandler()
@@ -164,24 +160,7 @@ export class UiStore {
   setUploadImageLoading(loading: boolean): void {
     this.uploadImageLoading = loading
   }
-  /**
-   * 重置系统消息未读
-   */
-  resetSystemMsgUnread(): void {
-    this.systemMsgUnread = 0
-  }
-  /**
-   * 添加未读系统消息
-   */
-  addSystemMsgUnread(count: number): void {
-    this.systemMsgUnread += count
-  }
-  /**
-   * 减少未读系统消息
-   */
-  decreaseSystemMsgUnread(count: number): void {
-    this.systemMsgUnread -= count
-  }
+
   /**
    * 获取群信息以及群关系
    * @param loading - 是否loading
@@ -259,6 +238,52 @@ export class UiStore {
     })
   }
 
+  /**
+   * 获取好友名片
+   * * @param account - 账号
+   */
+  getFriendWithUserNameCard(account: string): NimKitCoreTypes.IFriendInfo {
+    const friend: FriendProfile = this.rootStore.friendStore.friends.get(
+      account
+    ) || {
+      account: '',
+      updateTime: Date.now(),
+      createTime: Date.now(),
+      valid: false,
+    }
+    const userCard: UserNameCard = this.rootStore.userStore.users.get(
+      account
+    ) || {
+      account: '',
+      updateTime: Date.now(),
+      createTime: Date.now(),
+    }
+    return { ...friend, ...userCard }
+  }
+
+  // TODO 该方法对于消息上的称谓，会不再取 msg.fromNick，这会与目前的表现不一致，原因是 SDK 还没有提供昵称变更的回调。
+  /**
+   * 查询用户称谓
+   * 优先级按照 备注 > 群昵称 > 好友昵称 > 好友账号 返回
+   * * @param account - 账号
+   * * @param teamId - 群号
+   */
+  getAppellation({
+    account,
+    teamId = '',
+  }: {
+    account: string
+    teamId?: string
+  }): string {
+    const friend = this.rootStore.friendStore.friends.get(account)
+    const user = this.rootStore.userStore.users.get(account)
+    const teamMember = this.rootStore.teamMemberStore.teamMembers
+      .get(teamId)
+      ?.get(account)
+
+    return friend?.alias || teamMember?.nickInTeam || user?.nick || account
+  }
+
   get friends(): FriendProfile[] {
     return [...this.rootStore.friendStore.friends.values()]
   }
@@ -279,6 +304,9 @@ export class UiStore {
     return [...this.rootStore.sysMsgStore.applyMsgs.values()]
   }
 
+  get systemMsgUnread(): number {
+    return this.rootStore.sysMsgStore.getUnReadsysMsgsCount()
+  }
   get myTeamMemberInfos(): TeamMember[] {
     const myAccount = this.rootStore.userStore.myUserInfo.account
     const teamMembers: TeamMember[] = []
@@ -303,75 +331,74 @@ export class UiStore {
     const other = sessions.filter((item) => !item.stickTopInfo?.isStickOnTop)
     return [...filterIsTop, ...other]
   }
+
   /**
-   * 获取用户名片
-   * * @param account - 账号
+   * 获取好友名片列表
    */
-  getFriendWithUserNameCard(account: string): NimKitCoreTypes.IFriendInfo {
-    const friend: FriendProfile = this.rootStore.friendStore.friends.get(
-      account
-    ) || {
-      account: '',
-      updateTime: Date.now(),
-      createTime: Date.now(),
-      valid: false,
-    }
-    const userCard: UserNameCard = this.rootStore.userStore.users.get(
-      account
-    ) || {
-      account: '',
-      updateTime: Date.now(),
-      createTime: Date.now(),
-    }
-    return { ...friend, ...userCard }
+  get friendsWithoutBlacklist(): NimKitCoreTypes.IFriendInfo[] {
+    return this.friends
+      .map((item) => this.getFriendWithUserNameCard(item.account))
+      .filter((item) => {
+        return !this.rootStore.relationStore.blacklist.includes(item.account)
+      })
   }
 
-  private async watchFriendsAndBlacklist({
-    friends,
-    blacklist,
-  }: {
-    friends: FriendProfile[]
-    blacklist: string[]
-  }): Promise<void> {
-    try {
-      logger.log('watchFriendsAndBlacklist', friends, blacklist)
-      const userCards = await Promise.all(
-        friends.map((item) => {
-          return this.rootStore.userStore.getUserActive(item.account)
-        })
-      )
-      const friendsWithUserCard = friends.map((item) => {
-        const userCard = userCards.find((j) => item.account === j.account)!
-        return {
-          ...item,
-          ...userCard,
-        }
-      })
-      const friendsWithoutBlacklist = friendsWithUserCard.filter((i) =>
-        blacklist.every((j) => i.account !== j)
-      )
-      const blacklistWithUserCard = friendsWithUserCard.filter((i) =>
-        blacklist.includes(i.account)
-      )
-      runInAction(() => {
-        this.friendsWithoutBlacklist = friendsWithoutBlacklist
-        this.blacklistWithUserCard = blacklistWithUserCard
-      })
-      logger.log(
-        'watchFriendsAndBlacklist success: ',
-        friendsWithoutBlacklist,
-        blacklistWithUserCard
-      )
-    } catch (error) {
-      logger.error(
-        'watchFriendsAndBlacklist failed: ',
-        friends,
-        blacklist,
-        error
-      )
-      throw error
-    }
+  /**
+   * 获取黑名单名片列表
+   */
+  get blacklistWithUserCard(): NimKitCoreTypes.IFriendInfo[] {
+    return this.rootStore.relationStore.blacklist.map((item) =>
+      this.getFriendWithUserNameCard(item)
+    )
   }
+
+  // TODO reaction 确实一般是用不到的，普通的 mobx get 方法就可以实时变更。之前没有实时变更可能是一些奇怪的 bug 导致的
+  // private async watchFriendsAndBlacklist({
+  //   friends,
+  //   blacklist,
+  // }: {
+  //   friends: FriendProfile[]
+  //   blacklist: string[]
+  // }): Promise<void> {
+  //   try {
+  //     logger.log('watchFriendsAndBlacklist', friends, blacklist)
+  //     const userCards = await Promise.all(
+  //       friends.map((item) => {
+  //         return this.rootStore.userStore.getUserActive(item.account)
+  //       })
+  //     )
+  //     const friendsWithUserCard = friends.map((item) => {
+  //       const userCard = userCards.find((j) => item.account === j.account)!
+  //       return {
+  //         ...item,
+  //         ...userCard,
+  //       }
+  //     })
+  //     const friendsWithoutBlacklist = friendsWithUserCard.filter((i) =>
+  //       blacklist.every((j) => i.account !== j)
+  //     )
+  //     const blacklistWithUserCard = friendsWithUserCard.filter((i) =>
+  //       blacklist.includes(i.account)
+  //     )
+  //     runInAction(() => {
+  //       this.friendsWithoutBlacklist = friendsWithoutBlacklist
+  //       this.blacklistWithUserCard = blacklistWithUserCard
+  //     })
+  //     logger.log(
+  //       'watchFriendsAndBlacklist success: ',
+  //       friendsWithoutBlacklist,
+  //       blacklistWithUserCard
+  //     )
+  //   } catch (error) {
+  //     logger.error(
+  //       'watchFriendsAndBlacklist failed: ',
+  //       friends,
+  //       blacklist,
+  //       error
+  //     )
+  //     throw error
+  //   }
+  // }
 
   private async getP2pSessionList(params: {
     sessions: Session[]
@@ -586,7 +613,7 @@ export class UiStore {
     needUpdate?: boolean
   }): Relation | undefined {
     logger.log('getRelation', { sessionId, myAccount, blacklist, friends })
-    const [scene, to] = sessionId.split('-')
+    const { scene, to } = parseSessionId(sessionId)
     if (scene !== 'p2p') {
       return
     }

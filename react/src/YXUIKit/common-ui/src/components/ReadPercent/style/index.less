@@ -1,0 +1,26 @@
+@import '~antd/lib/style/themes/variable.less';
+@import './theme.less';
+
+@percent-prefix-cls: ~'@{percent-prefix}-wrap';
+
+.@{percent-prefix-cls} {
+  display: flex;
+  align-items: center;
+
+  &-icon {
+    color: @yx-avatar-color-3!important;
+  }
+
+  &-svg {
+    transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+    &-bg {
+      fill: @yx-primary-color;
+      stroke: @yx-avatar-color-3;
+    }
+
+    &-content {
+      stroke: @yx-avatar-color-3;
+    }
+  }
+}

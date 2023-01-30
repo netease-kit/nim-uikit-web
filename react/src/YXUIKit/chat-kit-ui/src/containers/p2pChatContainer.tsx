@@ -22,7 +22,7 @@ import {
 import { Action } from '../Container'
 import ChatP2pSetting from '../components/ChatP2pSetting'
 import { Session } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/SessionServiceInterface'
-import { debounce } from '@xkit-yx/utils'
+import { debounce, VisibilityObserver } from '@xkit-yx/utils'
 import {
   IMMessage,
   TMsgScene,
@@ -36,6 +36,7 @@ export interface P2pChatContainerProps {
   scene: TMsgScene
   to: string
   actions?: Action[]
+  p2pMsgReceiptVisible?: boolean
   onSendText?: (data: {
     value: string
     scene: TMsgScene
@@ -56,6 +57,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     scene,
     to,
     actions,
+    p2pMsgReceiptVisible,
     onSendText: onSendTextFromProps,
     renderP2pCustomMessage,
     renderHeader,
@@ -74,6 +76,8 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
 
     const msgs = store.msgStore.getMsg(sessionId)
 
+    const replyMsg = store.msgStore.replyMsgs.get(sessionId)
+
     const user = store.uiStore.getFriendWithUserNameCard(to)
 
     const myUser = store.userStore.myUserInfo
@@ -84,6 +88,12 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
 
     const messageListContainerDomRef = useRef<HTMLDivElement>(null)
     const settingDrawDomRef = useRef<HTMLDivElement>(null)
+
+    const visibilityObserver = useMemo(() => {
+      return new VisibilityObserver({
+        root: messageListContainerDomRef.current,
+      })
+    }, [to])
 
     // 以下是 UI 相关的 state，需要在切换会话时重置
     const [action, setAction] = useState<ChatAction | undefined>(undefined)
@@ -194,6 +204,10 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       }
     }
 
+    const onRemoveReplyMsg = () => {
+      replyMsg && store.msgStore.reomveReplyMsgActive(replyMsg.sessionId)
+    }
+
     const onMessageAction = async (key: MenuItemKey, msg: IMMessage) => {
       switch (key) {
         case 'delete':
@@ -202,6 +216,8 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         case 'recall':
           await store.msgStore.reCallMsgActive(msg)
           break
+        case 'reply':
+          await store.msgStore.replyMsgActive(msg)
         default:
           break
       }
@@ -271,6 +287,64 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       }
     }
 
+    useEffect(() => {
+      const notMyMsgs = msgs
+        .filter((item) => item.from !== myUser.account)
+        .filter((item) => !!item.idServer)
+        .filter((item) =>
+          // 以下这些类型的消息不需要发送已读未读
+          ['notification', 'tip', 'robot', 'g2'].every((j) => j !== item.type)
+        )
+
+      const visibleChangeHandler = (params: {
+        visible: boolean
+        target: HTMLElement
+      }) => {
+        if (params.visible) {
+          // 发送已读
+          const msg = notMyMsgs.find(
+            (item) => item.idClient === params.target.id
+          )
+          if (msg) {
+            store.msgStore.sendMsgReceiptActive(msg).finally(() => {
+              visibilityObserver.unobserve(params.target)
+            })
+          }
+        }
+      }
+
+      const handler = (isObserve: boolean) => {
+        notMyMsgs.forEach((item) => {
+          const target = document.getElementById(item.idClient)
+          if (target) {
+            if (isObserve) {
+              visibilityObserver.observe(target)
+            } else {
+              visibilityObserver.unobserve(target)
+            }
+          }
+        })
+
+        if (isObserve) {
+          visibilityObserver.on('visibleChange', visibleChangeHandler)
+        } else {
+          visibilityObserver.off('visibleChange', visibleChangeHandler)
+        }
+      }
+
+      handler(true)
+
+      return () => {
+        handler(false)
+      }
+    }, [store.msgStore, msgs, visibilityObserver, myUser.account])
+
+    useEffect(() => {
+      return () => {
+        visibilityObserver.destroy()
+      }
+    }, [visibilityObserver])
+
     // 切换会话时需要重新初始化
     useEffect(() => {
       resetState()
@@ -327,6 +401,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             ref={messageListContainerDomRef}
             msgs={msgs}
             member={user}
+            p2pMsgReceiptVisible={p2pMsgReceiptVisible}
             noMore={noMore}
             loadingMore={loadingMore}
             myAccount={myUser?.account || ''}
@@ -335,6 +410,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
               store.uiStore.selectedP2PSessionRelation === 'stranger'
             }
             strangerNotiText={`${userNickOrAccount} ${t('strangerNotiText')}`}
+            msgReceiptTime={session?.msgReceiptTime}
             onReceiveMsgBtnClick={scrollToBottom}
             onResend={onResend}
             onMessageAction={onMessageAction}
@@ -350,6 +426,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
                 ? renderP2pInputPlaceHolder(session!)
                 : `${t('sendToText')} ${userNickOrAccount}${t('sendUsageText')}`
             }
+            replyMsg={replyMsg}
             scene={scene}
             to={to}
             actions={actions}
@@ -360,13 +437,14 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             onSendText={onSendText}
             onSendFile={onSendFile}
             onSendImg={onSendImg}
+            onRemoveReplyMsg={onRemoveReplyMsg}
           />
           <ChatSettingDrawer
             prefix={prefix}
             visible={settingDrawerVisible}
             drawerContainer={settingDrawDomRef}
             onClose={onSettingDrawerClose}
-            title="设置"
+            title={t('setText')}
           >
             <ChatP2pSetting
               alias={user.alias || ''}

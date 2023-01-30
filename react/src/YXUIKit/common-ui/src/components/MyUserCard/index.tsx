@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState, useMemo } from 'react'
-import { Modal, Input, Select, Upload, message } from 'antd'
+import { Modal, Input, Select, Upload, message, Form } from 'antd'
 import { CrudeAvatar } from '../CrudeAvatar'
 import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 import { useTranslation } from '../../hooks/useTranslation'
@@ -164,65 +164,73 @@ export const MyUserCard: FC<MyUserCardProps> = ({
           </span>
         </div>
         <div className={`${_prefix}-content`}>
-          <div className={`${_prefix}-content-form-item`}>
-            <label>{t('accountText')}</label>
-            <Input value={props.account} disabled />
-          </div>
-          <div className={`${_prefix}-content-form-item`}>
-            <label>{t('nickText')}</label>
-            <Input
-              value={nick}
-              maxLength={15}
-              placeholder={t('nickPlaceholder')}
-              onChange={(e) => {
-                setNick(e.target.value)
-              }}
-            />
-          </div>
-          <div className={`${_prefix}-content-form-item`}>
-            <label>{t('genderText')}</label>
-            <Select
-              style={{ width: '100%' }}
-              options={genderOptions}
-              value={gender}
-              placeholder={t('genderPlaceholder')}
-              onChange={setGender}
-            />
-          </div>
-          <div className={`${_prefix}-content-form-item`}>
-            <label>{t('phoneText')}</label>
-            <Input
-              value={tel}
-              maxLength={11}
-              placeholder={t('phonePlaceholder')}
-              onChange={(e) => {
-                setTel(e.target.value.replace(/\D/g, ''))
-              }}
-            />
-          </div>
-          <div className={`${_prefix}-content-form-item`}>
-            <label>{t('emailText')}</label>
-            <Input
-              value={email}
-              maxLength={30}
-              placeholder={t('emailPlaceholder')}
-              onChange={(e) => {
-                setEmail(e.target.value)
-              }}
-            />
-          </div>
-          <div className={`${_prefix}-content-form-item`}>
-            <label>{t('signText')}</label>
-            <Input.TextArea
-              value={signature}
-              maxLength={50}
-              style={{ resize: 'none' }}
-              placeholder={t('signPlaceholder')}
-              onChange={(e) => {
-                setSignature(e.target.value)
-              }}
-            />
-          </div>
+          <Form labelCol={{ span: 6 }}>
+            <Form.Item label={t('accountText')}>
+              <div className={`${_prefix}-content-form-item`}>
+                <Input value={props.account} disabled />
+              </div>
+            </Form.Item>
+            <Form.Item label={t('nickText')}>
+              <div className={`${_prefix}-content-form-item`}>
+                <Input
+                  value={nick}
+                  maxLength={15}
+                  placeholder={t('nickPlaceholder')}
+                  onChange={(e) => {
+                    setNick(e.target.value)
+                  }}
+                />
+              </div>
+            </Form.Item>
+            <Form.Item label={t('genderText')}>
+              <div className={`${_prefix}-content-form-item`}>
+                <Select
+                  style={{ width: '100%' }}
+                  options={genderOptions}
+                  value={gender}
+                  placeholder={t('genderPlaceholder')}
+                  onChange={setGender}
+                />
+              </div>
+            </Form.Item>
+            <Form.Item label={t('phoneText')}>
+              <div className={`${_prefix}-content-form-item`}>
+                <Input
+                  value={tel}
+                  maxLength={11}
+                  placeholder={t('phonePlaceholder')}
+                  onChange={(e) => {
+                    setTel(e.target.value.replace(/\D/g, ''))
+                  }}
+                />
+              </div>
+            </Form.Item>
+            <Form.Item label={t('emailText')}>
+              <div className={`${_prefix}-content-form-item`}>
+                <Input
+                  value={email}
+                  maxLength={30}
+                  placeholder={t('emailPlaceholder')}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                  }}
+                />
+              </div>
+            </Form.Item>
+            <Form.Item label={t('signText')}>
+              <div className={`${_prefix}-content-form-item`}>
+                <Input.TextArea
+                  value={signature}
+                  maxLength={50}
+                  style={{ resize: 'none' }}
+                  placeholder={t('signPlaceholder')}
+                  onChange={(e) => {
+                    setSignature(e.target.value)
+                  }}
+                />
+              </div>
+            </Form.Item>
+          </Form>
         </div>
       </>
     )
@@ -240,6 +248,7 @@ export const MyUserCard: FC<MyUserCardProps> = ({
       cancelText={t('cancelText')}
       onOk={handleSave}
       onCancel={handleCancel}
+      width={370}
     >
       {contentRenderer()}
     </Modal>

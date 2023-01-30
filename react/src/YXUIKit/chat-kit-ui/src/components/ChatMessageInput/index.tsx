@@ -1,15 +1,25 @@
 import React, { useState, useRef, Fragment } from 'react'
 import { Input, Upload, Popover, message, Button, Spin } from 'antd'
-import { CommonIcon, Constant, useTranslation } from '../../../../common-ui/src'
+import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
+import {
+  CommonIcon,
+  Constant,
+  getMsgContentTipByType,
+  Utils,
+  useTranslation,
+  useStateContext,
+} from '../../../../common-ui/src'
 import { Action } from '../../Container'
 import { MAX_UPLOAD_FILE_SIZE } from '../../constant'
-import { LoadingOutlined } from '@ant-design/icons'
+import { LoadingOutlined, CloseOutlined } from '@ant-design/icons'
 import { TMsgScene } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
+import { observer } from 'mobx-react'
 
 const { TextArea } = Input
 export interface ChatMessageInputProps {
   prefix?: string
   placeholder?: string
+  replyMsg?: IMMessage
   scene: TMsgScene
   to: string
   actions?: Action[]
@@ -21,6 +31,7 @@ export interface ChatMessageInputProps {
   onSendText: (value: string) => void
   onSendFile: (file: File) => void
   onSendImg: (file: File) => void
+  onRemoveReplyMsg?: () => void
 }
 
 const mergeActions = (
@@ -40,27 +51,32 @@ const mergeActions = (
   })
 }
 
-const ChatMessageInput: React.FC<ChatMessageInputProps> = (props) => {
+const ChatMessageInput: React.FC<ChatMessageInputProps> = observer((props) => {
   const {
     prefix = 'chat',
     placeholder = '',
     actions,
+    scene,
+    to,
     mute = false,
     inputValue = '',
     uploadImageLoading = false,
     uploadFileLoading = false,
+    replyMsg,
     setInputValue,
     onSendText,
     onSendFile,
     onSendImg,
+    onRemoveReplyMsg,
   } = props
 
   const { t } = useTranslation()
+  const { store } = useStateContext()
   const _prefix = `${prefix}-message-input`
   const inputRef = useRef<any>(null)
   const [visible, setVisible] = useState<boolean>(false)
   const antIcon = <LoadingOutlined className={`${_prefix}-loading-spin`} spin />
-
+  const { EMOJI_ICON_MAP_CONFIG } = Utils.handleEmojiTranslate(t)
   const defaultActions: Action[] = [
     {
       action: 'emoji',
@@ -205,7 +221,7 @@ const ChatMessageInput: React.FC<ChatMessageInputProps> = (props) => {
 
   const emojiContent = (
     <>
-      {Object.keys(Constant.EMOJI_ICON_MAP_CONFIG).map((tag: string, index) => (
+      {Object.keys(EMOJI_ICON_MAP_CONFIG).map((tag: string, index) => (
         <span
           onClick={() => {
             onEmojiClickHandler(tag)
@@ -216,12 +232,21 @@ const ChatMessageInput: React.FC<ChatMessageInputProps> = (props) => {
         >
           <CommonIcon
             className={`${_prefix}-emoji-item-icon`}
-            type={Constant.EMOJI_ICON_MAP_CONFIG[tag]}
+            type={EMOJI_ICON_MAP_CONFIG[tag]}
           />
         </span>
       ))}
     </>
   )
+
+  const replyMsgContent = () => {
+    let content = `${t('replyText')} ${store.uiStore.getAppellation({
+      account: replyMsg?.from || '',
+      teamId: scene === 'team' ? to : '',
+    })}：`
+    content += replyMsg ? getMsgContentTipByType(replyMsg, t) : ''
+    return <div className={`${_prefix}-reply-content`}>{content}</div>
+  }
 
   // const isMute = useMemo(() => {
   //   return (teamInfo as ITeamInfo).mute && !isGroupOwner && !isGroupManager
@@ -230,30 +255,39 @@ const ChatMessageInput: React.FC<ChatMessageInputProps> = (props) => {
   return (
     <div className={`${prefix}-message-input`}>
       <div className={`${_prefix}-wrap`}>
-        <TextArea
-          ref={inputRef}
-          bordered={false}
-          className={`${_prefix}-textarea`}
-          placeholder={placeholder}
-          value={inputValue}
-          disabled={mute}
-          onChange={onInputChangeHandler}
-          onPressEnter={onPressEnterHandler}
-          autoSize={{ maxRows: 2 }}
-        />
-        <div className={`${_prefix}-icon-box`}>
-          {finalActions.map((item) =>
-            item.render && item.visible ? (
-              <Fragment key={item.action}>
-                {item.render({
-                  ...props,
-                  prefix: _prefix,
-                })}
-              </Fragment>
-            ) : null
-          )}
-        </div>
-        {/* <div
+        {!!replyMsg && (
+          <div className={`${_prefix}-reply-wrap`}>
+            <div className={`${_prefix}-reply-container`}>
+              <CloseOutlined onClick={() => onRemoveReplyMsg?.()} />
+              {replyMsgContent()}
+            </div>
+          </div>
+        )}
+        <div className={`${_prefix}-content`}>
+          <TextArea
+            ref={inputRef}
+            bordered={false}
+            className={`${_prefix}-textarea`}
+            placeholder={placeholder}
+            value={inputValue}
+            disabled={mute}
+            onChange={onInputChangeHandler}
+            onPressEnter={onPressEnterHandler}
+            autoSize={{ maxRows: 2 }}
+          />
+          <div className={`${_prefix}-icon-box`}>
+            {finalActions.map((item) =>
+              item.render && item.visible ? (
+                <Fragment key={item.action}>
+                  {item.render({
+                    ...props,
+                    prefix: _prefix,
+                  })}
+                </Fragment>
+              ) : null
+            )}
+          </div>
+          {/* <div
         contentEditable="true"
         ref={divRef}
         className={`${_prefix}-textarea`}
@@ -262,9 +296,10 @@ const ChatMessageInput: React.FC<ChatMessageInputProps> = (props) => {
         }}
         onKeyUp={onPressEnterHandler}
       ></div> */}
+        </div>
       </div>
     </div>
   )
-}
+})
 
 export default ChatMessageInput

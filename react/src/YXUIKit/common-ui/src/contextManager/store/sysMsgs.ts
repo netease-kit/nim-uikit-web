@@ -14,7 +14,7 @@ import { FriendProfile } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/FriendService
 export class SysMsgStore {
   // 申请消息
   applyMsgs: Map<string, SystemMessage> = new Map()
-
+  unReadSysMsgs: Map<string, SystemMessage> = new Map()
   constructor(
     private rootStore: RootStore,
     private nim: NimKitCoreTypes.INimKitCore,
@@ -39,29 +39,29 @@ export class SysMsgStore {
    * @param msg 系统消息对象
    */
   addApplyMsg(msg: SystemMessage): void {
-    if (msg.from && msg.type) {
+    if (msg.from && msg.type && msg.to) {
       // TODO SDK 有部分系统通知没有 idServer，因此先用 from 和 type 做 key，等后续 sdk 升级
-      const id = `${msg.from}-${msg.type}`
+      const id = `${msg.from}-${msg.type}-${msg.to}`
+      this.unReadSysMsgs.set(id, msg)
       this.applyMsgs.set(id, msg)
     } else {
       logger.warn('addApplyMsg drop', msg)
       return
     }
-    this.rootStore.uiStore.addSystemMsgUnread(1)
   }
   /**
    * SysMsgStore删除申请消息处理函数（SysMsgStore内部使用，外层不太推荐直接使用）
    * @param idServer 服务器用于区分消息用的ID
    */
   deleteApplyMsg(msg: SystemMessage): void {
-    if (msg.from && msg.type) {
-      const id = `${msg.from}-${msg.type}`
+    if (msg.from && msg.type && msg.to) {
+      const id = `${msg.from}-${msg.type}-${msg.to}`
       this.applyMsgs.delete(id)
+      this.unReadSysMsgs.delete(id)
     } else {
       logger.warn('deleteApplyMsg drop', msg)
       return
     }
-    this.rootStore.uiStore.decreaseSystemMsgUnread(1)
   }
 
   // TODO 这里 sdk 没有返回 idServer，因此只能根据 from 和 type 来更新，等待 sdk 优化
@@ -75,15 +75,17 @@ export class SysMsgStore {
     from,
     state,
     type,
+    to,
   }: {
     idServer?: string
     from: string
     state: TSystemMessageStatus
     type: TSystemMessageType
+    to: string
   }): void {
     let id = ''
-    if (from && type) {
-      id = `${from}-${type}`
+    if (from && type && to) {
+      id = `${from}-${type}-${to}`
     } else {
       logger.warn('updateApplyMsg drop', {
         idServer,
@@ -97,23 +99,46 @@ export class SysMsgStore {
     if (oldSysMsg) {
       this.applyMsgs.set(id, { ...oldSysMsg, ...{ from, type, state } })
     }
-
     // 这里还要继续响应一些操作
     switch (type) {
       case 'friendRequest':
-        this.rootStore.friendStore.addFriend([
-          {
-            account: from,
-            updateTime: Date.now(),
-            createTime: Date.now(),
-            valid: true,
-          },
-        ])
+        if (state === 'pass') {
+          this.rootStore.friendStore.addFriend([
+            {
+              account: from,
+              updateTime: Date.now(),
+              createTime: Date.now(),
+              valid: true,
+            },
+          ])
+        }
         break
       default:
         break
     }
   }
+  /**
+   * 获取去重后的未读系统消息
+   */
+  getUnReadsysMsgsCount() {
+    return [...this.unReadSysMsgs.keys()].length
+  }
+
+  /**
+   * 删除未读系统消息
+   */
+  deleteUnReadSysMsgs(type: TSystemMessageType, from: string, to: string) {
+    const id = `${from}-${type}-${to}`
+    this.unReadSysMsgs.delete(id)
+  }
+
+  /**
+   * 重置系统消息未读
+   */
+  resetSystemMsgUnread(): void {
+    this.unReadSysMsgs.clear()
+  }
+
   /**
    * 销毁SysMsgStore，会取消系统消息事件监听
    */
@@ -128,13 +153,12 @@ export class SysMsgStore {
       return
     }
     const { from, to, time } = msg
-    const { idClient, fromNick = '', opeAccount } = msg.recallMessageInfo
+    const { idClient, opeAccount } = msg.recallMessageInfo
     const fromAccount = opeAccount || from
 
     this.rootStore.msgStore.beReCallMsgActive({
       scene,
       from: fromAccount,
-      fromNick,
       to,
       idClient,
       time,
@@ -245,6 +269,17 @@ export class SysMsgStore {
     }
   }
 
+  // private _handleUnreadSysMsgKey(type: string, from: string, to?: string) {
+  //   let id = ''
+  //   //因为群相关系统消息无法通过from和type来确定系统消息唯一性，所以根据type区分，群消息key中增加to
+  //   if (type === 'friendRequest') {
+  //     id = `${from}-${type}`
+  //   } else {
+  //     id = `${from}-${type}-${to}`
+  //   }
+  //   return id
+  // }
+
   private _onSysMsg(data: SystemMessage) {
     logger.log('_onSysMsg: ', data)
     this._handleSysMsg(data)
@@ -260,7 +295,10 @@ export class SysMsgStore {
   ) {
     logger.log('_onUpdateSystemMessages: ', data)
     data.forEach((item) => {
-      this.updateApplyMsg(item)
+      this.updateApplyMsg({
+        ...item,
+        to: this.rootStore.userStore.myUserInfo.account,
+      })
     })
   }
 

@@ -1,11 +1,11 @@
 import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import { makeAutoObservable, runInAction } from 'mobx'
-import { ConnectState } from '../types'
 import RootStore from '.'
 import { logger } from '../../utils'
 /**Mobx 可观察对象，负责连接的子 store */
 export class ConnectStore {
-  connectState: ConnectState = 'idle'
+  /** 连接状态 */
+  connectState: NimKitCoreTypes.ConnectState = 'idle'
 
   constructor(
     private rootStore: RootStore,
@@ -32,6 +32,8 @@ export class ConnectStore {
     nim.on('multiPortLogin', this._onMultiPortLogin)
     // 同步完成
     nim.on('syncdone', this._onSyncDone)
+
+    this.connectState = this.nim.connectState
   }
   /** 销毁当前 IM 实例，同时会退出登录状态，并断开websocket连接 */
   destroy(): void {

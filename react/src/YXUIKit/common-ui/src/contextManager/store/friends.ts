@@ -37,10 +37,10 @@ export class FriendStore {
     // 多端同步好友操作
     nim.on('syncFriend', this._onSyncFriend)
   }
+
   /**
    * 销毁FriendStore，会取消好友事件监听
    */
-
   destroy(): void {
     this.nim.off('friends', this._onFriends)
     this.nim.off('syncFriend', this._onSyncFriend)
@@ -59,7 +59,13 @@ export class FriendStore {
         state: 'pass',
         from: account,
         type: 'friendRequest',
+        to: this.rootStore.userStore.myUserInfo.account,
       })
+      this.rootStore.sysMsgStore.deleteUnReadSysMsgs(
+        'friendRequest',
+        account,
+        this.rootStore.userStore.myUserInfo.account
+      )
       logger.log('passFriendApplyActive success', account)
     } catch (error) {
       logger.error('passFriendApplyActive failed: ', account, error)
@@ -81,7 +87,13 @@ export class FriendStore {
         state: 'decline',
         from: account,
         type: 'friendRequest',
+        to: this.rootStore.userStore.myUserInfo.account,
       })
+      this.rootStore.sysMsgStore.deleteUnReadSysMsgs(
+        'friendRequest',
+        account,
+        this.rootStore.userStore.myUserInfo.account
+      )
       logger.log('rejectFriendApplyActive success', account)
     } catch (error) {
       logger.error('rejectFriendApplyActive failed: ', account, error)
@@ -220,6 +232,7 @@ export class FriendStore {
           from: data.account || '',
           state: 'pass',
           type: 'friendRequest',
+          to: this.rootStore.userStore.myUserInfo.account,
         })
         break
       case 'rejectFriendApply':
@@ -227,6 +240,7 @@ export class FriendStore {
           from: data.account || '',
           state: 'decline',
           type: 'friendRequest',
+          to: this.rootStore.userStore.myUserInfo.account,
         })
         break
       case 'applyFriend':

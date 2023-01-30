@@ -33,7 +33,7 @@ export const ContactItem: FC<ContactItemProps> = ({
         onItemClick(contactType)
       }}
     >
-      <Badge count={unread} dot={unread > 0}>
+      <Badge count={unread}>
         <Avatar
           size={36}
           icon={icon}

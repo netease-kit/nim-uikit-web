@@ -13,7 +13,7 @@ import {
 import zh from '../../locales/zh'
 import RootStore from '.'
 import { message } from 'antd'
-import { logger } from '../../utils'
+import { parseSessionId, logger } from '../../utils'
 import { LocalOptions } from '../Provider'
 /**Mobx 可观察对象，负责管理群组的子 store */
 export class TeamStore {
@@ -144,7 +144,8 @@ export class TeamStore {
     try {
       logger.log('applyTeamActive', teamId)
       const team = await this.nim.applyTeam({ teamId })
-      await this._handleAddTeam(team)
+      // 这边不再直接维护群信息，因为要兼容申请入群的情况，放到 onAddTeamMembers 中处理
+      // await this._handleAddTeam(team)
       logger.log('applyTeamActive success', teamId)
     } catch (error) {
       logger.error('applyTeamActive failed: ', teamId, error)
@@ -277,7 +278,13 @@ export class TeamStore {
         from: options.from,
         type: 'teamInvite',
         state: 'pass',
+        to: options.teamId,
       })
+      this.rootStore.sysMsgStore.deleteUnReadSysMsgs(
+        'teamInvite',
+        options.from,
+        options.teamId
+      )
       logger.log('acceptTeamInviteActive success', options)
     } catch (error) {
       logger.error('acceptTeamInviteActive failed: ', options, error)
@@ -302,7 +309,13 @@ export class TeamStore {
         from: options.from,
         type: 'teamInvite',
         state: 'decline',
+        to: options.teamId,
       })
+      this.rootStore.sysMsgStore.deleteUnReadSysMsgs(
+        'teamInvite',
+        options.from,
+        options.teamId
+      )
       logger.log('rejectTeamInviteActive success', options)
     } catch (error) {
       logger.error('rejectTeamInviteActive failed: ', options, error)
@@ -324,7 +337,13 @@ export class TeamStore {
         from: options.from,
         type: 'applyTeam',
         state: 'pass',
+        to: options.teamId,
       })
+      this.rootStore.sysMsgStore.deleteUnReadSysMsgs(
+        'applyTeam',
+        options.from,
+        options.teamId
+      )
       logger.log('passTeamApplyActive success', options)
     } catch (error) {
       logger.error('passTeamApplyActive failed: ', options, error)
@@ -347,7 +366,13 @@ export class TeamStore {
         from: options.from,
         type: 'applyTeam',
         state: 'decline',
+        to: options.teamId,
       })
+      this.rootStore.sysMsgStore.deleteUnReadSysMsgs(
+        'applyTeam',
+        options.from,
+        options.teamId
+      )
       logger.log('rejectTeamApplyActive success', options)
     } catch (error) {
       logger.error('rejectTeamApplyActive failed: ', options, error)
@@ -397,8 +422,8 @@ export class TeamStore {
     logger.log('_onTransferTeam: ', data)
     this.addTeam([data.team])
     const members = [
-      { ...data.from, account: data.from.id.split('-')[1] },
-      { ...data.to, account: data.to.id.split('-')[1] },
+      { ...data.from, account: parseSessionId(data.from.id).to },
+      { ...data.to, account: parseSessionId(data.to.id).to },
     ]
     // @ts-ignore SDK 问题，先忽略
     this.rootStore.teamMemberStore.updateTeamMember(data.team.teamId, members)

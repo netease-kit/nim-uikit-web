@@ -41,7 +41,7 @@ export const ContactListContainer: FC<ContactListContainerProps> = observer(
       logger.log('选中通讯录导航：', contactType)
       store.uiStore.selectContactType(contactType)
       if (contactType === 'msgList') {
-        store.uiStore.resetSystemMsgUnread()
+        store.sysMsgStore.resetSystemMsgUnread()
       }
       onItemClick?.(contactType)
     }

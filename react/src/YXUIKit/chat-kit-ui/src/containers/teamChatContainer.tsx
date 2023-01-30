@@ -23,7 +23,7 @@ import { LeftOutlined } from '@ant-design/icons'
 import { Action } from '../Container'
 import ChatTeamSetting, { HistoryStack } from '../components/ChatTeamSetting'
 import { Session } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/SessionServiceInterface'
-import { debounce } from '@xkit-yx/utils'
+import { debounce, VisibilityObserver } from '@xkit-yx/utils'
 import {
   IMMessage,
   TMsgScene,
@@ -34,14 +34,16 @@ import { HISTORY_LIMIT } from '../constant'
 import {
   Team,
   TeamMember,
+  UpdateMyMemberInfoOptions,
 } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 import { observer } from 'mobx-react'
-import { FriendProfile } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/FriendServiceInterface'
+import { GroupItemProps } from '../components/ChatTeamSetting/GroupItem'
 
 export interface TeamChatContainerProps {
   scene: TMsgScene
   to: string
   actions?: Action[]
+  teamMsgReceiptVisible?: boolean
   onSendText?: (data: {
     value: string
     scene: TMsgScene
@@ -55,9 +57,9 @@ export interface TeamChatContainerProps {
     session: Session
     mute: boolean
   }) => string
-  renderTeamMemberItem?: (params: {
-    member: TeamMember & Partial<FriendProfile>
-  }) => JSX.Element | null | undefined
+  renderTeamMemberItem?: (
+    params: GroupItemProps
+  ) => JSX.Element | null | undefined
 
   prefix?: string
   commonPrefix?: string
@@ -68,6 +70,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     scene,
     to,
     actions,
+    teamMsgReceiptVisible,
     onSendText: onSendTextFromProps,
     renderTeamCustomMessage,
     renderHeader,
@@ -86,6 +89,8 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     const session = store.sessionStore.sessions.get(sessionId)
 
     const msgs = store.msgStore.getMsg(sessionId)
+
+    const replyMsg = store.msgStore.replyMsgs.get(sessionId)
 
     const team: Team = store.teamStore.teams.get(to) || {
       teamId: to,
@@ -140,6 +145,12 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
 
     const messageListContainerDomRef = useRef<HTMLDivElement>(null)
     const settingDrawDomRef = useRef<HTMLDivElement>(null)
+
+    const visibilityObserver = useMemo(() => {
+      return new VisibilityObserver({
+        root: messageListContainerDomRef.current,
+      })
+    }, [to])
 
     // 以下是 UI 相关的 state，需要在切换会话时重置
     const [inputValue, setInputValue] = useState('')
@@ -280,6 +291,10 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       }
     }
 
+    const onRemoveReplyMsg = () => {
+      replyMsg && store.msgStore.reomveReplyMsgActive(replyMsg.sessionId)
+    }
+
     const onMessageAction = async (key: MenuItemKey, msg: IMMessage) => {
       switch (key) {
         case 'delete':
@@ -287,6 +302,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           break
         case 'recall':
           await store.msgStore.reCallMsgActive(msg)
+          break
+        case 'reply':
+          await store.msgStore.replyMsgActive(msg)
           break
         default:
           break
@@ -360,6 +378,28 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       }
     }
 
+    const onUpdateMyMemberInfo = async (params: UpdateMyMemberInfoOptions) => {
+      const nickTipVisible = params.nickInTeam !== void 0
+      const bitConfigVisible =
+        params.bitConfigMask !== void 0 || params.muteTeam !== void 0
+      try {
+        await store.teamMemberStore.updateMyMemberInfo(params)
+        if (nickTipVisible) {
+          message.success(t('updateMyMemberNickSuccess'))
+        }
+        if (bitConfigVisible) {
+          message.success(t('updateBitConfigMaskSuccess'))
+        }
+      } catch (error) {
+        if (nickTipVisible) {
+          message.error(t('updateMyMemberNickFailed'))
+        }
+        if (bitConfigVisible) {
+          message.error(t('updateBitConfigMaskFailed'))
+        }
+      }
+    }
+
     const onTeamMuteChange = async (mute: boolean) => {
       try {
         await store.teamStore.muteTeamActive({
@@ -419,6 +459,72 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       }
     }
 
+    useEffect(() => {
+      const notMyMsgs = msgs
+        .filter((item) => item.from !== myUser.account)
+        .filter((item) => !!item.idServer)
+        .filter((item) =>
+          // 以下这些类型的消息不需要发送已读未读
+          ['notification', 'tip', 'robot', 'g2'].every((j) => j !== item.type)
+        )
+
+      const visibleChangeHandler = (params: {
+        visible: boolean
+        target: HTMLElement
+      }) => {
+        if (params.visible) {
+          // 发送已读
+          const msg = notMyMsgs.find(
+            (item) => item.idClient === params.target.id
+          )
+          if (msg) {
+            store.msgStore
+              .sendTeamMsgReceiptActive([
+                {
+                  teamId: team.teamId,
+                  idClient: msg.idClient,
+                  idServer: msg.idServer!,
+                },
+              ])
+              .finally(() => {
+                visibilityObserver.unobserve(params.target)
+              })
+          }
+        }
+      }
+
+      const handler = (isObserve: boolean) => {
+        notMyMsgs.forEach((item) => {
+          const target = document.getElementById(item.idClient)
+          if (target) {
+            if (isObserve) {
+              visibilityObserver.observe(target)
+            } else {
+              visibilityObserver.unobserve(target)
+            }
+          }
+        })
+
+        if (isObserve) {
+          visibilityObserver.on('visibleChange', visibleChangeHandler)
+        } else {
+          visibilityObserver.off('visibleChange', visibleChangeHandler)
+        }
+      }
+
+      handler(true)
+
+      return () => {
+        handler(false)
+      }
+    }, [store.msgStore, msgs, visibilityObserver, team.teamId, myUser.account])
+
+    useEffect(() => {
+      return () => {
+        visibilityObserver.destroy()
+      }
+    }, [visibilityObserver])
+
     // 切换会话时需要重新初始化
     useEffect(() => {
       resetState()
@@ -477,7 +583,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             commonPrefix={commonPrefix}
             ref={messageListContainerDomRef}
             msgs={msgs}
+            teamId={team.teamId}
             members={teamMembers}
+            teamMsgReceiptVisible={teamMsgReceiptVisible}
             noMore={noMore}
             loadingMore={loadingMore}
             myAccount={myUser?.account || ''}
@@ -502,6 +610,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
                 ? t('teamMutePlaceholder')
                 : `${t('sendToText')} ${teamNameOrTeamId}${t('sendUsageText')}`
             }
+            replyMsg={replyMsg}
             scene={scene}
             to={to}
             actions={actions}
@@ -510,6 +619,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             uploadImageLoading={store.uiStore.uploadImageLoading}
             uploadFileLoading={store.uiStore.uploadFileLoading}
             setInputValue={setInputValue}
+            onRemoveReplyMsg={onRemoveReplyMsg}
             onSendText={onSendText}
             onSendFile={onSendFile}
             onSendImg={onSendImg}
@@ -535,6 +645,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
               onLeaveTeam={onLeaveTeam}
               onRemoveTeamMemberClick={onRemoveTeamMember}
               onUpdateTeamInfo={onUpdateTeamInfo}
+              onUpdateMyMemberInfo={onUpdateMyMemberInfo}
               onTeamMuteChange={onTeamMuteChange}
               renderTeamMemberItem={renderTeamMemberItem}
               prefix={prefix}

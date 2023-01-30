@@ -57,6 +57,7 @@ const GroupCreate: React.FC<GroupCreateProps> = ({
           ...values,
           selectedAccounts,
           avatar,
+          name: values.name.trim(),
         })
         resetState()
       })
@@ -89,7 +90,7 @@ const GroupCreate: React.FC<GroupCreateProps> = ({
       cancelText={t('cancelText')}
       okText={t('createButtonText')}
     >
-      <Form form={form}>
+      <Form form={form} labelCol={{ span: 5 }}>
         <Form.Item
           label={t('teamTitle')}
           name="name"

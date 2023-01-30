@@ -1,7 +1,12 @@
 import React, { ReactNode } from 'react'
 import P2pChatContainer from './containers/p2pChatContainer'
 import TeamChatContainer from './containers/teamChatContainer'
-import { useStateContext, useEventTracking, Welcome } from '../../common-ui/src'
+import {
+  useStateContext,
+  useEventTracking,
+  Welcome,
+  Utils,
+} from '../../common-ui/src'
 import { TMsgScene } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import { RenderP2pCustomMessageOptions } from './components/ChatP2pMessageList'
 import { RenderTeamCustomMessageOptions } from './components/ChatTeamMessageList'
@@ -12,6 +17,7 @@ import { observer } from 'mobx-react'
 import packageJson from '../package.json'
 import { TeamMember } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 import { FriendProfile } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/FriendServiceInterface'
+import { GroupItemProps } from './components/ChatTeamSetting/GroupItem'
 
 export interface ActionRenderProps extends ChatMessageInputProps {
   scene: TMsgScene
@@ -42,6 +48,14 @@ export interface ChatContainerProps {
     消息发送按钮组配置，不传使用默认的配置
     */
   actions?: Action[]
+  /**
+    是否需要显示 p2p 消息已读未读，默认 false
+    */
+  p2pMsgReceiptVisible?: boolean
+  /**
+    是否需要显示群组消息已读未读，默认 false
+    */
+  teamMsgReceiptVisible?: boolean
   /**
     发送文字消息的回调，一般用于默认的文字发送缺少想要的字段时
     */
@@ -84,9 +98,9 @@ export interface ChatContainerProps {
   /**
    自定义渲染群组成员 item
    */
-  renderTeamMemberItem?: (params: {
-    member: TeamMember & Partial<FriendProfile>
-  }) => JSX.Element | null | undefined
+  renderTeamMemberItem?: (
+    params: GroupItemProps
+  ) => JSX.Element | null | undefined
   /**
    样式前缀
    */
@@ -101,6 +115,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
   ({
     selectedSession,
     actions,
+    p2pMsgReceiptVisible = false,
+    teamMsgReceiptVisible = false,
     onSendText,
     renderEmpty,
     renderP2pCustomMessage,
@@ -108,6 +124,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
     renderHeader,
     renderP2pInputPlaceHolder,
     renderTeamInputPlaceHolder,
+    renderTeamMemberItem,
 
     prefix = 'chat',
     commonPrefix = 'common',
@@ -117,9 +134,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
     const finalSelectedSession =
       selectedSession || store.uiStore.selectedSession || ''
 
-    const scene = finalSelectedSession.split('-')[0] as TMsgScene
-
-    const to = finalSelectedSession.split('-')[1]
+    const { scene, to } = Utils.parseSessionId(finalSelectedSession)
 
     useEventTracking({
       appkey: initOptions.appkey,
@@ -135,6 +150,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           commonPrefix={commonPrefix}
           scene={scene}
           to={to}
+          p2pMsgReceiptVisible={p2pMsgReceiptVisible}
           onSendText={onSendText}
           actions={actions}
           renderP2pCustomMessage={renderP2pCustomMessage}
@@ -147,11 +163,13 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           commonPrefix={commonPrefix}
           scene={scene}
           to={to}
+          teamMsgReceiptVisible={teamMsgReceiptVisible}
           onSendText={onSendText}
           actions={actions}
           renderTeamCustomMessage={renderTeamCustomMessage}
           renderHeader={renderHeader}
           renderTeamInputPlaceHolder={renderTeamInputPlaceHolder}
+          renderTeamMemberItem={renderTeamMemberItem}
         />
       ) : null
     ) : renderEmpty ? (

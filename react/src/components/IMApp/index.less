@@ -41,6 +41,19 @@
     flex-direction: column;
     align-items: center;
     position: relative;
+
+    .icon-label {
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .expand {
+      color: #c5c9d2;
+    }
+
+    .expand:hover {
+      color: #656a72;
+    }
   }
 
   .avatar-icon {
@@ -48,6 +61,7 @@
     border-radius: 50%;
     border: 1px solid #e8e8e8;
   }
+
   .iconfont {
     font-size: 24px;
   }
@@ -80,9 +94,97 @@
     cursor: pointer;
   }
 
-  .icon-label {
-    font-size: 12px;
-    text-align: center;
+  .menu-icon {
+    position: absolute;
+    right: 15px;
+    bottom: 20px;
+    font-size: 22px;
+    color: rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+  }
+
+  .menu-wrapper {
+    position: absolute;
+    display: none;
+    z-index: 999;
+    width: 300px;
+    height: 102px;
+    left: 10px;
+    top: 510px;
+    padding: 4px 4px 4px 40px;
+    cursor: pointer;
+
+    .menu {
+      width: 122px;
+      padding: 4px;
+      background: #ffffff;
+      border: 1px solid #e6e6e6;
+      box-shadow: 0px 4px 7px rgba(133, 136, 140, 0.25);
+      border-radius: 8px;
+    }
+
+    .language {
+      font-size: 15px;
+      margin-right: 7px;
+      color: #656a72;
+    }
+
+    .arrow {
+      font-size: 15px;
+      position: absolute;
+      left: 130px;
+      color: #656A72;
+    }
+
+    .logout {
+      font-size: 15px;
+      margin-right: 7px;
+      color: #656a72;
+    }
+
+    .seeting {
+      font-size: 15px;
+      margin-right: 7px;
+      color: #95989d;
+    }
+
+    .sub-menu {
+      position: absolute;
+      z-index: 999;
+      width: 132px;
+      height: 72px;
+      left: 170px;
+      top: 5px;
+      background: #ffffff;
+      border: 1px solid #e6e6e6;
+      box-shadow: 0px 4px 7px rgba(133, 136, 140, 0.25);
+      border-radius: 8px;
+      padding: 4px;
+      display: none;
+    }
+
+    .show-sub-menu {
+      display: block;
+    }
+  }
+
+  .menu-bg {
+    background-color: #f7f9fa;
+  }
+
+  .show-menu {
+    display: block;
+  }
+
+  .menu-item,
+  .sub-menu-item {
+    width: 114px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 4px;
   }
 
   .right {
@@ -97,5 +199,6 @@
 
   .right-content {
     flex: 1;
+    width: 0;
   }
 }

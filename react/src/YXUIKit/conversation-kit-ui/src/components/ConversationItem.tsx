@@ -2,7 +2,12 @@ import React, { FC, ReactElement, useMemo } from 'react'
 import moment from 'moment'
 import { Dropdown } from 'antd'
 import { ExclamationCircleFilled } from '@ant-design/icons'
-import { CommonIcon, ParseSession, useTranslation } from '../../../common-ui/src'
+import {
+  CommonIcon,
+  ParseSession,
+  getMsgContentTipByType,
+  useTranslation,
+} from '../../../common-ui/src'
 import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 
 export interface ConversationItemProps {
@@ -59,33 +64,8 @@ export const ConversationItem: FC<ConversationItemProps> = ({
     if (status === 'sendFailed' || status === 'refused') {
       return <ExclamationCircleFilled style={{ color: 'red' }} />
     }
-    switch (type) {
-      case 'text':
-        return body || `[${t('textMsgText')}]`
-      case 'audio':
-        return `[${t('audioMsgText')}]`
-      case 'custom':
-        return <ParseSession msg={lastMsg!} prefix={commonPrefix} />
-      case 'file':
-        return `[${t('fileMsgText')}]`
-      case 'g2':
-        return `[${t('callMsgText')}]`
-      case 'geo':
-        return `[${t('geoMsgText')}]`
-      case 'image':
-        return `[${t('imgMsgText')}]`
-      case 'notification':
-        return `[${t('notiMsgText')}]`
-      case 'robot':
-        return `[${t('robotMsgText')}]`
-      case 'tip':
-        return `[${t('tipMsgText')}]`
-      case 'video':
-        return `[${t('videoMsgText')}]`
-      default:
-        return `[${t('unknowMsgText')}]`
-    }
-  }, [lastMsg, commonPrefix, t])
+    return lastMsg ? getMsgContentTipByType(lastMsg, t) : ''
+  }, [lastMsg, t])
 
   return (
     <Dropdown overlay={menuRenderer} trigger={['contextMenu']}>
