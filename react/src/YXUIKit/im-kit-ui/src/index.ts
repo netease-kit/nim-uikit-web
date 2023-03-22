@@ -13,7 +13,6 @@ import {
   Provider,
   ProviderProps,
   ContextProps,
-  ContextManagerTypes,
   UserCard,
   MyUserCard,
   GroupAvatarSelect,
@@ -26,21 +25,21 @@ import {
   useTranslation,
   useEventTracking,
   UseEventTrackingProps,
-} from '../../common-ui/src'
+} from '../src/common'
 
 import { NimKitCoreTypes, NimKitCoreFactory } from '@xkit-yx/core-kit'
 
-import { ConversationContainer } from '../../conversation-kit-ui/src'
+import { ConversationContainer } from '../src/conversation'
 import {
   ContactListContainer,
   BlackListContainer,
   FriendListContainer,
   GroupListContainer,
   ContactInfoContainer,
-} from '../../contact-kit-ui/src'
-import { ChatContainer, ChatMessageItem } from '../../chat-kit-ui/src'
-import { AddContainer, SearchContainer } from '../../search-kit-ui/src'
-import RootStore from '../../common-ui/src/contextManager/store'
+} from './contact'
+import { ChatContainer, ChatMessageItem } from './chat'
+import { AddContainer, SearchContainer } from './search'
+import RootStore from '@xkit-yx/im-store'
 import { NIMInitializeOptions } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/NIMInterface'
 
 export class IMUIKit {
@@ -96,8 +95,8 @@ export {
   ComplexAvatarContainer,
   MyAvatarContainer,
   Context,
+  RootStore,
   Provider,
-  ContextManagerTypes,
   UserCard,
   MyUserCard,
   GroupAvatarSelect,

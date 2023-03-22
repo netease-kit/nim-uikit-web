@@ -9,7 +9,7 @@
     "start": "npm run dev"
   },
   "dependencies": {
-    "@xkit-yx/im-kit-ui": "^0.3.1",
+    "@xkit-yx/im-kit-ui": "^9.3.1",
     "umi": "^4.0.40"
   },
   "devDependencies": {
