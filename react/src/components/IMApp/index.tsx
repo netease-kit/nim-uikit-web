@@ -9,7 +9,7 @@ import {
   ContactInfoContainer, // 通讯录——通讯录详情组件，包含好友列表、群组列表以及黑名单列表
   MyAvatarContainer,
   useStateContext, // 用户资料组件
-} from '@xkit-yx/im-kit-ui/src'
+} from '../../YXUIKit/im-kit-ui/src'
 import { ConfigProvider, Badge } from 'antd'
 import zhCN from 'antd/es/locale/zh_CN'
 import enUS from 'antd/es/locale/en_US'
@@ -19,7 +19,7 @@ import { demo_en, demo_zh } from './locales/demo_locale'
 import classNames from 'classnames'
 import { observer } from 'mobx-react'
 
-import '@xkit-yx/im-kit-ui/src/style'
+import '../../YXUIKit/im-kit-ui/src/style'
 import 'antd/es/badge/style'
 import './iconfont.css'
 import './index.less'
