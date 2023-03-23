@@ -1,6 +1,6 @@
 {
   "name": "@xkit-yx/im-kit-ui",
-  "version": "9.3.1",
+  "version": "9.3.2",
   "description": "云信即时通讯组件",
   "license": "MIT",
   "main": "lib/index.js",
@@ -63,5 +63,6 @@
     "mobx": "^6.6.1",
     "mobx-react": "^7.5.2",
     "react-string-replace": "^1.1.0"
-  }
+  },
+  "gitHead": "d6fedf7506b418ce774fd65a3ef1b282ee774da3"
 }

@@ -44,13 +44,23 @@ export interface ProviderProps {
 
 export const Context = createContext<ContextProps>({})
 
+const defaultLocalOptions: LocalOptions = {
+  addFriendNeedVerify: true,
+  teamBeInviteMode: 'needVerify',
+  teamJoinMode: 'noVerify',
+  teamInviteMode: 'manager',
+  teamUpdateTeamMode: 'manager',
+  teamUpdateExtMode: 'manager',
+  sendMsgBefore: async (options: any) => options,
+}
+
 export const Provider: FC<ProviderProps> = memo(
   ({
     children,
     initOptions,
     otherOptions,
     funcOptions,
-    localOptions,
+    localOptions = defaultLocalOptions,
     nimKitCore,
     sdkVersion = 1,
     locale = 'zh',
@@ -101,19 +111,23 @@ export const Provider: FC<ProviderProps> = memo(
       [locale, localeConfig, localeMap]
     )
 
+    const finalLocalOptions = useMemo(() => {
+      return { ...defaultLocalOptions, ...localOptions }
+    }, [localOptions])
+
     const rootStore = useMemo(() => {
       if (singleton) {
-        return RootStore.getInstance(nim, localOptions)
+        return RootStore.getInstance(nim, finalLocalOptions)
       }
-      return new RootStore(nim, localOptions)
-    }, [nim, singleton, localOptions])
+      return new RootStore(nim, finalLocalOptions)
+    }, [nim, singleton, finalLocalOptions])
 
     // @ts-ignore
     window.__xkit_store__ = {
       nim,
       store: rootStore,
       initOptions,
-      localOptions: localOptions,
+      localOptions: finalLocalOptions,
     }
 
     useEffect(() => {
@@ -137,7 +151,7 @@ export const Provider: FC<ProviderProps> = memo(
           store: rootStore,
           nim,
           initOptions,
-          localOptions: localOptions,
+          localOptions: finalLocalOptions,
           t,
         }}
       >

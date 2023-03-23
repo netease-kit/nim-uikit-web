@@ -25,11 +25,11 @@ import {
   useTranslation,
   useEventTracking,
   UseEventTrackingProps,
-} from '../src/common'
+} from './common'
 
 import { NimKitCoreTypes, NimKitCoreFactory } from '@xkit-yx/core-kit'
 
-import { ConversationContainer } from '../src/conversation'
+import { ConversationContainer } from './conversation'
 import {
   ContactListContainer,
   BlackListContainer,
