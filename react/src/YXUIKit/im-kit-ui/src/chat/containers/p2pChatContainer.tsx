@@ -10,7 +10,9 @@ import ChatHeader from '../components/ChatHeader'
 import ChatP2pMessageList, {
   RenderP2pCustomMessageOptions,
 } from '../components/ChatP2pMessageList'
-import MessageInput from '../components/ChatMessageInput'
+import MessageInput, {
+  ChatMessageInputRef,
+} from '../components/ChatMessageInput'
 import ChatSettingDrawer from '../components/ChatSettingDrawer'
 import GroupCreate from '../components/ChatCreateTeam'
 import { ChatAction } from '../types'
@@ -31,6 +33,7 @@ import { MenuItemKey } from '../components/ChatMessageItem'
 import { message } from 'antd'
 import { HISTORY_LIMIT } from '../constant'
 import { observer } from 'mobx-react'
+import ChatForwardModal from '../components/ChatForwardModal'
 
 export interface P2pChatContainerProps {
   scene: TMsgScene
@@ -49,6 +52,8 @@ export interface P2pChatContainerProps {
   renderP2pInputPlaceHolder?: (session: Session) => string
   renderMessageAvatar?: (msg: IMMessage) => JSX.Element | null | undefined
   renderMessageName?: (msg: IMMessage) => JSX.Element | null | undefined
+  renderMessageOuterContent?: (msg: IMMessage) => JSX.Element | null | undefined
+  renderMessageInnerContent?: (msg: IMMessage) => JSX.Element | null | undefined
 
   prefix?: string
   commonPrefix?: string
@@ -66,6 +71,8 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     renderP2pInputPlaceHolder,
     renderMessageAvatar,
     renderMessageName,
+    renderMessageInnerContent,
+    renderMessageOuterContent,
 
     prefix = 'chat',
     commonPrefix = 'common',
@@ -80,6 +87,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
 
     const msgs = store.msgStore.getMsg(sessionId)
 
+    // 当前输入框的回复消息
     const replyMsg = store.msgStore.replyMsgs.get(sessionId)
 
     const user = store.uiStore.getFriendWithUserNameCard(to)
@@ -92,14 +100,18 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
 
     const messageListContainerDomRef = useRef<HTMLDivElement>(null)
     const settingDrawDomRef = useRef<HTMLDivElement>(null)
+    const chatMessageInputRef = useRef<ChatMessageInputRef>(null)
 
     const visibilityObserver = useMemo(() => {
-      return new VisibilityObserver!({
+      return new VisibilityObserver({
         root: messageListContainerDomRef.current,
       })
     }, [to])
 
     // 以下是 UI 相关的 state，需要在切换会话时重置
+    const [replyMsgsMap, setReplyMsgsMap] = useState<Record<string, IMMessage>>(
+      {}
+    ) // 回复消息的 map
     const [action, setAction] = useState<ChatAction | undefined>(undefined)
     const [inputValue, setInputValue] = useState('')
     const [groupCreateVisible, setGroupCreateVisible] = useState(false)
@@ -107,6 +119,9 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     const [noMore, setNoMore] = useState(false)
     const [receiveMsgBtnVisible, setReceiveMsgBtnVisible] = useState(false)
     const [settingDrawerVisible, setSettingDrawerVisible] = useState(false)
+    const [forwardMessage, setForwardMessage] = useState<IMMessage | undefined>(
+      undefined
+    )
 
     const onMsgListScrollHandler = debounce(async () => {
       if (messageListContainerDomRef.current) {
@@ -132,7 +147,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
               )
           )[0]
           if (_msg) {
-            await getHistroy(_msg.time, _msg.idServer)
+            await getHistory(_msg.time, _msg.idServer)
           }
           // 滚动到加载的那条消息
           document.getElementById(_msg.idClient)?.scrollIntoView()
@@ -150,8 +165,11 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       setSettingDrawerVisible(false)
     }
 
-    const onReeditClick = (body: string) => {
-      setInputValue(body)
+    const onReeditClick = (msg: IMMessage) => {
+      setInputValue(msg.attach?.oldBody || '')
+      const replyMsg = replyMsgsMap[msg.idClient]
+      replyMsg && store.msgStore.replyMsgActive(replyMsg)
+      chatMessageInputRef.current?.input?.focus()
     }
 
     const onResend = async (msg: IMMessage) => {
@@ -215,7 +233,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     }
 
     const onRemoveReplyMsg = () => {
-      replyMsg && store.msgStore.reomveReplyMsgActive(replyMsg.sessionId)
+      replyMsg && store.msgStore.removeReplyMsgActive(replyMsg.sessionId)
     }
 
     const onMessageAction = async (key: MenuItemKey, msg: IMMessage) => {
@@ -228,6 +246,11 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           break
         case 'reply':
           await store.msgStore.replyMsgActive(msg)
+          chatMessageInputRef.current?.input?.focus()
+          break
+        case 'forward':
+          setForwardMessage(msg)
+          break
         default:
           break
       }
@@ -267,6 +290,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       setLoadingMore(false)
       setNoMore(false)
       setReceiveMsgBtnVisible(false)
+      setForwardMessage(undefined)
     }
 
     // 收消息，发消息时需要调用
@@ -278,7 +302,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       setReceiveMsgBtnVisible(false)
     }
 
-    const getHistroy = async (endTime: number, lastMsgId?: string) => {
+    const getHistory = async (endTime: number, lastMsgId?: string) => {
       try {
         setLoadingMore(true)
         const historyMsgs = await store.msgStore.getHistoryMsgActive({
@@ -287,6 +311,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           lastMsgId,
           limit: HISTORY_LIMIT,
         })
+
         setLoadingMore(false)
         if (historyMsgs.length < HISTORY_LIMIT) {
           setNoMore(true)
@@ -295,6 +320,15 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         setLoadingMore(false)
         message.error(t('getHistoryMsgFailedText'))
       }
+    }
+
+    const handleForwardModalSend = () => {
+      scrollToBottom()
+      setForwardMessage(undefined)
+    }
+
+    const handleForwardModalClose = () => {
+      setForwardMessage(undefined)
     }
 
     useEffect(() => {
@@ -358,10 +392,59 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     // 切换会话时需要重新初始化
     useEffect(() => {
       resetState()
-      getHistroy(Date.now()).then(() => {
+      getHistory(Date.now()).then(() => {
         scrollToBottom()
       })
     }, [to])
+
+    // 处理消息
+    useEffect(() => {
+      if (msgs.length !== 0) {
+        const replyMsgsMap = {}
+        const reqMsgs: Array<{
+          scene: 'p2p' | 'team'
+          from: string
+          to: string
+          idServer: string
+          time: number
+        }> = []
+        const idClients: Record<string, string> = {}
+        msgs.forEach((msg) => {
+          if (msg.ext) {
+            try {
+              const { yxReplyMsg } = JSON.parse(msg.ext)
+              if (yxReplyMsg) {
+                const replyMsg = msgs.find(
+                  (item) => item.idClient === yxReplyMsg.idClient
+                )
+                if (replyMsg) {
+                  replyMsgsMap[msg.idClient] = replyMsg
+                } else {
+                  replyMsgsMap[msg.idClient] = 'noFind'
+                  const { scene, from, to, idServer, time } = yxReplyMsg
+                  if (scene && from && to && idServer && time) {
+                    reqMsgs.push({ scene, from, to, idServer, time })
+                    idClients[idServer] = msg.idClient
+                  }
+                }
+              }
+            } catch {}
+          }
+        })
+        if (reqMsgs.length > 0) {
+          store.msgStore.getMsgByIdServerActive({ reqMsgs }).then((res) => {
+            res.forEach((item) => {
+              if (item.idServer) {
+                replyMsgsMap[idClients[item.idServer]] = item
+              }
+            })
+            setReplyMsgsMap({ ...replyMsgsMap })
+          })
+        } else {
+          setReplyMsgsMap({ ...replyMsgsMap })
+        }
+      }
+    }, [msgs, store])
 
     useLayoutEffect(() => {
       const onMsg = (msg: IMMessage) => {
@@ -387,11 +470,11 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       }
     }, [nim, sessionId])
 
-    return (
+    return session ? (
       <div className={`${prefix}-wrap`}>
         <div ref={settingDrawDomRef} className={`${prefix}-content`}>
           {renderHeader ? (
-            renderHeader(session!)
+            renderHeader(session)
           ) : (
             <ChatHeader
               prefix={prefix}
@@ -399,7 +482,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
               avatar={
                 <ComplexAvatarContainer
                   account={to}
-                  canClick={false}
+                  canClick={true}
                   prefix={commonPrefix}
                 />
               }
@@ -410,6 +493,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             commonPrefix={commonPrefix}
             ref={messageListContainerDomRef}
             msgs={msgs}
+            replyMsgsMap={replyMsgsMap}
             member={user}
             p2pMsgReceiptVisible={p2pMsgReceiptVisible}
             noMore={noMore}
@@ -429,13 +513,16 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             renderP2pCustomMessage={renderP2pCustomMessage}
             renderMessageAvatar={renderMessageAvatar}
             renderMessageName={renderMessageName}
+            renderMessageInnerContent={renderMessageInnerContent}
+            renderMessageOuterContent={renderMessageOuterContent}
           />
 
           <MessageInput
+            ref={chatMessageInputRef}
             prefix={prefix}
             placeholder={
               renderP2pInputPlaceHolder
-                ? renderP2pInputPlaceHolder(session!)
+                ? renderP2pInputPlaceHolder(session)
                 : `${t('sendToText')} ${userNickOrAccount}${t('sendUsageText')}`
             }
             replyMsg={replyMsg}
@@ -483,8 +570,16 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           prefix={prefix}
           commonPrefix={commonPrefix}
         />
+        <ChatForwardModal
+          visible={!!forwardMessage}
+          msg={forwardMessage!}
+          onSend={handleForwardModalSend}
+          onCancel={handleForwardModalClose}
+          prefix={prefix}
+          commonPrefix={commonPrefix}
+        />
       </div>
-    )
+    ) : null
   }
 )
 

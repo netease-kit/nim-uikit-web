@@ -107,6 +107,14 @@ export interface ChatContainerProps {
    自定义渲染消息昵称
    */
   renderMessageName?: (msg: IMMessage) => JSX.Element | null | undefined
+  /**
+   自定义渲染消息内容，气泡样式也需要自定义
+   */
+  renderMessageOuterContent?: (msg: IMMessage) => JSX.Element | null | undefined
+  /**
+   自定义渲染消息内容，气泡样式不需要自定义
+   */
+  renderMessageInnerContent?: (msg: IMMessage) => JSX.Element | null | undefined
 
   /**
    样式前缀
@@ -134,6 +142,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
     renderTeamMemberItem,
     renderMessageAvatar,
     renderMessageName,
+    renderMessageInnerContent,
+    renderMessageOuterContent,
 
     prefix = 'chat',
     commonPrefix = 'common',
@@ -167,6 +177,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           renderP2pInputPlaceHolder={renderP2pInputPlaceHolder}
           renderMessageAvatar={renderMessageAvatar}
           renderMessageName={renderMessageName}
+          renderMessageInnerContent={renderMessageInnerContent}
+          renderMessageOuterContent={renderMessageOuterContent}
         />
       ) : scene === 'team' ? (
         <TeamChatContainer
@@ -183,6 +195,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           renderTeamMemberItem={renderTeamMemberItem}
           renderMessageAvatar={renderMessageAvatar}
           renderMessageName={renderMessageName}
+          renderMessageInnerContent={renderMessageInnerContent}
+          renderMessageOuterContent={renderMessageOuterContent}
         />
       ) : null
     ) : renderEmpty ? (

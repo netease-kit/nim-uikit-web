@@ -1,3 +1,7 @@
 {
-  "extends": "./src/.umi/tsconfig.json"
+  "extends": "./src/.umi/tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react",
+    "esModuleInterop": true
+  }
 }

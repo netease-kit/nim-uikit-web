@@ -4,7 +4,6 @@ import { message, Modal } from 'antd'
 import { useStateContext } from '../../hooks/useStateContext'
 import { useTranslation } from '../../hooks/useTranslation'
 import { observer } from 'mobx-react'
-import { Relation } from '@xkit-yx/im-store'
 
 export type ComplexAvatarContainerProps = Pick<
   ComplexAvatarProps,
@@ -43,7 +42,8 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
     const { t } = useTranslation()
 
     const [visible, setVisible] = useState(false)
-    const [relation, setRelation] = useState<Relation>('stranger')
+    // const [relation, setRelation] = useState<Relation>('stranger')
+    const relation = store.uiStore.getRelationByAccount(account)
 
     const userInfo = store.uiStore.getFriendWithUserNameCard(account)
 
@@ -53,7 +53,6 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
 
     useEffect(() => {
       if (visible) {
-        setRelation(store.uiStore.getRelationByAccount(account))
         // 从服务端更新下个人信息
         store.userStore.getUserForceActive(account)
       }

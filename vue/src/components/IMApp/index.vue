@@ -106,6 +106,9 @@ export default {
 </script>
 
 <style module>
+body{
+  background: #d8dee5;
+}
 .container {
   width: 1070px;
   height: 670px;

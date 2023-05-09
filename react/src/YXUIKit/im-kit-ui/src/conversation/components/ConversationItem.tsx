@@ -22,6 +22,7 @@ export interface ConversationItemProps {
   onItemClick: () => void
   sessionNameRenderer?: JSX.Element | null
   sessionMsgRenderer?: JSX.Element | null
+  beMentioned?: boolean
   prefix?: string
   commonPrefix?: string
 }
@@ -34,6 +35,7 @@ export const ConversationItem: FC<ConversationItemProps> = ({
   avatarRenderer,
   time,
   lastMsg,
+  beMentioned = false,
   isSelected = false,
   onItemClick,
   sessionMsgRenderer,
@@ -81,6 +83,11 @@ export const ConversationItem: FC<ConversationItemProps> = ({
             {sessionNameRenderer ?? sessionName}
           </div>
           <div className={`${prefix}-item-content-msg`}>
+            {beMentioned && (
+              <span className={`${prefix}-item-content-mention`}>
+                {t('beMentioned')}
+              </span>
+            )}
             {sessionMsgRenderer ?? msg}
           </div>
         </div>

@@ -1,9 +1,8 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useState } from 'react'
 import { MsgList } from './components/MsgList'
 import { useEventTracking, useStateContext, useTranslation } from '../../common'
 import packageJson from '../../../package.json'
 import { observer } from 'mobx-react'
-import { SystemMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/SystemMessageServiceInterface'
 import { message } from 'antd'
 import { logger } from '../../utils'
 
@@ -21,6 +20,30 @@ export interface MsgListContainerProps {
    */
   afterSendMsgClick?: () => void
   /**
+   通过入群申请后的事件
+   */
+  afterAcceptApplyTeam?: () => void
+  /**
+   拒绝入群申请后的事件
+   */
+  afterRejectApplyTeam?: () => void
+  /**
+   通过入群邀请后的事件
+   */
+  afterAcceptTeamInvite?: () => void
+  /**
+   拒绝入群邀请后的事件
+   */
+  afterRejectTeamInvite?: () => void
+  /**
+   通过好友申请后的事件
+   */
+  afterAcceptApplyFriend?: () => void
+  /**
+   拒绝好友申请后的事件
+   */
+  afterRejectApplyFriend?: () => void
+  /**
    样式前缀
    */
   prefix?: string
@@ -35,6 +58,12 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
     renderMsgListHeader,
     renderMsgListEmpty,
     afterSendMsgClick,
+    afterAcceptApplyTeam,
+    afterRejectApplyTeam,
+    afterAcceptTeamInvite,
+    afterRejectTeamInvite,
+    afterAcceptApplyFriend,
+    afterRejectApplyFriend,
     prefix = 'contact',
     commonPrefix = 'common',
   }) => {
@@ -62,6 +91,7 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         .passTeamApplyActive(options)
         .then(() => {
           message.success(t('acceptedText'))
+          afterAcceptApplyTeam?.()
         })
         .catch((err) => {
           message.error(t('acceptFailedText'))
@@ -81,6 +111,7 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         .rejectTeamApplyActive(options)
         .then(() => {
           message.success(t('rejectedText'))
+          afterRejectApplyTeam?.()
         })
         .catch((err) => {
           message.error(t('rejectFailedText'))
@@ -100,6 +131,7 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         .acceptTeamInviteActive(options)
         .then(() => {
           message.success(t('acceptedText'))
+          afterAcceptTeamInvite?.()
         })
         .catch((err) => {
           message.error(t('acceptFailedText'))
@@ -119,6 +151,7 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         .rejectTeamInviteActive(options)
         .then(() => {
           message.success(t('rejectedText'))
+          afterRejectTeamInvite?.()
         })
         .catch((err) => {
           message.error(t('rejectFailedText'))
@@ -129,20 +162,23 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         })
     }
 
-    const onAcceptApplyFriendClick = (account: string) => {
-      setApplyFriendLoading(true)
-      store.friendStore
-        .passFriendApplyActive(account)
-        .then(() => {
-          message.success(t('acceptedText'))
+    const onAcceptApplyFriendClick = async (account: string) => {
+      try {
+        setApplyFriendLoading(true)
+        await store.friendStore.passFriendApplyActive(account)
+        message.success(t('acceptedText'))
+        await store.msgStore.sendTextMsgActive({
+          scene: 'p2p',
+          to: account,
+          body: t('passFriendAskText'),
         })
-        .catch((err) => {
-          message.error(t('acceptFailedText'))
-          logger.error('同意该申请失败: ', err)
-        })
-        .finally(() => {
-          setApplyFriendLoading(false)
-        })
+        afterAcceptApplyFriend?.()
+      } catch (error) {
+        message.error(t('acceptFailedText'))
+        logger.error('同意该申请失败: ', error)
+      } finally {
+        setApplyFriendLoading(false)
+      }
     }
 
     const onRejectApplyFriendClick = (account: string) => {
@@ -151,6 +187,7 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         .rejectFriendApplyActive(account)
         .then(() => {
           message.success(t('rejectedText'))
+          afterRejectApplyFriend?.()
         })
         .catch((err) => {
           message.error(t('rejectFailedText'))

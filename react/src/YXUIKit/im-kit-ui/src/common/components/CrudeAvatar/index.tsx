@@ -5,7 +5,6 @@ import { Storage } from '@xkit-yx/utils'
 
 export interface CrudeAvatarProps
   extends Pick<UserNameCard, 'account' | 'avatar' | 'nick'> {
-  alias?: string
   size?: number
   icon?: React.ReactNode
   count?: number
@@ -13,7 +12,6 @@ export interface CrudeAvatarProps
 }
 
 export const CrudeAvatar: FC<CrudeAvatarProps> = ({
-  alias,
   nick,
   account,
   avatar,
@@ -26,8 +24,9 @@ export const CrudeAvatar: FC<CrudeAvatarProps> = ({
   const [bgColor, setBgColor] = useState('')
 
   const text = useMemo(() => {
-    return (alias || nick || account || '').slice(-2)
-  }, [nick, account, alias])
+    // 头像不用随备注而改变，产品需求
+    return (nick || account || '').slice(-2)
+  }, [nick, account])
 
   useEffect(() => {
     const colorMap: { [key: number]: string } = {
@@ -40,14 +39,14 @@ export const CrudeAvatar: FC<CrudeAvatarProps> = ({
       6: '#F9B751',
     }
     const store = new Storage('localStorage', '__xkit__')
-    const key = 'avatarColor'
+    const key = `avatarColor-${account}`
     let bgColor = store.get(key)
     if (!bgColor) {
       bgColor = colorMap[Math.floor(Math.random() * 7)]
       store.set(key, bgColor)
     }
     setBgColor(bgColor)
-  }, [])
+  }, [account])
 
   useEffect(() => {
     if (avatar) {

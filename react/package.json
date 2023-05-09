@@ -4,17 +4,18 @@
   "scripts": {
     "dev": "umi dev",
     "build": "umi build",
-    "postinstall": "umi setup",
-    "setup": "umi setup",
-    "start": "npm run dev"
+    "start": "umi dev"
   },
   "dependencies": {
-    "@xkit-yx/im-kit-ui": "^9.3.2",
-    "umi": "^4.0.40"
+    "@xkit-yx/call-kit": "^1.9.3",
+    "@xkit-yx/call-kit-react-ui": "^0.3.6",
+    "@xkit-yx/im-kit-ui": "^9.3.3",
+    "react-dom": "^16.8.0",
+    "umi": "^3.5.40"
   },
   "devDependencies": {
-    "@types/react": "^18.0.0",
-    "@types/react-dom": "^18.0.0",
+    "@types/react": "^16.8.23",
+    "@types/react-dom": "^16.8.5",
     "typescript": "^4.1.2"
   }
 }

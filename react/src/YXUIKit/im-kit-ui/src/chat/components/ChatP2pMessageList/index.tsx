@@ -15,6 +15,7 @@ export interface RenderP2pCustomMessageOptions
 export interface ChatP2pMessageListProps
   extends Omit<MessageItemProps, 'msg' | 'alias'> {
   msgs: IMMessage[]
+  replyMsgsMap: Record<string, IMMessage>
   member: NimKitCoreTypes.IFriendInfo
   p2pMsgReceiptVisible?: boolean
   renderP2pCustomMessage?: (
@@ -36,6 +37,7 @@ const ChatP2pMessageList = forwardRef<HTMLDivElement, ChatP2pMessageListProps>(
       prefix = 'chat',
       commonPrefix = 'common',
       msgs,
+      replyMsgsMap,
       member,
       p2pMsgReceiptVisible,
       receiveMsgBtnVisible = false,
@@ -53,6 +55,8 @@ const ChatP2pMessageList = forwardRef<HTMLDivElement, ChatP2pMessageListProps>(
       renderP2pCustomMessage,
       renderMessageAvatar,
       renderMessageName,
+      renderMessageOuterContent,
+      renderMessageInnerContent,
     },
     ref
   ) => {
@@ -71,7 +75,7 @@ const ChatP2pMessageList = forwardRef<HTMLDivElement, ChatP2pMessageListProps>(
           {renderMsgs.map((msg) => {
             const msgItem = renderP2pCustomMessage?.({
               msg,
-              msgs,
+              replyMsg: replyMsgsMap[msg.idClient],
               member,
               onResend,
               onReeditClick,
@@ -81,8 +85,8 @@ const ChatP2pMessageList = forwardRef<HTMLDivElement, ChatP2pMessageListProps>(
                 key={msg.idClient}
                 prefix={prefix}
                 commonPrefix={commonPrefix}
-                msgs={renderMsgs}
                 msg={msg}
+                replyMsg={replyMsgsMap[msg.idClient]}
                 normalStatusRenderer={
                   p2pMsgReceiptVisible ? (
                     <ReadPercent
@@ -98,6 +102,8 @@ const ChatP2pMessageList = forwardRef<HTMLDivElement, ChatP2pMessageListProps>(
                 onReeditClick={onReeditClick}
                 renderMessageAvatar={renderMessageAvatar}
                 renderMessageName={renderMessageName}
+                renderMessageInnerContent={renderMessageInnerContent}
+                renderMessageOuterContent={renderMessageOuterContent}
               />
             )
             return (

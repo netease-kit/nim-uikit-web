@@ -1,9 +1,10 @@
-import { defineConfig } from "umi";
+import { defineConfig } from 'umi';
 
 export default defineConfig({
-  npmClient: "npm",
-  mfsu: false,
-  chainWebpack(config) {
-    config.resolve.extensions.add(".d.ts");
+  nodeModulesTransform: {
+    type: 'none',
+  },
+  chainWebpack(memo) {
+    memo.resolve.extensions.add('.d.ts');
   },
 });

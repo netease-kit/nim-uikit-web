@@ -9,6 +9,7 @@ export interface GroupItemProps extends NimKitCoreTypes.TeamSession {
   onStickTopChange: (isTop: boolean) => void
   onDeleteClick: () => void
   onItemClick: () => void
+  beMentioned?: boolean
   avatarRenderer?: JSX.Element | null
   sessionNameRenderer?: JSX.Element | null
   sessionMsgRenderer?: JSX.Element | null
@@ -24,6 +25,7 @@ export const GroupItem: FC<GroupItemProps> = ({
   avatar,
   unread,
   lastMsg,
+  beMentioned,
   stickTopInfo,
   updateTime,
   isSelected,
@@ -92,6 +94,7 @@ export const GroupItem: FC<GroupItemProps> = ({
       sessionName={name || teamId}
       time={lastMsg?.time || updateTime}
       lastMsg={lastMsg}
+      beMentioned={beMentioned}
       isSelected={isSelected}
       onItemClick={onItemClick}
       prefix={prefix}
