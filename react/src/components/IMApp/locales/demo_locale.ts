@@ -10,8 +10,19 @@ export const demo_zh = {
   noText: '否',
   needVerifyText: '需要验证',
   notNeedVerifyText: '不需要验证',
+  oppositeSide: '对方',
   settingText: '设置',
   logoutConfirmText: '确定退出登录吗?',
+  voiceCallText: '语音通话',
+  vedioCallText: '视频通话',
+  callDurationText: '通话时长',
+  callCancelText: '已取消',
+  callRejectedText: '已拒绝',
+  callTimeoutText: '超时未接听',
+  callBusyText: '忙碌未接听',
+  networkDisconnectText: '网络连接已断开，请检查您的网络设置并尝试重新连接',
+  callFailed: '呼叫失败',
+  inCallText: '已在通话中，请结束通话后再呼叫',
 }
 
 export const demo_en = {
@@ -28,4 +39,16 @@ export const demo_en = {
   notNeedVerifyText: 'Not required',
   settingText: 'setting',
   logoutConfirmText: 'Are you sure you log out?',
+  voiceCallText: 'Voice Call',
+  vedioCallText: 'Vedio Call',
+  callDurationText: 'call duration',
+  callCancelText: 'canceled',
+  callRejectedText: 'rejected',
+  callTimeoutText: 'Missed call',
+  callBusyText: 'busy line',
+  oppositeSide: 'The opposite side',
+  networkDisconnectText:
+    'The network connection has been disconnected. Please check your network settings and try to reconnect.',
+  callFailed: 'call failed',
+  inCallText: 'Already in a call, please try again after ending the call',
 }

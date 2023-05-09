@@ -104,19 +104,10 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
       imVersion: nim.version,
     })
 
-    // const [loading, setLoading] = useState(false)
-
-    // useEffect(() => {
-    //   setLoading(true)
-    //   store.uiStore
-    //     .getSessionList()
-    //     .then(() => {
-    //       setLoading(false)
-    //     })
-    //     .catch(() => {
-    //       setLoading(false)
-    //     })
-    // }, [store.uiStore])
+    // 处理 team 会话列表 @ 提醒
+    const [sessionList, setSessionList] = useState<NimKitCoreTypes.ISession[]>(
+      []
+    )
 
     const handleSessionItemClick = async (
       session: NimKitCoreTypes.ISession
@@ -155,9 +146,49 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
       onSessionItemMuteChange?.(session.id, mute)
     }
 
+    useEffect(() => {
+      const account = store.userStore.myUserInfo.account
+      setSessionList([...store.uiStore.sessionList])
+      store.uiStore.sessionList.forEach(async (session: any) => {
+        if (session.scene === 'team' && session.unread !== 0) {
+          let unreadMsgs = [session.lastMsg]
+          // 不直接使用 `getHistoryMsgActive`, 因为这个方法有延迟
+          if (session.unread > 1) {
+            const res = await store.msgStore.getHistoryMsgActive({
+              sessionId: session.id,
+              endTime: session.lastMsg.time,
+              lastMsgId: session.lastMsg.idServer,
+              limit: session.unread - 1,
+            })
+            unreadMsgs = [...unreadMsgs, ...res]
+          }
+          unreadMsgs.forEach((msg) => {
+            if (msg.ext) {
+              try {
+                const extObj = JSON.parse(msg.ext)
+                const yxAitMsg = extObj.yxAitMsg
+                if (yxAitMsg) {
+                  Object.keys(yxAitMsg).forEach((key) => {
+                    if (key === account || key === 'ait_all') {
+                      session.beMentioned = true
+                    }
+                  })
+                }
+              } catch {}
+            }
+          })
+          setSessionList([...store.uiStore.sessionList])
+        }
+      })
+    }, [
+      store.uiStore.sessionList,
+      store.userStore.myUserInfo.account,
+      store.msgStore,
+    ])
+
     return (
       <ConversationList
-        sessions={store.uiStore.sessionList}
+        sessions={sessionList}
         // loading={loading}
         selectedSession={store.uiStore.selectedSession}
         onSessionItemClick={handleSessionItemClick}

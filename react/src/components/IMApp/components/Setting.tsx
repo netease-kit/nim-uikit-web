@@ -1,8 +1,7 @@
 import React, { FC } from 'react'
 import { Select, Modal, Form } from 'antd'
 import '../index.less'
-import { demo_zh } from '../locales/demo_locale'
-
+import { t } from '../util'
 interface IProps {
   sdkVersion: 1 | 2
   setSdkVersion: React.Dispatch<React.SetStateAction<1 | 2>>
@@ -14,7 +13,6 @@ interface IProps {
   setTeamMsgReceiptVisible: React.Dispatch<React.SetStateAction<boolean>>
   addFriendNeedVerify: boolean
   setAddFriendNeedVerify: React.Dispatch<React.SetStateAction<boolean>>
-  t: (str: keyof typeof demo_zh) => string
   locale: 'zh' | 'en'
 }
 const SettingModal: FC<IProps> = ({
@@ -28,7 +26,6 @@ const SettingModal: FC<IProps> = ({
   setTeamMsgReceiptVisible,
   addFriendNeedVerify,
   setAddFriendNeedVerify,
-  t,
   locale,
 }) => {
   return (

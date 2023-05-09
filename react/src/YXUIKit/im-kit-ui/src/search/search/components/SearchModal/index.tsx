@@ -8,6 +8,7 @@ import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 export interface SearchItemProps extends CrudeAvatarProps {
   onClick: () => void
   prefix?: string
+  alias?: string
 }
 
 const SearchItem: React.FC<SearchItemProps> = ({

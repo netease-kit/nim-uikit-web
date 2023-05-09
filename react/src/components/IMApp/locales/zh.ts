@@ -77,7 +77,11 @@ const LocaleConfig = {
   updateAliasFailedText: '修改备注失败',
   sendText: '发送消息',
   noPermission: '您暂无权限操作',
-
+  callDurationText: '通话时长',
+  callCancelText: '已取消',
+  callRejectedText: '已拒绝',
+  callTimeoutText: '已超时',
+  callBusyText: '对方忙',
   // conversation-kit
   onDismissTeamText: '群已被解散',
   onRemoveTeamText: '您已被移出群组',
@@ -85,7 +89,7 @@ const LocaleConfig = {
   audioMsgText: '音频消息',
   videoMsgText: '视频消息',
   fileMsgText: '文件消息',
-  callMsgText: '话单消息',
+  callMsgText: '音视频通话',
   geoMsgText: '地理位置消息',
   imgMsgText: '图片消息',
   notiMsgText: '通知消息',
@@ -97,6 +101,7 @@ const LocaleConfig = {
   unmuteSessionText: '取消免打扰',
   deleteStickTopText: '取消置顶',
   addStickTopText: '置顶消息',
+  beMentioned: '[有人@我]',
 
   // contact-kit
   teamListTitle: '我的群组',

@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { Form, Input, Button } from 'antd'
 import { GroupAvatarSelect, useTranslation, CrudeAvatar } from '../../../common'
 import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
@@ -22,23 +22,38 @@ const GroupDetail: FC<GroupDetailmProps> = ({
 }) => {
   const { t } = useTranslation()
 
+  const [avatar, setAvatar] = useState('')
+  const [intro, setIntro] = useState('')
+  const [name, setName] = useState('')
+
   const _prefix = `${prefix}-group-detail`
 
-  const [form] = Form.useForm<Partial<Team>>()
+  useEffect(() => {
+    setAvatar(team.avatar)
+  }, [team.avatar])
 
   useEffect(() => {
-    form.setFieldsValue({
-      ...team,
-    })
-  }, [form, team])
+    if (team.intro) {
+      setIntro(team.intro)
+    }
+  }, [team.intro])
+
+  useEffect(() => {
+    setName(team.name)
+  }, [team.name])
 
   const onUpdateTeamInfoSubmitHandler = () => {
-    const value = form.getFieldsValue()
-    onUpdateTeamInfo(value)
+    const obj: Partial<Team> = { avatar, name, intro }
+    Object.keys(obj).forEach((key) => {
+      if (obj[key] === team[key]) {
+        delete obj[key]
+      }
+    })
+    onUpdateTeamInfo({ ...obj, teamId: team.teamId })
   }
 
   return (
-    <Form className={`${_prefix}-wrap`} form={form} layout="vertical">
+    <Form className={`${_prefix}-wrap`} layout="vertical">
       <Form.Item
         className={`${_prefix}-avatar-box`}
         label={<b>{t('teamAvatarText')}</b>}
@@ -47,42 +62,46 @@ const GroupDetail: FC<GroupDetailmProps> = ({
         {hasPower ? (
           <GroupAvatarSelect
             prefix={commonPrefix}
-            avatar={team.avatar}
+            avatar={avatar}
             account={team.teamId}
             nick={team.name}
-            onSelect={(avatar) => {
-              form.setFieldsValue({
-                avatar,
-              })
-            }}
+            onSelect={setAvatar}
           />
         ) : (
-          <CrudeAvatar
-            account={team.teamId}
-            nick={team.name}
-            avatar={team.avatar}
-          />
+          <CrudeAvatar account={team.teamId} nick={team.name} avatar={avatar} />
         )}
       </Form.Item>
-      <Form.Item name="teamId" label={<b>{t('teamIdText')}</b>}>
-        <Input disabled className={`${_prefix}-form-input`} />
+      <Form.Item label={<b>{t('teamIdText')}</b>}>
+        <Input
+          disabled
+          className={`${_prefix}-form-input`}
+          value={team.teamId}
+        />
       </Form.Item>
-      <Form.Item name="name" label={<b>{t('teamTitle')}</b>}>
+      <Form.Item label={<b>{t('teamTitle')}</b>}>
         <Input
           disabled={!hasPower}
           className={`${_prefix}-form-input`}
           showCount
           maxLength={30}
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value)
+          }}
           placeholder={t('teamTitlePlaceholder')}
         />
       </Form.Item>
-      <Form.Item name="intro" label={<b>{t('teamSignText')}</b>}>
+      <Form.Item label={<b>{t('teamSignText')}</b>}>
         <Input.TextArea
           disabled={!hasPower}
           className={`${_prefix}-form-input`}
           maxLength={100}
           showCount
           rows={4}
+          value={intro}
+          onChange={(e) => {
+            setIntro(e.target.value)
+          }}
           placeholder={t('teamSignPlaceholder')}
         />
       </Form.Item>

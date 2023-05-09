@@ -11,6 +11,7 @@ import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 import { observer } from 'mobx-react'
 import { parseSessionId } from '../../../utils'
+
 // 对话框中要展示的文件icon标识
 const fileIconMap = {
   img: 'icon-tupian2',
@@ -27,54 +28,69 @@ const fileIconMap = {
 export interface IParseSessionProps {
   prefix?: string
   msg: IMMessage
-  replyMsg?: Pick<
-    IMMessage,
-    'type' | 'body' | 'attach' | 'idClient' | 'fromNick' | 'from'
-  >
+  replyMsg?: IMMessage
 }
 
 export const ParseSession: React.FC<IParseSessionProps> = observer(
   ({ prefix = 'common', msg, replyMsg }) => {
     const _prefix = `${prefix}-parse-session`
     const { store } = useStateContext()
-    const { t } = useTranslation()
     // const imagePreview = useRef<HTMLDivElement | null>(null)
+    const { t } = useTranslation()
     const locationDomRef = useRef<HTMLDivElement | null>(null)
+    const audioContainerRef = useRef<HTMLDivElement>(null)
     const notSupportMessageText = t('notSupportMessageText')
-    const { type, body, idClient, sessionId } = msg
+    // const { type, body, idClient, sessionId, ext } = msg
     const [audioIconType, setAudioIconType] = useState('icon-yuyin3')
-    const { scene, to } = parseSessionId(sessionId)
+    const { scene, to } = parseSessionId(msg.sessionId)
 
     const teamId = scene === 'team' ? to : ''
+
     const { EMOJI_ICON_MAP_CONFIG, INPUT_EMOJI_SYMBOL_REG } =
       handleEmojiTranslate(t)
-    const renderCustomText = () => {
-      const text = reactStringReplace(
-        body?.trim(),
-        /(https?:\/\/\S+)/gi,
-        (match, i) => (
-          <a key={idClient + match + i} href={match} target="_blank">
-            {match}
-          </a>
-        )
-      )
 
-      return (
-        <div className={`${_prefix}-text-wrapper`}>
-          {reactStringReplace(text, INPUT_EMOJI_SYMBOL_REG, (match, i) => {
-            return (
-              <CommonIcon
-                key={idClient + match + i}
-                className={`${_prefix}-emoji-icon`}
-                type={EMOJI_ICON_MAP_CONFIG[match]}
-              />
-            )
-          })}
-        </div>
-      )
+    const renderCustomText = (msg) => {
+      const { body, idClient, ext } = msg
+
+      let text = reactStringReplace(body, /(https?:\/\/\S+)/gi, (match, i) => (
+        <a key={idClient + match + i} href={match} target="_blank">
+          {match}
+        </a>
+      ))
+      text = reactStringReplace(text, INPUT_EMOJI_SYMBOL_REG, (match, i) => {
+        return (
+          <CommonIcon
+            key={idClient + match + i}
+            className={`${_prefix}-emoji-icon`}
+            type={EMOJI_ICON_MAP_CONFIG[match]}
+          />
+        )
+      })
+      if (ext) {
+        try {
+          const extObj = JSON.parse(ext)
+          const yxAitMsg = extObj.yxAitMsg
+          if (yxAitMsg) {
+            Object.keys(yxAitMsg).forEach((key) => {
+              const item = yxAitMsg[key]
+              text = reactStringReplace(text, item.text, (match, i) => {
+                return (
+                  <span
+                    key={idClient + match + i}
+                    className={`${_prefix}-mention`}
+                  >
+                    {match}
+                  </span>
+                )
+              })
+            })
+          }
+        } catch {}
+      }
+      return <div className={`${_prefix}-text-wrapper`}>{text}</div>
     }
 
-    const renderImage = () => {
+    const renderImage = (msg) => {
       const { attach } = msg
       const url = `${attach?.url}?download=${msg.idClient}.${attach?.ext}`
       return (
@@ -89,7 +105,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
-    const renderFile = () => {
+    const renderFile = (msg) => {
       return (
         <div className={`${_prefix}-file-box`}>
           <CommonIcon
@@ -115,7 +131,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
-    const renderNotification = () => {
+    const renderNotification = (msg) => {
       switch (msg.attach?.type) {
         case 'updateTeam': {
           const team: Team = msg.attach?.team || {}
@@ -162,10 +178,9 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
             </div>
           )
         }
-        // 主动加入群聊
+        // 有人主动加入群聊
         case 'passTeamApply':
-        // 邀请加入群聊
-        // case 'addTeamMembers' : // 忘了为什么写这个，但是实测是下面这个，先注释掉留着
+        // 邀请加入群聊对方同意
         case 'acceptTeamInvite': {
           return (
             <div className={`${_prefix}-noti`}>
@@ -174,17 +189,27 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
             </div>
           )
         }
+        // 邀请加入群聊无需验证
+        case 'addTeamMembers': {
+          const accounts: string[] = msg.attach?.accounts || []
+          const nicks = accounts
+            .map((item) =>
+              store.uiStore.getAppellation({ account: item, teamId })
+            )
+            .filter((item) => !!item)
+            .join('、')
+          return (
+            <div className={`${_prefix}-noti`}>
+              {nicks} {t('joinTeamText')}
+            </div>
+          )
+        }
         // 踢出群聊
         case 'removeTeamMembers': {
           const accounts: string[] = msg.attach?.accounts || []
-          const users: UserNameCard[] = accounts.map((item) => {
-            return (
-              (msg.attach?.users || []).find((j) => item === j.account) || {}
-            )
-          })
-          const nicks = users
+          const nicks = accounts
             .map((item) =>
-              store.uiStore.getAppellation({ account: item.account, teamId })
+              store.uiStore.getAppellation({ account: item, teamId })
             )
             .filter((item) => !!item)
             .join('、')
@@ -196,10 +221,9 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         }
         // 主动退出群聊
         case 'leaveTeam': {
-          const user: UserNameCard = (msg.attach?.users || [])[0] || {}
           return (
             <div className={`${_prefix}-noti`}>
-              {store.uiStore.getAppellation({ account: user.account, teamId })}{' '}
+              {store.uiStore.getAppellation({ account: msg.from, teamId })}{' '}
               {t('leaveTeamText')}
             </div>
           )
@@ -209,7 +233,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       }
     }
 
-    const renderAudio = () => {
+    const renderAudio = (msg) => {
       const { flow, attach } = msg
       const duration = Math.floor(attach?.dur / 1000) || 0
       let animationFlag = false
@@ -230,6 +254,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         <div
           className={`${_prefix}-audio-container`}
           style={{ width: containerWidth }}
+          ref={audioContainerRef}
         >
           <div
             className={
@@ -239,12 +264,18 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
               const oldAudio = document.getElementById(
                 'yx-audio-message'
               ) as HTMLAudioElement
+              const msgId = oldAudio?.getAttribute('msgId')
               oldAudio?.pause()
+              if (msgId === msg.idClient) {
+                animationFlag = false
+                return
+              }
               const audio = new Audio(attach?.url)
               // 播放音频，并开始动画
               audio.id = 'yx-audio-message'
+              audio.setAttribute('msgId', msg.idClient)
               audio.play()
-              document.body.appendChild(audio)
+              audioContainerRef.current?.appendChild(audio)
               audio.addEventListener('ended', () => {
                 animationFlag = false
                 audio.parentNode?.removeChild(audio)
@@ -268,13 +299,23 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
-    const renderVideo = () => {
+    const renderVideo = (msg) => {
       const { attach } = msg
       const url = `${attach?.url}?download=${msg.idClient}.${attach?.ext}`
       return (
         <video
           src={url}
+          id={`msg-video-${msg.idClient}`}
           controls
+          onPlay={() => {
+            // 播放视频，暂停其他视频
+            const videoElements = document.getElementsByTagName('video')
+            for (let i = 0; i < videoElements.length; i++) {
+              if (videoElements[i].id !== `msg-video-${msg.idClient}`) {
+                videoElements[i].pause()
+              }
+            }
+          }}
           onError={() => {
             // 处理异常 例如：视频格式不支持播放等
           }}
@@ -283,7 +324,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
-    const renderLocation = () => {
+    const renderLocation = (msg) => {
       const { attach, body } = msg
       const amapUrl = `https://uri.amap.com/marker?position=${attach?.lng},${attach?.lat}&name=${body}`
       const txmapUrl = `https://apis.map.qq.com/uri/v1/marker?marker=coord:${attach?.lat},${attach?.lng};title:${body};addr:${attach?.title}&referer=myapp`
@@ -311,8 +352,10 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         <Popover
           content={menu}
           trigger={['click']}
-          placement="right"
-          getPopupContainer={() => locationDomRef.current || document.body}
+          overlayClassName={`${_prefix}-map-menu-popover`}
+          getPopupContainer={(triggerNode) =>
+            locationDomRef.current || triggerNode
+          }
         >
           <div className={`${_prefix}-location-card`} ref={locationDomRef}>
             <div className={`${_prefix}-location-title`}>{body}</div>
@@ -331,64 +374,69 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     const renderReplyMsg = () => {
       if (replyMsg) {
         let content = ''
-        if (
-          replyMsg.type === 'custom' &&
-          ['reCallMsg', 'beReCallMsg'].includes(replyMsg.attach?.type)
-        ) {
+        // @ts-ignore
+        if (replyMsg === 'noFind') {
           content = t('recallReplyMessageText')
-        } else {
-          content =
-            `${store.uiStore.getAppellation({
-              account: replyMsg.from,
-              teamId,
-            })}：` + getMsgContentTipByType(replyMsg, t)
         }
-
+        const nick = store.uiStore.getAppellation({
+          account: replyMsg.from,
+          teamId,
+          ignoreAlias: true,
+        })
         return (
           <div
             className={`${_prefix}-reply-wrapper`}
             onClick={() => {
               // 滚动到回复的消息
-              document.getElementById(replyMsg.idClient)?.scrollIntoView()
+              // document.getElementById(replyMsg.idClient)?.scrollIntoView()
             }}
           >
-            {content}
+            {content ? (
+              content
+            ) : (
+              <>
+                <div className={`${_prefix}-reply-nick`}>{nick}：</div>
+                {renderMsgContent(replyMsg)}
+              </>
+            )}
           </div>
         )
       }
       return null
     }
 
+    const renderMsgContent = (msg) => {
+      switch (msg.type) {
+        case 'text':
+        case 'custom':
+          return renderCustomText(msg)
+        case 'image':
+          return renderImage(msg)
+        case 'file':
+          return renderFile(msg)
+        case 'notification':
+          return renderNotification(msg)
+        case 'audio':
+          return renderAudio(msg)
+        case 'g2':
+          return `[${t('callMsgText')}，${notSupportMessageText}]`
+        case 'geo':
+          return renderLocation(msg)
+        case 'robot':
+          return `[${t('robotMsgText')}，${notSupportMessageText}]`
+        case 'tip':
+          return `[${t('tipMsgText')}，${notSupportMessageText}]`
+        case 'video':
+          return renderVideo(msg)
+        default:
+          return `[${t('unknowMsgText')}，${notSupportMessageText}]`
+      }
+    }
+
     return (
       <>
         {renderReplyMsg()}
-        {(() => {
-          switch (type) {
-            case 'text':
-            case 'custom':
-              return renderCustomText()
-            case 'image':
-              return renderImage()
-            case 'file':
-              return renderFile()
-            case 'notification':
-              return renderNotification()
-            case 'audio':
-              return renderAudio()
-            case 'g2':
-              return `[${t('callMsgText')}，${notSupportMessageText}]`
-            case 'geo':
-              return renderLocation()
-            case 'robot':
-              return `[${t('robotMsgText')}，${notSupportMessageText}]`
-            case 'tip':
-              return `[${t('tipMsgText')}，${notSupportMessageText}]`
-            case 'video':
-              return renderVideo()
-            default:
-              return `[${t('unknowMsgText')}，${notSupportMessageText}]`
-          }
-        })()}
+        {renderMsgContent(msg)}
       </>
     )
   }

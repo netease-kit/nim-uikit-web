@@ -1,5 +1,6 @@
 # 云信 IM UI Kit for React
 
+
 ### 配置项目
 ```typescript
 // 请到下面路径的文件配置
@@ -29,3 +30,6 @@ xxx（组件名称）
 │   └── pages 
 │       └── index.tsx // 项目入口
 ```
+
+### 补充
+建议使用 React 16 及以下版本

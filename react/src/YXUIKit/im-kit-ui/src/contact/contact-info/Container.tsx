@@ -15,6 +15,30 @@ export interface ContactInfoContainerProps {
     */
   afterSendMsgClick?: () => void
   /**
+   通过入群申请后的事件
+   */
+  afterAcceptApplyTeam?: () => void
+  /**
+    拒绝入群申请后的事件
+    */
+  afterRejectApplyTeam?: () => void
+  /**
+    通过入群邀请后的事件
+    */
+  afterAcceptTeamInvite?: () => void
+  /**
+    拒绝入群邀请后的事件
+    */
+  afterRejectTeamInvite?: () => void
+  /**
+    通过好友申请后的事件
+    */
+  afterAcceptApplyFriend?: () => void
+  /**
+    拒绝好友申请后的事件
+    */
+  afterRejectApplyFriend?: () => void
+  /**
    好友点击事件
    */
   onFriendItemClick?: (account: string) => void
@@ -26,7 +50,6 @@ export interface ContactInfoContainerProps {
    群组点击事件
    */
   onGroupItemClick?: (team: Team) => void
-
   /**
     自定义渲染好友列表为空时内容
     */
@@ -89,6 +112,12 @@ export const ContactInfoContainer: React.FC<ContactInfoContainerProps> =
       renderMsgListHeader,
       renderEmpty,
       afterSendMsgClick,
+      afterAcceptApplyTeam,
+      afterRejectApplyTeam,
+      afterAcceptTeamInvite,
+      afterRejectTeamInvite,
+      afterAcceptApplyFriend,
+      afterRejectApplyFriend,
       prefix = 'contact',
       commonPrefix = 'common',
     }) => {
@@ -131,6 +160,12 @@ export const ContactInfoContainer: React.FC<ContactInfoContainerProps> =
           renderMsgListEmpty={renderMsgListEmpty}
           renderMsgListHeader={renderMsgListHeader}
           afterSendMsgClick={afterSendMsgClick}
+          afterAcceptApplyTeam={afterAcceptApplyTeam}
+          afterRejectApplyTeam={afterRejectApplyTeam}
+          afterAcceptTeamInvite={afterAcceptTeamInvite}
+          afterRejectTeamInvite={afterRejectTeamInvite}
+          afterAcceptApplyFriend={afterAcceptApplyFriend}
+          afterRejectApplyFriend={afterRejectApplyFriend}
           prefix={prefix}
           commonPrefix={commonPrefix}
         />

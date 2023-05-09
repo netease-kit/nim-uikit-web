@@ -77,6 +77,11 @@ const LocaleConfig = {
   updateAliasFailedText: 'Failed to modify remark',
   sendText: 'Send',
   noPermission: 'No permission',
+  callDurationText: 'call duration',
+  callCancelText: 'canceled',
+  callRejectedText: 'rejected',
+  callTimeoutText: 'timeout',
+  callBusyText: 'busy line',
 
   // conversation-kit
   onDismissTeamText: 'Group dismissed',
@@ -97,6 +102,7 @@ const LocaleConfig = {
   unmuteSessionText: 'Disable Do-Not-Disturb',
   deleteStickTopText: 'Unpin',
   addStickTopText: 'Pin',
+  beMentioned: '[You were mentioned]',
 
   // contact-kit
   teamListTitle: 'Groups',

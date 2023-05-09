@@ -8,10 +8,12 @@
 }
 
 .@{prefix-cls}-wrap {
+  position: relative;
   background: @yx-primary-color;
   border: 1px solid @yx-border-color-4;
   border-radius: @yx-primary-border-radius;
   .@{prefix-cls}-reply-wrap {
+    position: relative;
     padding: 12px 15px 0;
     .@{prefix-cls}-reply-container {
       height: 30px;
@@ -36,6 +38,25 @@
   .@{prefix-cls}-content {
     display: flex;
     position: relative;
+  }
+
+  .@{prefix-cls}-popup-container {
+    position: absolute;
+    top: 15px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .@{prefix-cls}-at-popover {
+    right: 0 !important;
+    left: 0 !important;
+    .@{ant-prefix}-popover-inner {
+      border-radius: 4px;
+    }
+    .@{ant-prefix}-popover-inner-content {
+      padding: 0;
+    }
   }
 
   // .@{prefix-cls}-msg-tip {

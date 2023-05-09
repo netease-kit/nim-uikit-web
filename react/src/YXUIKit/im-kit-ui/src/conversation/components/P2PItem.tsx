@@ -119,7 +119,6 @@ export const P2PItem: FC<P2PItemProps> = ({
           <CrudeAvatar
             nick={nick}
             account={account}
-            alias={alias}
             avatar={props.avatar}
             count={isSelected ? 0 : unread}
             dot={isSelected ? false : isMute && unread > 0}

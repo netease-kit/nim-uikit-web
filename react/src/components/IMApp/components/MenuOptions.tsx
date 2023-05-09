@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import classNames from 'classnames'
-import { demo_zh } from '../locales/demo_locale'
 import { Modal } from 'antd'
+import { t } from '../util'
 interface IProps {
   onLogout?: () => void
   locale: 'zh' | 'en'
@@ -12,7 +12,6 @@ interface IProps {
   subMenuVisible: boolean
   setMenuVisible: React.Dispatch<React.SetStateAction<boolean>>
   setSubMenuVisible: React.Dispatch<React.SetStateAction<boolean>>
-  t: (str: keyof typeof demo_zh) => string
 }
 const Menu: FC<IProps> = ({
   onLogout,
@@ -24,21 +23,18 @@ const Menu: FC<IProps> = ({
   subMenuVisible,
   setMenuVisible,
   setSubMenuVisible,
-  t,
 }) => {
   const logout = () => {
     Modal.confirm({
       title: t('logoutConfirmText'),
       onOk: () => {
-        onLogout()
+        onLogout?.()
       },
     })
   }
-  return (
+  return menuVisible ? (
     <div
-      className={classNames('menu-wrapper', {
-        'show-menu': menuVisible,
-      })}
+      className={classNames('menu-wrapper', 'show-menu')}
       onMouseEnter={() => {
         setMenuVisible(true)
       }}
@@ -93,7 +89,7 @@ const Menu: FC<IProps> = ({
         </div>
       </div>
     </div>
-  )
+  ) : null
 }
 
 export default Menu

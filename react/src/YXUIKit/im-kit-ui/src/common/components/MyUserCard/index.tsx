@@ -92,6 +92,7 @@ export const MyUserCard: FC<MyUserCardProps> = ({
     setTel(props.tel)
     setEmail(props.email)
     setSignature(props.signature)
+    setAvatarFile(undefined)
   }
 
   const handleCancel = () => {

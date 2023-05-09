@@ -16,7 +16,7 @@ export interface RenderTeamCustomMessageOptions
 export interface ChatTeamMessageListProps
   extends Omit<MessageItemProps, 'msg' | 'alias'> {
   msgs: IMMessage[]
-  teamId: string
+  replyMsgsMap: Record<string, IMMessage>
   members: (TeamMember & Partial<FriendProfile>)[]
   teamMsgReceiptVisible?: boolean
   renderTeamCustomMessage?: (
@@ -40,7 +40,7 @@ const ChatTeamMessageList = forwardRef<
       prefix = 'chat',
       commonPrefix = 'common',
       msgs,
-      teamId,
+      replyMsgsMap,
       members,
       teamMsgReceiptVisible,
       receiveMsgBtnVisible = false,
@@ -52,11 +52,14 @@ const ChatTeamMessageList = forwardRef<
       myAccount,
       onResend,
       onMessageAction,
+      onMessageAvatarAction,
       onReeditClick,
       onScroll,
       renderTeamCustomMessage,
       renderMessageAvatar,
       renderMessageName,
+      renderMessageInnerContent,
+      renderMessageOuterContent,
     },
     ref
   ) => {
@@ -75,9 +78,8 @@ const ChatTeamMessageList = forwardRef<
           {renderMsgs.map((msg) => {
             const msgItem = renderTeamCustomMessage?.({
               msg,
-              msgs,
+              replyMsg: replyMsgsMap[msg.idClient],
               members,
-              teamId,
               onResend,
               onReeditClick,
               onMessageAction,
@@ -87,8 +89,7 @@ const ChatTeamMessageList = forwardRef<
                 prefix={prefix}
                 commonPrefix={commonPrefix}
                 msg={msg}
-                msgs={renderMsgs}
-                teamId={teamId}
+                replyMsg={replyMsgsMap[msg.idClient]}
                 normalStatusRenderer={
                   teamMsgReceiptVisible ? (
                     <ReadPercent
@@ -102,9 +103,12 @@ const ChatTeamMessageList = forwardRef<
                 myAccount={myAccount}
                 onResend={onResend}
                 onMessageAction={onMessageAction}
+                onMessageAvatarAction={onMessageAvatarAction}
                 onReeditClick={onReeditClick}
                 renderMessageAvatar={renderMessageAvatar}
                 renderMessageName={renderMessageName}
+                renderMessageInnerContent={renderMessageInnerContent}
+                renderMessageOuterContent={renderMessageOuterContent}
               />
             )
             return (
