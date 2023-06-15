@@ -143,8 +143,7 @@ const AddFriendModal: React.FC<AddFriendModalProps> = observer(
                 {searchRes.account}
               </div>
             </div>
-            {store.uiStore.getRelationByAccount(searchRes.account) !==
-            'stranger' ? (
+            {store.uiStore.getRelation(searchRes.account) !== 'stranger' ? (
               <Button type="primary" onClick={handleChat}>
                 {t('chatButtonText')}
               </Button>

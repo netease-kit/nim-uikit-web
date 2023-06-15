@@ -1,8 +1,16 @@
 import React, { FC, useMemo } from 'react'
 import { Menu } from 'antd'
-import { CrudeAvatar, CommonIcon, useTranslation } from '../../common'
+import {
+  ComplexAvatarContainer,
+  CommonIcon,
+  useTranslation,
+  useStateContext,
+  ReadPercent,
+} from '../../common'
 import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import { ConversationItem } from './ConversationItem'
+import { CheckCircleOutlined } from '@ant-design/icons'
+import { observer } from 'mobx-react'
 
 export interface P2PItemProps extends NimKitCoreTypes.P2PSession {
   isSelected: boolean
@@ -13,118 +21,139 @@ export interface P2PItemProps extends NimKitCoreTypes.P2PSession {
   avatarRenderer?: JSX.Element | null
   sessionNameRenderer?: JSX.Element | null
   sessionMsgRenderer?: JSX.Element | null
+  msgReceiptTime?: number
 
   prefix?: string
   commonPrefix?: string
 }
 
-export const P2PItem: FC<P2PItemProps> = ({
-  onStickTopChange,
-  onDeleteClick,
-  onMuteChange,
-  onItemClick,
-  isMute,
-  stickTopInfo,
-  nick,
-  alias,
-  account,
-  unread,
-  lastMsg,
-  updateTime,
-  isSelected,
-  avatarRenderer,
-  sessionMsgRenderer,
-  sessionNameRenderer,
-  prefix = 'conversation',
-  commonPrefix = 'common',
-  ...props
-}) => {
-  const { t } = useTranslation()
-
-  const menuRenderer = useMemo(() => {
-    const items = [
-      {
-        label: stickTopInfo?.isStickOnTop
-          ? t('deleteStickTopText')
-          : t('addStickTopText'),
-        icon: stickTopInfo?.isStickOnTop ? (
-          <CommonIcon type="icon-quxiaozhiding" />
-        ) : (
-          <CommonIcon type="icon-xiaoxizhiding" />
-        ),
-        key: 'stickTop',
-      },
-      {
-        label: isMute ? t('unmuteSessionText') : t('muteSessionText'),
-        icon: isMute ? (
-          <CommonIcon type="icon-quxiaoxiaoximiandarao" />
-        ) : (
-          <CommonIcon type="icon-xiaoximiandarao" />
-        ),
-        key: 'muteSession',
-      },
-      {
-        label: t('deleteSessionText'),
-        icon: <CommonIcon type="icon-shanchu" />,
-        key: 'deleteSession',
-      },
-    ] as any
-
-    return (
-      <Menu
-        onClick={({ key, domEvent }) => {
-          domEvent.stopPropagation()
-          switch (key) {
-            case 'stickTop':
-              onStickTopChange(!stickTopInfo?.isStickOnTop)
-              break
-            case 'muteSession':
-              onMuteChange(!isMute)
-              break
-            case 'deleteSession':
-              onDeleteClick()
-              break
-            default:
-              break
-          }
-        }}
-        items={items}
-      ></Menu>
-    )
-  }, [
-    isMute,
-    stickTopInfo?.isStickOnTop,
+export const P2PItem: FC<P2PItemProps> = observer(
+  ({
     onStickTopChange,
     onDeleteClick,
     onMuteChange,
-    t,
-  ])
+    onItemClick,
+    isMute,
+    stickTopInfo,
+    to,
+    unread,
+    lastMsg,
+    updateTime,
+    isSelected,
+    avatarRenderer,
+    sessionMsgRenderer,
+    sessionNameRenderer,
+    prefix = 'conversation',
+    commonPrefix = 'common',
+    msgReceiptTime,
+    ...props
+  }) => {
+    const { t } = useTranslation()
+    const { store, localOptions } = useStateContext()
 
-  return (
-    <ConversationItem
-      isTop={!!stickTopInfo?.isStickOnTop}
-      isMute={isMute}
-      sessionName={alias || nick || account}
-      time={lastMsg?.time || updateTime}
-      lastMsg={lastMsg}
-      isSelected={isSelected}
-      onItemClick={onItemClick}
-      menuRenderer={menuRenderer}
-      prefix={prefix}
-      commonPrefix={commonPrefix}
-      sessionMsgRenderer={sessionMsgRenderer}
-      sessionNameRenderer={sessionNameRenderer}
-      avatarRenderer={
-        avatarRenderer ?? (
-          <CrudeAvatar
-            nick={nick}
-            account={account}
-            avatar={props.avatar}
-            count={isSelected ? 0 : unread}
-            dot={isSelected ? false : isMute && unread > 0}
-          />
-        )
-      }
-    />
-  )
-}
+    const menuRenderer = useMemo(() => {
+      const items = [
+        {
+          label: stickTopInfo?.isStickOnTop
+            ? t('deleteStickTopText')
+            : t('addStickTopText'),
+          icon: stickTopInfo?.isStickOnTop ? (
+            <CommonIcon type="icon-quxiaozhiding" />
+          ) : (
+            <CommonIcon type="icon-xiaoxizhiding" />
+          ),
+          key: 'stickTop',
+        },
+        {
+          label: isMute ? t('unmuteSessionText') : t('muteSessionText'),
+          icon: isMute ? (
+            <CommonIcon type="icon-quxiaoxiaoximiandarao" />
+          ) : (
+            <CommonIcon type="icon-xiaoximiandarao" />
+          ),
+          key: 'muteSession',
+        },
+        {
+          label: t('deleteSessionText'),
+          icon: <CommonIcon type="icon-shanchu" />,
+          key: 'deleteSession',
+        },
+      ] as any
+
+      return (
+        <Menu
+          onClick={({ key, domEvent }) => {
+            domEvent.stopPropagation()
+            switch (key) {
+              case 'stickTop':
+                onStickTopChange(!stickTopInfo?.isStickOnTop)
+                break
+              case 'muteSession':
+                onMuteChange(!isMute)
+                break
+              case 'deleteSession':
+                onDeleteClick()
+                break
+              default:
+                break
+            }
+          }}
+          items={items}
+        ></Menu>
+      )
+    }, [
+      isMute,
+      stickTopInfo?.isStickOnTop,
+      onStickTopChange,
+      onDeleteClick,
+      onMuteChange,
+      t,
+    ])
+
+    const renderSessionMsgIsRead = () => {
+      return localOptions.p2pMsgReceiptVisible &&
+        lastMsg?.flow === 'out' &&
+        lastMsg?.type !== 'g2' &&
+        lastMsg?.type !== 'notification' ? (
+        <div className={`${prefix}-item-content-read-status`}>
+          {(msgReceiptTime ?? 0) - (lastMsg?.time ?? 0) > 0 ? (
+            <CheckCircleOutlined
+              className={`${prefix}-item-content-read-icon`}
+            />
+          ) : (
+            <ReadPercent radius={7} unread={1} read={0} prefix={commonPrefix} />
+          )}
+        </div>
+      ) : null
+    }
+
+    return (
+      <ConversationItem
+        isTop={!!stickTopInfo?.isStickOnTop}
+        isMute={isMute}
+        sessionName={store.uiStore.getAppellation({ account: to })}
+        time={lastMsg?.time || updateTime}
+        lastMsg={lastMsg}
+        isSelected={isSelected}
+        onItemClick={onItemClick}
+        menuRenderer={menuRenderer}
+        prefix={prefix}
+        commonPrefix={commonPrefix}
+        sessionMsgRenderer={sessionMsgRenderer}
+        sessionNameRenderer={sessionNameRenderer}
+        renderSessionMsgIsRead={renderSessionMsgIsRead}
+        avatarRenderer={
+          avatarRenderer ?? (
+            <ComplexAvatarContainer
+              account={to}
+              prefix={commonPrefix}
+              canClick={false}
+              count={isSelected ? 0 : unread}
+              dot={isSelected ? false : isMute && unread > 0}
+            />
+          )
+        }
+      />
+    )
+  }
+)

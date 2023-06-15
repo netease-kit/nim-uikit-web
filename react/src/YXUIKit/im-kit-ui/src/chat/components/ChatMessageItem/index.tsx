@@ -18,6 +18,8 @@ import {
 import { RollbackOutlined, DeleteOutlined } from '@ant-design/icons'
 import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import { observer } from 'mobx-react'
+import { MsgOperMenuItem } from '../../Container'
+import { mergeActions } from '../../../utils'
 
 export type MenuItemKey = 'recall' | 'delete' | 'reply' | 'forward'
 export type AvatarMenuItem = 'mention'
@@ -34,6 +36,7 @@ export interface MessageItemProps {
   msg: IMMessage
   replyMsg?: IMMessage
   normalStatusRenderer?: React.ReactNode
+  msgOperMenu?: MsgOperMenuItem[]
   onResend: (msg: IMMessage) => void
   onReeditClick: (msg: IMMessage) => void
   onMessageAction: (key: MenuItemKey, msg: IMMessage) => void
@@ -51,6 +54,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = ({
   replyMsg,
   myAccount,
   normalStatusRenderer,
+  msgOperMenu,
   onResend,
   onMessageAction,
   onMessageAvatarAction,
@@ -144,19 +148,14 @@ export const ChatMessageItem: React.FC<MessageItemProps> = ({
       ? date.format('MM-DD HH:mm:ss')
       : date.format('YYYY-MM-DD HH:mm:ss')
   }
+
   const renderMenuItems = () => {
-    const menuItems: MenuItem[] = [
+    const defaultMenuItems: MenuItem[] = [
       // {
       //   label: '复制',
       //   key: 'copy',
       //   icon: <CopyOutlined />,
       // },
-      {
-        show: canRecall ? 1 : 0,
-        label: t('recallText'),
-        key: 'recall',
-        icon: <RollbackOutlined />,
-      },
       {
         show: ['sending', 'sendFailed', 'refused', 'delete'].includes(status)
           ? 0
@@ -181,7 +180,16 @@ export const ChatMessageItem: React.FC<MessageItemProps> = ({
         key: 'forward',
         icon: <CommonIcon type="icon-zhuanfa" />,
       },
+      {
+        show: canRecall ? 1 : 0,
+        label: t('recallText'),
+        key: 'recall',
+        icon: <RollbackOutlined />,
+      },
     ]
+    const menuItems = msgOperMenu
+      ? mergeActions(defaultMenuItems, msgOperMenu, 'key')
+      : defaultMenuItems
     return menuItems.filter((item) => item.show)
   }
 

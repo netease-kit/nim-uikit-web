@@ -4,7 +4,6 @@ import { Dropdown } from 'antd'
 import { ExclamationCircleFilled } from '@ant-design/icons'
 import {
   CommonIcon,
-  ParseSession,
   getMsgContentTipByType,
   useTranslation,
 } from '../../common'
@@ -20,6 +19,7 @@ export interface ConversationItemProps {
   lastMsg: IMMessage | null | undefined
   isSelected: boolean
   onItemClick: () => void
+  renderSessionMsgIsRead?: () => void
   sessionNameRenderer?: JSX.Element | null
   sessionMsgRenderer?: JSX.Element | null
   beMentioned?: boolean
@@ -40,6 +40,7 @@ export const ConversationItem: FC<ConversationItemProps> = ({
   onItemClick,
   sessionMsgRenderer,
   sessionNameRenderer,
+  renderSessionMsgIsRead,
   prefix = 'conversation',
   commonPrefix = 'common',
 }) => {
@@ -53,7 +54,6 @@ export const ConversationItem: FC<ConversationItemProps> = ({
   }, [time])
 
   const { t } = useTranslation()
-
   const msg = useMemo(() => {
     const { type = '', body = '', status } = lastMsg || {}
 
@@ -88,7 +88,10 @@ export const ConversationItem: FC<ConversationItemProps> = ({
                 {t('beMentioned')}
               </span>
             )}
-            {sessionMsgRenderer ?? msg}
+            {renderSessionMsgIsRead?.()}
+            <div className={`${prefix}-item-content-msg-body`}>
+              {sessionMsgRenderer ?? msg}
+            </div>
           </div>
         </div>
         <div className={`${prefix}-item-state`}>

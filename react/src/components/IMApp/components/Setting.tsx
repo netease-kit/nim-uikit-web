@@ -3,29 +3,21 @@ import { Select, Modal, Form } from 'antd'
 import '../index.less'
 import { t } from '../util'
 interface IProps {
-  sdkVersion: 1 | 2
-  setSdkVersion: React.Dispatch<React.SetStateAction<1 | 2>>
   isSettingModalOpen: boolean
   handleSettingCancel: () => void
   p2pMsgReceiptVisible: boolean
-  setP2pMsgReceiptVisible: React.Dispatch<React.SetStateAction<boolean>>
   teamMsgReceiptVisible: boolean
-  setTeamMsgReceiptVisible: React.Dispatch<React.SetStateAction<boolean>>
   addFriendNeedVerify: boolean
-  setAddFriendNeedVerify: React.Dispatch<React.SetStateAction<boolean>>
+  needMention: boolean
   locale: 'zh' | 'en'
 }
 const SettingModal: FC<IProps> = ({
   isSettingModalOpen,
   handleSettingCancel,
-  sdkVersion,
-  setSdkVersion,
   p2pMsgReceiptVisible,
-  setP2pMsgReceiptVisible,
   teamMsgReceiptVisible,
-  setTeamMsgReceiptVisible,
   addFriendNeedVerify,
-  setAddFriendNeedVerify,
+  needMention,
   locale,
 }) => {
   return (
@@ -37,7 +29,7 @@ const SettingModal: FC<IProps> = ({
       width={locale === 'zh' ? 420 : 460}
     >
       <Form labelCol={{ span: locale === 'zh' ? 12 : 14 }}>
-        <Form.Item label={t('sdkVersionSelectionText')}>
+        {/* <Form.Item label={t('sdkVersionSelectionText')}>
           <Select
             options={[
               { label: 'IM SDK', value: 1 },
@@ -46,11 +38,11 @@ const SettingModal: FC<IProps> = ({
             style={{ width: '150px' }}
             value={sdkVersion}
             onChange={(value) => {
-              setSdkVersion(value)
               sessionStorage.setItem('sdkVersion', value.toString())
+              window.location.reload()
             }}
           />
-        </Form.Item>
+        </Form.Item> */}
         <Form.Item label={t('p2pMsgVisibleModeText')}>
           <Select
             options={[
@@ -60,8 +52,8 @@ const SettingModal: FC<IProps> = ({
             style={{ width: '150px' }}
             value={p2pMsgReceiptVisible}
             onChange={(value) => {
-              setP2pMsgReceiptVisible(value)
               sessionStorage.setItem('p2pMsgReceiptVisible', value.toString())
+              window.location.reload()
             }}
           />
         </Form.Item>
@@ -74,8 +66,8 @@ const SettingModal: FC<IProps> = ({
             style={{ width: '150px' }}
             value={teamMsgReceiptVisible}
             onChange={(value) => {
-              setTeamMsgReceiptVisible(value)
               sessionStorage.setItem('teamMsgReceiptVisible', value.toString())
+              window.location.reload()
             }}
           />
         </Form.Item>
@@ -88,8 +80,21 @@ const SettingModal: FC<IProps> = ({
             style={{ width: '150px' }}
             value={addFriendNeedVerify}
             onChange={(value) => {
-              setAddFriendNeedVerify(value)
               sessionStorage.setItem('addFriendNeedVerify', value.toString())
+              window.location.reload()
+            }}
+          />
+        </Form.Item>
+        <Form.Item label={t('needMentionText')}>
+          <Select
+            options={[
+              { label: t('yesText'), value: true },
+              { label: t('noText'), value: false },
+            ]}
+            style={{ width: '150px' }}
+            value={needMention}
+            onChange={(value) => {
+              sessionStorage.setItem('needMention', value.toString())
               window.location.reload()
             }}
           />

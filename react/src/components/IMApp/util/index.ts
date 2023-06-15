@@ -46,7 +46,7 @@ export const convertSecondsToTime = (seconds: number): string => {
 }
 
 //话单类型
-export const g2StatusMap:any = {
+export const g2StatusMap = {
   1: t('callDurationText'),
   2: t('callCancelText'),
   3: t('callRejectedText'),
@@ -59,7 +59,7 @@ export const callTypeMap = {
   vedio: '2',
 }
 
-export const renderMsgDate = (time: any) => {
+export const renderMsgDate = (time) => {
   const date = moment(time)
   const isCurrentDay = date.isSame(moment(), 'day')
   const isCurrentYear = date.isSame(moment(), 'year')
@@ -69,7 +69,6 @@ export const renderMsgDate = (time: any) => {
     ? date.format('MM-DD HH:mm:ss')
     : date.format('YYYY-MM-DD HH:mm:ss')
 }
-
 /**
  * 解析 sessionId，形如 scene-accid
  */

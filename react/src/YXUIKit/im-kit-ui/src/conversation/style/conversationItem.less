@@ -34,10 +34,28 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      display: flex;
+      align-items: center;
+    }
+    &-msg-body {
+      font-size: @yx-font-size-12;
+      color: @yx-text-color-2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     &-mention {
       font-size: @yx-font-size-12;
       color: @yx-text-color-7;
+    }
+    &-read-status {
+      margin-right: 4px;
+    }
+    &-read-icon {
+      font-size: @yx-primary-font-size;
+      color: @yx-text-color-4 !important;
+      position: relative;
+      top: 1px;
     }
   }
 

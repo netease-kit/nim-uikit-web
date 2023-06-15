@@ -1,11 +1,10 @@
 import React, { FC } from 'react'
 import { BlackItem } from './BlackItem'
 import { useTranslation } from '../../../common'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import { Spin, Empty } from 'antd'
 
 export interface BlackListProps {
-  list: NimKitCoreTypes.IFriendInfo[]
+  list: string[]
   loading?: boolean
   onItemClick?: (account: string) => void
   afterSendMsgClick?: () => void
@@ -55,12 +54,12 @@ export const BlackList: FC<BlackListProps> = ({
         ) : (
           list.map((item) => (
             <BlackItem
-              key={item.account}
+              account={item}
+              key={item}
               prefix={prefix}
               commonPrefix={commonPrefix}
               onItemClick={onItemClick}
               afterSendMsgClick={afterSendMsgClick}
-              {...item}
             />
           ))
         )}

@@ -19,7 +19,7 @@ import GroupAddMembers from '../components/ChatAddMembers'
 import { ChatAction } from '../types'
 import { useStateContext, useTranslation, CrudeAvatar } from '../../common'
 import { LeftOutlined } from '@ant-design/icons'
-import { Action } from '../Container'
+import { Action, MsgOperMenuItem } from '../Container'
 import ChatTeamSetting, { HistoryStack } from '../components/ChatTeamSetting'
 import { Session } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/SessionServiceInterface'
 import { debounce, VisibilityObserver } from '@xkit-yx/utils'
@@ -39,17 +39,19 @@ import { observer } from 'mobx-react'
 import { GroupItemProps } from '../components/ChatTeamSetting/GroupItem'
 import ChatForwardModal from '../components/ChatForwardModal'
 import { MentionedMember } from '../components/ChatMessageInput/ChatMentionMemberList'
+import GroupActionModal from '../components/ChatTeamSetting/GroupActionModal'
 
 export interface TeamChatContainerProps {
   scene: TMsgScene
   to: string
   actions?: Action[]
-  teamMsgReceiptVisible?: boolean
+  msgOperMenu?: MsgOperMenuItem[]
   onSendText?: (data: {
     value: string
     scene: TMsgScene
     to: string
   }) => Promise<void>
+  afterTransferTeam?: (teamId: string) => Promise<void>
   renderTeamCustomMessage?: (
     options: RenderTeamCustomMessageOptions
   ) => JSX.Element | null | undefined
@@ -75,8 +77,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     scene,
     to,
     actions,
-    teamMsgReceiptVisible,
+    msgOperMenu,
     onSendText: onSendTextFromProps,
+    afterTransferTeam,
     renderTeamCustomMessage,
     renderHeader,
     renderTeamInputPlaceHolder,
@@ -139,6 +142,8 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       .filter((item) => item.type === 'manager')
       .some((item) => item.account === myUser?.account)
 
+    const [groupSearchText, setGroupSerachText] = useState<string>('')
+
     const mentionMembers = useMemo(() => {
       return teamMembers.filter((member) => {
         if (member.account !== myUser?.account) {
@@ -156,6 +161,25 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         return false
       })
     }, [teamMembers, myUser?.account, store])
+
+    const sortedMembers = useMemo(() => {
+      const owner = teamMembers.filter((item) => item.type === 'owner')
+      const manager = teamMembers
+        .filter((item) => item.type === 'manager')
+        .sort((a, b) => a.joinTime - b.joinTime)
+      const other = teamMembers
+        .filter((item) => !['owner', 'manager'].includes(item.type))
+        .sort((a, b) => a.joinTime - b.joinTime)
+      let _sortedMembers = [...owner, ...manager, ...other]
+      if (groupSearchText) {
+        _sortedMembers = _sortedMembers.filter((item) =>
+          store.uiStore
+            .getAppellation({ account: item.account, teamId: item.teamId })
+            .includes(groupSearchText)
+        )
+      }
+      return _sortedMembers
+    }, [teamMembers, groupSearchText])
 
     const teamMute = useMemo(() => {
       if (team.mute) {
@@ -179,6 +203,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         root: messageListContainerDomRef.current,
       })
     }, [to])
+
+    const [groupActionModalVisible, setGroupActionModalVisible] =
+      useState<boolean>(false)
 
     // 以下是 UI 相关的 state，需要在切换会话时重置
     const [replyMsgsMap, setReplyMsgsMap] = useState<Record<string, IMMessage>>(
@@ -364,6 +391,10 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     }
 
     const onMessageAction = async (key: MenuItemKey, msg: IMMessage) => {
+      const msgOperMenuItem = msgOperMenu?.find((item) => item.key === key)
+      if (msgOperMenuItem?.onClick) {
+        return msgOperMenuItem?.onClick(msg)
+      }
       switch (key) {
         case 'delete':
           await store.msgStore.deleteMsgActive([msg])
@@ -418,6 +449,28 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         message.success(t('leaveTeamSuccessText'))
       } catch (error) {
         message.error(t('leaveTeamFailedText'))
+      }
+    }
+
+    const onTeamMemberSearchChange = (searchText) => {
+      setGroupSerachText(searchText)
+    }
+
+    const onTransferMemberClick = () => {
+      setGroupActionModalVisible(true)
+    }
+
+    const onTransferTeam = async (account: string) => {
+      try {
+        await store.teamStore.transferTeamTeamActive({
+          account,
+          teamId: team.teamId,
+        })
+        setGroupActionModalVisible(false)
+        afterTransferTeam?.(team.teamId)
+        message.success(t('transferTeamSuccessText'))
+      } catch (error) {
+        message.error(t('transferTeamFailedText'))
       }
     }
 
@@ -561,6 +614,11 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
 
     const handleForwardModalClose = () => {
       setForwardMessage(undefined)
+    }
+
+    const handleGroupActionCancel = () => {
+      setGroupActionModalVisible(false)
+      setGroupSerachText('')
     }
 
     useEffect(() => {
@@ -862,9 +920,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             commonPrefix={commonPrefix}
             ref={messageListContainerDomRef}
             msgs={msgs}
+            msgOperMenu={msgOperMenu}
             replyMsgsMap={replyMsgsMap}
             members={teamMembers}
-            teamMsgReceiptVisible={teamMsgReceiptVisible}
             noMore={noMore}
             loadingMore={loadingMore}
             myAccount={myUser?.account || ''}
@@ -919,7 +977,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             title={title}
           >
             <ChatTeamSetting
-              members={teamMembers}
+              members={sortedMembers}
               team={team}
               myAccount={myUser?.account || ''}
               isGroupManager={isGroupManager}
@@ -934,7 +992,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
               onUpdateTeamInfo={onUpdateTeamInfo}
               onUpdateMyMemberInfo={onUpdateMyMemberInfo}
               onTeamMuteChange={onTeamMuteChange}
+              onTransferTeamClick={onTransferMemberClick}
               renderTeamMemberItem={renderTeamMemberItem}
+              onTeamMemberSearchChange={onTeamMemberSearchChange}
               prefix={prefix}
               commonPrefix={commonPrefix}
             />
@@ -962,6 +1022,17 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           onCancel={handleForwardModalClose}
           prefix={prefix}
           commonPrefix={commonPrefix}
+        />
+        <GroupActionModal
+          title={t('transferOwnerText')}
+          prefix={prefix}
+          visible={groupActionModalVisible}
+          members={sortedMembers}
+          onOk={onTransferTeam}
+          onCancel={handleGroupActionCancel}
+          teamId={to}
+          groupSearchText={groupSearchText}
+          onTeamMemberSearchChange={onTeamMemberSearchChange}
         />
       </div>
     ) : null

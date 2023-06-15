@@ -22,27 +22,27 @@ export interface MsgListContainerProps {
   /**
    通过入群申请后的事件
    */
-  afterAcceptApplyTeam?: () => void
+  afterAcceptApplyTeam?: (options: { teamId: string; from: string }) => void
   /**
    拒绝入群申请后的事件
    */
-  afterRejectApplyTeam?: () => void
+  afterRejectApplyTeam?: (options: { teamId: string; from: string }) => void
   /**
    通过入群邀请后的事件
    */
-  afterAcceptTeamInvite?: () => void
+  afterAcceptTeamInvite?: (options: { teamId: string; from: string }) => void
   /**
    拒绝入群邀请后的事件
    */
-  afterRejectTeamInvite?: () => void
+  afterRejectTeamInvite?: (options: { teamId: string; from: string }) => void
   /**
    通过好友申请后的事件
    */
-  afterAcceptApplyFriend?: () => void
+  afterAcceptApplyFriend?: (account: string) => void
   /**
    拒绝好友申请后的事件
    */
-  afterRejectApplyFriend?: () => void
+  afterRejectApplyFriend?: (account: string) => void
   /**
    样式前缀
    */
@@ -91,7 +91,7 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         .passTeamApplyActive(options)
         .then(() => {
           message.success(t('acceptedText'))
-          afterAcceptApplyTeam?.()
+          afterAcceptApplyTeam?.(options)
         })
         .catch((err) => {
           message.error(t('acceptFailedText'))
@@ -111,7 +111,7 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         .rejectTeamApplyActive(options)
         .then(() => {
           message.success(t('rejectedText'))
-          afterRejectApplyTeam?.()
+          afterRejectApplyTeam?.(options)
         })
         .catch((err) => {
           message.error(t('rejectFailedText'))
@@ -131,7 +131,7 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         .acceptTeamInviteActive(options)
         .then(() => {
           message.success(t('acceptedText'))
-          afterAcceptTeamInvite?.()
+          afterAcceptTeamInvite?.(options)
         })
         .catch((err) => {
           message.error(t('acceptFailedText'))
@@ -151,7 +151,7 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         .rejectTeamInviteActive(options)
         .then(() => {
           message.success(t('rejectedText'))
-          afterRejectTeamInvite?.()
+          afterRejectTeamInvite?.(options)
         })
         .catch((err) => {
           message.error(t('rejectFailedText'))
@@ -167,12 +167,7 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         setApplyFriendLoading(true)
         await store.friendStore.passFriendApplyActive(account)
         message.success(t('acceptedText'))
-        await store.msgStore.sendTextMsgActive({
-          scene: 'p2p',
-          to: account,
-          body: t('passFriendAskText'),
-        })
-        afterAcceptApplyFriend?.()
+        afterAcceptApplyFriend?.(account)
       } catch (error) {
         message.error(t('acceptFailedText'))
         logger.error('同意该申请失败: ', error)
@@ -187,7 +182,7 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         .rejectFriendApplyActive(account)
         .then(() => {
           message.success(t('rejectedText'))
-          afterRejectApplyFriend?.()
+          afterRejectApplyFriend?.(account)
         })
         .catch((err) => {
           message.error(t('rejectFailedText'))
