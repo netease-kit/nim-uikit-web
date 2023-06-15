@@ -43,7 +43,7 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
 
     const [visible, setVisible] = useState(false)
     // const [relation, setRelation] = useState<Relation>('stranger')
-    const relation = store.uiStore.getRelationByAccount(account)
+    const relation = store.uiStore.getRelation(account)
 
     const userInfo = store.uiStore.getFriendWithUserNameCard(account)
 

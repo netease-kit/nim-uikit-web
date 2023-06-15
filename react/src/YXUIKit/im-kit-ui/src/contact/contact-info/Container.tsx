@@ -17,27 +17,27 @@ export interface ContactInfoContainerProps {
   /**
    通过入群申请后的事件
    */
-  afterAcceptApplyTeam?: () => void
+  afterAcceptApplyTeam?: (options: { teamId: string; from: string }) => void
   /**
     拒绝入群申请后的事件
     */
-  afterRejectApplyTeam?: () => void
+  afterRejectApplyTeam?: (options: { teamId: string; from: string }) => void
   /**
     通过入群邀请后的事件
     */
-  afterAcceptTeamInvite?: () => void
+  afterAcceptTeamInvite?: (options: { teamId: string; from: string }) => void
   /**
     拒绝入群邀请后的事件
     */
-  afterRejectTeamInvite?: () => void
+  afterRejectTeamInvite?: (options: { teamId: string; from: string }) => void
   /**
     通过好友申请后的事件
     */
-  afterAcceptApplyFriend?: () => void
+  afterAcceptApplyFriend?: (account: string) => void
   /**
     拒绝好友申请后的事件
     */
-  afterRejectApplyFriend?: () => void
+  afterRejectApplyFriend?: (account: string) => void
   /**
    好友点击事件
    */

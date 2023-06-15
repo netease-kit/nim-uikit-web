@@ -51,6 +51,12 @@ const defaultLocalOptions: LocalOptions = {
   teamInviteMode: 'manager',
   teamUpdateTeamMode: 'manager',
   teamUpdateExtMode: 'manager',
+  leaveOnTransfer: false,
+  needMention: true,
+  p2pMsgReceiptVisible: false,
+  teamMsgReceiptVisible: false,
+  loginStateVisible: false,
+  allowTransferTeamOwner: false,
   sendMsgBefore: async (options: any) => options,
 }
 

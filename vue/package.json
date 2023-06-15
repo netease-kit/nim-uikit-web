@@ -11,7 +11,7 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "dependencies": {
-    "@xkit-yx/im-kit-ui": "^9.4.1",
+    "@xkit-yx/im-kit-ui": "^9.5.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "vue": "^3.2.45"

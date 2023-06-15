@@ -13,9 +13,8 @@ import { Session } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/SessionServiceInter
 import { observer } from 'mobx-react'
 
 import packageJson from '../../package.json'
-import { TeamMember } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
-import { FriendProfile } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/FriendServiceInterface'
 import { GroupItemProps } from './components/ChatTeamSetting/GroupItem'
+import { MenuItemKey } from './components/ChatMessageItem'
 
 export interface ActionRenderProps extends ChatMessageInputProps {
   scene: TMsgScene
@@ -37,6 +36,23 @@ export interface Action {
   render?: (props: ActionRenderProps) => ReactNode
 }
 
+export interface MsgOperMenuItem {
+  /**
+    菜单项是否显示
+  */
+  show?: number
+  /**
+    菜单项名称
+  */
+  label?: string
+  key: MenuItemKey | string
+  icon?: React.ReactNode
+  /**
+    自定义点击事件
+  */
+  onClick?: (msg: IMMessage) => void
+}
+
 export interface ChatContainerProps {
   /**
     自定义选中的会话 sessionId。一般不用传，内部会处理好选中逻辑
@@ -47,13 +63,9 @@ export interface ChatContainerProps {
     */
   actions?: Action[]
   /**
-    是否需要显示 p2p 消息已读未读，默认 false
-    */
-  p2pMsgReceiptVisible?: boolean
-  /**
-    是否需要显示群组消息已读未读，默认 false
-    */
-  teamMsgReceiptVisible?: boolean
+   自定义渲染 消息右键菜单
+   */
+  msgOperMenu?: MsgOperMenuItem[]
   /**
     发送文字消息的回调，一般用于默认的文字发送缺少想要的字段时
     */
@@ -62,6 +74,10 @@ export interface ChatContainerProps {
     scene: TMsgScene
     to: string
   }) => Promise<void>
+  /**
+   转让群主后的回调
+   */
+  afterTransferTeam?: (teamId: string) => Promise<void>
   /**
    自定义渲染未选中任何会话时的内容
    */
@@ -130,9 +146,9 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
   ({
     selectedSession,
     actions,
-    p2pMsgReceiptVisible = false,
-    teamMsgReceiptVisible = false,
+    msgOperMenu,
     onSendText,
+    afterTransferTeam,
     renderEmpty,
     renderP2pCustomMessage,
     renderTeamCustomMessage,
@@ -169,9 +185,9 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           commonPrefix={commonPrefix}
           scene={scene}
           to={to}
-          p2pMsgReceiptVisible={p2pMsgReceiptVisible}
           onSendText={onSendText}
           actions={actions}
+          msgOperMenu={msgOperMenu}
           renderP2pCustomMessage={renderP2pCustomMessage}
           renderHeader={renderHeader}
           renderP2pInputPlaceHolder={renderP2pInputPlaceHolder}
@@ -186,9 +202,10 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           commonPrefix={commonPrefix}
           scene={scene}
           to={to}
-          teamMsgReceiptVisible={teamMsgReceiptVisible}
           onSendText={onSendText}
           actions={actions}
+          msgOperMenu={msgOperMenu}
+          afterTransferTeam={afterTransferTeam}
           renderTeamCustomMessage={renderTeamCustomMessage}
           renderHeader={renderHeader}
           renderTeamInputPlaceHolder={renderTeamInputPlaceHolder}

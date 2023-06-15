@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useEffect } from 'react'
 import { FriendList } from './components/FriendList'
 import { useEventTracking, useStateContext } from '../../common'
 import packageJson from '../../../package.json'
@@ -48,6 +48,14 @@ export const FriendListContainer: FC<FriendListContainerProps> = observer(
       component: 'ContactUIKit',
       imVersion: nim.version,
     })
+
+    useEffect(() => {
+      // 订阅好友列表
+      const accounts = store.uiStore.friendsWithoutBlacklist.map(
+        (item) => item.account
+      )
+      store.eventStore.subscribeLoginStateActive(accounts)
+    }, [store.uiStore.friendsWithoutBlacklist, store.eventStore])
 
     return (
       <FriendList

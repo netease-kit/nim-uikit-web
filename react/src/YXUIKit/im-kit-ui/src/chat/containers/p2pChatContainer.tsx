@@ -21,7 +21,7 @@ import {
   useTranslation,
   ComplexAvatarContainer,
 } from '../../common'
-import { Action } from '../Container'
+import { Action, MsgOperMenuItem } from '../Container'
 import ChatP2pSetting from '../components/ChatP2pSetting'
 import { Session } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/SessionServiceInterface'
 import { debounce, VisibilityObserver } from '@xkit-yx/utils'
@@ -39,7 +39,7 @@ export interface P2pChatContainerProps {
   scene: TMsgScene
   to: string
   actions?: Action[]
-  p2pMsgReceiptVisible?: boolean
+  msgOperMenu?: MsgOperMenuItem[]
   onSendText?: (data: {
     value: string
     scene: TMsgScene
@@ -64,7 +64,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     scene,
     to,
     actions,
-    p2pMsgReceiptVisible,
+    msgOperMenu,
     onSendText: onSendTextFromProps,
     renderP2pCustomMessage,
     renderHeader,
@@ -77,7 +77,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     prefix = 'chat',
     commonPrefix = 'common',
   }) => {
-    const { store, nim } = useStateContext()
+    const { store, nim, localOptions } = useStateContext()
 
     const { t } = useTranslation()
 
@@ -94,7 +94,11 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
 
     const myUser = store.userStore.myUserInfo
 
-    const userNickOrAccount = user.alias || user.nick || user.account || ''
+    const userNickOrAccount = store.uiStore.getAppellation({
+      account: user.account,
+    })
+
+    const isOnline = store.eventStore.stateMap.get(to) === 'online'
 
     const createDefaultAccounts = useMemo(() => [to], [to])
 
@@ -237,6 +241,10 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     }
 
     const onMessageAction = async (key: MenuItemKey, msg: IMMessage) => {
+      const msgOperMenuItem = msgOperMenu?.find((item) => item.key === key)
+      if (msgOperMenuItem?.onClick) {
+        return msgOperMenuItem?.onClick(msg)
+      }
       switch (key) {
         case 'delete':
           await store.msgStore.deleteMsgActive([msg])
@@ -478,7 +486,17 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           ) : (
             <ChatHeader
               prefix={prefix}
-              title={userNickOrAccount}
+              title={
+                userNickOrAccount +
+                (isOnline && localOptions.loginStateVisible
+                  ? t('onlineText')
+                  : '')
+              }
+              subTitle={
+                !isOnline && localOptions.loginStateVisible
+                  ? t('offlineText')
+                  : undefined
+              }
               avatar={
                 <ComplexAvatarContainer
                   account={to}
@@ -493,17 +511,13 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             commonPrefix={commonPrefix}
             ref={messageListContainerDomRef}
             msgs={msgs}
+            msgOperMenu={msgOperMenu}
             replyMsgsMap={replyMsgsMap}
             member={user}
-            p2pMsgReceiptVisible={p2pMsgReceiptVisible}
             noMore={noMore}
             loadingMore={loadingMore}
             myAccount={myUser?.account || ''}
             receiveMsgBtnVisible={receiveMsgBtnVisible}
-            strangerNotiVisible={
-              store.uiStore.selectedP2PSessionRelation === 'stranger'
-            }
-            strangerNotiText={`${userNickOrAccount} ${t('strangerNotiText')}`}
             msgReceiptTime={session?.msgReceiptTime}
             onReceiveMsgBtnClick={scrollToBottom}
             onResend={onResend}

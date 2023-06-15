@@ -7,9 +7,9 @@
     "start": "umi dev"
   },
   "dependencies": {
-    "@xkit-yx/call-kit": "^1.9.3",
-    "@xkit-yx/call-kit-react-ui": "^0.3.6",
-    "@xkit-yx/im-kit-ui": "^9.3.3",
+    "@xkit-yx/call-kit": "^2.0.1",
+    "@xkit-yx/call-kit-react-ui": "^0.4.1",
+    "@xkit-yx/im-kit-ui": "^9.5.0",
     "react-dom": "^16.8.0",
     "umi": "^3.5.40"
   },

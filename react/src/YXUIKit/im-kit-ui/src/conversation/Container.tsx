@@ -95,7 +95,7 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
     renderSessionName,
     renderSessionMsg,
   }) => {
-    const { nim, store, initOptions } = useStateContext()
+    const { nim, store, initOptions, localOptions } = useStateContext()
 
     useEventTracking({
       appkey: initOptions.appkey,
@@ -167,7 +167,7 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
               try {
                 const extObj = JSON.parse(msg.ext)
                 const yxAitMsg = extObj.yxAitMsg
-                if (yxAitMsg) {
+                if (yxAitMsg && localOptions.needMention) {
                   Object.keys(yxAitMsg).forEach((key) => {
                     if (key === account || key === 'ait_all') {
                       session.beMentioned = true
@@ -185,6 +185,14 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
       store.userStore.myUserInfo.account,
       store.msgStore,
     ])
+
+    useEffect(() => {
+      // 订阅会话列表中 p2p 的在线离线状态
+      const accounts = store.uiStore.sessionList
+        .filter((item) => item.scene === 'p2p')
+        .map((item) => item.to)
+      store.eventStore.subscribeLoginStateActive(accounts)
+    }, [store.uiStore.sessionList, store.eventStore])
 
     return (
       <ConversationList

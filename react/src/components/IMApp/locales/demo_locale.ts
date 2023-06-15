@@ -23,6 +23,8 @@ export const demo_zh = {
   networkDisconnectText: '网络连接已断开，请检查您的网络设置并尝试重新连接',
   callFailed: '呼叫失败',
   inCallText: '已在通话中，请结束通话后再呼叫',
+  passFriendAskText: '我已经同意了你的申请，现在开始聊天吧~',
+  needMentionText: '是否需要@消息',
 }
 
 export const demo_en = {
@@ -51,4 +53,6 @@ export const demo_en = {
     'The network connection has been disconnected. Please check your network settings and try to reconnect.',
   callFailed: 'call failed',
   inCallText: 'Already in a call, please try again after ending the call',
+  passFriendAskText: "I have approved your request, let's start chatting now~",
+  needMentionText: 'Whether or not an @ message is needed',
 }

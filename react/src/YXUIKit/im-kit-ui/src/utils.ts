@@ -184,6 +184,24 @@ export const parseSessionId = (
     to: to.join('-'),
   }
 }
+
+/**
+ * 合并自定义发送按钮Action以及右键消息菜单Action
+ */
+export const mergeActions = (defaultActions, propsActions, key) => {
+  return propsActions.map((i) => {
+    const defaultAction = defaultActions.find((j) => i[key] === j[key])
+    if (defaultAction) {
+      return {
+        ...defaultAction,
+        ...i,
+      }
+    } else {
+      return i
+    }
+  })
+}
+
 interface IKeyMap {
   [key: string]: string
 }

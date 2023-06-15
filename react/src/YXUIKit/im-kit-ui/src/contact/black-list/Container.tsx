@@ -51,7 +51,7 @@ export const BlackListContainer: FC<BlackListContainerProps> = observer(
 
     return (
       <BlackList
-        list={store.uiStore.blacklistWithUserCard}
+        list={store.relationStore.blacklist}
         // loading={loading}
         onItemClick={onItemClick}
         afterSendMsgClick={afterSendMsgClick}

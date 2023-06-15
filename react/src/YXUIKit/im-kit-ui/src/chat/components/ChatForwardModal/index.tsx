@@ -48,7 +48,9 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = ({
     if (searchText) {
       const friends = store.uiStore.friendsWithoutBlacklist
         .filter((item) =>
-          (item.alias || item.nick || item.account).includes(searchText)
+          store.uiStore
+            .getAppellation({ account: item.account })
+            .includes(searchText)
         )
         .map((item) => ({
           scene: 'p2p' as TMsgScene,
@@ -66,12 +68,7 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = ({
       scene: item.scene,
       to: item.to,
     }))
-  }, [
-    searchText,
-    store.uiStore.teamList,
-    store.uiStore.friendsWithoutBlacklist,
-    store.sessionStore.sessions,
-  ])
+  }, [searchText, store.uiStore, store.sessionStore.sessions])
 
   const _prefix = `${prefix}-forward-modal`
 

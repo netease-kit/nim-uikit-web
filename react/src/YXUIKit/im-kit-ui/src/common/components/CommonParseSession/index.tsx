@@ -34,7 +34,7 @@ export interface IParseSessionProps {
 export const ParseSession: React.FC<IParseSessionProps> = observer(
   ({ prefix = 'common', msg, replyMsg }) => {
     const _prefix = `${prefix}-parse-session`
-    const { store } = useStateContext()
+    const { store, localOptions } = useStateContext()
     // const imagePreview = useRef<HTMLDivElement | null>(null)
     const { t } = useTranslation()
     const locationDomRef = useRef<HTMLDivElement | null>(null)
@@ -70,7 +70,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         try {
           const extObj = JSON.parse(ext)
           const yxAitMsg = extObj.yxAitMsg
-          if (yxAitMsg) {
+          if (yxAitMsg && localOptions.needMention) {
             Object.keys(yxAitMsg).forEach((key) => {
               const item = yxAitMsg[key]
               text = reactStringReplace(text, item.text, (match, i) => {
@@ -92,12 +92,15 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
 
     const renderImage = (msg) => {
       const { attach } = msg
-      const url = `${attach?.url}?download=${msg.idClient}.${attach?.ext}`
+      const url = `${attach?.url}?download=${attach?.name}`
       return (
         <div
           className={`${_prefix}-image-container`}
           onContextMenu={(e) => {
-            e.stopPropagation()
+            // @ts-ignore
+            if (!e.target.className.includes('-image-mask')) {
+              e.stopPropagation()
+            }
           }}
         >
           <Image rootClassName={`${_prefix}-image`} src={url} />
@@ -136,13 +139,13 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         case 'updateTeam': {
           const team: Team = msg.attach?.team || {}
           const content: string[] = []
-          if (team.avatar) {
+          if (team.avatar !== undefined) {
             content.push(t('updateTeamAvatar'))
           }
-          if (team.name) {
+          if (team.name !== undefined) {
             content.push(`${t('updateTeamName')}“${team.name}”`)
           }
-          if (team.intro) {
+          if (team.intro !== undefined) {
             content.push(t('updateTeamIntro'))
           }
           if (team.inviteMode) {
@@ -225,6 +228,19 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
             <div className={`${_prefix}-noti`}>
               {store.uiStore.getAppellation({ account: msg.from, teamId })}{' '}
               {t('leaveTeamText')}
+            </div>
+          )
+        }
+        case 'transferTeam': {
+          return (
+            <div className={`${_prefix}-noti`}>
+              <span className={`${_prefix}-noti-transfer`}>
+                {store.uiStore.getAppellation({
+                  account: msg.attach?.account,
+                  teamId,
+                })}
+              </span>
+              {t('newGroupOwnerText')}
             </div>
           )
         }

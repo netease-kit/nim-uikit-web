@@ -4,9 +4,10 @@ import { TeamMember } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInter
 import MessageListItem, { MessageItemProps } from '../ChatMessageItem'
 import { Alert, Spin } from 'antd'
 import { ArrowDownOutlined } from '@ant-design/icons'
-import { ReadPercent, useTranslation } from '../../../common'
+import { ReadPercent, useStateContext, useTranslation } from '../../../common'
 import { FriendProfile } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/FriendServiceInterface'
 import { storeUtils } from '@xkit-yx/im-store'
+import { MsgOperMenuItem } from '../../Container'
 
 export interface RenderTeamCustomMessageOptions
   extends Omit<MessageItemProps, 'myAccount'> {
@@ -16,9 +17,9 @@ export interface RenderTeamCustomMessageOptions
 export interface ChatTeamMessageListProps
   extends Omit<MessageItemProps, 'msg' | 'alias'> {
   msgs: IMMessage[]
+  msgOperMenu?: MsgOperMenuItem[]
   replyMsgsMap: Record<string, IMMessage>
   members: (TeamMember & Partial<FriendProfile>)[]
-  teamMsgReceiptVisible?: boolean
   renderTeamCustomMessage?: (
     options: RenderTeamCustomMessageOptions
   ) => JSX.Element | null | undefined
@@ -40,9 +41,9 @@ const ChatTeamMessageList = forwardRef<
       prefix = 'chat',
       commonPrefix = 'common',
       msgs,
+      msgOperMenu,
       replyMsgsMap,
       members,
-      teamMsgReceiptVisible,
       receiveMsgBtnVisible = false,
       strangerNotiVisible = false,
       strangerNotiText = '',
@@ -67,6 +68,8 @@ const ChatTeamMessageList = forwardRef<
 
     const { t } = useTranslation()
 
+    const { localOptions } = useStateContext()
+
     const renderMsgs = storeUtils.getFilterMsgs(msgs)
 
     return (
@@ -89,11 +92,12 @@ const ChatTeamMessageList = forwardRef<
                 prefix={prefix}
                 commonPrefix={commonPrefix}
                 msg={msg}
+                msgOperMenu={msgOperMenu}
                 replyMsg={replyMsgsMap[msg.idClient]}
                 normalStatusRenderer={
-                  teamMsgReceiptVisible ? (
+                  localOptions.teamMsgReceiptVisible ? (
                     <ReadPercent
-                      unread={msg.attach?.yxUnread || 0}
+                      unread={msg.attach?.yxUnread || members.length - 1}
                       read={msg.attach?.yxRead || 0}
                       hoverable
                       prefix={commonPrefix}

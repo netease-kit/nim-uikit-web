@@ -1,5 +1,4 @@
-import React from 'react'
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import {
   Provider, // 全局上下文
   ConversationContainer, // 会话列表组件
@@ -11,7 +10,7 @@ import {
   MyAvatarContainer,
   useStateContext,
   ComplexAvatarContainer,
-} from '@xkit-yx/im-kit-ui/src'
+} from '@xkit-yx/im-kit-ui'
 import { ConfigProvider, Badge, Button, Popover, message } from 'antd'
 //antd 国际化
 import zhCN from 'antd/es/locale/zh_CN'
@@ -21,7 +20,7 @@ import en from './locales/en'
 import zh from './locales/zh'
 import classNames from 'classnames'
 import { observer } from 'mobx-react'
-import '@xkit-yx/im-kit-ui/src/style'
+import '@xkit-yx/im-kit-ui/es/style'
 import 'antd/es/badge/style'
 import './iconfont.css'
 import './index.less'
@@ -33,6 +32,7 @@ import {
   CallViewProvider,
   CallViewProviderRef,
 } from '@xkit-yx/call-kit-react-ui'
+import '@xkit-yx/call-kit-react-ui/es/style'
 import Calling from './components/call'
 //demo国际化函数
 import { convertSecondsToTime, g2StatusMap, renderMsgDate, t } from './util'
@@ -53,9 +53,10 @@ interface IMAppProps {
   locale: 'zh' | 'en'
   changeLanguage?: (value: 'zh' | 'en') => void
   sdkVersion: 1 | 2
-  setSdkVersion: React.Dispatch<React.SetStateAction<1 | 2>>
   addFriendNeedVerify: boolean
-  setAddFriendNeedVerify: React.Dispatch<React.SetStateAction<boolean>>
+  p2pMsgReceiptVisible: boolean
+  teamMsgReceiptVisible: boolean
+  needMention: boolean
 }
 // @ts-ignore: Unreachable code error
 
@@ -64,29 +65,24 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
     onLogout,
     locale,
     changeLanguage,
-    setSdkVersion,
     sdkVersion,
     addFriendNeedVerify,
-    setAddFriendNeedVerify,
     account,
     appkey,
+    p2pMsgReceiptVisible,
+    teamMsgReceiptVisible,
+    needMention,
   } = props
   const callViewProviderRef = useRef<CallViewProviderRef>(null)
   const [model, setModel] = useState<'chat' | 'contact'>('chat')
   const [isSettingModalOpen, setIsSettingModalOpen] = useState<boolean>(false)
-  //单聊消息是否显示已读未读
-  const [p2pMsgReceiptVisible, setP2pMsgReceiptVisible] =
-    useState<boolean>(true)
-  //群聊消息是否显示已读未读
-  const [teamMsgReceiptVisible, setTeamMsgReceiptVisible] =
-    useState<boolean>(true)
   // 是否显示呼叫弹窗
   const [callingVisible, setCallingVisible] = useState<boolean>(false)
-  // store实例
+  // IMUIKit store实例
   const { store } = useStateContext()
   // im sdk实例
   const nim = store.nim
-  // 当前选中会话场景和会话接受方 scene：p2p ｜ team
+  // 当前选中会话场景和会话接受方 scene：p2p ｜ team, to: accid
   const { scene, to } = parseSessionId(store.uiStore.selectedSession)
 
   const handleSettingCancel = () => {
@@ -95,27 +91,11 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
   const openSettingModal = () => {
     setIsSettingModalOpen(true)
   }
-  
-  console.log('=====react=====', React.version);
-  
-  useEffect(() => {
-    const _p2pMsgReceiptVisible = sessionStorage.getItem('p2pMsgReceiptVisible')
-    const _teamMsgReceiptVisible = sessionStorage.getItem(
-      'teamMsgReceiptVisible'
-    )
-    if (_p2pMsgReceiptVisible) {
-      setP2pMsgReceiptVisible(_p2pMsgReceiptVisible === 'true')
-    }
-    if (_teamMsgReceiptVisible) {
-      setTeamMsgReceiptVisible(_teamMsgReceiptVisible === 'true')
-    }
-  }, [])
 
   useEffect(() => {
     if (callViewProviderRef.current?.neCall) {
       //注册呼叫结束事件监听
-      // @ts-ignore
-      callViewProviderRef.current?.neCall?.on('onMessageSent', () => {
+      callViewProviderRef.current?.neCall?.on('onRecordSend', () => {
         //当通话因为 取消、拒绝、超时或占线 结束时，组件会主动发送一条话单消息给对端，可以在此事件中更新本端的UI
         const sessionId = store.uiStore.selectedSession
         setTimeout(() => {
@@ -136,10 +116,7 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
         }, 800)
       })
       // 设置呼叫超时时间
-      callViewProviderRef.current?.neCall?.setTimeout({
-        callTimeout: 30000,
-        rejectTimeout: 30000,
-      })
+      callViewProviderRef.current?.neCall?.setTimeout(30)
     }
   }, [callViewProviderRef.current?.neCall])
 
@@ -150,8 +127,6 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
         await callViewProviderRef.current?.call?.({ accId: to, callType })
         setCallingVisible(false)
       } catch (error) {
-        console.log('=========error======', error)
-        // @ts-ignore
         switch (error.code) {
           // 忙线
           case '105':
@@ -308,17 +283,14 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
               openSettingModal={openSettingModal}
             />
           </div>
+          {/* 若您复制IMUIKit demo至您的工程，SettingModal相关代码可以删除 */}
           <SettingModal
             isSettingModalOpen={isSettingModalOpen}
             handleSettingCancel={handleSettingCancel}
             p2pMsgReceiptVisible={p2pMsgReceiptVisible}
-            setP2pMsgReceiptVisible={setP2pMsgReceiptVisible}
             teamMsgReceiptVisible={teamMsgReceiptVisible}
-            setTeamMsgReceiptVisible={setTeamMsgReceiptVisible}
-            setSdkVersion={setSdkVersion}
-            sdkVersion={sdkVersion}
             addFriendNeedVerify={addFriendNeedVerify}
-            setAddFriendNeedVerify={setAddFriendNeedVerify}
+            needMention={needMention}
             locale={locale}
           />
           {model === 'chat' && (
@@ -328,8 +300,6 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
               </div>
               <div className="right-content">
                 <ChatContainer
-                  p2pMsgReceiptVisible={p2pMsgReceiptVisible}
-                  teamMsgReceiptVisible={teamMsgReceiptVisible}
                   actions={actions}
                   renderP2pCustomMessage={renderP2pCustomMessage}
                 />
@@ -345,7 +315,17 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
                 <ContactInfoContainer
                   afterSendMsgClick={() => setModel('chat')}
                   onGroupItemClick={() => setModel('chat')}
-                  afterAcceptApplyFriend={() => setModel('chat')}
+                  afterAcceptApplyFriend={(account) => {
+                    store.msgStore
+                      .sendTextMsgActive({
+                        scene: 'p2p',
+                        to: account,
+                        body: t('passFriendAskText'),
+                      })
+                      .then(() => {
+                        setModel('chat')
+                      })
+                  }}
                 />
               </div>
             </div>
@@ -366,8 +346,6 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
     sdkVersion,
     renderP2pCustomMessage,
     store.uiStore.systemMsgUnread,
-    setAddFriendNeedVerify,
-    setSdkVersion,
   ])
   // IM elite(IM 2) sdk 没有信令， 无法初始化呼叫组件
   return sdkVersion === 1 ? (
@@ -376,8 +354,7 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
       neCallConfig={{
         // @ts-ignore
         nim: nim.nim,
-        appKey: appkey,
-        currentUserInfo: { accId: account }, // 当前用户的IM 账号accId
+        appkey,
         debug: true,
       }}
       position={{
@@ -394,12 +371,21 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
 
 const IMAppContainer: React.FC<IMContainerProps> = (props) => {
   const { appkey, account, token, onLogout } = props
-  // 语言类型
+  // 国际化语言类型
   const [curLanguage, setCurLanguage] = useState<'zh' | 'en'>('zh')
   // sdk版本
-  const [sdkVersion, setSdkVersion] = useState<1 | 2>(1)
+  const urlParams = new URLSearchParams(window.location.search)
+  const sdkVersion = (Number(urlParams.get('sdkVersion')) as 1 | 2) || 1
   // 添加好友是否需要验证
   const [addFriendNeedVerify, setAddFriendNeedVerify] = useState<boolean>(true)
+  //单聊消息是否显示已读未读
+  const [p2pMsgReceiptVisible, setP2pMsgReceiptVisible] =
+    useState<boolean>(true)
+  //群聊消息是否显示已读未读
+  const [teamMsgReceiptVisible, setTeamMsgReceiptVisible] =
+    useState<boolean>(true)
+  // 是否需要@消息
+  const [needMention, setNeedMention] = useState<boolean>(true)
   const languageMap = { zh, en }
   // 初始化参数
   const initOptions = useMemo(() => {
@@ -419,6 +405,16 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
     addFriendNeedVerify,
     // 群组被邀请模式，默认不需要验证
     teamBeInviteMode: 'noVerify',
+    // 单聊消息是否显示已读未读 默认 false
+    p2pMsgReceiptVisible,
+    // 群聊消息是否显示已读未读 默认 false
+    teamMsgReceiptVisible,
+    // 是否需要@消息
+    needMention,
+    // 是否显示在线离线状态
+    loginStateVisible: true,
+    // 是否允许转让群主
+    allowTransferTeamOwner: true,
   }
 
   const changeLanguage = useCallback((value: 'zh' | 'en') => {
@@ -429,12 +425,24 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
 
   useEffect(() => {
     const _languageType = sessionStorage.getItem('languageType') as 'zh' | 'en'
-    const _sdkVersion = Number(sessionStorage.getItem('sdkVersion')) as 1 | 2
     const _addFriendNeedVerify = sessionStorage.getItem('addFriendNeedVerify')
+    const _p2pMsgReceiptVisible = sessionStorage.getItem('p2pMsgReceiptVisible')
+    const _teamMsgReceiptVisible = sessionStorage.getItem(
+      'teamMsgReceiptVisible'
+    )
+    const _needMention = sessionStorage.getItem('needMention')
     setCurLanguage(_languageType || 'zh')
-    setSdkVersion(_sdkVersion || 1)
+    if (_p2pMsgReceiptVisible) {
+      setP2pMsgReceiptVisible(_p2pMsgReceiptVisible === 'true')
+    }
+    if (_teamMsgReceiptVisible) {
+      setTeamMsgReceiptVisible(_teamMsgReceiptVisible === 'true')
+    }
     if (_addFriendNeedVerify) {
       setAddFriendNeedVerify(_addFriendNeedVerify === 'true')
+    }
+    if (_needMention) {
+      setNeedMention(_needMention === 'true')
     }
   }, [])
   return (
@@ -454,9 +462,10 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
               locale={curLanguage}
               changeLanguage={changeLanguage}
               addFriendNeedVerify={addFriendNeedVerify}
-              setAddFriendNeedVerify={setAddFriendNeedVerify}
               sdkVersion={sdkVersion}
-              setSdkVersion={setSdkVersion}
+              p2pMsgReceiptVisible={p2pMsgReceiptVisible}
+              teamMsgReceiptVisible={teamMsgReceiptVisible}
+              needMention={needMention}
             />
           </Provider>
         </div>

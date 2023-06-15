@@ -1,27 +1,43 @@
 {
-  "name": "@xkit-yx/im-kit-ui",
-  "version": "9.4.1",
-  "description": "云信即时通讯组件",
-  "license": "MIT",
-  "main": "lib/index.js",
-  "module": "es/index.js",
-  "typings": "es/index.d.ts",
-  "publishConfig": {
-    "access": "public"
+  "_from": "@xkit-yx/im-kit-ui@latest",
+  "_id": "@xkit-yx/im-kit-ui@9.5.0",
+  "_inBundle": false,
+  "_integrity": "sha512-UAJ8qxgmt5LGFvGKEt7ixHmFlfZtVb59iV6KvBlGCpVGro8YfailtRyUwxalTIU4kIJXQVd/5zfbp8m099kYtw==",
+  "_location": "/@xkit-yx/im-kit-ui",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "@xkit-yx/im-kit-ui@latest",
+    "name": "@xkit-yx/im-kit-ui",
+    "escapedName": "@xkit-yx%2fim-kit-ui",
+    "scope": "@xkit-yx",
+    "rawSpec": "latest",
+    "saveSpec": null,
+    "fetchSpec": "latest"
   },
-  "scripts": {
-    "start": "rollup -cw --environment DEV",
-    "dev": "gulp watch",
-    "build": "gulp",
-    "p": "npm run build && npm publish"
-  },
-  "files": [
-    "src",
-    "lib",
-    "es",
-    "copySourceCode.js"
+  "_requiredBy": [
+    "#USER",
+    "/"
   ],
+  "_resolved": "https://registry.npmjs.org/@xkit-yx/im-kit-ui/-/im-kit-ui-9.5.0.tgz",
+  "_shasum": "e74d71c0f80abcc753383b8e52ce5bec3010999a",
+  "_spec": "@xkit-yx/im-kit-ui@latest",
+  "_where": "/Users/yaoshun01/Desktop/IMUIKit-prod/nim-uikit-web/react",
   "author": "",
+  "bundleDependencies": false,
+  "dependencies": {
+    "@ant-design/icons": "^5.0.1",
+    "@xkit-yx/core-kit": "^0.10.2",
+    "@xkit-yx/im-store": "^0.0.5",
+    "@xkit-yx/utils": "^0.5.2",
+    "antd": "^4.16.3",
+    "mobx": "^6.6.1",
+    "mobx-react": "^7.5.2",
+    "react-string-replace": "^1.1.0"
+  },
+  "deprecated": false,
+  "description": "云信即时通讯组件",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.1.0",
     "@rollup/plugin-json": "^4.1.0",
@@ -33,7 +49,7 @@
     "gulp-typescript": "^6.0.0-alpha.1",
     "less": "^4.1.1",
     "less-plugin-npm-import": "^2.1.0",
-    "nim-web-sdk-ng": "0.13.0",
+    "nim-web-sdk-ng": "0.14.0",
     "postcss": "^8.3.5",
     "postcss-nested": "^5.0.5",
     "react": "^16.8.0",
@@ -45,6 +61,17 @@
     "sass": "^1.58.3",
     "typescript": "^4.6.4"
   },
+  "files": [
+    "src",
+    "lib",
+    "es",
+    "copySourceCode.js"
+  ],
+  "gitHead": "bcf34d625e69b2c647eaacb58b35b70ef886ff9f",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "name": "@xkit-yx/im-kit-ui",
   "peerDependencies": {
     "@xkit-yx/core-kit": "^0.3.2",
     "@xkit-yx/utils": "^0.4.3",
@@ -54,15 +81,15 @@
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0"
   },
-  "dependencies": {
-    "@ant-design/icons": "^5.0.1",
-    "@xkit-yx/core-kit": "^0.10.1",
-    "@xkit-yx/im-store": "^0.0.4",
-    "@xkit-yx/utils": "^0.5.2",
-    "antd": "^4.16.3",
-    "mobx": "^6.6.1",
-    "mobx-react": "^7.5.2",
-    "react-string-replace": "^1.1.0"
+  "publishConfig": {
+    "access": "public"
   },
-  "gitHead": "31ee9b2094f1a13e179565bf8a37237c5e45c1dd"
+  "scripts": {
+    "build": "gulp",
+    "dev": "gulp watch",
+    "p": "npm run build && npm publish",
+    "start": "rollup -cw --environment DEV"
+  },
+  "typings": "es/index.d.ts",
+  "version": "9.5.0"
 }

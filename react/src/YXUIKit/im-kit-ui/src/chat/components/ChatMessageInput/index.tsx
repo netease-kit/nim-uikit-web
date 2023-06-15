@@ -6,6 +6,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
   useCallback,
+  useEffect,
 } from 'react'
 import { Input, Upload, Popover, message, Button, Spin } from 'antd'
 import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
@@ -24,6 +25,7 @@ import { observer } from 'mobx-react'
 import { TextAreaRef } from 'antd/lib/input/TextArea'
 import { FriendProfile, TeamMember } from '@xkit-yx/im-store'
 import ChatAtMemberList, { MentionedMember } from './ChatMentionMemberList'
+import { mergeActions } from '../../../utils'
 
 const { TextArea } = Input
 
@@ -47,23 +49,6 @@ export interface ChatMessageInputProps {
   onSendFile: (file: File) => void
   onSendImg: (file: File) => void
   onRemoveReplyMsg?: () => void
-}
-
-const mergeActions = (
-  defaultActions: Action[] = [],
-  propsActions: Action[] = []
-) => {
-  return propsActions.map((i) => {
-    const defaultAction = defaultActions.find((j) => i.action === j.action)
-    if (defaultAction) {
-      return {
-        ...defaultAction,
-        ...i,
-      }
-    } else {
-      return i
-    }
-  })
 }
 
 export interface ChatMessageInputRef {
@@ -99,7 +84,7 @@ const ChatMessageInput = observer(
     const _prefix = `${prefix}-message-input`
 
     const { t } = useTranslation()
-    const { store } = useStateContext()
+    const { store, localOptions } = useStateContext()
 
     const textAreaRef = useRef<TextAreaRef>(null)
     const popupContainerRef = useRef<HTMLDivElement>(null)
@@ -149,10 +134,10 @@ const ChatMessageInput = observer(
                 <Spin indicator={LoadingIcon} />
               ) : (
                 <Upload
-                  beforeUpload={onBeforeUploadHandler}
+                  beforeUpload={onBeforeUploadImgHandler}
                   showUploadList={false}
                   accept=".jpg,.png,.jpeg,.gif"
-                  action={onUploadImgHandler}
+                  // action={onUploadImgHandler}
                   className={`${_prefix}-icon-upload`}
                 >
                   <CommonIcon
@@ -175,10 +160,10 @@ const ChatMessageInput = observer(
                 <Spin indicator={LoadingIcon} />
               ) : (
                 <Upload
-                  beforeUpload={onBeforeUploadHandler}
+                  beforeUpload={onBeforeUploadFileHandler}
                   showUploadList={false}
                   disabled={mute}
-                  action={onUploadFileHandler}
+                  // action={onUploadFileHandler}
                   className={`${_prefix}-icon-upload`}
                 >
                   <CommonIcon
@@ -194,7 +179,7 @@ const ChatMessageInput = observer(
     ]
 
     const finalActions = actions
-      ? mergeActions(defaultActions, actions)
+      ? mergeActions(defaultActions, actions, 'action')
       : defaultActions
 
     const filterAtMembers = useMemo(() => {
@@ -202,17 +187,28 @@ const ChatMessageInput = observer(
         const res = mentionMembers?.filter((member) => {
           return member.alias?.includes(atMemberSearchText.replace('@', ''))
         })
-        if (res?.length) {
+        return res
+      } else {
+        return mentionMembers
+      }
+    }, [mentionMembers, atMemberSearchText])
+
+    useEffect(() => {
+      setAtMemberSearchText('')
+      setAtVisible(false)
+    }, [to])
+
+    useEffect(() => {
+      if (atMemberSearchText) {
+        if (filterAtMembers?.length) {
           setAtVisible(true)
         } else {
           setAtVisible(false)
         }
-        return res
       } else {
         setAtVisible(false)
-        return mentionMembers
       }
-    }, [mentionMembers, atMemberSearchText])
+    }, [filterAtMembers, atMemberSearchText])
 
     const onAtMembersExtHandler = () => {
       let ext
@@ -281,8 +277,8 @@ const ChatMessageInput = observer(
       }
       setTimeout(() => {
         const input = textAreaRef.current?.resizableTextArea?.textArea
-
-        if (input) {
+        //当needMention为false时  避免不必要的计算
+        if (input && localOptions.needMention) {
           const selectionStart =
             getCursorPosition(input.selectionStart)?.selectionStart ??
             input.selectionStart
@@ -306,7 +302,9 @@ const ChatMessageInput = observer(
           atMemberSearchText = newValue.slice(atIndex, cursorIndex)
         }
       }
-      setAtMemberSearchText(atMemberSearchText)
+      if (localOptions.needMention) {
+        setAtMemberSearchText(atMemberSearchText)
+      }
       setInputValue(newValue)
     }
 
@@ -395,7 +393,7 @@ const ChatMessageInput = observer(
 
     const onClickHandler = onTextAreaSelectionRangeHandler
 
-    const onBeforeUploadHandler = (
+    const onBeforeUploadFileHandler = (
       file: File
     ): boolean | Promise<void | Blob | File> => {
       const isLimit = file.size / 1024 / 1000 > MAX_UPLOAD_FILE_SIZE
@@ -406,17 +404,37 @@ const ChatMessageInput = observer(
             'uploadLimitUnit'
           )}`
         )
+      } else {
+        onSendFile(file)
       }
 
-      return !isLimit
+      return false
     }
 
-    const onUploadImgHandler = (file: any): any => {
-      onSendImg(file)
+    const onBeforeUploadImgHandler = (
+      file: File
+    ): boolean | Promise<void | Blob | File> => {
+      const isLimit = file.size / 1024 / 1000 > MAX_UPLOAD_FILE_SIZE
+
+      if (isLimit) {
+        message.error(
+          `${t('uploadLimitText')}${MAX_UPLOAD_FILE_SIZE}${t(
+            'uploadLimitUnit'
+          )}`
+        )
+      } else {
+        onSendImg(file)
+      }
+
+      return false
     }
-    const onUploadFileHandler = (file: any): any => {
-      onSendFile(file)
-    }
+
+    // const onUploadImgHandler = (file: any): any => {
+    //   onSendImg(file)
+    // }
+    // const onUploadFileHandler = (file: any): any => {
+    //   onSendFile(file)
+    // }
 
     const onEmojiClickHandler = (tag: string) => {
       const input = textAreaRef.current?.resizableTextArea?.textArea

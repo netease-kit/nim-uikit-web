@@ -76,11 +76,32 @@
     cursor: pointer;
   }
 
+  .@{prefix-cls}-group-operation {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    .@{prefix-cls}-group-operation-item{
+      flex: 1;
+      display: inline-block;
+      margin: 0 30px;
+      border-radius: @yx-primary-border-radius;
+    }
+    .@{prefix-cls}-group-operation-dismiss{
+      color: @yx-button-color-1;
+      background: @yx-button-color-3;
+    }
+  }
   .@{prefix-cls}-exit-btn {
     position: absolute;
     bottom: 16px;
     left: 50%;
     transform: translateX(-50%);
+    color: @yx-button-color-1;
+    background: @yx-button-color-3;
     border-radius: @yx-primary-border-radius;
   }
 

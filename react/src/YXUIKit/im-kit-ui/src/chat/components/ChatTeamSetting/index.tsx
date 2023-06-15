@@ -5,6 +5,7 @@ import { RightOutlined, PlusOutlined } from '@ant-design/icons'
 import {
   ComplexAvatarContainer,
   CrudeAvatar,
+  useStateContext,
   useTranslation,
 } from '../../../common'
 import GroupDetail from './GroupDetail'
@@ -35,10 +36,12 @@ export interface ChatTeamSettingProps {
   onDismissTeam: () => void
   onLeaveTeam: () => void
   onAddMembersClick: () => void
+  onTransferTeamClick: () => void
   onRemoveTeamMemberClick: (member: TeamMember) => void
   onUpdateTeamInfo: (team: Partial<Team>) => void
   onUpdateMyMemberInfo: (params: UpdateMyMemberInfoOptions) => void
   onTeamMuteChange: (mute: boolean) => void
+  onTeamMemberSearchChange: (searchText: string) => void
   afterSendMsgClick?: () => void
   setNavHistoryStack: (stack: HistoryStack[]) => void
   renderTeamMemberItem?: (
@@ -58,10 +61,11 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
   isGroupOwner,
   isGroupManager,
   navHistoryStack,
-
+  onTeamMemberSearchChange,
   onDismissTeam,
   onLeaveTeam,
   onAddMembersClick,
+  onTransferTeamClick,
   onRemoveTeamMemberClick,
   onUpdateTeamInfo,
   onUpdateMyMemberInfo,
@@ -73,6 +77,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
   prefix = 'chat',
   commonPrefix = 'common',
 }) => {
+  const { localOptions } = useStateContext()
   const { t } = useTranslation()
   const _prefix = `${prefix}-group-setting`
   const [nickInTeam, setNickInTeam] = useState('')
@@ -145,15 +150,6 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
     return team.updateTeamMode === 'all'
   }, [team.updateTeamMode, isOwnerOrManager])
 
-  const sortedMembers = useMemo(() => {
-    const owner = members.filter((item) => item.type === 'owner')
-    const manager = members.filter((item) => item.type === 'manager')
-    const other = members.filter(
-      (item) => !['owner', 'manager'].includes(item.type)
-    )
-    return [...owner, ...manager, ...other]
-  }, [members])
-
   const myMemberInfo = useMemo(() => {
     return members.find((item) => item.account === myAccount)
   }, [myAccount, members])
@@ -165,6 +161,9 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
   useEffect(() => {
     if (!navHistoryStack.length) {
       handleStackPush('home')
+    }
+    if (path === 'home') {
+      onTeamMemberSearchChange('')
     }
   }, [navHistoryStack])
 
@@ -194,7 +193,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
               <div>
                 <b>{t('teamMemberText')}</b>
                 <span className={`${_prefix}-members-num`}>
-                  ({sortedMembers.length} ){t('personUnit')}
+                  ({members.length} ){t('personUnit')}
                 </span>
               </div>
               {/* {groupList.length > 6 && <RightOutlined size={10} />} */}
@@ -208,7 +207,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
                 <PlusOutlined style={{ fontSize: 14, color: '#C1C8D1' }} />
               </span>
               <span className={`${_prefix}-members-upload`}></span>
-              {sortedMembers.slice(0, 6).map((item) => {
+              {members.slice(0, 6).map((item) => {
                 return (
                   <ComplexAvatarContainer
                     key={item.account}
@@ -256,13 +255,14 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
           {path === 'list' && (
             <GroupList
               myAccount={myAccount}
-              members={sortedMembers}
+              members={members}
               hasPower={isOwnerOrManager}
               onRemoveTeamMemberClick={onRemoveTeamMemberClick}
               afterSendMsgClick={afterSendMsgClick}
               renderTeamMemberItem={renderTeamMemberItem}
               prefix={prefix}
               commonPrefix={commonPrefix}
+              onTeamMemberSearchChange={onTeamMemberSearchChange}
             />
           )}
           {path === 'power' && (
@@ -278,13 +278,24 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
       )}
       {path === 'home' &&
         (isGroupOwner ? (
-          <Button
-            danger
-            className={`${_prefix}-exit-btn`}
-            onClick={showDismissConfirm}
-          >
-            {t('dismissTeamText')}
-          </Button>
+          <div className={`${_prefix}-group-operation`}>
+            {localOptions.allowTransferTeamOwner && (
+              <Button
+                className={`${_prefix}-group-operation-item`}
+                onClick={onTransferTeamClick}
+                danger
+              >
+                {t('transferOwnerText')}
+              </Button>
+            )}
+            <Button
+              danger
+              className={`${_prefix}-group-operation-item ${_prefix}-group-operation-dismiss`}
+              onClick={showDismissConfirm}
+            >
+              {t('dismissTeamText')}
+            </Button>
+          </div>
         ) : (
           <Button
             danger
