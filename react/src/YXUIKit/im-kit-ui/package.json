@@ -1,35 +1,34 @@
 {
-  "_from": "@xkit-yx/im-kit-ui@latest",
-  "_id": "@xkit-yx/im-kit-ui@9.5.0",
+  "_from": "@xkit-yx/im-kit-ui@^9.5.1",
+  "_id": "@xkit-yx/im-kit-ui@9.5.1",
   "_inBundle": false,
-  "_integrity": "sha512-UAJ8qxgmt5LGFvGKEt7ixHmFlfZtVb59iV6KvBlGCpVGro8YfailtRyUwxalTIU4kIJXQVd/5zfbp8m099kYtw==",
+  "_integrity": "sha512-rwN0w14C+44O4X8ej55jGDlMeHYGtUO24VFAfbXZR9O++tnq/5HcuHGEhdvsRqKvHvAbVpXqwEt9E79Hu24mxA==",
   "_location": "/@xkit-yx/im-kit-ui",
   "_phantomChildren": {},
   "_requested": {
-    "type": "tag",
+    "type": "range",
     "registry": true,
-    "raw": "@xkit-yx/im-kit-ui@latest",
+    "raw": "@xkit-yx/im-kit-ui@^9.5.1",
     "name": "@xkit-yx/im-kit-ui",
     "escapedName": "@xkit-yx%2fim-kit-ui",
     "scope": "@xkit-yx",
-    "rawSpec": "latest",
+    "rawSpec": "^9.5.1",
     "saveSpec": null,
-    "fetchSpec": "latest"
+    "fetchSpec": "^9.5.1"
   },
   "_requiredBy": [
-    "#USER",
     "/"
   ],
-  "_resolved": "https://registry.npmjs.org/@xkit-yx/im-kit-ui/-/im-kit-ui-9.5.0.tgz",
-  "_shasum": "e74d71c0f80abcc753383b8e52ce5bec3010999a",
-  "_spec": "@xkit-yx/im-kit-ui@latest",
-  "_where": "/Users/yaoshun01/Desktop/IMUIKit-prod/nim-uikit-web/react",
+  "_resolved": "https://registry.npmjs.org/@xkit-yx/im-kit-ui/-/im-kit-ui-9.5.1.tgz",
+  "_shasum": "a283a895d62029d8a127d4bd007629535ee62ac2",
+  "_spec": "@xkit-yx/im-kit-ui@^9.5.1",
+  "_where": "/Users/leeing/Documents/yunxin-projects/nim-uikit-web/react",
   "author": "",
   "bundleDependencies": false,
   "dependencies": {
     "@ant-design/icons": "^5.0.1",
     "@xkit-yx/core-kit": "^0.10.2",
-    "@xkit-yx/im-store": "^0.0.5",
+    "@xkit-yx/im-store": "^0.0.6",
     "@xkit-yx/utils": "^0.5.2",
     "antd": "^4.16.3",
     "mobx": "^6.6.1",
@@ -67,7 +66,7 @@
     "es",
     "copySourceCode.js"
   ],
-  "gitHead": "bcf34d625e69b2c647eaacb58b35b70ef886ff9f",
+  "gitHead": "e76d1e5985485e731b39e50c854a2d587519157b",
   "license": "MIT",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -91,5 +90,5 @@
     "start": "rollup -cw --environment DEV"
   },
   "typings": "es/index.d.ts",
-  "version": "9.5.0"
+  "version": "9.5.1"
 }

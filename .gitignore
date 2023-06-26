@@ -36,3 +36,6 @@ react/src/.umi
 react/src/.umi-production
 react/src/.umi-test
 react/dist
+
+package-lock.json
+yarn.lock

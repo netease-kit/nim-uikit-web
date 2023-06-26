@@ -97,8 +97,8 @@ const ChatTeamMessageList = forwardRef<
                 normalStatusRenderer={
                   localOptions.teamMsgReceiptVisible ? (
                     <ReadPercent
-                      unread={msg.attach?.yxUnread || members.length - 1}
-                      read={msg.attach?.yxRead || 0}
+                      unread={msg.attach?.yxUnread ?? members.length - 1}
+                      read={msg.attach?.yxRead ?? 0}
                       hoverable
                       prefix={commonPrefix}
                     />
