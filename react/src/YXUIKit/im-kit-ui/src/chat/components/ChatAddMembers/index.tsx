@@ -28,8 +28,16 @@ const ChatAddMemebers: React.FC<ChatAddMemebersProps> = ({
   // const [searchText, setSearchText] = useState('')
 
   useEffect(() => {
-    setSelectedAccounts([...new Set(defaultAccounts)])
-  }, [defaultAccounts])
+    if (visible) {
+      setSelectedAccounts([...new Set(defaultAccounts)])
+    }
+  }, [defaultAccounts, visible])
+
+  useEffect(() => {
+    if (!visible) {
+      resetState()
+    }
+  }, [visible])
 
   const { t } = useTranslation()
   const _prefix = `${prefix}-add-members`
@@ -40,12 +48,10 @@ const ChatAddMemebers: React.FC<ChatAddMemebersProps> = ({
       return
     }
     onGroupAddMembers(selectedAccounts)
-    resetState()
   }
 
   const handleCancel = () => {
     onCancel()
-    resetState()
   }
 
   const resetState = () => {
@@ -61,6 +67,7 @@ const ChatAddMemebers: React.FC<ChatAddMemebersProps> = ({
       visible={visible}
       width={630}
       cancelText={t('cancelText')}
+      destroyOnClose={true}
       okText={t('addTeamMemberText')}
     >
       {/* <SearchInput value={searchText} onChange={setSearchText} /> */}

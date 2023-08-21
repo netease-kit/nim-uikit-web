@@ -2,82 +2,8 @@
 
 @prefix-cls: ~'@{chat-prefix}-forward-modal';
 
-.@{prefix-cls}-content {
-  margin-bottom: 12px;
-  border: 1px solid @yx-border-color-10;
-  border-radius: @yx-primary-border-radius;
-  display: flex;
-  flex-direction: row;
-
-  &-left {
-    flex: 1;
-    padding: 12px;
-    border-right: 1px solid @yx-border-color-10;
-  }
-
-  &-right {
-    flex: 1;
-    padding: 12px;
-  }
-
-  &-l-title {
-    font-size: @yx-font-size-12;
-    color: @yx-text-color-2;
-    margin-top: 12px;
-    margin-bottom: 8px;
-  }
-
-  &-r-title {
-    font-size: @yx-primary-font-size;
-    color: @yx-primary-text-color;
-    margin-bottom: 20px;
-  }
-
-  &-list {
-    height: 300px;
-    overflow-y: auto;
-  }
-
-  &-chose {
-    display: flex;
-    align-items: center;
-  }
-
-  &-item {
-    padding: 8px 12px;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-
-    &:hover,
-    &-focus {
-      background-color: @yx-background-color-7;
-    }
-  }
-
-  &-text {
-    max-width: 200px;
-    margin-left: 8px;
-    font-size: @yx-font-size-12;
-    color: @yx-primary-text-color;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  &-close {
-    font-size: @yx-font-size-12;
-    color: @yx-text-color-8;
-  }
-
-  &-empty {
-    font-size: @yx-primary-font-size;
-    text-align: center;
-  }
-}
-
 .@{prefix-cls}-input {
+  margin-top: 12px;
   border-radius: @yx-primary-border-radius;
   border-color: @yx-border-color-10;
 }

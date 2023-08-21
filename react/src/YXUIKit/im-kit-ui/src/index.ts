@@ -2,7 +2,6 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import {
   Utils,
-  Constant,
   CrudeAvatar,
   SearchInput,
   CommonIcon,
@@ -43,6 +42,12 @@ import RootStore from '@xkit-yx/im-store'
 import { NIMInitializeOptions } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/NIMInterface'
 
 export class IMUIKit {
+  context: {
+    nim: NimKitCoreTypes.INimKitCore
+    store: RootStore
+    initOptions: NIMInitializeOptions
+    // @ts-ignore
+  } | void = window.__xkit_store__
   constructor(private providerProps: Omit<ProviderProps, 'children'>) {}
 
   render<
@@ -80,14 +85,23 @@ export class IMUIKit {
     store: RootStore
     initOptions: NIMInitializeOptions
   } | void {
+    return this.context
+  }
+
+  destroy(): void {
+    this.context?.store.destroy()
+    this.context?.nim.destroy()
+
+    const NIM = NimKitCoreFactory(this.providerProps.sdkVersion || 1)
     // @ts-ignore
-    return window.__xkit_store__
+    RootStore.ins = void 0
+    //@ts-ignore
+    NIM.ins = void 0
   }
 }
 
 export {
   Utils,
-  Constant,
   CrudeAvatar,
   SearchInput,
   CommonIcon,

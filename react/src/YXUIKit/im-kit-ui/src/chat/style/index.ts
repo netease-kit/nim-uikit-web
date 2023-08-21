@@ -9,6 +9,8 @@ import '../components/ChatCreateTeam/style'
 import '../components/ChatP2pSetting/style'
 import '../components/ChatTeamSetting/style'
 import '../components/ChatForwardModal/style'
+import '../components/ChatTeamMemberModal/style'
+import '../components/ChatGroupTransferModal/style'
 
 import '../../common/components/FriendSelect/style'
 import '../../common/components/GroupAvatarSelect/style'

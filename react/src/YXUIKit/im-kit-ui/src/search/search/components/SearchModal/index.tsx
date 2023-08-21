@@ -144,6 +144,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
       visible={visible}
       width={630}
       footer={null}
+      destroyOnClose={true}
     >
       {!sections.length ? (
         renderEmpty ? (

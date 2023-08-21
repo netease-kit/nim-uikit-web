@@ -108,7 +108,7 @@ const ChatSettingDrawer: React.FC<ChatSettingDrawerProps> = ({
       placement="right"
       closable={false}
       maskClosable={true}
-      visible={visible}
+      open={visible}
       keyboard={true}
       onClose={onClose}
       extra={<CloseOutlined onClick={onClose} type="primary" />}

@@ -14,7 +14,8 @@ import { observer } from 'mobx-react'
 
 import packageJson from '../../package.json'
 import { GroupItemProps } from './components/ChatTeamSetting/GroupItem'
-import { MenuItemKey } from './components/ChatMessageItem'
+import { MenuItem, MenuItemKey } from './components/ChatMessageItem'
+import { SettingActionItemProps } from './components/ChatActionBar'
 
 export interface ActionRenderProps extends ChatMessageInputProps {
   scene: TMsgScene
@@ -27,7 +28,7 @@ export interface Action {
     */
   action: 'emoji' | 'sendImg' | 'sendFile' | string
   /**
-    是否显示该按钮，默认 true
+    是否显示该按钮，自带按钮默认 true，新增自定义按钮默认 false
     */
   visible?: boolean
   /**
@@ -36,21 +37,12 @@ export interface Action {
   render?: (props: ActionRenderProps) => ReactNode
 }
 
-export interface MsgOperMenuItem {
-  /**
-    菜单项是否显示
-  */
-  show?: number
-  /**
-    菜单项名称
-  */
-  label?: string
-  key: MenuItemKey | string
-  icon?: React.ReactNode
-  /**
-    自定义点击事件
-  */
+export interface MsgOperMenuItem extends MenuItem {
   onClick?: (msg: IMMessage) => void
+}
+
+export interface ChatSettingActionItem extends SettingActionItemProps {
+  onClick?: () => void
 }
 
 export interface ChatContainerProps {
@@ -62,6 +54,14 @@ export interface ChatContainerProps {
     消息发送按钮组配置，不传使用默认的配置
     */
   actions?: Action[]
+  /**
+    单聊消息页面右侧设置栏按钮自定义，不传使用默认的配置
+    */
+  p2pSettingActions?: ChatSettingActionItem[]
+  /**
+    群聊消息页面右侧设置栏按钮自定义，不传使用默认的配置
+    */
+  teamSettingActions?: ChatSettingActionItem[]
   /**
    自定义渲染 消息右键菜单
    */
@@ -146,6 +146,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
   ({
     selectedSession,
     actions,
+    p2pSettingActions,
+    teamSettingActions,
     msgOperMenu,
     onSendText,
     afterTransferTeam,
@@ -187,6 +189,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           to={to}
           onSendText={onSendText}
           actions={actions}
+          settingActions={p2pSettingActions}
           msgOperMenu={msgOperMenu}
           renderP2pCustomMessage={renderP2pCustomMessage}
           renderHeader={renderHeader}
@@ -204,6 +207,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           to={to}
           onSendText={onSendText}
           actions={actions}
+          settingActions={teamSettingActions}
           msgOperMenu={msgOperMenu}
           afterTransferTeam={afterTransferTeam}
           renderTeamCustomMessage={renderTeamCustomMessage}

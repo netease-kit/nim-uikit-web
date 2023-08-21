@@ -19,7 +19,7 @@ import GroupAddMembers from '../components/ChatAddMembers'
 import { ChatAction } from '../types'
 import { useStateContext, useTranslation, CrudeAvatar } from '../../common'
 import { LeftOutlined } from '@ant-design/icons'
-import { Action, MsgOperMenuItem } from '../Container'
+import { Action, ChatSettingActionItem, MsgOperMenuItem } from '../Container'
 import ChatTeamSetting, { HistoryStack } from '../components/ChatTeamSetting'
 import { Session } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/SessionServiceInterface'
 import { debounce, VisibilityObserver } from '@xkit-yx/utils'
@@ -29,7 +29,8 @@ import {
 } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import { MenuItemKey, AvatarMenuItem } from '../components/ChatMessageItem'
 import { message } from 'antd'
-import { HISTORY_LIMIT } from '../constant'
+import { ALLOW_AT, HISTORY_LIMIT, TAllowAt } from '../../constant'
+import { AT_ALL_ACCOUNT } from '@xkit-yx/im-store'
 import {
   Team,
   TeamMember,
@@ -39,11 +40,12 @@ import { observer } from 'mobx-react'
 import { GroupItemProps } from '../components/ChatTeamSetting/GroupItem'
 import ChatForwardModal from '../components/ChatForwardModal'
 import { MentionedMember } from '../components/ChatMessageInput/ChatMentionMemberList'
-import GroupActionModal from '../components/ChatTeamSetting/GroupActionModal'
+import GroupTransferModal from '../components/ChatGroupTransferModal'
 
 export interface TeamChatContainerProps {
   scene: TMsgScene
   to: string
+  settingActions?: ChatSettingActionItem[]
   actions?: Action[]
   msgOperMenu?: MsgOperMenuItem[]
   onSendText?: (data: {
@@ -76,6 +78,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
   ({
     scene,
     to,
+    settingActions,
     actions,
     msgOperMenu,
     onSendText: onSendTextFromProps,
@@ -130,7 +133,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       muteType: 'none',
     }
 
-    const teamMembers = store.uiStore.getTeamMembersWithAlias(to)
+    const teamMembers = store.teamMemberStore.getTeamMember(to)
 
     const myUser = store.userStore.myUserInfo
 
@@ -142,25 +145,24 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       .filter((item) => item.type === 'manager')
       .some((item) => item.account === myUser?.account)
 
-    const [groupSearchText, setGroupSerachText] = useState<string>('')
-
     const mentionMembers = useMemo(() => {
-      return teamMembers.filter((member) => {
-        if (member.account !== myUser?.account) {
-          member.alias = store.uiStore.getAppellation({
-            account: member.account,
-            teamId: member.teamId,
-          })
-          member.nickInTeam = store.uiStore.getAppellation({
-            account: member.account,
-            teamId: member.teamId,
-            ignoreAlias: true,
-          })
-          return true
-        }
-        return false
-      })
-    }, [teamMembers, myUser?.account, store])
+      return teamMembers.filter(
+        (member) => member.account !== myUser?.account
+        // if (member.account !== myUser?.account) {
+        // member.alias = store.uiStore.getAppellation({
+        //   account: member.account,
+        //   teamId: member.teamId,
+        // })
+        // member.nickInTeam = store.uiStore.getAppellation({
+        //   account: member.account,
+        //   teamId: member.teamId,
+        //   ignoreAlias: true,
+        // })
+        //   return true
+        // }
+        // return false
+      )
+    }, [teamMembers, myUser?.account])
 
     const sortedMembers = useMemo(() => {
       const owner = teamMembers.filter((item) => item.type === 'owner')
@@ -170,16 +172,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       const other = teamMembers
         .filter((item) => !['owner', 'manager'].includes(item.type))
         .sort((a, b) => a.joinTime - b.joinTime)
-      let _sortedMembers = [...owner, ...manager, ...other]
-      if (groupSearchText) {
-        _sortedMembers = _sortedMembers.filter((item) =>
-          store.uiStore
-            .getAppellation({ account: item.account, teamId: item.teamId })
-            .includes(groupSearchText)
-        )
-      }
+      const _sortedMembers = [...owner, ...manager, ...other]
       return _sortedMembers
-    }, [teamMembers, groupSearchText])
+    }, [teamMembers])
 
     const teamMute = useMemo(() => {
       if (team.mute) {
@@ -187,6 +182,19 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       }
       return team.mute
     }, [team.mute, isGroupOwner, isGroupManager])
+
+    const allowAtAll = useMemo(() => {
+      let ext: TAllowAt = {}
+      try {
+        ext = JSON.parse(team.ext || '{}')
+      } catch (error) {
+        //
+      }
+      if (ext[ALLOW_AT] === 'manager') {
+        return isGroupOwner || isGroupManager
+      }
+      return true
+    }, [team.ext, isGroupOwner, isGroupManager])
 
     const teamDefaultAddMembers = useMemo(() => {
       return teamMembers
@@ -204,7 +212,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       })
     }, [to])
 
-    const [groupActionModalVisible, setGroupActionModalVisible] =
+    const [groupTransferModalVisible, setGroupTransferModalVisible] =
       useState<boolean>(false)
 
     // 以下是 UI 相关的 state，需要在切换会话时重置
@@ -277,16 +285,28 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           )[0]
           if (_msg) {
             await getHistory(_msg.time, _msg.idServer)
+            // 滚动到加载的那条消息
+            document.getElementById(_msg.idClient)?.scrollIntoView()
           }
-          // 滚动到加载的那条消息
-          document.getElementById(_msg.idClient)?.scrollIntoView()
         }
       }
     }, 300)
 
     const onActionClick = (action: ChatAction) => {
-      setAction(action)
-      setSettingDrawerVisible(true)
+      const settingAction = settingActions?.find(
+        (item) => item.action === action
+      )
+      if (settingAction?.onClick) {
+        return settingAction?.onClick()
+      }
+      switch (action) {
+        case 'chatSetting':
+          setAction(action)
+          setSettingDrawerVisible(true)
+          break
+        default:
+          break
+      }
     }
 
     const onSettingDrawerClose = () => {
@@ -307,14 +327,22 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           if (yxAitMsg) {
             const mentionedMembers: MentionedMember[] = []
             Object.keys(yxAitMsg).forEach((key) => {
-              if (key === 'ait_all') {
+              if (key === AT_ALL_ACCOUNT) {
                 mentionedMembers.push({
-                  account: 'ait_all',
-                  nickInTeam: t('teamAll'),
+                  account: AT_ALL_ACCOUNT,
+                  appellation: t('teamAll'),
                 })
               } else {
                 const member = teamMembers.find((item) => item.account === key)
-                member && mentionedMembers.push(member)
+                member &&
+                  mentionedMembers.push({
+                    account: member.account,
+                    appellation: store.uiStore.getAppellation({
+                      account: member.account,
+                      teamId: member.teamId,
+                      ignoreAlias: true,
+                    }),
+                  })
               }
             })
             chatMessageInputRef.current?.setSelectedAtMembers(mentionedMembers)
@@ -406,7 +434,15 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           const member = mentionMembers.find(
             (item) => item.account === msg.from
           )
-          member && chatMessageInputRef.current?.onAtMemberSelectHandler(member)
+          member &&
+            chatMessageInputRef.current?.onAtMemberSelectHandler({
+              account: member.account,
+              appellation: store.uiStore.getAppellation({
+                account: member.account,
+                teamId: member.teamId,
+                ignoreAlias: true,
+              }),
+            })
           await store.msgStore.replyMsgActive(msg)
           chatMessageInputRef.current?.input?.focus()
           break
@@ -427,7 +463,15 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           const member = mentionMembers.find(
             (item) => item.account === msg.from
           )
-          member && chatMessageInputRef.current?.onAtMemberSelectHandler(member)
+          member &&
+            chatMessageInputRef.current?.onAtMemberSelectHandler({
+              account: member.account,
+              appellation: store.uiStore.getAppellation({
+                account: member.account,
+                teamId: member.teamId,
+                ignoreAlias: true,
+              }),
+            })
           break
         default:
           break
@@ -438,8 +482,16 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       try {
         await store.teamStore.dismissTeamActive(team.teamId)
         message.success(t('dismissTeamSuccessText'))
-      } catch (error) {
-        message.error(t('dismissTeamFailedText'))
+      } catch (error: any) {
+        switch (error?.code) {
+          // 无权限
+          case 802:
+            message.error(t('noPermission'))
+            break
+          default:
+            message.error(t('dismissTeamFailedText'))
+            break
+        }
       }
     }
 
@@ -447,31 +499,26 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       try {
         await store.teamStore.leaveTeamActive(team.teamId)
         message.success(t('leaveTeamSuccessText'))
-      } catch (error) {
-        message.error(t('leaveTeamFailedText'))
+      } catch (error: any) {
+        switch (error?.code) {
+          // 无权限
+          case 802:
+            message.error(t('noPermission'))
+            break
+          default:
+            message.error(t('leaveTeamFailedText'))
+            break
+        }
       }
-    }
-
-    const onTeamMemberSearchChange = (searchText) => {
-      setGroupSerachText(searchText)
     }
 
     const onTransferMemberClick = () => {
-      setGroupActionModalVisible(true)
+      setGroupTransferModalVisible(true)
     }
 
-    const onTransferTeam = async (account: string) => {
-      try {
-        await store.teamStore.transferTeamTeamActive({
-          account,
-          teamId: team.teamId,
-        })
-        setGroupActionModalVisible(false)
-        afterTransferTeam?.(team.teamId)
-        message.success(t('transferTeamSuccessText'))
-      } catch (error) {
-        message.error(t('transferTeamFailedText'))
-      }
+    const handleTransferTeam = () => {
+      setGroupTransferModalVisible(false)
+      afterTransferTeam?.(team.teamId)
     }
 
     const onAddMembersClick = () => {
@@ -484,18 +531,22 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
 
     const onAddTeamMember = async (accounts: string[]) => {
       try {
-        if (team.inviteMode === 'manager' && !isGroupOwner && !isGroupManager) {
-          message.error(t('noPermission'))
-          return
-        }
         await store.teamMemberStore.addTeamMemberActive({
           teamId: team.teamId,
           accounts,
         })
         message.success(t('addTeamMemberSuccessText'))
         resetSettingState()
-      } catch (error) {
-        message.error(t('addTeamMemberFailedText'))
+      } catch (error: any) {
+        switch (error?.code) {
+          // 无权限
+          case 802:
+            message.error(t('noPermission'))
+            break
+          default:
+            message.error(t('addTeamMemberFailedText'))
+            break
+        }
       }
     }
 
@@ -506,8 +557,16 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           accounts: [member.account],
         })
         message.success(t('removeTeamMemberSuccessText'))
-      } catch (error) {
-        message.error(t('removeTeamMemberFailedText'))
+      } catch (error: any) {
+        switch (error?.code) {
+          // 无权限
+          case 802:
+            message.error(t('noPermission'))
+            break
+          default:
+            message.error(t('removeTeamMemberFailedText'))
+            break
+        }
       }
     }
 
@@ -518,8 +577,16 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           teamId: team.teamId,
         })
         message.success(t('updateTeamSuccessText'))
-      } catch (error) {
-        message.error(t('updateTeamFailedText'))
+      } catch (error: any) {
+        switch (error?.code) {
+          // 无权限
+          case 802:
+            message.error(t('noPermission'))
+            break
+          default:
+            message.error(t('updateTeamFailedText'))
+            break
+        }
       }
     }
 
@@ -534,12 +601,22 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         if (bitConfigVisible) {
           message.success(t('updateBitConfigMaskSuccess'))
         }
-      } catch (error) {
-        if (nickTipVisible) {
-          message.error(t('updateMyMemberNickFailed'))
-        }
-        if (bitConfigVisible) {
-          message.error(t('updateBitConfigMaskFailed'))
+      } catch (error: any) {
+        switch (error?.code) {
+          // 无权限
+          case 802:
+            message.error(t('noPermission'))
+            break
+          default:
+            {
+              if (nickTipVisible) {
+                message.error(t('updateMyMemberNickFailed'))
+              }
+              if (bitConfigVisible) {
+                message.error(t('updateBitConfigMaskFailed'))
+              }
+            }
+            break
         }
       }
     }
@@ -553,10 +630,18 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         message.success(
           mute ? t('muteAllTeamSuccessText') : t('unmuteAllTeamSuccessText')
         )
-      } catch (error) {
-        message.error(
-          mute ? t('muteAllTeamFailedText') : t('unmuteAllTeamFailedText')
-        )
+      } catch (error: any) {
+        switch (error?.code) {
+          // 无权限
+          case 802:
+            message.error(t('noPermission'))
+            break
+          default:
+            message.error(
+              mute ? t('muteAllTeamFailedText') : t('unmuteAllTeamFailedText')
+            )
+            break
+        }
       }
     }
 
@@ -617,8 +702,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     }
 
     const handleGroupActionCancel = () => {
-      setGroupActionModalVisible(false)
-      setGroupSerachText('')
+      setGroupTransferModalVisible(false)
     }
 
     useEffect(() => {
@@ -961,6 +1045,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             actions={actions}
             inputValue={inputValue}
             mute={teamMute}
+            allowAtAll={allowAtAll}
             uploadImageLoading={store.uiStore.uploadImageLoading}
             uploadFileLoading={store.uiStore.uploadFileLoading}
             setInputValue={setInputValue}
@@ -994,7 +1079,6 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
               onTeamMuteChange={onTeamMuteChange}
               onTransferTeamClick={onTransferMemberClick}
               renderTeamMemberItem={renderTeamMemberItem}
-              onTeamMemberSearchChange={onTeamMemberSearchChange}
               prefix={prefix}
               commonPrefix={commonPrefix}
             />
@@ -1003,6 +1087,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         <ChatActionBar
           prefix={prefix}
           action={action}
+          settingActions={settingActions}
           onActionClick={onActionClick}
         />
         <GroupAddMembers
@@ -1023,16 +1108,12 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           prefix={prefix}
           commonPrefix={commonPrefix}
         />
-        <GroupActionModal
-          title={t('transferOwnerText')}
-          prefix={prefix}
-          visible={groupActionModalVisible}
+        <GroupTransferModal
+          visible={groupTransferModalVisible}
           members={sortedMembers}
-          onOk={onTransferTeam}
+          onOk={handleTransferTeam}
           onCancel={handleGroupActionCancel}
           teamId={to}
-          groupSearchText={groupSearchText}
-          onTeamMemberSearchChange={onTeamMemberSearchChange}
         />
       </div>
     ) : null

@@ -1,16 +1,16 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { Image, Popover } from 'antd'
 import reactStringReplace from 'react-string-replace'
 import CommonIcon from '../CommonIcon'
 import { getFileType, parseFileSize, addUrlSearch } from '@xkit-yx/utils'
-// import { EMOJI_ICON_MAP_CONFIG, INPUT_EMOJI_SYMBOL_REG } from '../../constant'
 import { handleEmojiTranslate } from '../../../utils'
 import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import { useTranslation, useStateContext } from '../../index'
 import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
-import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 import { observer } from 'mobx-react'
 import { parseSessionId } from '../../../utils'
+import { ALLOW_AT, TAllowAt } from '../../../constant'
+import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 
 // 对话框中要展示的文件icon标识
 const fileIconMap = {
@@ -31,6 +31,30 @@ export interface IParseSessionProps {
   replyMsg?: IMMessage
 }
 
+export const pauseAllAudio = (): HTMLAudioElement => {
+  const audio = document.getElementById('yx-audio-message') as HTMLAudioElement
+  audio?.pause()
+  return audio
+}
+
+export const pauseOtherVideo = (idClient: string): void => {
+  const videoElements = document.getElementsByTagName('video')
+  for (let i = 0; i < videoElements.length; i++) {
+    if (videoElements[i].id !== `msg-video-${idClient}`) {
+      videoElements[i].pause()
+    }
+  }
+}
+
+export const pauseAllVideo = (): void => {
+  const videoElements = document.getElementsByTagName('video')
+  for (let i = 0; i < videoElements.length; i++) {
+    if (videoElements[i].id.startsWith('msg-video-')) {
+      videoElements[i].pause()
+    }
+  }
+}
+
 export const ParseSession: React.FC<IParseSessionProps> = observer(
   ({ prefix = 'common', msg, replyMsg }) => {
     const _prefix = `${prefix}-parse-session`
@@ -43,6 +67,8 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     // const { type, body, idClient, sessionId, ext } = msg
     const [audioIconType, setAudioIconType] = useState('icon-yuyin3')
     const { scene, to } = parseSessionId(msg.sessionId)
+
+    let animationFlag = false
 
     const teamId = scene === 'team' ? to : ''
 
@@ -88,6 +114,24 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         } catch {}
       }
       return <div className={`${_prefix}-text-wrapper`}>{text}</div>
+    }
+
+    const playAudioAnimation = () => {
+      animationFlag = true
+      let audioIcons = ['icon-yuyin1', 'icon-yuyin2', 'icon-yuyin3']
+      const handler = () => {
+        const icon = audioIcons.shift()
+        if (icon) {
+          setAudioIconType(icon)
+          if (!audioIcons.length && animationFlag) {
+            audioIcons = ['icon-yuyin1', 'icon-yuyin2', 'icon-yuyin3']
+          }
+          if (audioIcons.length) {
+            setTimeout(handler, 300)
+          }
+        }
+      }
+      handler()
     }
 
     const renderImage = (msg) => {
@@ -151,7 +195,11 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           if (team.inviteMode) {
             content.push(
               `${t('updateTeamInviteMode')}“${
-                team.inviteMode === 'all' ? t('teamAll') : t('onlyTeamOwner')
+                team.inviteMode === 'all'
+                  ? t('teamAll')
+                  : localOptions.teamManagerVisible
+                  ? t('teamOwnerAndManagerText')
+                  : t('onlyTeamOwner')
               }”`
             )
           }
@@ -160,6 +208,8 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
               `${t('updateTeamUpdateTeamMode')}“${
                 team.updateTeamMode === 'all'
                   ? t('teamAll')
+                  : localOptions.teamManagerVisible
+                  ? t('teamOwnerAndManagerText')
                   : t('onlyTeamOwner')
               }”`
             )
@@ -171,23 +221,53 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
               }`
             )
           }
-          return (
+          if (team.ext) {
+            let ext: TAllowAt = {}
+            try {
+              ext = JSON.parse(team.ext)
+            } catch (error) {
+              //
+            }
+            if (ext[ALLOW_AT] !== undefined) {
+              content.push(
+                `${t('updateAllowAt')}“${
+                  ext[ALLOW_AT] === 'manager'
+                    ? localOptions.teamManagerVisible
+                      ? t('teamOwnerAndManagerText')
+                      : t('onlyTeamOwner')
+                    : t('teamAll')
+                }”`
+              )
+            }
+          }
+          const attachUser = (msg.attach?.users as UserNameCard[]).find(
+            (_) => _.account === msg.from
+          )
+          return content.length ? (
             <div className={`${_prefix}-noti`}>
               {store.uiStore.getAppellation({
                 account: msg.from,
                 teamId,
+                nickFromMsg: attachUser?.nick,
               })}{' '}
               {content.join('、')}
             </div>
-          )
+          ) : null
         }
         // 有人主动加入群聊
         case 'passTeamApply':
         // 邀请加入群聊对方同意
         case 'acceptTeamInvite': {
+          const attachUser = (msg.attach?.users as UserNameCard[]).find(
+            (_) => _.account === msg.from
+          )
           return (
             <div className={`${_prefix}-noti`}>
-              {store.uiStore.getAppellation({ account: msg.from, teamId })}{' '}
+              {store.uiStore.getAppellation({
+                account: msg.from,
+                teamId,
+                nickFromMsg: attachUser?.nick,
+              })}{' '}
               {t('joinTeamText')}
             </div>
           )
@@ -196,9 +276,16 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         case 'addTeamMembers': {
           const accounts: string[] = msg.attach?.accounts || []
           const nicks = accounts
-            .map((item) =>
-              store.uiStore.getAppellation({ account: item, teamId })
-            )
+            .map((item) => {
+              const attachUser = (msg.attach?.users as UserNameCard[]).find(
+                (_) => _.account === item
+              )
+              return store.uiStore.getAppellation({
+                account: item,
+                teamId,
+                nickFromMsg: attachUser?.nick,
+              })
+            })
             .filter((item) => !!item)
             .join('、')
           return (
@@ -211,9 +298,16 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         case 'removeTeamMembers': {
           const accounts: string[] = msg.attach?.accounts || []
           const nicks = accounts
-            .map((item) =>
-              store.uiStore.getAppellation({ account: item, teamId })
-            )
+            .map((item) => {
+              const attachUser = (msg.attach?.users as UserNameCard[]).find(
+                (_) => _.account === item
+              )
+              return store.uiStore.getAppellation({
+                account: item,
+                teamId,
+                nickFromMsg: attachUser?.nick,
+              })
+            })
             .filter((item) => !!item)
             .join('、')
           return (
@@ -222,22 +316,78 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
             </div>
           )
         }
-        // 主动退出群聊
-        case 'leaveTeam': {
+        // 增加群管理员
+        case 'addTeamManagers': {
+          const accounts: string[] = msg.attach?.accounts || []
+          const nicks = accounts
+            .map((item) => {
+              const attachUser = (msg.attach?.users as UserNameCard[]).find(
+                (_) => _.account === item
+              )
+              return store.uiStore.getAppellation({
+                account: item,
+                teamId,
+                nickFromMsg: attachUser?.nick,
+              })
+            })
+            .filter((item) => !!item)
+            .join('、')
           return (
             <div className={`${_prefix}-noti`}>
-              {store.uiStore.getAppellation({ account: msg.from, teamId })}{' '}
+              {nicks} {t('beAddTeamManagersText')}
+            </div>
+          )
+        }
+        // 移除群管理员
+        case 'removeTeamManagers': {
+          const accounts: string[] = msg.attach?.accounts || []
+          const nicks = accounts
+            .map((item) => {
+              const attachUser = (msg.attach?.users as UserNameCard[]).find(
+                (_) => _.account === item
+              )
+              return store.uiStore.getAppellation({
+                account: item,
+                teamId,
+                nickFromMsg: attachUser?.nick,
+              })
+            })
+            .filter((item) => !!item)
+            .join('、')
+          return (
+            <div className={`${_prefix}-noti`}>
+              {nicks} {t('beRemoveTeamManagersText')}
+            </div>
+          )
+        }
+        // 主动退出群聊
+        case 'leaveTeam': {
+          const attachUser = (msg.attach?.users as UserNameCard[]).find(
+            (_) => _.account === msg.from
+          )
+          return (
+            <div className={`${_prefix}-noti`}>
+              {store.uiStore.getAppellation({
+                account: msg.from,
+                teamId,
+                nickFromMsg: attachUser?.nick,
+              })}{' '}
               {t('leaveTeamText')}
             </div>
           )
         }
+        // 转让群主
         case 'transferTeam': {
+          const attachUser = (msg.attach?.users as UserNameCard[]).find(
+            (_) => _.account === msg.attach?.account
+          )
           return (
             <div className={`${_prefix}-noti`}>
               <span className={`${_prefix}-noti-transfer`}>
                 {store.uiStore.getAppellation({
                   account: msg.attach?.account,
                   teamId,
+                  nickFromMsg: attachUser?.nick,
                 })}
               </span>
               {t('newGroupOwnerText')}
@@ -252,17 +402,6 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     const renderAudio = (msg) => {
       const { flow, attach } = msg
       const duration = Math.floor(attach?.dur / 1000) || 0
-      let animationFlag = false
-      let audioIcons
-      const animationFn = () => {
-        setAudioIconType(audioIcons.shift())
-        audioIcons.length === 0 &&
-          animationFlag &&
-          (audioIcons = ['icon-yuyin1', 'icon-yuyin2', 'icon-yuyin3'])
-        if (audioIcons.length > 0) {
-          setTimeout(animationFn, 300)
-        }
-      }
 
       const containerWidth = 80 + 15 * (duration - 1)
 
@@ -277,11 +416,10 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
               flow === 'in' ? `${_prefix}-audio-in` : `${_prefix}-audio-out`
             }
             onClick={() => {
-              const oldAudio = document.getElementById(
-                'yx-audio-message'
-              ) as HTMLAudioElement
+              pauseAllVideo()
+              const oldAudio = pauseAllAudio()
               const msgId = oldAudio?.getAttribute('msgId')
-              oldAudio?.pause()
+              // 如果是自己，暂停动画
               if (msgId === msg.idClient) {
                 animationFlag = false
                 return
@@ -300,9 +438,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
                 animationFlag = false
                 audio.parentNode?.removeChild(audio)
               })
-              audioIcons = ['icon-yuyin1', 'icon-yuyin2', 'icon-yuyin3']
-              animationFlag = true
-              animationFn()
+              playAudioAnimation()
             }}
           >
             {duration}s
@@ -324,13 +460,9 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           id={`msg-video-${msg.idClient}`}
           controls
           onPlay={() => {
-            // 播放视频，暂停其他视频
-            const videoElements = document.getElementsByTagName('video')
-            for (let i = 0; i < videoElements.length; i++) {
-              if (videoElements[i].id !== `msg-video-${msg.idClient}`) {
-                videoElements[i].pause()
-              }
-            }
+            // 播放视频，暂停其他视频和音频
+            pauseOtherVideo(msg.idClient)
+            pauseAllAudio()
           }}
           onError={() => {
             // 处理异常 例如：视频格式不支持播放等

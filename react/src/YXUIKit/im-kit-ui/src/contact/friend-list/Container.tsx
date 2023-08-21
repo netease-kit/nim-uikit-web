@@ -54,7 +54,9 @@ export const FriendListContainer: FC<FriendListContainerProps> = observer(
       const accounts = store.uiStore.friendsWithoutBlacklist.map(
         (item) => item.account
       )
-      store.eventStore.subscribeLoginStateActive(accounts)
+      store.eventStore.subscribeLoginStateActive(accounts).catch((err) => {
+        // 忽略报错
+      })
     }, [store.uiStore.friendsWithoutBlacklist, store.eventStore])
 
     return (

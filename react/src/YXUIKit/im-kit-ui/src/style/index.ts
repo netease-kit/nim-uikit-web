@@ -9,6 +9,7 @@ import '../common/components/MyUserCard/style'
 import '../common/components/UserCard/style'
 import '../common/components/SearchInput/style'
 import '../common/components/ReadPercent/style'
+import '../common/components/SelectModal/style'
 
 import '../conversation/style'
 import '../contact/black-list/style'
