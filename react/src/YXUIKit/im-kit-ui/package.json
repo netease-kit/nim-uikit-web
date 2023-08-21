@@ -1,35 +1,35 @@
 {
-  "_from": "@xkit-yx/im-kit-ui@^9.5.1",
-  "_id": "@xkit-yx/im-kit-ui@9.5.1",
+  "_from": "@xkit-yx/im-kit-ui@^9.6.0",
+  "_id": "@xkit-yx/im-kit-ui@9.6.0",
   "_inBundle": false,
-  "_integrity": "sha512-rwN0w14C+44O4X8ej55jGDlMeHYGtUO24VFAfbXZR9O++tnq/5HcuHGEhdvsRqKvHvAbVpXqwEt9E79Hu24mxA==",
+  "_integrity": "sha512-J5t6zWcqjtW6PQv4t8Mj3JmY2yUaGJ8X5lxxCoivtiEl5hNXOAA3U7REcdFhxkeq7TFSl0eXxeWokmfcg7mGuA==",
   "_location": "/@xkit-yx/im-kit-ui",
   "_phantomChildren": {},
   "_requested": {
     "type": "range",
     "registry": true,
-    "raw": "@xkit-yx/im-kit-ui@^9.5.1",
+    "raw": "@xkit-yx/im-kit-ui@^9.6.0",
     "name": "@xkit-yx/im-kit-ui",
     "escapedName": "@xkit-yx%2fim-kit-ui",
     "scope": "@xkit-yx",
-    "rawSpec": "^9.5.1",
+    "rawSpec": "^9.6.0",
     "saveSpec": null,
-    "fetchSpec": "^9.5.1"
+    "fetchSpec": "^9.6.0"
   },
   "_requiredBy": [
     "/"
   ],
-  "_resolved": "https://registry.npmjs.org/@xkit-yx/im-kit-ui/-/im-kit-ui-9.5.1.tgz",
-  "_shasum": "a283a895d62029d8a127d4bd007629535ee62ac2",
-  "_spec": "@xkit-yx/im-kit-ui@^9.5.1",
+  "_resolved": "https://registry.npmjs.org/@xkit-yx/im-kit-ui/-/im-kit-ui-9.6.0.tgz",
+  "_shasum": "14695835abff91d327fcbf0b4dcdeda746dd7bcf",
+  "_spec": "@xkit-yx/im-kit-ui@^9.6.0",
   "_where": "/Users/leeing/Documents/yunxin-projects/nim-uikit-web/react",
   "author": "",
   "bundleDependencies": false,
   "dependencies": {
     "@ant-design/icons": "^5.0.1",
-    "@xkit-yx/core-kit": "^0.10.2",
-    "@xkit-yx/im-store": "^0.0.6",
-    "@xkit-yx/utils": "^0.5.2",
+    "@xkit-yx/core-kit": "^0.10.6",
+    "@xkit-yx/im-store": "^0.0.11",
+    "@xkit-yx/utils": "^0.5.5",
     "antd": "^4.16.3",
     "mobx": "^6.6.1",
     "mobx-react": "^7.5.2",
@@ -48,7 +48,7 @@
     "gulp-typescript": "^6.0.0-alpha.1",
     "less": "^4.1.1",
     "less-plugin-npm-import": "^2.1.0",
-    "nim-web-sdk-ng": "0.14.0",
+    "nim-web-sdk-ng": "0.15.0",
     "postcss": "^8.3.5",
     "postcss-nested": "^5.0.5",
     "react": "^16.8.0",
@@ -66,7 +66,7 @@
     "es",
     "copySourceCode.js"
   ],
-  "gitHead": "e76d1e5985485e731b39e50c854a2d587519157b",
+  "gitHead": "b3bbc966437ee1b3e69ef1c4ffeae88003030588",
   "license": "MIT",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -90,5 +90,5 @@
     "start": "rollup -cw --environment DEV"
   },
   "typings": "es/index.d.ts",
-  "version": "9.5.1"
+  "version": "9.6.0"
 }

@@ -21,7 +21,7 @@ import {
   useTranslation,
   ComplexAvatarContainer,
 } from '../../common'
-import { Action, MsgOperMenuItem } from '../Container'
+import { Action, ChatSettingActionItem, MsgOperMenuItem } from '../Container'
 import ChatP2pSetting from '../components/ChatP2pSetting'
 import { Session } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/SessionServiceInterface'
 import { debounce, VisibilityObserver } from '@xkit-yx/utils'
@@ -31,13 +31,14 @@ import {
 } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import { MenuItemKey } from '../components/ChatMessageItem'
 import { message } from 'antd'
-import { HISTORY_LIMIT } from '../constant'
+import { HISTORY_LIMIT } from '../../constant'
 import { observer } from 'mobx-react'
 import ChatForwardModal from '../components/ChatForwardModal'
 
 export interface P2pChatContainerProps {
   scene: TMsgScene
   to: string
+  settingActions?: ChatSettingActionItem[]
   actions?: Action[]
   msgOperMenu?: MsgOperMenuItem[]
   onSendText?: (data: {
@@ -63,6 +64,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
   ({
     scene,
     to,
+    settingActions,
     actions,
     msgOperMenu,
     onSendText: onSendTextFromProps,
@@ -152,16 +154,28 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           )[0]
           if (_msg) {
             await getHistory(_msg.time, _msg.idServer)
+            // 滚动到加载的那条消息
+            document.getElementById(_msg.idClient)?.scrollIntoView()
           }
-          // 滚动到加载的那条消息
-          document.getElementById(_msg.idClient)?.scrollIntoView()
         }
       }
     }, 300)
 
     const onActionClick = (action: ChatAction) => {
-      setAction(action)
-      setSettingDrawerVisible(true)
+      const settingAction = settingActions?.find(
+        (item) => item.action === action
+      )
+      if (settingAction?.onClick) {
+        return settingAction?.onClick()
+      }
+      switch (action) {
+        case 'chatSetting':
+          setAction(action)
+          setSettingDrawerVisible(true)
+          break
+        default:
+          break
+      }
     }
 
     const onSettingDrawerClose = () => {
@@ -281,8 +295,16 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         })
         resetSettingState()
         message.success(t('createTeamSuccessText'))
-      } catch (error) {
-        message.error(t('createTeamFailedText'))
+      } catch (error: any) {
+        switch (error?.code) {
+          // 无权限
+          case 802:
+            message.error(t('noPermission'))
+            break
+          default:
+            message.error(t('createTeamFailedText'))
+            break
+        }
       }
     }
 
@@ -572,6 +594,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         <ChatActionBar
           prefix={prefix}
           action={action}
+          settingActions={settingActions}
           onActionClick={onActionClick}
         />
         <GroupCreate

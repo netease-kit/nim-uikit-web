@@ -1,32 +1,161 @@
-import React from 'react'
-import { Form, Switch } from 'antd'
-import classnames from 'classnames'
-import { useTranslation } from '../../../common'
-import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+import React, { useMemo, useState } from 'react'
+import { Switch, Select, Button, Empty } from 'antd'
+import {
+  ComplexAvatarContainer,
+  useStateContext,
+  useTranslation,
+} from '../../../common'
+import {
+  Team,
+  TeamMember,
+} from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+import ChatTeamMemberModal from '../ChatTeamMemberModal'
+import { ALLOW_AT, TAllowAt } from '../../../constant'
 
 export interface GroupPowerProps {
   onUpdateTeamInfo: (team: Partial<Team>) => void
   onTeamMuteChange: (mute: boolean) => void
   team: Team
-  hasPower: boolean
+  managers: TeamMember[]
+  isGroupOwner: boolean
+  afterSendMsgClick?: () => void
 
   prefix?: string
+  commonPrefix?: string
 }
 
 const GroupPower: React.FC<GroupPowerProps> = ({
   onUpdateTeamInfo,
   onTeamMuteChange,
   team,
-  hasPower,
+  managers,
+  isGroupOwner,
+  afterSendMsgClick,
 
   prefix = 'chat',
+  commonPrefix = 'common',
 }) => {
+  const { localOptions } = useStateContext()
   const { t } = useTranslation()
   const _prefix = `${prefix}-group-power`
 
+  const [memberModalVisible, setMemberModalVisible] = useState(false)
+
+  const options = useMemo(() => {
+    return [
+      {
+        label: localOptions.teamManagerVisible
+          ? t('teamOwnerAndManagerText')
+          : t('teamOwnerText'),
+        value: 'manager',
+      },
+      {
+        label: t('teamAll'),
+        value: 'all',
+      },
+    ]
+  }, [localOptions.teamManagerVisible, t])
+
+  const ext: TAllowAt = useMemo(() => {
+    let res = {}
+    try {
+      res = JSON.parse(team.ext || '{}')
+    } catch (error) {
+      //
+    }
+    return res
+  }, [team.ext])
+
   return (
-    <div className={classnames(`${_prefix}-wrap`)}>
-      <Form>
+    <div className={`${_prefix}-wrap`}>
+      {localOptions.teamManagerVisible && (
+        <div className={`${_prefix}-manager`}>
+          <div className={`${_prefix}-manager-title`}>
+            <label>{t('teamManagerText')}</label>
+            {isGroupOwner && (
+              <Button
+                onClick={() => {
+                  setMemberModalVisible(true)
+                }}
+                className={`${_prefix}-manager-btn`}
+                type="link"
+              >
+                {t('teamManagerEditText') + ' >'}
+              </Button>
+            )}
+          </div>
+          <div className={`${_prefix}-manager-avatars`}>
+            {!managers.length ? (
+              <Empty
+                className={`${_prefix}-manager-avatars-empty`}
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={t('teamManagerEmptyText')}
+              />
+            ) : (
+              managers.map((item) => (
+                <ComplexAvatarContainer
+                  key={item.account}
+                  account={item.account}
+                  afterSendMsgClick={afterSendMsgClick}
+                  prefix={commonPrefix}
+                />
+              ))
+            )}
+          </div>
+        </div>
+      )}
+      <div className={`${_prefix}-who`}>
+        <div className={`${_prefix}-who-item`}>
+          <label>{t('teamManagerLimitText')}</label>
+          <Select
+            className={`${_prefix}-who-select`}
+            options={options}
+            value={team.updateTeamMode}
+            onChange={(value) => {
+              onUpdateTeamInfo({ updateTeamMode: value })
+            }}
+          ></Select>
+        </div>
+        <div className={`${_prefix}-who-item`}>
+          <label>{t('teamInviteModeText')}</label>
+          <Select
+            className={`${_prefix}-who-select`}
+            options={options}
+            value={team.inviteMode}
+            onChange={(value) => {
+              onUpdateTeamInfo({ inviteMode: value })
+            }}
+          ></Select>
+        </div>
+        <div className={`${_prefix}-who-item`}>
+          <label>{t('teamAtModeText')}</label>
+          <Select
+            className={`${_prefix}-who-select`}
+            options={options}
+            value={ext[ALLOW_AT] || 'all'}
+            onChange={(value) => {
+              onUpdateTeamInfo({
+                ext: JSON.stringify({ ...ext, [ALLOW_AT]: value }),
+              })
+            }}
+          ></Select>
+        </div>
+      </div>
+      <div className={`${_prefix}-action`}>
+        <div className={`${_prefix}-action-item`}>
+          <label>{t('teamMuteText')}</label>
+          <Switch checked={team.mute} onChange={onTeamMuteChange} />
+        </div>
+      </div>
+      <ChatTeamMemberModal
+        visible={memberModalVisible}
+        onCancel={() => {
+          setMemberModalVisible(false)
+        }}
+        teamId={team.teamId}
+        commonPrefix={commonPrefix}
+      />
+      {/* <Form>
         <Form.Item name="updateTeamMode" label={t('teamManagerLimitText')}>
           <Switch
             checked={team.updateTeamMode === 'manager'}
@@ -52,7 +181,7 @@ const GroupPower: React.FC<GroupPowerProps> = ({
             }}
           />
         </Form.Item>
-      </Form>
+      </Form> */}
     </div>
   )
 }

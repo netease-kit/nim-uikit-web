@@ -7,15 +7,13 @@ import {
   useStateContext,
 } from '../../../common'
 import { TeamMember } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
-import { FriendProfile } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/FriendServiceInterface'
 import { observer } from 'mobx-react'
 
 export interface GroupItemProps {
-  member: TeamMember & Partial<FriendProfile>
+  myMemberInfo: TeamMember
+  member: TeamMember
   onRemoveTeamMemberClick: (member: TeamMember) => void
   afterSendMsgClick?: () => void
-  hasPower: boolean
-  isSelf: boolean
 
   prefix?: string
   commonPrefix?: string
@@ -25,11 +23,10 @@ const { confirm } = Modal
 
 export const GroupItem: FC<GroupItemProps> = observer(
   ({
+    myMemberInfo,
     member,
     onRemoveTeamMemberClick,
     afterSendMsgClick,
-    hasPower,
-    isSelf,
 
     prefix = 'chat',
     commonPrefix = 'common',
@@ -41,6 +38,55 @@ export const GroupItem: FC<GroupItemProps> = observer(
     const { store } = useStateContext()
 
     const [isActive, setIsActive] = useState(false)
+
+    const isSelf = member.account === myMemberInfo.account
+
+    const renderRemoveBtn = () => {
+      return (
+        <a
+          type="link"
+          className={`${_prefix}-remove-member`}
+          onClick={() => {
+            confirm({
+              content: t('removeTeamMemberConfirmText'),
+              okText: t('okText'),
+              cancelText: t('cancelText'),
+              okType: 'danger',
+              onOk() {
+                onRemoveTeamMemberClick(member)
+              },
+            })
+          }}
+        >
+          {t('removeTeamMemberText')}
+        </a>
+      )
+    }
+
+    const renderButton = () => {
+      if (member.type === 'owner') {
+        return <span className={`${_prefix}-owner`}>{t('teamOwnerText')}</span>
+      }
+
+      if (member.type === 'manager') {
+        return myMemberInfo.type === 'owner' && isActive ? (
+          renderRemoveBtn()
+        ) : (
+          <span className={`${_prefix}-manager`}>{t('teamManagerText')}</span>
+        )
+      }
+
+      if (member.type === 'normal') {
+        return (myMemberInfo.type === 'owner' ||
+          myMemberInfo.type === 'manager') &&
+          isActive &&
+          !isSelf
+          ? renderRemoveBtn()
+          : null
+      }
+
+      return null
+    }
 
     return (
       <div
@@ -67,29 +113,8 @@ export const GroupItem: FC<GroupItemProps> = observer(
             })}
           </span>
         </div>
-        {isActive && hasPower && !isSelf ? (
-          <a
-            type="link"
-            className={`${_prefix}-remove-member`}
-            onClick={() => {
-              confirm({
-                content: t('removeTeamMemberConfirmText'),
-                okText: t('okText'),
-                cancelText: t('cancelText'),
-                okType: 'danger',
-                onOk() {
-                  onRemoveTeamMemberClick(member)
-                },
-              })
-            }}
-          >
-            {t('removeTeamMemberText')}
-          </a>
-        ) : member.type === 'owner' ? (
-          <span className={`${_prefix}-owner`}>{t('teamOwnerText')}</span>
-        ) : member.type === 'manager' ? (
-          <span className={`${_prefix}-owner`}>{t('teamManagerText')}</span>
-        ) : null}
+
+        {renderButton()}
       </div>
     )
   }

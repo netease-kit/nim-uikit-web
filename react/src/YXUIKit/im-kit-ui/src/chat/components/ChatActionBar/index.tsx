@@ -2,28 +2,37 @@ import React from 'react'
 import { SettingOutlined } from '@ant-design/icons'
 import classNames from 'classnames'
 import { ChatAction } from '../../types'
+import { mergeActions } from '../../../utils'
+
+export interface SettingActionItemProps {
+  // 唯一 key
+  action: ChatAction
+  // 是否显示，自带按钮默认 true，新增自定义按钮默认 false
+  visible?: boolean
+  // 自定义渲染函数
+  render?: () => JSX.Element
+}
 
 export interface ChatActionBarProps {
   prefix?: string
   action?: ChatAction
+  settingActions?: SettingActionItemProps[]
   onActionClick: (action: ChatAction) => void
 }
 
 const ChatActionBar: React.FC<ChatActionBarProps> = ({
   prefix = 'chat',
   action = '',
+  settingActions,
   onActionClick,
 }) => {
   const _prefix = `${prefix}-action`
 
-  type IconsProps = {
-    action: ChatAction
-    content: JSX.Element
-  }
-  const ChatBarIcons: IconsProps[] = [
+  const defaultChatActions: SettingActionItemProps[] = [
     {
       action: 'chatSetting',
-      content: (
+      visible: true,
+      render: () => (
         <SettingOutlined
           className={`${_prefix}-icon`}
           style={{ fontSize: 18 }}
@@ -56,22 +65,30 @@ const ChatActionBar: React.FC<ChatActionBarProps> = ({
     // },
   ]
 
+  const finalChatActions = settingActions
+    ? mergeActions(defaultChatActions, settingActions, 'action')
+    : defaultChatActions
+
   return (
     <div className={`${_prefix}-wrap`}>
-      {ChatBarIcons.map((item) => (
-        <div
-          key={item.action}
-          onClick={() => {
-            onActionClick(item.action)
-          }}
-          className={classNames(
-            `${_prefix}-setting`,
-            `${action === item.action ? `${_prefix}-setting-active` : ''}`
-          )}
-        >
-          {item.content}
-        </div>
-      ))}
+      {finalChatActions.map(
+        (item) =>
+          item.visible &&
+          item.render && (
+            <div
+              key={item.action}
+              onClick={() => {
+                onActionClick(item.action)
+              }}
+              className={classNames(
+                `${_prefix}-setting`,
+                `${action === item.action ? `${_prefix}-setting-active` : ''}`
+              )}
+            >
+              {item.render?.()}
+            </div>
+          )
+      )}
     </div>
   )
 }

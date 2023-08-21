@@ -26,6 +26,8 @@ const GroupDetail: FC<GroupDetailmProps> = ({
   const [intro, setIntro] = useState('')
   const [name, setName] = useState('')
 
+  const { intro: lastIntro = '' } = team
+
   const _prefix = `${prefix}-group-detail`
 
   useEffect(() => {
@@ -33,10 +35,8 @@ const GroupDetail: FC<GroupDetailmProps> = ({
   }, [team.avatar])
 
   useEffect(() => {
-    if (team.intro) {
-      setIntro(team.intro)
-    }
-  }, [team.intro])
+    setIntro(lastIntro)
+  }, [lastIntro])
 
   useEffect(() => {
     setName(team.name)

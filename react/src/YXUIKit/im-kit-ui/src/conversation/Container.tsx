@@ -96,6 +96,7 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
     renderSessionMsg,
   }) => {
     const { nim, store, initOptions, localOptions } = useStateContext()
+    const sessionId = store.uiStore.selectedSession
 
     useEventTracking({
       appkey: initOptions.appkey,
@@ -147,51 +148,17 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
     }
 
     useEffect(() => {
-      const account = store.userStore.myUserInfo.account
       setSessionList([...store.uiStore.sessionList])
-      store.uiStore.sessionList.forEach(async (session: any) => {
-        if (session.scene === 'team' && session.unread !== 0) {
-          let unreadMsgs = [session.lastMsg]
-          // 不直接使用 `getHistoryMsgActive`, 因为这个方法有延迟
-          if (session.unread > 1) {
-            const res = await store.msgStore.getHistoryMsgActive({
-              sessionId: session.id,
-              endTime: session.lastMsg.time,
-              lastMsgId: session.lastMsg.idServer,
-              limit: session.unread - 1,
-            })
-            unreadMsgs = [...unreadMsgs, ...res]
-          }
-          unreadMsgs.forEach((msg) => {
-            if (msg.ext) {
-              try {
-                const extObj = JSON.parse(msg.ext)
-                const yxAitMsg = extObj.yxAitMsg
-                if (yxAitMsg && localOptions.needMention) {
-                  Object.keys(yxAitMsg).forEach((key) => {
-                    if (key === account || key === 'ait_all') {
-                      session.beMentioned = true
-                    }
-                  })
-                }
-              } catch {}
-            }
-          })
-          setSessionList([...store.uiStore.sessionList])
-        }
-      })
-    }, [
-      store.uiStore.sessionList,
-      store.userStore.myUserInfo.account,
-      store.msgStore,
-    ])
+    }, [store.uiStore.sessionList])
 
     useEffect(() => {
       // 订阅会话列表中 p2p 的在线离线状态
       const accounts = store.uiStore.sessionList
         .filter((item) => item.scene === 'p2p')
         .map((item) => item.to)
-      store.eventStore.subscribeLoginStateActive(accounts)
+      store.eventStore.subscribeLoginStateActive(accounts).catch((err) => {
+        // 忽略报错
+      })
     }, [store.uiStore.sessionList, store.eventStore])
 
     return (

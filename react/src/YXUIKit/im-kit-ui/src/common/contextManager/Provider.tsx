@@ -44,7 +44,7 @@ export interface ProviderProps {
 
 export const Context = createContext<ContextProps>({})
 
-const defaultLocalOptions: LocalOptions = {
+const defaultLocalOptions: Required<LocalOptions> = {
   addFriendNeedVerify: true,
   teamBeInviteMode: 'needVerify',
   teamJoinMode: 'noVerify',
@@ -57,6 +57,8 @@ const defaultLocalOptions: LocalOptions = {
   teamMsgReceiptVisible: false,
   loginStateVisible: false,
   allowTransferTeamOwner: false,
+  teamManagerVisible: false,
+  teamManagerLimit: 10,
   sendMsgBefore: async (options: any) => options,
 }
 

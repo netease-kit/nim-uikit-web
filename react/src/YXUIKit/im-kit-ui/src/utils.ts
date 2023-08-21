@@ -9,6 +9,7 @@ export const logger = logDebug({
   appName: packageJson.name,
 })
 
+// 传入的是空，返回旧值
 export function mergeArrs<T>(
   oldArr: T[],
   newArr: Partial<T>[],
@@ -33,6 +34,25 @@ export function mergeArrs<T>(
   })
 
   return [...map.values()]
+}
+
+// 传入的是空，返回空
+export const mergeActions = <T>(
+  defaultActions: T[],
+  propsActions: T[],
+  key: keyof T
+): T[] => {
+  return propsActions.map((i) => {
+    const defaultAction = defaultActions.find((j) => i[key] === j[key])
+    if (defaultAction) {
+      return {
+        ...defaultAction,
+        ...i,
+      }
+    } else {
+      return i
+    }
+  })
 }
 
 export const groupByPy = <T>(
@@ -183,23 +203,6 @@ export const parseSessionId = (
     // 这样处理是为了防止有些用户 accid 中自带 -
     to: to.join('-'),
   }
-}
-
-/**
- * 合并自定义发送按钮Action以及右键消息菜单Action
- */
-export const mergeActions = (defaultActions, propsActions, key) => {
-  return propsActions.map((i) => {
-    const defaultAction = defaultActions.find((j) => i[key] === j[key])
-    if (defaultAction) {
-      return {
-        ...defaultAction,
-        ...i,
-      }
-    } else {
-      return i
-    }
-  })
 }
 
 interface IKeyMap {

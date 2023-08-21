@@ -21,14 +21,18 @@ import { observer } from 'mobx-react'
 import { MsgOperMenuItem } from '../../Container'
 import { mergeActions } from '../../../utils'
 
-export type MenuItemKey = 'recall' | 'delete' | 'reply' | 'forward'
+export type MenuItemKey = 'recall' | 'delete' | 'reply' | 'forward' | string
 export type AvatarMenuItem = 'mention'
 
 export interface MenuItem {
-  show: 1 | 0
-  label: string
+  // 是否显示
+  show?: 1 | 0
+  // 名称
+  label?: string
+  // 唯一 key
   key: MenuItemKey
-  icon: React.ReactNode
+  // 图标
+  icon?: React.ReactNode
 }
 
 export interface MessageItemProps {
@@ -49,274 +53,279 @@ export interface MessageItemProps {
   commonPrefix?: string
 }
 
-export const ChatMessageItem: React.FC<MessageItemProps> = ({
-  msg,
-  replyMsg,
-  myAccount,
-  normalStatusRenderer,
-  msgOperMenu,
-  onResend,
-  onMessageAction,
-  onMessageAvatarAction,
-  onReeditClick,
-  renderMessageAvatar,
-  renderMessageName,
-  renderMessageOuterContent,
-  renderMessageInnerContent,
-  prefix = 'chat',
-  commonPrefix = 'common',
-}) => {
-  const { t } = useTranslation()
-  const { store } = useStateContext()
+export const ChatMessageItem: React.FC<MessageItemProps> = observer(
+  ({
+    msg,
+    replyMsg,
+    myAccount,
+    normalStatusRenderer,
+    msgOperMenu,
+    onResend,
+    onMessageAction,
+    onMessageAvatarAction,
+    onReeditClick,
+    renderMessageAvatar,
+    renderMessageName,
+    renderMessageOuterContent,
+    renderMessageInnerContent,
+    prefix = 'chat',
+    commonPrefix = 'common',
+  }) => {
+    const { t } = useTranslation()
+    const { store } = useStateContext()
 
-  const _prefix = `${prefix}-message-list-item`
+    const _prefix = `${prefix}-message-list-item`
 
-  const {
-    from,
-    // fromNick,
-    body,
-    attach,
-    idClient,
-    status,
-    time,
-    type,
-    scene,
-    to,
-  } = msg
+    const {
+      from,
+      // fromNick,
+      body,
+      attach,
+      idClient,
+      status,
+      time,
+      type,
+      scene,
+      to,
+    } = msg
 
-  const messageActionDropdownContainerRef = useRef<HTMLDivElement>(null)
-  const messageAvatarActionDropdownContainerRef = useRef<HTMLDivElement>(null)
+    const messageActionDropdownContainerRef = useRef<HTMLDivElement>(null)
+    const messageAvatarActionDropdownContainerRef = useRef<HTMLDivElement>(null)
 
-  const isSelf = from === myAccount
+    const isSelf = from === myAccount
 
-  const nick = store.uiStore.getAppellation({
-    account: from,
-    teamId: scene === 'team' ? to : undefined,
-  })
+    const nick = store.uiStore.getAppellation({
+      account: from,
+      teamId: scene === 'team' ? to : undefined,
+    })
 
-  const nickWithoutAlias = store.uiStore.getAppellation({
-    account: from,
-    teamId: scene === 'team' ? to : undefined,
-    ignoreAlias: true,
-  })
+    const nickWithoutAlias = store.uiStore.getAppellation({
+      account: from,
+      teamId: scene === 'team' ? to : undefined,
+      ignoreAlias: true,
+    })
 
-  // 内存中插入的 msg 属性，具体内容参考 msg store
-  const {
-    type: attachType = '',
-    canRecall = false,
-    canEdit = false,
-    oldBody = '',
-  } = attach || { type: '', canRecall: false, canEdit: false, oldBody: '' }
+    // 内存中插入的 msg 属性，具体内容参考 msg store
+    const {
+      type: attachType = '',
+      canRecall = false,
+      canEdit = false,
+      oldBody = '',
+    } = attach || { type: '', canRecall: false, canEdit: false, oldBody: '' }
 
-  const renderSendStatus = () => {
-    if (status === 'sending') {
-      return <LoadingOutlined className={`${_prefix}-status-icon`} />
+    const renderSendStatus = () => {
+      if (status === 'sending') {
+        return <LoadingOutlined className={`${_prefix}-status-icon`} />
+      }
+      if (status === 'read') {
+        return <CheckCircleOutlined className={`${_prefix}-status-icon`} />
+      }
+      if (status === 'sendFailed') {
+        return (
+          <Tooltip title={t('sendMsgFailedText')}>
+            <ExclamationCircleFilled
+              className={`${_prefix}-status-icon-fail`}
+              onClick={() => onResend(msg)}
+            />
+          </Tooltip>
+        )
+      }
+      if (status === 'refused') {
+        return (
+          <Tooltip title={t('sendBlackFailedText')}>
+            <ExclamationCircleFilled
+              className={`${_prefix}-status-icon-fail`}
+              onClick={() => onResend(msg)}
+            />
+          </Tooltip>
+        )
+      }
+      return normalStatusRenderer || null
     }
-    if (status === 'read') {
-      return <CheckCircleOutlined className={`${_prefix}-status-icon`} />
-    }
-    if (status === 'sendFailed') {
-      return (
-        <Tooltip title={t('sendMsgFailedText')}>
-          <ExclamationCircleFilled
-            className={`${_prefix}-status-icon-fail`}
-            onClick={() => onResend(msg)}
-          />
-        </Tooltip>
-      )
-    }
-    if (status === 'refused') {
-      return (
-        <Tooltip title={t('sendBlackFailedText')}>
-          <ExclamationCircleFilled
-            className={`${_prefix}-status-icon-fail`}
-            onClick={() => onResend(msg)}
-          />
-        </Tooltip>
-      )
-    }
-    return normalStatusRenderer || null
-  }
 
-  const renderMsgDate = () => {
-    const date = moment(time)
-    const isCurrentDay = date.isSame(moment(), 'day')
-    const isCurrentYear = date.isSame(moment(), 'year')
-    return isCurrentDay
-      ? date.format('HH:mm:ss')
-      : isCurrentYear
-      ? date.format('MM-DD HH:mm:ss')
-      : date.format('YYYY-MM-DD HH:mm:ss')
-  }
+    const renderMsgDate = () => {
+      const date = moment(time)
+      const isCurrentDay = date.isSame(moment(), 'day')
+      const isCurrentYear = date.isSame(moment(), 'year')
+      return isCurrentDay
+        ? date.format('HH:mm:ss')
+        : isCurrentYear
+        ? date.format('MM-DD HH:mm:ss')
+        : date.format('YYYY-MM-DD HH:mm:ss')
+    }
 
-  const renderMenuItems = () => {
-    const defaultMenuItems: MenuItem[] = [
-      // {
-      //   label: '复制',
-      //   key: 'copy',
-      //   icon: <CopyOutlined />,
-      // },
-      {
-        show: ['sending', 'sendFailed', 'refused', 'delete'].includes(status)
-          ? 0
-          : 1,
-        label: t('replyText'),
-        key: 'reply',
-        icon: <CommonIcon type="icon-huifu" />,
-      },
-      {
-        show: 1,
-        label: t('deleteText'),
-        key: 'delete',
-        icon: <DeleteOutlined />,
-      },
-      {
-        show:
-          ['sending', 'sendFailed', 'refused', 'delete'].includes(status) ||
-          type === 'audio'
+    const renderMenuItems = () => {
+      const defaultMenuItems: MenuItem[] = [
+        // {
+        //   label: '复制',
+        //   key: 'copy',
+        //   icon: <CopyOutlined />,
+        // },
+        {
+          show: ['sending', 'sendFailed', 'refused', 'delete'].includes(status)
             ? 0
             : 1,
-        label: t('forwardText'),
-        key: 'forward',
-        icon: <CommonIcon type="icon-zhuanfa" />,
-      },
-      {
-        show: canRecall ? 1 : 0,
-        label: t('recallText'),
-        key: 'recall',
-        icon: <RollbackOutlined />,
-      },
-    ]
-    const menuItems = msgOperMenu
-      ? mergeActions(defaultMenuItems, msgOperMenu, 'key')
-      : defaultMenuItems
-    return menuItems.filter((item) => item.show)
-  }
+          label: t('replyText'),
+          key: 'reply',
+          icon: <CommonIcon type="icon-huifu" />,
+        },
+        {
+          show: 1,
+          label: t('deleteText'),
+          key: 'delete',
+          icon: <DeleteOutlined />,
+        },
+        {
+          show:
+            ['sending', 'sendFailed', 'refused', 'delete'].includes(status) ||
+            type === 'audio'
+              ? 0
+              : 1,
+          label: t('forwardText'),
+          key: 'forward',
+          icon: <CommonIcon type="icon-zhuanfa" />,
+        },
+        {
+          show: canRecall ? 1 : 0,
+          label: t('recallText'),
+          key: 'recall',
+          icon: <RollbackOutlined />,
+        },
+      ]
+      const menuItems = msgOperMenu
+        ? mergeActions(defaultMenuItems, msgOperMenu, 'key')
+        : defaultMenuItems
+      return menuItems.filter((item) => item.show)
+    }
 
-  const renderAvatarMenuItems = () => {
-    return [
-      {
-        // @ts-ignore: 需求导致不需要 群备注
-        label: `@${nickWithoutAlias}`,
-        key: 'mention',
-      },
-    ]
-  }
+    const renderAvatarMenuItems = () => {
+      return [
+        {
+          // @ts-ignore: 需求导致不需要 群备注
+          label: `@${nickWithoutAlias}`,
+          key: 'mention',
+        },
+      ]
+    }
 
-  const renderSpecialMsg = () => {
-    return (
-      <div key={idClient} className={`${_prefix}-recall`}>
-        {attachType === 'reCallMsg' ? (
-          <>
-            {`${t('you')}${t('recallMessageText')}`}
-            {canEdit ? (
-              <span
-                className={`${_prefix}-reedit`}
-                onClick={() => onReeditClick(msg)}
+    const renderSpecialMsg = () => {
+      return (
+        <div key={idClient} className={`${_prefix}-recall`}>
+          {attachType === 'reCallMsg' ? (
+            <>
+              {`${t('you')}${t('recallMessageText')}`}
+              {canEdit ? (
+                <span
+                  className={`${_prefix}-reedit`}
+                  onClick={() => onReeditClick(msg)}
+                >
+                  {t('reeditText')}
+                </span>
+              ) : null}
+            </>
+          ) : (
+            `${isSelf ? t('you') : nick} ${t('recallMessageText')}`
+          )}
+        </div>
+      )
+    }
+
+    return attachType === 'reCallMsg' || attachType === 'beReCallMsg' ? (
+      renderSpecialMsg()
+    ) : type === 'notification' ? (
+      <ParseSession replyMsg={replyMsg} msg={msg} prefix={commonPrefix} />
+    ) : (
+      <div
+        className={classNames(`${_prefix}-wrap`, {
+          [`${_prefix}-self`]: isSelf,
+        })}
+      >
+        {renderMessageAvatar?.(msg) ?? (
+          <div className={`${_prefix}-avatar`}>
+            {isSelf ? (
+              <MyAvatarContainer prefix={commonPrefix} canClick={false} />
+            ) : (
+              <Dropdown
+                key={idClient}
+                trigger={['contextMenu']}
+                overlay={
+                  onMessageAvatarAction ? (
+                    <Menu
+                      onClick={({ key }) =>
+                        onMessageAvatarAction?.(key as AvatarMenuItem, msg)
+                      }
+                      items={renderAvatarMenuItems()}
+                    />
+                  ) : (
+                    <Fragment />
+                  )
+                }
+                getPopupContainer={(triggerNode) =>
+                  messageAvatarActionDropdownContainerRef.current || triggerNode
+                }
               >
-                {t('reeditText')}
-              </span>
-            ) : null}
-          </>
-        ) : (
-          `${isSelf ? t('you') : nick} ${t('recallMessageText')}`
+                <div
+                  className={`${_prefix}-avatar-wrap`}
+                  ref={messageAvatarActionDropdownContainerRef}
+                >
+                  <ComplexAvatarContainer
+                    prefix={commonPrefix}
+                    account={from}
+                  />
+                </div>
+              </Dropdown>
+            )}
+          </div>
         )}
+
+        <Dropdown
+          key={idClient}
+          trigger={['contextMenu']}
+          overlay={
+            <Menu
+              onClick={({ key }) => onMessageAction(key as MenuItemKey, msg)}
+              items={renderMenuItems()}
+            />
+          }
+          getPopupContainer={(triggerNode) =>
+            messageActionDropdownContainerRef.current || triggerNode
+          }
+        >
+          <div
+            className={`${_prefix}-content-box`}
+            ref={messageActionDropdownContainerRef}
+          >
+            {renderMessageName?.(msg) ?? (
+              <div className={`${_prefix}-nick`}>{nick}</div>
+            )}
+            <div className={`${_prefix}-content`}>
+              {isSelf && (
+                <div className={`${_prefix}-status`}>{renderSendStatus()}</div>
+              )}
+              {renderMessageOuterContent?.(msg) ?? (
+                <div className={`${_prefix}-body`}>
+                  {renderMessageInnerContent?.(msg) ?? (
+                    <ParseSession
+                      replyMsg={replyMsg}
+                      msg={msg}
+                      prefix={commonPrefix}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+            <div
+              className={classNames(`${_prefix}-date`, {
+                [`${_prefix}-date-self`]: isSelf,
+              })}
+            >
+              {renderMsgDate()}
+            </div>
+          </div>
+        </Dropdown>
       </div>
     )
   }
-
-  return attachType === 'reCallMsg' || attachType === 'beReCallMsg' ? (
-    renderSpecialMsg()
-  ) : type === 'notification' ? (
-    <ParseSession replyMsg={replyMsg} msg={msg} prefix={commonPrefix} />
-  ) : (
-    <div
-      className={classNames(`${_prefix}-wrap`, {
-        [`${_prefix}-self`]: isSelf,
-      })}
-    >
-      {renderMessageAvatar?.(msg) ?? (
-        <div className={`${_prefix}-avatar`}>
-          {isSelf ? (
-            <MyAvatarContainer prefix={commonPrefix} canClick={false} />
-          ) : (
-            <Dropdown
-              key={idClient}
-              trigger={['contextMenu']}
-              overlay={
-                onMessageAvatarAction ? (
-                  <Menu
-                    onClick={({ key }) =>
-                      onMessageAvatarAction?.(key as AvatarMenuItem, msg)
-                    }
-                    items={renderAvatarMenuItems()}
-                  />
-                ) : (
-                  <Fragment />
-                )
-              }
-              getPopupContainer={(triggerNode) =>
-                messageAvatarActionDropdownContainerRef.current || triggerNode
-              }
-            >
-              <div
-                className={`${_prefix}-avatar-wrap`}
-                ref={messageAvatarActionDropdownContainerRef}
-              >
-                <ComplexAvatarContainer prefix={commonPrefix} account={from} />
-              </div>
-            </Dropdown>
-          )}
-        </div>
-      )}
-
-      <Dropdown
-        key={idClient}
-        trigger={['contextMenu']}
-        overlay={
-          <Menu
-            onClick={({ key }) => onMessageAction(key as MenuItemKey, msg)}
-            items={renderMenuItems()}
-          />
-        }
-        getPopupContainer={(triggerNode) =>
-          messageActionDropdownContainerRef.current || triggerNode
-        }
-      >
-        <div
-          className={`${_prefix}-content-box`}
-          ref={messageActionDropdownContainerRef}
-        >
-          {renderMessageName?.(msg) ?? (
-            <div className={`${_prefix}-nick`}>{nick}</div>
-          )}
-          <div className={`${_prefix}-content`}>
-            {isSelf && (
-              <div className={`${_prefix}-status`}>{renderSendStatus()}</div>
-            )}
-            {renderMessageOuterContent?.(msg) ?? (
-              <div className={`${_prefix}-body`}>
-                {renderMessageInnerContent?.(msg) ?? (
-                  <ParseSession
-                    replyMsg={replyMsg}
-                    msg={msg}
-                    prefix={commonPrefix}
-                  />
-                )}
-              </div>
-            )}
-          </div>
-          <div
-            className={classNames(`${_prefix}-date`, {
-              [`${_prefix}-date-self`]: isSelf,
-            })}
-          >
-            {renderMsgDate()}
-          </div>
-        </div>
-      </Dropdown>
-    </div>
-  )
-}
+)
 
 export default ChatMessageItem

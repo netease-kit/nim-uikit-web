@@ -18,29 +18,29 @@ import {
   useStateContext,
 } from '../../../common'
 import { Action } from '../../Container'
-import { MAX_UPLOAD_FILE_SIZE } from '../../constant'
+import { MAX_UPLOAD_FILE_SIZE } from '../../../constant'
+import { AT_ALL_ACCOUNT } from '@xkit-yx/im-store'
 import { LoadingOutlined, CloseOutlined } from '@ant-design/icons'
 import { TMsgScene } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import { observer } from 'mobx-react'
 import { TextAreaRef } from 'antd/lib/input/TextArea'
-import { FriendProfile, TeamMember } from '@xkit-yx/im-store'
+import { TeamMember } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 import ChatAtMemberList, { MentionedMember } from './ChatMentionMemberList'
 import { mergeActions } from '../../../utils'
 
 const { TextArea } = Input
-
-type Member = TeamMember & Partial<FriendProfile>
 
 export interface ChatMessageInputProps {
   prefix?: string
   commonPrefix?: string
   placeholder?: string
   replyMsg?: IMMessage
-  mentionMembers?: Member[]
+  mentionMembers?: TeamMember[]
   scene: TMsgScene
   to: string
   actions?: Action[]
   mute?: boolean
+  allowAtAll?: boolean
   inputValue?: string
   uploadImageLoading?: boolean
   uploadFileLoading?: boolean
@@ -71,6 +71,7 @@ const ChatMessageInput = observer(
       scene,
       to,
       mute = false,
+      allowAtAll = true,
       inputValue = '',
       uploadImageLoading = false,
       uploadFileLoading = false,
@@ -176,6 +177,30 @@ const ChatMessageInput = observer(
           )
         },
       },
+      {
+        action: 'sendMsg',
+        visible: true,
+        render: () => {
+          return (
+            <Button
+              onClick={onClickSendMsgHandler}
+              size="small"
+              disabled={mute}
+            >
+              <CommonIcon
+                className={
+                  mute
+                    ? `${_prefix}-icon-msg`
+                    : inputValue
+                    ? `${_prefix}-icon-msg-select`
+                    : `${_prefix}-icon-msg`
+                }
+                type="icon-fasong"
+              />
+            </Button>
+          )
+        },
+      },
     ]
 
     const finalActions = actions
@@ -185,13 +210,18 @@ const ChatMessageInput = observer(
     const filterAtMembers = useMemo(() => {
       if (atMemberSearchText) {
         const res = mentionMembers?.filter((member) => {
-          return member.alias?.includes(atMemberSearchText.replace('@', ''))
+          return store.uiStore
+            .getAppellation({
+              account: member.account,
+              teamId: member.teamId,
+            })
+            ?.includes(atMemberSearchText.replace('@', ''))
         })
         return res
       } else {
         return mentionMembers
       }
-    }, [mentionMembers, atMemberSearchText])
+    }, [mentionMembers, atMemberSearchText, store.uiStore])
 
     useEffect(() => {
       setAtMemberSearchText('')
@@ -213,40 +243,47 @@ const ChatMessageInput = observer(
     const onAtMembersExtHandler = () => {
       let ext
       if (selectedAtMembers.length) {
-        selectedAtMembers.forEach((member) => {
-          const substr = `@${member.nickInTeam} `
-          const positions: number[] = []
-          let pos = inputValue.indexOf(substr)
-          while (pos !== -1) {
-            positions.push(pos)
-            pos = inputValue.indexOf(substr, pos + 1)
-          }
-          if (positions.length) {
-            if (!ext) {
-              ext = {
-                yxAitMsg: {
-                  [member.account]: {
-                    text: substr,
-                    segments: [],
-                  },
-                },
-              }
-            } else {
-              ext.yxAitMsg[member.account] = {
-                text: substr,
-                segments: [],
-              }
+        selectedAtMembers
+          .filter((member) => {
+            if (!allowAtAll && member.account === AT_ALL_ACCOUNT) {
+              return false
             }
-            positions.forEach((position) => {
-              const start = position
-              ext.yxAitMsg[member.account].segments.push({
-                start,
-                end: start + substr.length - 1,
-                broken: false,
+            return true
+          })
+          .forEach((member) => {
+            const substr = `@${member.appellation} `
+            const positions: number[] = []
+            let pos = inputValue.indexOf(substr)
+            while (pos !== -1) {
+              positions.push(pos)
+              pos = inputValue.indexOf(substr, pos + 1)
+            }
+            if (positions.length) {
+              if (!ext) {
+                ext = {
+                  yxAitMsg: {
+                    [member.account]: {
+                      text: substr,
+                      segments: [],
+                    },
+                  },
+                }
+              } else {
+                ext.yxAitMsg[member.account] = {
+                  text: substr,
+                  segments: [],
+                }
+              }
+              positions.forEach((position) => {
+                const start = position
+                ext.yxAitMsg[member.account].segments.push({
+                  start,
+                  end: start + substr.length - 1,
+                  broken: false,
+                })
               })
-            })
-          }
-        })
+            }
+          })
       }
       return ext
     }
@@ -257,7 +294,7 @@ const ChatMessageInput = observer(
       ): { selectionStart: number; selectionEnd: number } | undefined {
         let selectionStart, selectionEnd
         selectedAtMembers.some((member) => {
-          const alias = `@${member.nickInTeam} `
+          const alias = `@${member.appellation} `
           const regex = new RegExp(alias, 'g')
           let match
           while ((match = regex.exec(inputValue))) {
@@ -320,7 +357,7 @@ const ChatMessageInput = observer(
         if (input) {
           input.focus()
           input.setRangeText(
-            `@${member.nickInTeam} `,
+            `@${member.appellation} `,
             atVisible
               ? input.selectionStart - atMemberSearchText.length
               : input.selectionStart,
@@ -333,6 +370,23 @@ const ChatMessageInput = observer(
       },
       [atMemberSearchText, selectedAtMembers, setInputValue, atVisible]
     )
+
+    const onClickSendMsgHandler = (e) => {
+      if (atVisible) {
+        e.preventDefault()
+        setAtVisible(false)
+        setAtMemberSearchText('')
+        return
+      }
+      const trimValue = inputValue.trim()
+      if (!trimValue) {
+        message.warning(t('sendEmptyText'))
+        return
+      }
+      onSendText(inputValue, onAtMembersExtHandler())
+      setInputValue('')
+      setSelectedAtMembers([])
+    }
 
     const onPressEnterHandler = (
       e: React.KeyboardEvent<HTMLTextAreaElement>
@@ -366,7 +420,7 @@ const ChatMessageInput = observer(
           const cursorIndex = input?.selectionStart
           let atIndex
           selectedAtMembers.some((member) => {
-            const alias = `@${member.nickInTeam} `
+            const alias = `@${member.appellation} `
             const regex = new RegExp(alias, 'g')
             let match
             while ((match = regex.exec(inputValue))) {
@@ -493,10 +547,11 @@ const ChatMessageInput = observer(
       <div className={`${prefix}-message-input`}>
         <div className={`${_prefix}-wrap`}>
           <Popover
-            visible={atVisible}
+            open={atVisible}
             trigger={[]}
             content={
               <ChatAtMemberList
+                allowAtAll={allowAtAll}
                 prefix={prefix}
                 commonPrefix={commonPrefix}
                 mentionMembers={filterAtMembers}

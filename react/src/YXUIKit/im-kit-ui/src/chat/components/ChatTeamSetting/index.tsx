@@ -16,7 +16,6 @@ import {
   Team,
   TeamMember,
 } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
-import { FriendProfile } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/FriendServiceInterface'
 import { UpdateMyMemberInfoOptions } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 import { GroupItemProps } from './GroupItem'
 
@@ -26,7 +25,7 @@ export interface HistoryStack {
 }
 
 export interface ChatTeamSettingProps {
-  members: (TeamMember & Partial<FriendProfile>)[]
+  members: TeamMember[]
   team: Team
   myAccount: string
   isGroupOwner: boolean
@@ -41,7 +40,6 @@ export interface ChatTeamSettingProps {
   onUpdateTeamInfo: (team: Partial<Team>) => void
   onUpdateMyMemberInfo: (params: UpdateMyMemberInfoOptions) => void
   onTeamMuteChange: (mute: boolean) => void
-  onTeamMemberSearchChange: (searchText: string) => void
   afterSendMsgClick?: () => void
   setNavHistoryStack: (stack: HistoryStack[]) => void
   renderTeamMemberItem?: (
@@ -61,7 +59,6 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
   isGroupOwner,
   isGroupManager,
   navHistoryStack,
-  onTeamMemberSearchChange,
   onDismissTeam,
   onLeaveTeam,
   onAddMembersClick,
@@ -151,19 +148,22 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
   }, [team.updateTeamMode, isOwnerOrManager])
 
   const myMemberInfo = useMemo(() => {
-    return members.find((item) => item.account === myAccount)
+    return (
+      members.find((item) => item.account === myAccount) || ({} as TeamMember)
+    )
   }, [myAccount, members])
 
+  const teamManagers = useMemo(() => {
+    return members.filter((item) => item.type === 'manager')
+  }, [members])
+
   useEffect(() => {
-    setNickInTeam(myMemberInfo?.nickInTeam || '')
-  }, [myMemberInfo?.nickInTeam])
+    setNickInTeam(myMemberInfo.nickInTeam || '')
+  }, [myMemberInfo.nickInTeam])
 
   useEffect(() => {
     if (!navHistoryStack.length) {
       handleStackPush('home')
-    }
-    if (path === 'home') {
-      onTeamMemberSearchChange('')
     }
   }, [navHistoryStack])
 
@@ -231,7 +231,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
               placeholder={t('editNickInTeamText')}
             />
           </div>
-          {team.type !== 'normal' ? (
+          {team.type !== 'normal' && isOwnerOrManager ? (
             <div
               className={`${_prefix}-power ${_prefix}-item`}
               onClick={handleStackPush.bind(null, 'power')}
@@ -254,15 +254,13 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
           )}
           {path === 'list' && (
             <GroupList
-              myAccount={myAccount}
               members={members}
-              hasPower={isOwnerOrManager}
+              myMemberInfo={myMemberInfo}
               onRemoveTeamMemberClick={onRemoveTeamMemberClick}
               afterSendMsgClick={afterSendMsgClick}
               renderTeamMemberItem={renderTeamMemberItem}
               prefix={prefix}
               commonPrefix={commonPrefix}
-              onTeamMemberSearchChange={onTeamMemberSearchChange}
             />
           )}
           {path === 'power' && (
@@ -270,7 +268,9 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
               onUpdateTeamInfo={onUpdateTeamInfo}
               onTeamMuteChange={onTeamMuteChange}
               team={team}
-              hasPower={isOwnerOrManager}
+              managers={teamManagers}
+              afterSendMsgClick={afterSendMsgClick}
+              isGroupOwner={isGroupOwner}
               prefix={prefix}
             />
           )}

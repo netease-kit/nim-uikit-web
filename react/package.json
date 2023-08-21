@@ -9,7 +9,7 @@
   "dependencies": {
     "@xkit-yx/call-kit": "^2.0.1",
     "@xkit-yx/call-kit-react-ui": "^0.4.1",
-    "@xkit-yx/im-kit-ui": "^9.5.1",
+    "@xkit-yx/im-kit-ui": "^9.6.0",
     "react-dom": "^16.8.0",
     "umi": "^3.5.40"
   },

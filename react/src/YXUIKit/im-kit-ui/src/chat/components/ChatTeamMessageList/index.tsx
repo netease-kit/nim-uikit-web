@@ -5,13 +5,12 @@ import MessageListItem, { MessageItemProps } from '../ChatMessageItem'
 import { Alert, Spin } from 'antd'
 import { ArrowDownOutlined } from '@ant-design/icons'
 import { ReadPercent, useStateContext, useTranslation } from '../../../common'
-import { FriendProfile } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/FriendServiceInterface'
 import { storeUtils } from '@xkit-yx/im-store'
 import { MsgOperMenuItem } from '../../Container'
 
 export interface RenderTeamCustomMessageOptions
   extends Omit<MessageItemProps, 'myAccount'> {
-  members: (TeamMember & Partial<FriendProfile>)[]
+  members: TeamMember[]
 }
 
 export interface ChatTeamMessageListProps
@@ -19,7 +18,7 @@ export interface ChatTeamMessageListProps
   msgs: IMMessage[]
   msgOperMenu?: MsgOperMenuItem[]
   replyMsgsMap: Record<string, IMMessage>
-  members: (TeamMember & Partial<FriendProfile>)[]
+  members: TeamMember[]
   renderTeamCustomMessage?: (
     options: RenderTeamCustomMessageOptions
   ) => JSX.Element | null | undefined
