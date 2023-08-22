@@ -25,6 +25,8 @@ export const demo_zh = {
   inCallText: '已在通话中，请结束通话后再呼叫',
   passFriendAskText: '我已经同意了你的申请，现在开始聊天吧~',
   needMentionText: '是否需要@消息',
+  teamManagerEnableText: '是否开启群管理员功能',
+  deleteText: '删除',
 }
 
 export const demo_en = {
@@ -55,4 +57,6 @@ export const demo_en = {
   inCallText: 'Already in a call, please try again after ending the call',
   passFriendAskText: "I have approved your request, let's start chatting now~",
   needMentionText: 'Whether or not an @ message is needed',
+  teamManagerEnableText: 'Whether or not team manager is needed',
+  deleteText: 'delete',
 }

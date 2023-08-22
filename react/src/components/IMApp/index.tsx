@@ -11,7 +11,15 @@ import {
   useStateContext,
   ComplexAvatarContainer,
 } from '@xkit-yx/im-kit-ui'
-import { ConfigProvider, Badge, Button, Popover, message } from 'antd'
+import {
+  ConfigProvider,
+  Badge,
+  Button,
+  Popover,
+  message,
+  Dropdown,
+  Menu,
+} from 'antd'
 //antd 国际化
 import zhCN from 'antd/es/locale/zh_CN'
 import enUS from 'antd/es/locale/en_US'
@@ -26,18 +34,22 @@ import './iconfont.css'
 import './index.less'
 // 左下角菜单组件
 import SettingModal from './components/Setting'
-import Menu from './components/Menus'
+import Menus from './components/Menus'
 // 呼叫组件
 import {
   CallViewProvider,
   CallViewProviderRef,
 } from '@xkit-yx/call-kit-react-ui'
-import '@xkit-yx/call-kit-react-ui/es/style'
 import Calling from './components/call'
 //demo国际化函数
 import { convertSecondsToTime, g2StatusMap, renderMsgDate, t } from './util'
-import { parseSessionId } from './util'
+import { parseSessionId } from '@xkit-yx/im-kit-ui/src/utils'
 import { LocalOptions } from '@xkit-yx/im-store'
+import { DeleteOutlined } from '@ant-design/icons'
+import {
+  pauseAllAudio,
+  pauseAllVideo,
+} from '@xkit-yx/im-kit-ui/src/common/components/CommonParseSession'
 interface IMContainerProps {
   appkey: string //传入您的App Key
   account: string // 传入您的云信IM账号
@@ -57,6 +69,7 @@ interface IMAppProps {
   p2pMsgReceiptVisible: boolean
   teamMsgReceiptVisible: boolean
   needMention: boolean
+  teamManagerVisible: boolean
 }
 // @ts-ignore: Unreachable code error
 
@@ -72,6 +85,7 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
     p2pMsgReceiptVisible,
     teamMsgReceiptVisible,
     needMention,
+    teamManagerVisible,
   } = props
   const callViewProviderRef = useRef<CallViewProviderRef>(null)
   const [model, setModel] = useState<'chat' | 'contact'>('chat')
@@ -85,6 +99,8 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
   // 当前选中会话场景和会话接受方 scene：p2p ｜ team, to: accid
   const { scene, to } = parseSessionId(store.uiStore.selectedSession)
 
+  const messageActionDropdownContainerRef = useRef<HTMLDivElement>(null)
+
   const handleSettingCancel = () => {
     setIsSettingModalOpen(false)
   }
@@ -95,28 +111,21 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
   useEffect(() => {
     if (callViewProviderRef.current?.neCall) {
       //注册呼叫结束事件监听
-      callViewProviderRef.current?.neCall?.on('onRecordSend', () => {
-        //当通话因为 取消、拒绝、超时或占线 结束时，组件会主动发送一条话单消息给对端，可以在此事件中更新本端的UI
+      callViewProviderRef.current?.neCall?.on('onRecordSend', (options) => {
         const sessionId = store.uiStore.selectedSession
-        setTimeout(() => {
-          store.msgStore
-            .getHistoryMsgActive({
-              sessionId,
-              endTime: Date.now(),
-              limit: 100,
-            })
-            .then((msgs) => {
-              setTimeout(() => {
-                document.getElementById(msgs[0].idClient)?.scrollIntoView()
-              })
-            })
-            .catch((err) => {
-              console.log('err:', err)
-            })
-        }, 800)
+        // @ts-ignore 消息列表增加话单消息
+        store.msgStore.addMsg(sessionId, [options])
+        // @ts-ignore 使增加的消息出现在视野可见区域
+        document.getElementById(options.idClient)?.scrollIntoView()
       })
       // 设置呼叫超时时间
       callViewProviderRef.current?.neCall?.setTimeout(30)
+      // 接通成功事件
+      callViewProviderRef.current?.neCall?.on('onCallConnected', () => {
+        // 暂停音视频消息的播放
+        pauseAllAudio()
+        pauseAllVideo()
+      })
     }
   }, [callViewProviderRef.current?.neCall])
 
@@ -179,6 +188,10 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
           )
         },
       },
+      {
+        action: 'sendMsg',
+        visible: true,
+      },
     ],
     [handleCall, callingVisible, scene, sdkVersion]
   )
@@ -200,32 +213,58 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
       //判断当前消息是发出的消息还是接收的消息
       const isSelf = msg.from === myAccount
       const account = isSelf ? myAccount : to
-
+      const deleteG2Message = (msg) => {
+        console.log('msg:', msg)
+        store.msgStore.deleteMsgActive([msg])
+      }
       return (
         <div className={classNames('wrapper', { 'wrapper-self': isSelf })}>
           <ComplexAvatarContainer account={account} />
-          <div
-            className={classNames('g2-msg-wrapper', {
-              'g2-msg-wrapper-self': isSelf,
-            })}
+          <Dropdown
+            key={msg.idClient}
+            trigger={['contextMenu']}
+            getPopupContainer={(triggerNode) =>
+              messageActionDropdownContainerRef.current || triggerNode
+            }
+            overlay={
+              <Menu
+                // @ts-ignore
+                onClick={() => deleteG2Message(msg)}
+                items={[
+                  {
+                    label: t('deleteText'),
+                    key: 'delete',
+                    icon: <DeleteOutlined />,
+                  },
+                ]}
+              />
+            }
           >
-            <div className="appellation">
-              {store.uiStore.getAppellation({ account })}
-            </div>
             <div
-              className={classNames('g2-msg', { 'g2-msg-self': isSelf })}
-              onClick={() => handleCall(type.toString())}
+              className={classNames('g2-msg-wrapper', {
+                'g2-msg-wrapper-self': isSelf,
+              })}
+              ref={messageActionDropdownContainerRef}
             >
-              <i className={classNames('iconfont', 'g2-icon', icon)}></i>
-              <span>{g2StatusMap[status]}</span>
-              {duration && (
-                <span className="g2-time">
-                  {convertSecondsToTime(duration)}
-                </span>
-              )}
+              <div className="appellation">
+                {store.uiStore.getAppellation({ account })}
+              </div>
+
+              <div
+                className={classNames('g2-msg', { 'g2-msg-self': isSelf })}
+                onClick={() => handleCall(type.toString())}
+              >
+                <i className={classNames('iconfont', 'g2-icon', icon)}></i>
+                <span>{g2StatusMap[status]}</span>
+                {duration && (
+                  <span className="g2-time">
+                    {convertSecondsToTime(duration)}
+                  </span>
+                )}
+              </div>
+              <div className="time">{renderMsgDate(msg.time)}</div>
             </div>
-            <div className="time">{renderMsgDate(msg.time)}</div>
-          </div>
+          </Dropdown>
         </div>
       )
     },
@@ -276,7 +315,7 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
                 <div className="icon-label">{t('addressText')}</div>
               </div>
             </Badge>
-            <Menu
+            <Menus
               onLogout={onLogout}
               changeLanguage={changeLanguage}
               locale={locale}
@@ -291,6 +330,7 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
             teamMsgReceiptVisible={teamMsgReceiptVisible}
             addFriendNeedVerify={addFriendNeedVerify}
             needMention={needMention}
+            teamManagerVisible={teamManagerVisible}
             locale={locale}
           />
           {model === 'chat' && (
@@ -386,6 +426,8 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
     useState<boolean>(true)
   // 是否需要@消息
   const [needMention, setNeedMention] = useState<boolean>(true)
+  // 是否开启群管理员功能
+  const [teamManagerVisible, setTeamManagerVisible] = useState<boolean>(true)
   const languageMap = { zh, en }
   // 初始化参数
   const initOptions = useMemo(() => {
@@ -405,12 +447,14 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
     addFriendNeedVerify,
     // 群组被邀请模式，默认不需要验证
     teamBeInviteMode: 'noVerify',
-    // 单聊消息是否显示已读未读 默认 false
+    // 单聊消息是否显示已读未读
     p2pMsgReceiptVisible,
-    // 群聊消息是否显示已读未读 默认 false
+    // 群聊消息是否显示已读未读
     teamMsgReceiptVisible,
     // 是否需要@消息
     needMention,
+    // 是否开启群管理员
+    teamManagerVisible,
     // 是否显示在线离线状态
     loginStateVisible: true,
     // 是否允许转让群主
@@ -431,6 +475,7 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
       'teamMsgReceiptVisible'
     )
     const _needMention = sessionStorage.getItem('needMention')
+    const _teamManagerVisible = sessionStorage.getItem('teamManagerVisible')
     setCurLanguage(_languageType || 'zh')
     if (_p2pMsgReceiptVisible) {
       setP2pMsgReceiptVisible(_p2pMsgReceiptVisible === 'true')
@@ -443,6 +488,9 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
     }
     if (_needMention) {
       setNeedMention(_needMention === 'true')
+    }
+    if (_teamManagerVisible) {
+      setTeamManagerVisible(_teamManagerVisible === 'true')
     }
   }, [])
   return (
@@ -466,6 +514,7 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
               p2pMsgReceiptVisible={p2pMsgReceiptVisible}
               teamMsgReceiptVisible={teamMsgReceiptVisible}
               needMention={needMention}
+              teamManagerVisible={teamManagerVisible}
             />
           </Provider>
         </div>
