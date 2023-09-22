@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Image, Popover } from 'antd'
 import reactStringReplace from 'react-string-replace'
 import CommonIcon from '../CommonIcon'
@@ -11,6 +11,7 @@ import { observer } from 'mobx-react'
 import { parseSessionId } from '../../../utils'
 import { ALLOW_AT, TAllowAt } from '../../../constant'
 import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
+import { getBlobImg } from '../../../urlToBlob'
 
 // 对话框中要展示的文件icon标识
 const fileIconMap = {
@@ -67,6 +68,31 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     // const { type, body, idClient, sessionId, ext } = msg
     const [audioIconType, setAudioIconType] = useState('icon-yuyin3')
     const { scene, to } = parseSessionId(msg.sessionId)
+    const [imgUrl, setImgUrl] = useState('')
+    const [replyImgUrl, setReplyImgUrl] = useState('')
+
+    useEffect(() => {
+      if (msg.type === 'image' && msg.attach && msg.attach.url) {
+        const url = `${msg.attach.url}?download=${msg.attach.name}`
+        getBlobImg(url).then((blobUrl) => {
+          setImgUrl(blobUrl)
+        })
+      }
+    }, [msg.attach, msg.type])
+
+    useEffect(() => {
+      if (
+        replyMsg &&
+        replyMsg.type === 'image' &&
+        replyMsg.attach &&
+        replyMsg.attach.url
+      ) {
+        const url = `${replyMsg.attach.url}?download=${replyMsg.attach.name}`
+        getBlobImg(url).then((blobUrl) => {
+          setReplyImgUrl(blobUrl)
+        })
+      }
+    }, [replyMsg])
 
     let animationFlag = false
 
@@ -134,9 +160,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       handler()
     }
 
-    const renderImage = (msg) => {
-      const { attach } = msg
-      const url = `${attach?.url}?download=${attach?.name}`
+    const renderImage = (msg, isReplyMsg: boolean) => {
       return (
         <div
           className={`${_prefix}-image-container`}
@@ -147,7 +171,14 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
             }
           }}
         >
-          <Image rootClassName={`${_prefix}-image`} src={url} />
+          <Image
+            rootClassName={`${_prefix}-image`}
+            loading="lazy"
+            src={
+              (isReplyMsg ? replyImgUrl : imgUrl) ||
+              'https://yx-web-nosdn.netease.im/common/33d3e1fa8de771277ea4466564ef37aa/emptyImg.png'
+            }
+          />
         </div>
       )
     }
@@ -544,7 +575,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
             ) : (
               <>
                 <div className={`${_prefix}-reply-nick`}>{nick}：</div>
-                {renderMsgContent(replyMsg)}
+                {renderMsgContent(replyMsg, true)}
               </>
             )}
           </div>
@@ -553,13 +584,13 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       return null
     }
 
-    const renderMsgContent = (msg) => {
+    const renderMsgContent = (msg, isReplyMsg: boolean) => {
       switch (msg.type) {
         case 'text':
         case 'custom':
           return renderCustomText(msg)
         case 'image':
-          return renderImage(msg)
+          return renderImage(msg, isReplyMsg)
         case 'file':
           return renderFile(msg)
         case 'notification':
@@ -584,7 +615,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     return (
       <>
         {renderReplyMsg()}
-        {renderMsgContent(msg)}
+        {renderMsgContent(msg, false)}
       </>
     )
   }

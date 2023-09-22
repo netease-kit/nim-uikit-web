@@ -8,7 +8,7 @@ import {
 import { TeamMember } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 import classNames from 'classnames'
 import { observer } from 'mobx-react'
-import { AT_ALL_ACCOUNT } from '@xkit-yx/im-store'
+import { storeConstants } from '@xkit-yx/im-store'
 
 export type MentionedMember = { account: string; appellation: string }
 
@@ -55,7 +55,7 @@ export const ChatAtMemberList: React.FC<ChatMentionMemberList> = observer(
           } else if (e.key === 'Enter') {
             if (activeIndex === -1) {
               onSelect?.({
-                account: AT_ALL_ACCOUNT,
+                account: storeConstants.AT_ALL_ACCOUNT,
                 appellation: t('teamAll'),
               })
             } else {
@@ -87,7 +87,7 @@ export const ChatAtMemberList: React.FC<ChatMentionMemberList> = observer(
             })}
             onClick={() =>
               onSelect?.({
-                account: AT_ALL_ACCOUNT,
+                account: storeConstants.AT_ALL_ACCOUNT,
                 appellation: t('teamAll'),
               })
             }

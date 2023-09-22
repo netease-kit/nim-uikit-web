@@ -106,9 +106,9 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
     })
 
     // 处理 team 会话列表 @ 提醒
-    const [sessionList, setSessionList] = useState<NimKitCoreTypes.ISession[]>(
-      []
-    )
+    // const [sessionList, setSessionList] = useState<NimKitCoreTypes.ISession[]>(
+    //   []
+    // )
 
     const handleSessionItemClick = async (
       session: NimKitCoreTypes.ISession
@@ -147,9 +147,9 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
       onSessionItemMuteChange?.(session.id, mute)
     }
 
-    useEffect(() => {
-      setSessionList([...store.uiStore.sessionList])
-    }, [store.uiStore.sessionList])
+    // useEffect(() => {
+    //   setSessionList([...store.uiStore.sessionList])
+    // }, [store.uiStore.sessionList])
 
     useEffect(() => {
       // 订阅会话列表中 p2p 的在线离线状态
@@ -163,7 +163,7 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
 
     return (
       <ConversationList
-        sessions={sessionList}
+        sessions={store.uiStore.sessionList}
         // loading={loading}
         selectedSession={store.uiStore.selectedSession}
         onSessionItemClick={handleSessionItemClick}

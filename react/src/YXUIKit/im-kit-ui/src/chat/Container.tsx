@@ -14,7 +14,7 @@ import { observer } from 'mobx-react'
 
 import packageJson from '../../package.json'
 import { GroupItemProps } from './components/ChatTeamSetting/GroupItem'
-import { MenuItem, MenuItemKey } from './components/ChatMessageItem'
+import { MenuItem } from './components/ChatMessageItem'
 import { SettingActionItemProps } from './components/ChatActionBar'
 
 export interface ActionRenderProps extends ChatMessageInputProps {
