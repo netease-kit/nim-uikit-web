@@ -4,6 +4,7 @@ import React, {
   useState,
   useLayoutEffect,
   useMemo,
+  useCallback,
 } from 'react'
 import ChatActionBar from '../components/ChatActionBar'
 import ChatHeader from '../components/ChatHeader'
@@ -31,7 +32,7 @@ import {
 } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import { MenuItemKey } from '../components/ChatMessageItem'
 import { message } from 'antd'
-import { HISTORY_LIMIT } from '../../constant'
+import { storeConstants } from '@xkit-yx/im-store'
 import { observer } from 'mobx-react'
 import ChatForwardModal from '../components/ChatForwardModal'
 
@@ -129,184 +130,243 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       undefined
     )
 
-    const onMsgListScrollHandler = debounce(async () => {
+    const getHistory = useCallback(
+      async (endTime: number, lastMsgId?: string) => {
+        try {
+          setLoadingMore(true)
+          const historyMsgs = await store.msgStore.getHistoryMsgActive({
+            sessionId,
+            endTime,
+            lastMsgId,
+            limit: storeConstants.HISTORY_LIMIT,
+          })
+
+          setLoadingMore(false)
+          if (historyMsgs.length < storeConstants.HISTORY_LIMIT) {
+            setNoMore(true)
+          }
+        } catch (error) {
+          setLoadingMore(false)
+          message.error(t('getHistoryMsgFailedText'))
+        }
+      },
+      [sessionId, store.msgStore, t]
+    )
+
+    // 收消息，发消息时需要调用
+    const scrollToBottom = useCallback(() => {
       if (messageListContainerDomRef.current) {
-        if (
-          // 滚动到最底部了
-          messageListContainerDomRef.current.scrollTop >=
-          messageListContainerDomRef.current.scrollHeight -
-            messageListContainerDomRef.current.clientHeight -
-            200
-        ) {
-          setReceiveMsgBtnVisible(false)
-        } else if (
-          // 滚动到顶部了
-          messageListContainerDomRef.current.scrollTop < 10 &&
-          !loadingMore &&
-          !noMore
-        ) {
-          const _msg = msgs.filter(
-            (item) =>
-              !(
-                item.type === 'custom' &&
-                ['beReCallMsg', 'reCallMsg'].includes(item.attach?.type || '')
-              )
-          )[0]
-          if (_msg) {
-            await getHistory(_msg.time, _msg.idServer)
-            // 滚动到加载的那条消息
-            document.getElementById(_msg.idClient)?.scrollIntoView()
+        messageListContainerDomRef.current.scrollTop =
+          messageListContainerDomRef.current.scrollHeight
+      }
+      setReceiveMsgBtnVisible(false)
+    }, [])
+
+    const onMsgListScrollHandler = useCallback(
+      debounce(async () => {
+        if (messageListContainerDomRef.current) {
+          if (
+            // 滚动到最底部了
+            messageListContainerDomRef.current.scrollTop >=
+            messageListContainerDomRef.current.scrollHeight -
+              messageListContainerDomRef.current.clientHeight -
+              200
+          ) {
+            setReceiveMsgBtnVisible(false)
+          } else if (
+            // 滚动到顶部了
+            messageListContainerDomRef.current.scrollTop < 10 &&
+            !loadingMore &&
+            !noMore
+          ) {
+            const _msg = msgs.filter(
+              (item) =>
+                !(
+                  item.type === 'custom' &&
+                  ['beReCallMsg', 'reCallMsg'].includes(item.attach?.type || '')
+                )
+            )[0]
+            if (_msg) {
+              await getHistory(_msg.time, _msg.idServer)
+              // 滚动到加载的那条消息
+              document.getElementById(_msg.idClient)?.scrollIntoView()
+            }
           }
         }
-      }
-    }, 300)
+      }, 300),
+      [loadingMore, msgs, noMore, getHistory]
+    )
 
-    const onActionClick = (action: ChatAction) => {
-      const settingAction = settingActions?.find(
-        (item) => item.action === action
-      )
-      if (settingAction?.onClick) {
-        return settingAction?.onClick()
-      }
-      switch (action) {
-        case 'chatSetting':
-          setAction(action)
-          setSettingDrawerVisible(true)
-          break
-        default:
-          break
-      }
-    }
-
-    const onSettingDrawerClose = () => {
-      setAction(undefined)
-      setSettingDrawerVisible(false)
-    }
-
-    const onReeditClick = (msg: IMMessage) => {
-      setInputValue(msg.attach?.oldBody || '')
-      const replyMsg = replyMsgsMap[msg.idClient]
-      replyMsg && store.msgStore.replyMsgActive(replyMsg)
-      chatMessageInputRef.current?.input?.focus()
-    }
-
-    const onResend = async (msg: IMMessage) => {
-      try {
-        await store.msgStore.resendMsgActive(msg)
-      } catch (error) {
-        // message.error(t('sendMsgFailedText'))
-      } finally {
-        scrollToBottom()
-      }
-    }
-
-    const onSendText = async (value: string) => {
-      try {
-        if (onSendTextFromProps) {
-          await onSendTextFromProps({
-            value,
-            scene,
-            to,
-          })
-        } else {
-          await store.msgStore.sendTextMsgActive({
-            scene,
-            to,
-            body: value,
-          })
+    const onActionClick = useCallback(
+      (action: ChatAction) => {
+        const settingAction = settingActions?.find(
+          (item) => item.action === action
+        )
+        if (settingAction?.onClick) {
+          return settingAction?.onClick()
         }
-      } catch (error) {
-        // message.error(t('sendMsgFailedText'))
-      } finally {
-        scrollToBottom()
-      }
-    }
-
-    const onSendFile = async (file: File) => {
-      try {
-        await store.msgStore.sendFileMsgActive({
-          scene,
-          to,
-          file,
-        })
-      } catch (error) {
-        // message.error(t('sendMsgFailedText'))
-      } finally {
-        scrollToBottom()
-      }
-    }
-
-    const onSendImg = async (file: File) => {
-      try {
-        await store.msgStore.sendImageMsgActive({
-          scene,
-          to,
-          file,
-        })
-      } catch (error) {
-        // message.error(t('sendMsgFailedText'))
-      } finally {
-        scrollToBottom()
-      }
-    }
-
-    const onRemoveReplyMsg = () => {
-      replyMsg && store.msgStore.removeReplyMsgActive(replyMsg.sessionId)
-    }
-
-    const onMessageAction = async (key: MenuItemKey, msg: IMMessage) => {
-      const msgOperMenuItem = msgOperMenu?.find((item) => item.key === key)
-      if (msgOperMenuItem?.onClick) {
-        return msgOperMenuItem?.onClick(msg)
-      }
-      switch (key) {
-        case 'delete':
-          await store.msgStore.deleteMsgActive([msg])
-          break
-        case 'recall':
-          await store.msgStore.reCallMsgActive(msg)
-          break
-        case 'reply':
-          await store.msgStore.replyMsgActive(msg)
-          chatMessageInputRef.current?.input?.focus()
-          break
-        case 'forward':
-          setForwardMessage(msg)
-          break
-        default:
-          break
-      }
-    }
-
-    const onGroupCreate = async ({
-      name,
-      avatar,
-      selectedAccounts,
-    }: {
-      name: string
-      avatar: string
-      selectedAccounts: string[]
-    }) => {
-      try {
-        await store.teamStore.createTeamActive({
-          name,
-          avatar,
-          accounts: selectedAccounts,
-        })
-        resetSettingState()
-        message.success(t('createTeamSuccessText'))
-      } catch (error: any) {
-        switch (error?.code) {
-          // 无权限
-          case 802:
-            message.error(t('noPermission'))
+        switch (action) {
+          case 'chatSetting':
+            setAction(action)
+            setSettingDrawerVisible(true)
             break
           default:
-            message.error(t('createTeamFailedText'))
             break
         }
-      }
-    }
+      },
+      [settingActions]
+    )
+
+    const onSettingDrawerClose = useCallback(() => {
+      setAction(undefined)
+      setSettingDrawerVisible(false)
+    }, [])
+
+    const onReeditClick = useCallback(
+      (msg: IMMessage) => {
+        setInputValue(msg.attach?.oldBody || '')
+        const replyMsg = replyMsgsMap[msg.idClient]
+        replyMsg && store.msgStore.replyMsgActive(replyMsg)
+        chatMessageInputRef.current?.input?.focus()
+      },
+      [replyMsgsMap, store.msgStore]
+    )
+
+    const onResend = useCallback(
+      async (msg: IMMessage) => {
+        try {
+          await store.msgStore.resendMsgActive(msg)
+        } catch (error) {
+          // message.error(t('sendMsgFailedText'))
+        } finally {
+          scrollToBottom()
+        }
+      },
+      [scrollToBottom, store.msgStore]
+    )
+
+    const onSendText = useCallback(
+      async (value: string) => {
+        try {
+          if (onSendTextFromProps) {
+            await onSendTextFromProps({
+              value,
+              scene,
+              to,
+            })
+          } else {
+            await store.msgStore.sendTextMsgActive({
+              scene,
+              to,
+              body: value,
+            })
+          }
+        } catch (error) {
+          // message.error(t('sendMsgFailedText'))
+        } finally {
+          scrollToBottom()
+        }
+      },
+      [onSendTextFromProps, scene, store.msgStore, to, scrollToBottom]
+    )
+
+    const onSendFile = useCallback(
+      async (file: File) => {
+        try {
+          await store.msgStore.sendFileMsgActive({
+            scene,
+            to,
+            file,
+          })
+        } catch (error) {
+          // message.error(t('sendMsgFailedText'))
+        } finally {
+          scrollToBottom()
+        }
+      },
+      [scene, store.msgStore, to, scrollToBottom]
+    )
+
+    const onSendImg = useCallback(
+      async (file: File) => {
+        try {
+          await store.msgStore.sendImageMsgActive({
+            scene,
+            to,
+            file,
+          })
+        } catch (error) {
+          // message.error(t('sendMsgFailedText'))
+        } finally {
+          scrollToBottom()
+        }
+      },
+      [scene, store.msgStore, to, scrollToBottom]
+    )
+
+    const onRemoveReplyMsg = useCallback(() => {
+      replyMsg && store.msgStore.removeReplyMsgActive(replyMsg.sessionId)
+    }, [replyMsg, store.msgStore])
+
+    const onMessageAction = useCallback(
+      async (key: MenuItemKey, msg: IMMessage) => {
+        const msgOperMenuItem = msgOperMenu?.find((item) => item.key === key)
+        if (msgOperMenuItem?.onClick) {
+          return msgOperMenuItem?.onClick(msg)
+        }
+        switch (key) {
+          case 'delete':
+            await store.msgStore.deleteMsgActive([msg])
+            break
+          case 'recall':
+            await store.msgStore.reCallMsgActive(msg)
+            break
+          case 'reply':
+            await store.msgStore.replyMsgActive(msg)
+            chatMessageInputRef.current?.input?.focus()
+            break
+          case 'forward':
+            setForwardMessage(msg)
+            break
+          default:
+            break
+        }
+      },
+      [msgOperMenu, store.msgStore]
+    )
+
+    const onGroupCreate = useCallback(
+      async ({
+        name,
+        avatar,
+        selectedAccounts,
+      }: {
+        name: string
+        avatar: string
+        selectedAccounts: string[]
+      }) => {
+        try {
+          await store.teamStore.createTeamActive({
+            name,
+            avatar,
+            accounts: selectedAccounts,
+          })
+          resetSettingState()
+          message.success(t('createTeamSuccessText'))
+        } catch (error: any) {
+          switch (error?.code) {
+            // 无权限
+            case 802:
+              message.error(t('noPermission'))
+              break
+            default:
+              message.error(t('createTeamFailedText'))
+              break
+          }
+        }
+      },
+      [store.teamStore, t]
+    )
 
     const resetSettingState = () => {
       setAction(undefined)
@@ -314,43 +374,14 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       setSettingDrawerVisible(false)
     }
 
-    const resetState = () => {
+    const resetState = useCallback(() => {
       resetSettingState()
       setInputValue('')
       setLoadingMore(false)
       setNoMore(false)
       setReceiveMsgBtnVisible(false)
       setForwardMessage(undefined)
-    }
-
-    // 收消息，发消息时需要调用
-    const scrollToBottom = () => {
-      if (messageListContainerDomRef.current) {
-        messageListContainerDomRef.current.scrollTop =
-          messageListContainerDomRef.current.scrollHeight
-      }
-      setReceiveMsgBtnVisible(false)
-    }
-
-    const getHistory = async (endTime: number, lastMsgId?: string) => {
-      try {
-        setLoadingMore(true)
-        const historyMsgs = await store.msgStore.getHistoryMsgActive({
-          sessionId,
-          endTime,
-          lastMsgId,
-          limit: HISTORY_LIMIT,
-        })
-
-        setLoadingMore(false)
-        if (historyMsgs.length < HISTORY_LIMIT) {
-          setNoMore(true)
-        }
-      } catch (error) {
-        setLoadingMore(false)
-        message.error(t('getHistoryMsgFailedText'))
-      }
-    }
+    }, [])
 
     const handleForwardModalSend = () => {
       scrollToBottom()
@@ -422,10 +453,24 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     // 切换会话时需要重新初始化
     useEffect(() => {
       resetState()
-      getHistory(Date.now()).then(() => {
-        scrollToBottom()
-      })
-    }, [to])
+      scrollToBottom()
+    }, [to, resetState, scrollToBottom])
+
+    // 切换会话时，如果内存中除了撤回消息的其他消息小于10条（差不多一屏幕），需要拉取历史消息
+    useEffect(() => {
+      if (
+        store.msgStore
+          .getMsg(sessionId)
+          .filter(
+            (item) =>
+              !['beReCallMsg', 'reCallMsg'].includes(item.attach?.type || '')
+          ).length < 10
+      ) {
+        getHistory(Date.now()).then(() => {
+          scrollToBottom()
+        })
+      }
+    }, [store.msgStore, sessionId, getHistory, scrollToBottom])
 
     // 处理消息
     useEffect(() => {

@@ -29,8 +29,8 @@ import {
 } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import { MenuItemKey, AvatarMenuItem } from '../components/ChatMessageItem'
 import { message } from 'antd'
-import { ALLOW_AT, HISTORY_LIMIT, TAllowAt } from '../../constant'
-import { AT_ALL_ACCOUNT } from '@xkit-yx/im-store'
+import { ALLOW_AT, TAllowAt } from '../../constant'
+import { storeConstants } from '@xkit-yx/im-store'
 import {
   Team,
   TeamMember,
@@ -260,225 +260,284 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       return <span>{defaultTitle}</span>
     }, [navHistoryStack, SETTING_NAV_TITLE_MAP, action])
 
-    const onMsgListScrollHandler = debounce(async () => {
+    const getHistory = useCallback(
+      async (endTime: number, lastMsgId?: string) => {
+        try {
+          setLoadingMore(true)
+          const historyMsgs = await store.msgStore.getHistoryMsgActive({
+            sessionId,
+            endTime,
+            lastMsgId,
+            limit: storeConstants.HISTORY_LIMIT,
+          })
+          setLoadingMore(false)
+          if (historyMsgs.length < storeConstants.HISTORY_LIMIT) {
+            setNoMore(true)
+          }
+        } catch (error) {
+          setLoadingMore(false)
+          message.error(t('getHistoryMsgFailedText'))
+        }
+      },
+      [sessionId, store.msgStore, t]
+    )
+
+    // 收消息，发消息时需要调用
+    const scrollToBottom = useCallback(() => {
       if (messageListContainerDomRef.current) {
-        if (
-          // 滚动到最底部了
-          messageListContainerDomRef.current.scrollTop >=
-          messageListContainerDomRef.current.scrollHeight -
-            messageListContainerDomRef.current.clientHeight -
-            200
-        ) {
-          setReceiveMsgBtnVisible(false)
-        } else if (
-          // 滚动到顶部了
-          messageListContainerDomRef.current.scrollTop < 10 &&
-          !loadingMore &&
-          !noMore
-        ) {
-          const _msg = msgs.filter(
-            (item) =>
-              !(
-                item.type === 'custom' &&
-                ['beReCallMsg', 'reCallMsg'].includes(item.attach?.type || '')
-              )
-          )[0]
-          if (_msg) {
-            await getHistory(_msg.time, _msg.idServer)
-            // 滚动到加载的那条消息
-            document.getElementById(_msg.idClient)?.scrollIntoView()
+        messageListContainerDomRef.current.scrollTop =
+          messageListContainerDomRef.current.scrollHeight
+      }
+      setReceiveMsgBtnVisible(false)
+    }, [])
+
+    const onMsgListScrollHandler = useCallback(
+      debounce(async () => {
+        if (messageListContainerDomRef.current) {
+          if (
+            // 滚动到最底部了
+            messageListContainerDomRef.current.scrollTop >=
+            messageListContainerDomRef.current.scrollHeight -
+              messageListContainerDomRef.current.clientHeight -
+              200
+          ) {
+            setReceiveMsgBtnVisible(false)
+          } else if (
+            // 滚动到顶部了
+            messageListContainerDomRef.current.scrollTop < 10 &&
+            !loadingMore &&
+            !noMore
+          ) {
+            const _msg = msgs.filter(
+              (item) =>
+                !(
+                  item.type === 'custom' &&
+                  ['beReCallMsg', 'reCallMsg'].includes(item.attach?.type || '')
+                )
+            )[0]
+            if (_msg) {
+              await getHistory(_msg.time, _msg.idServer)
+              // 滚动到加载的那条消息
+              document.getElementById(_msg.idClient)?.scrollIntoView()
+            }
           }
         }
-      }
-    }, 300)
+      }, 300),
+      [loadingMore, msgs, noMore, getHistory]
+    )
 
-    const onActionClick = (action: ChatAction) => {
-      const settingAction = settingActions?.find(
-        (item) => item.action === action
-      )
-      if (settingAction?.onClick) {
-        return settingAction?.onClick()
-      }
-      switch (action) {
-        case 'chatSetting':
-          setAction(action)
-          setSettingDrawerVisible(true)
-          break
-        default:
-          break
-      }
-    }
+    const onActionClick = useCallback(
+      (action: ChatAction) => {
+        const settingAction = settingActions?.find(
+          (item) => item.action === action
+        )
+        if (settingAction?.onClick) {
+          return settingAction?.onClick()
+        }
+        switch (action) {
+          case 'chatSetting':
+            setAction(action)
+            setSettingDrawerVisible(true)
+            break
+          default:
+            break
+        }
+      },
+      [settingActions]
+    )
 
-    const onSettingDrawerClose = () => {
+    const onSettingDrawerClose = useCallback(() => {
       setNavHistoryStack([])
       setAction(undefined)
       setSettingDrawerVisible(false)
-    }
+    }, [])
 
-    const onReeditClick = (msg: IMMessage) => {
-      const replyMsg = replyMsgsMap[msg.idClient]
-      replyMsg && store.msgStore.replyMsgActive(replyMsg)
-      // 处理 @ 消息
-      const { ext } = msg
-      if (ext) {
-        try {
-          const extObj = JSON.parse(ext)
-          const yxAitMsg = extObj.yxAitMsg
-          if (yxAitMsg) {
-            const mentionedMembers: MentionedMember[] = []
-            Object.keys(yxAitMsg).forEach((key) => {
-              if (key === AT_ALL_ACCOUNT) {
-                mentionedMembers.push({
-                  account: AT_ALL_ACCOUNT,
-                  appellation: t('teamAll'),
-                })
-              } else {
-                const member = teamMembers.find((item) => item.account === key)
-                member &&
+    const onReeditClick = useCallback(
+      (msg: IMMessage) => {
+        const replyMsg = replyMsgsMap[msg.idClient]
+        replyMsg && store.msgStore.replyMsgActive(replyMsg)
+        // 处理 @ 消息
+        const { ext } = msg
+        if (ext) {
+          try {
+            const extObj = JSON.parse(ext)
+            const yxAitMsg = extObj.yxAitMsg
+            if (yxAitMsg) {
+              const mentionedMembers: MentionedMember[] = []
+              Object.keys(yxAitMsg).forEach((key) => {
+                if (key === storeConstants.AT_ALL_ACCOUNT) {
                   mentionedMembers.push({
-                    account: member.account,
-                    appellation: store.uiStore.getAppellation({
-                      account: member.account,
-                      teamId: member.teamId,
-                      ignoreAlias: true,
-                    }),
+                    account: storeConstants.AT_ALL_ACCOUNT,
+                    appellation: t('teamAll'),
                   })
-              }
-            })
-            chatMessageInputRef.current?.setSelectedAtMembers(mentionedMembers)
-          }
-        } catch {}
-      }
-      setInputValue(msg.attach?.oldBody || '')
-      chatMessageInputRef.current?.input?.focus()
-    }
-
-    const onResend = async (msg: IMMessage) => {
-      try {
-        await store.msgStore.resendMsgActive(msg)
-      } catch (error) {
-        // message.error(t('sendMsgFailedText'))
-      } finally {
-        scrollToBottom()
-      }
-    }
-
-    const onSendText = async (value: string, ext?: Record<string, unknown>) => {
-      try {
-        if (onSendTextFromProps) {
-          await onSendTextFromProps({
-            value,
-            scene,
-            to,
-          })
-        } else {
-          await store.msgStore.sendTextMsgActive({
-            scene,
-            to,
-            body: value,
-            ext,
-          })
+                } else {
+                  const member = teamMembers.find(
+                    (item) => item.account === key
+                  )
+                  member &&
+                    mentionedMembers.push({
+                      account: member.account,
+                      appellation: store.uiStore.getAppellation({
+                        account: member.account,
+                        teamId: member.teamId,
+                        ignoreAlias: true,
+                      }),
+                    })
+                }
+              })
+              chatMessageInputRef.current?.setSelectedAtMembers(
+                mentionedMembers
+              )
+            }
+          } catch {}
         }
-      } catch (error) {
-        // message.error(t('sendMsgFailedText'))
-      } finally {
-        scrollToBottom()
-      }
-    }
+        setInputValue(msg.attach?.oldBody || '')
+        chatMessageInputRef.current?.input?.focus()
+      },
+      [replyMsgsMap, store.msgStore, teamMembers, store.uiStore, t]
+    )
 
-    const onSendFile = async (file: File) => {
-      try {
-        await store.msgStore.sendFileMsgActive({
-          scene,
-          to,
-          file,
-        })
-      } catch (error) {
-        // message.error(t('sendMsgFailedText'))
-      } finally {
-        scrollToBottom()
-      }
-    }
+    const onResend = useCallback(
+      async (msg: IMMessage) => {
+        try {
+          await store.msgStore.resendMsgActive(msg)
+        } catch (error) {
+          // message.error(t('sendMsgFailedText'))
+        } finally {
+          scrollToBottom()
+        }
+      },
+      [scrollToBottom, store.msgStore]
+    )
 
-    const onSendImg = async (file: File) => {
-      try {
-        await store.msgStore.sendImageMsgActive({
-          scene,
-          to,
-          file,
-        })
-      } catch (error) {
-        // message.error(t('sendMsgFailedText'))
-      } finally {
-        scrollToBottom()
-      }
-    }
+    const onSendText = useCallback(
+      async (value: string, ext?: Record<string, unknown>) => {
+        try {
+          if (onSendTextFromProps) {
+            await onSendTextFromProps({
+              value,
+              scene,
+              to,
+            })
+          } else {
+            await store.msgStore.sendTextMsgActive({
+              scene,
+              to,
+              body: value,
+              ext,
+            })
+          }
+        } catch (error) {
+          // message.error(t('sendMsgFailedText'))
+        } finally {
+          scrollToBottom()
+        }
+      },
+      [onSendTextFromProps, scene, store.msgStore, to, scrollToBottom]
+    )
 
-    const onRemoveReplyMsg = () => {
+    const onSendFile = useCallback(
+      async (file: File) => {
+        try {
+          await store.msgStore.sendFileMsgActive({
+            scene,
+            to,
+            file,
+          })
+        } catch (error) {
+          // message.error(t('sendMsgFailedText'))
+        } finally {
+          scrollToBottom()
+        }
+      },
+      [scene, store.msgStore, to, scrollToBottom]
+    )
+
+    const onSendImg = useCallback(
+      async (file: File) => {
+        try {
+          await store.msgStore.sendImageMsgActive({
+            scene,
+            to,
+            file,
+          })
+        } catch (error) {
+          // message.error(t('sendMsgFailedText'))
+        } finally {
+          scrollToBottom()
+        }
+      },
+      [scene, store.msgStore, to, scrollToBottom]
+    )
+
+    const onRemoveReplyMsg = useCallback(() => {
       replyMsg && store.msgStore.removeReplyMsgActive(replyMsg.sessionId)
-    }
+    }, [replyMsg, store.msgStore])
 
-    const onMessageAction = async (key: MenuItemKey, msg: IMMessage) => {
-      const msgOperMenuItem = msgOperMenu?.find((item) => item.key === key)
-      if (msgOperMenuItem?.onClick) {
-        return msgOperMenuItem?.onClick(msg)
-      }
-      switch (key) {
-        case 'delete':
-          await store.msgStore.deleteMsgActive([msg])
-          break
-        case 'recall':
-          await store.msgStore.reCallMsgActive(msg)
-          break
-        case 'reply':
-          const member = mentionMembers.find(
-            (item) => item.account === msg.from
-          )
-          member &&
-            chatMessageInputRef.current?.onAtMemberSelectHandler({
-              account: member.account,
-              appellation: store.uiStore.getAppellation({
+    const onMessageAction = useCallback(
+      async (key: MenuItemKey, msg: IMMessage) => {
+        const msgOperMenuItem = msgOperMenu?.find((item) => item.key === key)
+        if (msgOperMenuItem?.onClick) {
+          return msgOperMenuItem?.onClick(msg)
+        }
+        switch (key) {
+          case 'delete':
+            await store.msgStore.deleteMsgActive([msg])
+            break
+          case 'recall':
+            await store.msgStore.reCallMsgActive(msg)
+            break
+          case 'reply':
+            const member = mentionMembers.find(
+              (item) => item.account === msg.from
+            )
+            member &&
+              chatMessageInputRef.current?.onAtMemberSelectHandler({
                 account: member.account,
-                teamId: member.teamId,
-                ignoreAlias: true,
-              }),
-            })
-          await store.msgStore.replyMsgActive(msg)
-          chatMessageInputRef.current?.input?.focus()
-          break
-        case 'forward':
-          setForwardMessage(msg)
-          break
-        default:
-          break
-      }
-    }
+                appellation: store.uiStore.getAppellation({
+                  account: member.account,
+                  teamId: member.teamId,
+                  ignoreAlias: true,
+                }),
+              })
+            await store.msgStore.replyMsgActive(msg)
+            chatMessageInputRef.current?.input?.focus()
+            break
+          case 'forward':
+            setForwardMessage(msg)
+            break
+          default:
+            break
+        }
+      },
+      [store.msgStore, mentionMembers, store.uiStore, msgOperMenu]
+    )
 
-    const onMessageAvatarAction = async (
-      key: AvatarMenuItem,
-      msg: IMMessage
-    ) => {
-      switch (key) {
-        case 'mention':
-          const member = mentionMembers.find(
-            (item) => item.account === msg.from
-          )
-          member &&
-            chatMessageInputRef.current?.onAtMemberSelectHandler({
-              account: member.account,
-              appellation: store.uiStore.getAppellation({
+    const onMessageAvatarAction = useCallback(
+      async (key: AvatarMenuItem, msg: IMMessage) => {
+        switch (key) {
+          case 'mention':
+            const member = mentionMembers.find(
+              (item) => item.account === msg.from
+            )
+            member &&
+              chatMessageInputRef.current?.onAtMemberSelectHandler({
                 account: member.account,
-                teamId: member.teamId,
-                ignoreAlias: true,
-              }),
-            })
-          break
-        default:
-          break
-      }
-    }
+                appellation: store.uiStore.getAppellation({
+                  account: member.account,
+                  teamId: member.teamId,
+                  ignoreAlias: true,
+                }),
+              })
+            break
+          default:
+            break
+        }
+      },
+      [mentionMembers, store.uiStore]
+    )
 
-    const onDismissTeam = async () => {
+    const onDismissTeam = useCallback(async () => {
       try {
         await store.teamStore.dismissTeamActive(team.teamId)
         message.success(t('dismissTeamSuccessText'))
@@ -493,9 +552,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             break
         }
       }
-    }
+    }, [store.teamStore, team.teamId, t])
 
-    const onLeaveTeam = async () => {
+    const onLeaveTeam = useCallback(async () => {
       try {
         await store.teamStore.leaveTeamActive(team.teamId)
         message.success(t('leaveTeamSuccessText'))
@@ -510,140 +569,155 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             break
         }
       }
-    }
+    }, [store.teamStore, team.teamId, t])
 
-    const onTransferMemberClick = () => {
+    const onTransferMemberClick = useCallback(() => {
       setGroupTransferModalVisible(true)
-    }
+    }, [])
 
-    const handleTransferTeam = () => {
+    const handleTransferTeam = useCallback(() => {
       setGroupTransferModalVisible(false)
       afterTransferTeam?.(team.teamId)
-    }
+    }, [afterTransferTeam, team.teamId])
 
-    const onAddMembersClick = () => {
+    const onAddMembersClick = useCallback(() => {
       if (team.inviteMode === 'manager' && !isGroupOwner && !isGroupManager) {
         message.error(t('noPermission'))
       } else {
         setGroupAddMembersVisible(true)
       }
-    }
+    }, [team.inviteMode, isGroupOwner, isGroupManager, t])
 
-    const onAddTeamMember = async (accounts: string[]) => {
-      try {
-        await store.teamMemberStore.addTeamMemberActive({
-          teamId: team.teamId,
-          accounts,
-        })
-        message.success(t('addTeamMemberSuccessText'))
-        resetSettingState()
-      } catch (error: any) {
-        switch (error?.code) {
-          // 无权限
-          case 802:
-            message.error(t('noPermission'))
-            break
-          default:
-            message.error(t('addTeamMemberFailedText'))
-            break
+    const onAddTeamMember = useCallback(
+      async (accounts: string[]) => {
+        try {
+          await store.teamMemberStore.addTeamMemberActive({
+            teamId: team.teamId,
+            accounts,
+          })
+          message.success(t('addTeamMemberSuccessText'))
+          resetSettingState()
+        } catch (error: any) {
+          switch (error?.code) {
+            // 无权限
+            case 802:
+              message.error(t('noPermission'))
+              break
+            default:
+              message.error(t('addTeamMemberFailedText'))
+              break
+          }
         }
-      }
-    }
+      },
+      [store.teamMemberStore, team.teamId, t]
+    )
 
-    const onRemoveTeamMember = async (member: TeamMember) => {
-      try {
-        await store.teamMemberStore.removeTeamMemberActive({
-          teamId: team.teamId,
-          accounts: [member.account],
-        })
-        message.success(t('removeTeamMemberSuccessText'))
-      } catch (error: any) {
-        switch (error?.code) {
-          // 无权限
-          case 802:
-            message.error(t('noPermission'))
-            break
-          default:
-            message.error(t('removeTeamMemberFailedText'))
-            break
+    const onRemoveTeamMember = useCallback(
+      async (member: TeamMember) => {
+        try {
+          await store.teamMemberStore.removeTeamMemberActive({
+            teamId: team.teamId,
+            accounts: [member.account],
+          })
+          message.success(t('removeTeamMemberSuccessText'))
+        } catch (error: any) {
+          switch (error?.code) {
+            // 无权限
+            case 802:
+              message.error(t('noPermission'))
+              break
+            default:
+              message.error(t('removeTeamMemberFailedText'))
+              break
+          }
         }
-      }
-    }
+      },
+      [store.teamMemberStore, team.teamId, t]
+    )
 
-    const onUpdateTeamInfo = async (params: Partial<Team>) => {
-      try {
-        await store.teamStore.updateTeamActive({
-          ...params,
-          teamId: team.teamId,
-        })
-        message.success(t('updateTeamSuccessText'))
-      } catch (error: any) {
-        switch (error?.code) {
-          // 无权限
-          case 802:
-            message.error(t('noPermission'))
-            break
-          default:
-            message.error(t('updateTeamFailedText'))
-            break
+    const onUpdateTeamInfo = useCallback(
+      async (params: Partial<Team>) => {
+        try {
+          await store.teamStore.updateTeamActive({
+            ...params,
+            teamId: team.teamId,
+          })
+          message.success(t('updateTeamSuccessText'))
+        } catch (error: any) {
+          switch (error?.code) {
+            // 无权限
+            case 802:
+              message.error(t('noPermission'))
+              break
+            default:
+              message.error(t('updateTeamFailedText'))
+              break
+          }
         }
-      }
-    }
+      },
+      [store.teamStore, team.teamId, t]
+    )
 
-    const onUpdateMyMemberInfo = async (params: UpdateMyMemberInfoOptions) => {
-      const nickTipVisible = params.nickInTeam !== void 0
-      const bitConfigVisible = params.bitConfigMask !== void 0
-      try {
-        await store.teamMemberStore.updateMyMemberInfo(params)
-        if (nickTipVisible) {
-          message.success(t('updateMyMemberNickSuccess'))
-        }
-        if (bitConfigVisible) {
-          message.success(t('updateBitConfigMaskSuccess'))
-        }
-      } catch (error: any) {
-        switch (error?.code) {
-          // 无权限
-          case 802:
-            message.error(t('noPermission'))
-            break
-          default:
-            {
-              if (nickTipVisible) {
-                message.error(t('updateMyMemberNickFailed'))
+    const onUpdateMyMemberInfo = useCallback(
+      async (params: UpdateMyMemberInfoOptions) => {
+        const nickTipVisible = params.nickInTeam !== void 0
+        const bitConfigVisible = params.bitConfigMask !== void 0
+        try {
+          await store.teamMemberStore.updateMyMemberInfo(params)
+          if (nickTipVisible) {
+            message.success(t('updateMyMemberNickSuccess'))
+          }
+          if (bitConfigVisible) {
+            message.success(t('updateBitConfigMaskSuccess'))
+          }
+        } catch (error: any) {
+          switch (error?.code) {
+            // 无权限
+            case 802:
+              message.error(t('noPermission'))
+              break
+            default:
+              {
+                if (nickTipVisible) {
+                  message.error(t('updateMyMemberNickFailed'))
+                }
+                if (bitConfigVisible) {
+                  message.error(t('updateBitConfigMaskFailed'))
+                }
               }
-              if (bitConfigVisible) {
-                message.error(t('updateBitConfigMaskFailed'))
-              }
-            }
-            break
+              break
+          }
         }
-      }
-    }
+      },
+      [store.teamMemberStore, t]
+    )
 
-    const onTeamMuteChange = async (mute: boolean) => {
-      try {
-        await store.teamStore.muteTeamActive({
-          teamId: team.teamId,
-          mute,
-        })
-        message.success(
-          mute ? t('muteAllTeamSuccessText') : t('unmuteAllTeamSuccessText')
-        )
-      } catch (error: any) {
-        switch (error?.code) {
-          // 无权限
-          case 802:
-            message.error(t('noPermission'))
-            break
-          default:
-            message.error(
-              mute ? t('muteAllTeamFailedText') : t('unmuteAllTeamFailedText')
-            )
-            break
+    const onTeamMuteChange = useCallback(
+      async (mute: boolean) => {
+        try {
+          await store.teamStore.muteTeamActive({
+            teamId: team.teamId,
+            mute,
+          })
+          message.success(
+            mute ? t('muteAllTeamSuccessText') : t('unmuteAllTeamSuccessText')
+          )
+        } catch (error: any) {
+          switch (error?.code) {
+            // 无权限
+            case 802:
+              message.error(t('noPermission'))
+              break
+            default:
+              message.error(
+                mute ? t('muteAllTeamFailedText') : t('unmuteAllTeamFailedText')
+              )
+              break
+          }
         }
-      }
-    }
+      },
+      [store.teamStore, team.teamId, t]
+    )
 
     const resetSettingState = () => {
       setNavHistoryStack([])
@@ -660,37 +734,6 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       setReceiveMsgBtnVisible(false)
       setForwardMessage(undefined)
     }, [])
-
-    // 收消息，发消息时需要调用
-    const scrollToBottom = () => {
-      if (messageListContainerDomRef.current) {
-        messageListContainerDomRef.current.scrollTop =
-          messageListContainerDomRef.current.scrollHeight
-      }
-      setReceiveMsgBtnVisible(false)
-    }
-
-    const getHistory = useCallback(
-      async (endTime: number, lastMsgId?: string) => {
-        try {
-          setLoadingMore(true)
-          const historyMsgs = await store.msgStore.getHistoryMsgActive({
-            sessionId,
-            endTime,
-            lastMsgId,
-            limit: HISTORY_LIMIT,
-          })
-          setLoadingMore(false)
-          if (historyMsgs.length < HISTORY_LIMIT) {
-            setNoMore(true)
-          }
-        } catch (error) {
-          setLoadingMore(false)
-          message.error(t('getHistoryMsgFailedText'))
-        }
-      },
-      [sessionId, store.msgStore, t]
-    )
 
     const handleForwardModalSend = () => {
       scrollToBottom()
@@ -777,12 +820,26 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     // 切换会话时需要重新初始化
     useEffect(() => {
       resetState()
-      getHistory(Date.now()).then(() => {
-        scrollToBottom()
-      })
+      scrollToBottom()
       store.teamStore.getTeamActive(to)
       store.teamMemberStore.getTeamMemberActive(to)
-    }, [store.teamStore, store.teamMemberStore, to, getHistory, resetState])
+    }, [store.teamStore, store.teamMemberStore, to, resetState, scrollToBottom])
+
+    // 切换会话时，如果内存中除了撤回消息的其他消息小于10条（差不多一屏幕），需要拉取历史消息
+    useEffect(() => {
+      if (
+        store.msgStore
+          .getMsg(sessionId)
+          .filter(
+            (item) =>
+              !['beReCallMsg', 'reCallMsg'].includes(item.attach?.type || '')
+          ).length < 10
+      ) {
+        getHistory(Date.now()).then(() => {
+          scrollToBottom()
+        })
+      }
+    }, [store.msgStore, sessionId, getHistory, scrollToBottom])
 
     // 处理消息
     useEffect(() => {

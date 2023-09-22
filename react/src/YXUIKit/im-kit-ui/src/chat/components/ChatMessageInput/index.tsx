@@ -19,7 +19,7 @@ import {
 } from '../../../common'
 import { Action } from '../../Container'
 import { MAX_UPLOAD_FILE_SIZE } from '../../../constant'
-import { AT_ALL_ACCOUNT } from '@xkit-yx/im-store'
+import { storeConstants } from '@xkit-yx/im-store'
 import { LoadingOutlined, CloseOutlined } from '@ant-design/icons'
 import { TMsgScene } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import { observer } from 'mobx-react'
@@ -245,7 +245,10 @@ const ChatMessageInput = observer(
       if (selectedAtMembers.length) {
         selectedAtMembers
           .filter((member) => {
-            if (!allowAtAll && member.account === AT_ALL_ACCOUNT) {
+            if (
+              !allowAtAll &&
+              member.account === storeConstants.AT_ALL_ACCOUNT
+            ) {
               return false
             }
             return true
