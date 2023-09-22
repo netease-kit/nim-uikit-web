@@ -9,6 +9,7 @@ interface IProps {
   teamMsgReceiptVisible: boolean
   addFriendNeedVerify: boolean
   needMention: boolean
+  teamManagerVisible: boolean
   locale: 'zh' | 'en'
 }
 const SettingModal: FC<IProps> = ({
@@ -18,6 +19,7 @@ const SettingModal: FC<IProps> = ({
   teamMsgReceiptVisible,
   addFriendNeedVerify,
   needMention,
+  teamManagerVisible,
   locale,
 }) => {
   return (
@@ -95,6 +97,20 @@ const SettingModal: FC<IProps> = ({
             value={needMention}
             onChange={(value) => {
               sessionStorage.setItem('needMention', value.toString())
+              window.location.reload()
+            }}
+          />
+        </Form.Item>
+        <Form.Item label={t('teamManagerEnableText')}>
+          <Select
+            options={[
+              { label: t('yesText'), value: true },
+              { label: t('noText'), value: false },
+            ]}
+            style={{ width: '150px' }}
+            value={teamManagerVisible}
+            onChange={(value) => {
+              sessionStorage.setItem('teamManagerVisible', value.toString())
               window.location.reload()
             }}
           />
