@@ -40,6 +40,7 @@ import {
   CallViewProvider,
   CallViewProviderRef,
 } from '@xkit-yx/call-kit-react-ui'
+import '@xkit-yx/call-kit-react-ui/es/style'
 import Calling from './components/call'
 //demo国际化函数
 import { convertSecondsToTime, g2StatusMap, renderMsgDate, t } from './util'
