@@ -72,6 +72,11 @@ const AddFriendModal: React.FC<AddFriendModalProps> = observer(
             await store.friendStore.addFriendActive(searchRes.account)
             message.success(t('addFriendSuccessText'))
           }
+          // 发送申请或添加好友成功后解除黑名单
+          await store.relationStore.setBlackActive({
+            account: searchRes.account,
+            isAdd: false,
+          })
         }
         setAdding(false)
       } catch (error) {
@@ -143,7 +148,8 @@ const AddFriendModal: React.FC<AddFriendModalProps> = observer(
                 {searchRes.account}
               </div>
             </div>
-            {store.uiStore.getRelation(searchRes.account) !== 'stranger' ? (
+            {store.uiStore.getRelation(searchRes.account).relation !==
+            'stranger' ? (
               <Button type="primary" onClick={handleChat}>
                 {t('chatButtonText')}
               </Button>

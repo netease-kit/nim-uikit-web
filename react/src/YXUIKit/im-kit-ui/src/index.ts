@@ -42,12 +42,14 @@ import RootStore from '@xkit-yx/im-store'
 import { NIMInitializeOptions } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/NIMInterface'
 
 export class IMUIKit {
-  context: {
+  get context(): {
     nim: NimKitCoreTypes.INimKitCore
     store: RootStore
     initOptions: NIMInitializeOptions
+  } | void {
     // @ts-ignore
-  } | void = window.__xkit_store__
+    return window.__xkit_store__
+  }
   constructor(private providerProps: Omit<ProviderProps, 'children'>) {}
 
   render<

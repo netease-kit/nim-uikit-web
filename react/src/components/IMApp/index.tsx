@@ -305,7 +305,7 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
                 <div className="icon-label">{t('session')}</div>
               </div>
             </Badge>
-            <Badge dot={!!store.uiStore.systemMsgUnread}>
+            <Badge dot={!!store.sysMsgStore.unreadSysMsgCount}>
               <div
                 className={classNames('contact-icon', {
                   active: model === 'contact',
@@ -386,7 +386,7 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
     teamMsgReceiptVisible,
     sdkVersion,
     renderP2pCustomMessage,
-    store.uiStore.systemMsgUnread,
+    store.sysMsgStore.unreadSysMsgCount,
   ])
   // IM elite(IM 2) sdk 没有信令， 无法初始化呼叫组件
   return sdkVersion === 1 ? (

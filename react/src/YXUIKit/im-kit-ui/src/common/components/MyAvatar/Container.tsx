@@ -75,6 +75,7 @@ export const MyAvatarContainer: FC<MyAvatarContainerProps> = observer(
       <ComplexAvatarUI
         relation="myself"
         visible={visible}
+        isInBlacklist={false}
         onCancel={handleCancel}
         onSave={handleSave}
         onAvatarClick={canClick ? handleOnAvatarClick : undefined}

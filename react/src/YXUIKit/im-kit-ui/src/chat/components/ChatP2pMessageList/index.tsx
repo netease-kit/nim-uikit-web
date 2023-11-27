@@ -124,7 +124,7 @@ const ChatP2pMessageList = observer(
               <ArrowDownOutlined />
             </div>
           ) : null}
-          {store.uiStore.getRelation(member.account) === 'stranger' ? (
+          {store.uiStore.getRelation(member.account).relation === 'stranger' ? (
             <Alert
               className={`${_prefix}-stranger-noti`}
               banner

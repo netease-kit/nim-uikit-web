@@ -16,6 +16,7 @@ export interface UserCardProps
   alias?: string
   visible: boolean
   relation: Relation
+  isInBlacklist: boolean
   onChangeAlias?: (alias: string) => void
   onSendMsglick?: () => void
   onAddFriendClick?: () => void
@@ -29,6 +30,7 @@ export interface UserCardProps
 export const UserCard: FC<UserCardProps> = ({
   visible,
   relation,
+  isInBlacklist,
   onChangeAlias,
   onAddFriendClick,
   onDeleteFriendClick,
@@ -55,24 +57,28 @@ export const UserCard: FC<UserCardProps> = ({
   )
 
   const controlsMenuRenderer = useMemo(() => {
-    const items = [
-      relation === 'friend'
-        ? {
-            key: 'block',
-            label: t('blackText'),
-            icon: <UsergroupAddOutlined />,
-          }
-        : {
-            key: 'removeBlock',
-            label: t('removeBlackText'),
-            icon: <UsergroupDeleteOutlined />,
-          },
-      {
-        key: 'deleteFriend',
-        label: t('deleteFriendText'),
-        icon: <DeleteOutlined />,
-      },
-    ] as any
+    const items = (
+      [
+        isInBlacklist
+          ? {
+              key: 'removeBlock',
+              label: t('removeBlackText'),
+              icon: <UsergroupDeleteOutlined />,
+            }
+          : {
+              key: 'block',
+              label: t('blackText'),
+              icon: <UsergroupAddOutlined />,
+            },
+        relation === 'friend'
+          ? {
+              key: 'deleteFriend',
+              label: t('deleteFriendText'),
+              icon: <DeleteOutlined />,
+            }
+          : null,
+      ] as any
+    ).filter((item) => !!item)
 
     return (
       <Menu
@@ -97,6 +103,7 @@ export const UserCard: FC<UserCardProps> = ({
   }, [
     t,
     relation,
+    isInBlacklist,
     onBlockFriendClick,
     onRemoveBlockFriendClick,
     onDeleteFriendClick,
@@ -124,18 +131,16 @@ export const UserCard: FC<UserCardProps> = ({
           <span className={`${_prefix}-header-nick`}>
             {props.alias || props.nick || props.account}
           </span>
-          {relation !== 'stranger' ? (
-            <Dropdown overlay={controlsMenuRenderer}>
-              <Button
-                className={`${_prefix}-header-controls`}
-                type="text"
-                icon={<MoreOutlined />}
-              ></Button>
-            </Dropdown>
-          ) : null}
+          <Dropdown overlay={controlsMenuRenderer}>
+            <Button
+              className={`${_prefix}-header-controls`}
+              type="text"
+              icon={<MoreOutlined />}
+            ></Button>
+          </Dropdown>
         </div>
         <div className={`${_prefix}-content`}>
-          {['friend', 'blacklist'].includes(relation) ? (
+          {relation === 'friend' ? (
             <div className={`${_prefix}-content-form-item`}>
               <label>{t('aliasText')}</label>
               <Input

@@ -48,7 +48,7 @@ export const ContactListContainer: FC<ContactListContainerProps> = observer(
         selectedContactType={store.uiStore.selectedContactType}
         onItemClick={handleItemClick}
         renderCustomContact={renderCustomContact}
-        systemMsgUnread={store.uiStore.systemMsgUnread}
+        systemMsgUnread={store.sysMsgStore.unreadSysMsgCount}
         prefix={prefix}
       />
     )
