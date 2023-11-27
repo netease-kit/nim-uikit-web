@@ -567,7 +567,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
               avatar={
                 <ComplexAvatarContainer
                   account={to}
-                  canClick={true}
+                  canClick={to !== myUser.account}
                   prefix={commonPrefix}
                 />
               }

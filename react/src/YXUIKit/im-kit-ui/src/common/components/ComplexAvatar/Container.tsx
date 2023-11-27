@@ -43,7 +43,7 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
 
     const [visible, setVisible] = useState(false)
     // const [relation, setRelation] = useState<Relation>('stranger')
-    const relation = store.uiStore.getRelation(account)
+    const { relation, isInBlacklist } = store.uiStore.getRelation(account)
 
     const userInfo = store.uiStore.getFriendWithUserNameCard(account)
 
@@ -72,6 +72,8 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
           await store.friendStore.addFriendActive(account)
           message.success(t('addFriendSuccessText'))
         }
+        // 发送申请或添加好友成功后解除黑名单
+        await store.relationStore.setBlackActive({ account, isAdd: false })
         setVisible(false)
         afterAddFriend?.(account)
       } catch (error) {
@@ -154,6 +156,7 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
     return (
       <ComplexAvatarUI
         relation={relation}
+        isInBlacklist={isInBlacklist}
         visible={visible}
         onCancel={handleCancel}
         onChangeAlias={handleChangeAlias}

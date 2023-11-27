@@ -1,45 +1,27 @@
 {
-  "_from": "@xkit-yx/im-kit-ui@^9.6.2",
-  "_id": "@xkit-yx/im-kit-ui@9.6.2",
-  "_inBundle": false,
-  "_integrity": "sha512-vFleF0DzxDgYJQnOWQKU6gkOC7Okqk8X1xvADTHVSK7toL8lHPP2PL/qEnQWOa0lffdQOYFy3B3OJxS+It1/+Q==",
-  "_location": "/@xkit-yx/im-kit-ui",
-  "_phantomChildren": {
-    "axios": "0.27.2",
-    "eventemitter3": "4.0.7"
-  },
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "@xkit-yx/im-kit-ui@^9.6.2",
-    "name": "@xkit-yx/im-kit-ui",
-    "escapedName": "@xkit-yx%2fim-kit-ui",
-    "scope": "@xkit-yx",
-    "rawSpec": "^9.6.2",
-    "saveSpec": null,
-    "fetchSpec": "^9.6.2"
-  },
-  "_requiredBy": [
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/@xkit-yx/im-kit-ui/-/im-kit-ui-9.6.2.tgz",
-  "_shasum": "e9dd04a9d359c36fa404900ec28aca70bc8ee022",
-  "_spec": "@xkit-yx/im-kit-ui@^9.6.2",
-  "_where": "/Users/leeing/Documents/yunxin-projects/nim-uikit-web/react",
-  "author": "",
-  "bundleDependencies": false,
-  "dependencies": {
-    "@ant-design/icons": "^5.0.1",
-    "@xkit-yx/core-kit": "^0.10.8",
-    "@xkit-yx/im-store": "^0.0.13",
-    "@xkit-yx/utils": "^0.5.6",
-    "antd": "^4.16.3",
-    "mobx": "^6.6.1",
-    "mobx-react": "^7.5.2",
-    "react-string-replace": "^1.1.0"
-  },
-  "deprecated": false,
+  "name": "@xkit-yx/im-kit-ui",
+  "version": "9.6.4",
   "description": "云信即时通讯组件",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "typings": "es/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "start": "rollup -cw --environment DEV",
+    "dev": "gulp watch",
+    "build": "gulp",
+    "p": "npm run build && npm publish"
+  },
+  "files": [
+    "src",
+    "lib",
+    "es",
+    "copySourceCode.js"
+  ],
+  "author": "",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.1.0",
     "@rollup/plugin-json": "^4.1.0",
@@ -63,17 +45,6 @@
     "sass": "^1.58.3",
     "typescript": "^4.6.4"
   },
-  "files": [
-    "src",
-    "lib",
-    "es",
-    "copySourceCode.js"
-  ],
-  "gitHead": "3b90601cf3d29a01c3aa986043a84af0c04562d0",
-  "license": "MIT",
-  "main": "lib/index.js",
-  "module": "es/index.js",
-  "name": "@xkit-yx/im-kit-ui",
   "peerDependencies": {
     "@xkit-yx/core-kit": "^0.3.2",
     "@xkit-yx/utils": "^0.4.3",
@@ -83,15 +54,14 @@
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0"
   },
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "build": "gulp",
-    "dev": "gulp watch",
-    "p": "npm run build && npm publish",
-    "start": "rollup -cw --environment DEV"
-  },
-  "typings": "es/index.d.ts",
-  "version": "9.6.2"
+  "dependencies": {
+    "@ant-design/icons": "^5.0.1",
+    "@xkit-yx/core-kit": "^0.10.8",
+    "@xkit-yx/im-store": "^0.0.15",
+    "@xkit-yx/utils": "^0.5.6",
+    "antd": "^4.16.3",
+    "mobx": "^6.6.1",
+    "mobx-react": "^7.5.2",
+    "react-string-replace": "^1.1.0"
+  }
 }

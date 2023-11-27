@@ -50,37 +50,37 @@ export const MyUserCard: FC<MyUserCardProps> = ({
   const [signature, setSignature] = useState<string | undefined>(undefined)
 
   useEffect(() => {
-    if (props.nick) {
+    if (props.nick !== void 0) {
       setNick(props.nick)
     }
   }, [props.nick])
 
   useEffect(() => {
-    if (props.avatar) {
+    if (props.avatar !== void 0) {
       setAvatar(props.avatar)
     }
   }, [props.avatar])
 
   useEffect(() => {
-    if (props.gender) {
+    if (props.gender !== void 0) {
       setGender(props.gender)
     }
   }, [props.gender])
 
   useEffect(() => {
-    if (props.tel) {
+    if (props.tel !== void 0) {
       setTel(props.tel)
     }
   }, [props.tel])
 
   useEffect(() => {
-    if (props.email) {
+    if (props.email !== void 0) {
       setEmail(props.email)
     }
   }, [props.email])
 
   useEffect(() => {
-    if (props.signature) {
+    if (props.signature !== void 0) {
       setSignature(props.signature)
     }
   }, [props.signature])
