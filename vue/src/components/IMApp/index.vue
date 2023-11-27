@@ -45,9 +45,7 @@ import {
   ContactListContainer, // 通讯录——通讯录导航组件
   ContactInfoContainer, // 通讯录——通讯录详情组件，包含好友列表、群组列表以及黑名单列表
   MyAvatarContainer, // 用户资料组件
-  ComplexAvatarContainer,
 } from "@xkit-yx/im-kit-ui";
-import { compile } from "jsx-web-compiler";
 import "@xkit-yx/im-kit-ui/es/style/css";
 import "./iconfont.css";
 
@@ -79,9 +77,7 @@ export default {
       this.$refs.add
     );
     this.$uikit.render(MyAvatarContainer, null, this.$refs.avatar);
-    this.$uikit.render(ConversationContainer, {
-      renderP2pSessionAvatar: () => compile(`<div><img style={{width: 30, height: 30}} src='https://nim-nosdn.netease.im/MjYxNDkzNzE=/bmltYV85NDQ5NzgxNzYxN18xNjg2MTI2MTc2MTk1XzE2Njg0N2UxLTlhYWUtNDZlZS05ZTI2LTFmOWYyYjhhNTU0Mw==?createTime=1686126177312' /></div>`),
-    }, this.$refs.conversation);
+    this.$uikit.render(ConversationContainer, null, this.$refs.conversation);
     this.$uikit.render(
       ChatContainer,
       {
@@ -89,19 +85,6 @@ export default {
         // 安装并引入： import { compile } from "jsx-web-compiler";
         // renderHeader: () => compile(`<div className="my-header">123</div>`),
         // renderEmpty: () => compile("<div>This is empty</div>"),
-        renderMessageAvatar: (options) => {
-          console.log(options)
-          const openUserCard = () => {
-            console.log('???')
-          }
-          const context = {
-            ComplexAvatarContainer,
-            openUserCard,
-            account: options.from,
-          }
-          return compile(
-            `<div onClickCapture={context.openUserCard}><context.ComplexAvatarContainer account={context.account} canClick={false} /></div>`, context
-        )}
       },
       this.$refs.chat
     );
