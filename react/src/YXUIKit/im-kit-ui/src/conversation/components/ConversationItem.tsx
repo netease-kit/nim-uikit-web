@@ -45,6 +45,9 @@ export const ConversationItem: FC<ConversationItemProps> = ({
   commonPrefix = 'common',
 }) => {
   const date = useMemo(() => {
+    if (!time) {
+      return ''
+    }
     const _d = moment(time)
     const isCurrentDay = _d.isSame(moment(), 'day')
     const isCurrentYear = _d.isSame(moment(), 'year')
