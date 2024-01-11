@@ -145,6 +145,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           if (historyMsgs.length < storeConstants.HISTORY_LIMIT) {
             setNoMore(true)
           }
+          return historyMsgs
         } catch (error) {
           setLoadingMore(false)
           message.error(t('getHistoryMsgFailedText'))
@@ -466,11 +467,21 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
               !['beReCallMsg', 'reCallMsg'].includes(item.attach?.type || '')
           ).length < 10
       ) {
-        getHistory(Date.now()).then(() => {
+        getHistory(Date.now()).then((res) => {
           scrollToBottom()
+          if (session && !session.lastMsg && res && res[0]) {
+            store.sessionStore.addSession([{ ...session, lastMsg: res[0] }])
+          }
         })
       }
-    }, [store.msgStore, sessionId, getHistory, scrollToBottom])
+    }, [
+      store.msgStore,
+      store.sessionStore,
+      session,
+      sessionId,
+      getHistory,
+      scrollToBottom,
+    ])
 
     // 处理消息
     useEffect(() => {
