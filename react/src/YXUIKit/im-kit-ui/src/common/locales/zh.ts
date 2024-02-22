@@ -35,7 +35,7 @@ const LocaleConfig = {
   friendsText: '位好友',
   strangerText: '位陌生人',
   emailErrorText: '邮箱格式不正确',
-  uploadLimitText: '图片或文件大小最大支持',
+  uploadLimitText: '图片视频或文件大小最大支持',
   uploadLimitUnit: 'M',
   uploadImgFailedText: '上传图片失败',
   accountText: '账号',
@@ -239,6 +239,8 @@ const LocaleConfig = {
   updateMyMemberNickFailed: '更新我的群昵称失败',
   updateBitConfigMaskSuccess: '更新群消息免打扰成功',
   updateBitConfigMaskFailed: '更新群消息免打扰失败',
+  imgText: '图片',
+  videoText: '视频',
   onlineText: '[在线]',
   offlineText: '(离线)',
 

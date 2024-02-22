@@ -41,6 +41,8 @@ export interface MessageItemProps {
   replyMsg?: IMMessage
   normalStatusRenderer?: React.ReactNode
   msgOperMenu?: MsgOperMenuItem[]
+  onSendImg: (file: File, randomId?: string) => Promise<void>
+  onSendVideo: (file: File, randomId?: string) => Promise<void>
   onResend: (msg: IMMessage) => void
   onReeditClick: (msg: IMMessage) => void
   onMessageAction: (key: MenuItemKey, msg: IMMessage) => void
@@ -61,6 +63,8 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
     normalStatusRenderer,
     msgOperMenu,
     onResend,
+    onSendImg,
+    onSendVideo,
     onMessageAction,
     onMessageAvatarAction,
     onReeditClick,
@@ -83,6 +87,10 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       attach,
       idClient,
       status,
+      // @ts-ignore
+      uploadProgress,
+      // @ts-ignore
+      uploadFileInfo,
       time,
       type,
       scene,
@@ -113,6 +121,24 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       oldBody = '',
     } = attach || { type: '', canRecall: false, canEdit: false, oldBody: '' }
 
+    const handleResendMsg = () => {
+      // 如果是上传过程中失败的图片和视频消息，则重新发送
+      if (uploadFileInfo && ['image', 'video'].includes(msg.type)) {
+        switch (msg.type) {
+          case 'image':
+            onSendImg(uploadFileInfo.file, msg.idClient)
+            break
+          case 'video':
+            onSendVideo(uploadFileInfo.file, msg.idClient)
+            break
+          default:
+            break
+        }
+      } else {
+        onResend(msg)
+      }
+    }
+
     const renderSendStatus = () => {
       if (status === 'sending') {
         return <LoadingOutlined className={`${_prefix}-status-icon`} />
@@ -125,7 +151,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
           <Tooltip title={t('sendMsgFailedText')}>
             <ExclamationCircleFilled
               className={`${_prefix}-status-icon-fail`}
-              onClick={() => onResend(msg)}
+              onClick={handleResendMsg}
             />
           </Tooltip>
         )
@@ -170,7 +196,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
           icon: <CommonIcon type="icon-huifu" />,
         },
         {
-          show: 1,
+          show: uploadProgress === void 0 ? 1 : 0,
           label: t('deleteText'),
           key: 'delete',
           icon: <DeleteOutlined />,

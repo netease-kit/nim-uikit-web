@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Image, Popover } from 'antd'
+import { Image, Popover, Progress } from 'antd'
 import reactStringReplace from 'react-string-replace'
 import CommonIcon from '../CommonIcon'
 import { getFileType, parseFileSize, addUrlSearch } from '@xkit-yx/utils'
@@ -12,6 +12,7 @@ import { parseSessionId } from '../../../utils'
 import { ALLOW_AT, TAllowAt } from '../../../constant'
 import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 import { getBlobImg } from '../../../urlToBlob'
+import { abortTask } from '../../../uploadingTask'
 
 // 对话框中要展示的文件icon标识
 const fileIconMap = {
@@ -101,7 +102,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     const { EMOJI_ICON_MAP_CONFIG, INPUT_EMOJI_SYMBOL_REG } =
       handleEmojiTranslate(t)
 
-    const renderCustomText = (msg) => {
+    const renderCustomText = (msg: IMMessage) => {
       const { body, idClient, ext } = msg
 
       let text = reactStringReplace(body, /(https?:\/\/\S+)/gi, (match, i) => (
@@ -160,7 +161,49 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       handler()
     }
 
-    const renderImage = (msg, isReplyMsg: boolean) => {
+    const renderUploadMsg = (msg: IMMessage) => {
+      // @ts-ignore
+      const { uploadProgress, previewImg, idClient } = msg
+
+      return (
+        <div className={`${_prefix}-upload-container`}>
+          <img
+            className={`${_prefix}-upload-img`}
+            src={
+              previewImg ||
+              'https://yx-web-nosdn.netease.im/common/33d3e1fa8de771277ea4466564ef37aa/emptyImg.png'
+            }
+          />
+          <div className={`${_prefix}-upload-mask`}>
+            <div
+              className={`${_prefix}-upload-progress`}
+              onClick={() => {
+                abortTask(idClient)
+              }}
+            >
+              <Progress
+                type="circle"
+                status="exception"
+                percent={uploadProgress || 0}
+                width={40}
+                strokeColor="#899095"
+                trailColor="rgba(0,0,0,0.5)"
+              />
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    const renderImage = (msg: IMMessage, isReplyMsg: boolean) => {
+      // @ts-ignore
+      const { uploadProgress, uploadFileInfo } = msg
+
+      // uploadProgress 属性只会在上传中存在，uploadFileInfo 在上传中和上传失败时都存在
+      if (uploadProgress !== void 0 || uploadFileInfo) {
+        return renderUploadMsg(msg)
+      }
+
       return (
         <div
           className={`${_prefix}-image-container`}
@@ -183,7 +226,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
-    const renderFile = (msg) => {
+    const renderFile = (msg: IMMessage) => {
       return (
         <div className={`${_prefix}-file-box`}>
           <CommonIcon
@@ -209,7 +252,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
-    const renderNotification = (msg) => {
+    const renderNotification = (msg: IMMessage) => {
       switch (msg.attach?.type) {
         case 'updateTeam': {
           const team: Team = msg.attach?.team || {}
@@ -430,7 +473,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       }
     }
 
-    const renderAudio = (msg) => {
+    const renderAudio = (msg: IMMessage) => {
       const { flow, attach } = msg
       const duration = Math.floor(attach?.dur / 1000) || 0
 
@@ -482,13 +525,21 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
-    const renderVideo = (msg) => {
-      const { attach } = msg
+    const renderVideo = (msg: IMMessage) => {
+      // @ts-ignore
+      const { uploadProgress, uploadFileInfo, attach } = msg
+
+      // uploadProgress 属性只会在上传中存在，uploadFileInfo 在上传中和上传失败时都存在
+      if (uploadProgress !== void 0 || uploadFileInfo) {
+        return renderUploadMsg(msg)
+      }
+
       const url = `${attach?.url}?download=${msg.idClient}.${attach?.ext}`
       return (
         <video
           src={url}
           id={`msg-video-${msg.idClient}`}
+          className={`${_prefix}-video`}
           controls
           onPlay={() => {
             // 播放视频，暂停其他视频和音频
@@ -498,12 +549,11 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           onError={() => {
             // 处理异常 例如：视频格式不支持播放等
           }}
-          height={300}
         />
       )
     }
 
-    const renderLocation = (msg) => {
+    const renderLocation = (msg: IMMessage) => {
       const { attach, body } = msg
       const amapUrl = `https://uri.amap.com/marker?position=${attach?.lng},${attach?.lat}&name=${body}`
       const txmapUrl = `https://apis.map.qq.com/uri/v1/marker?marker=coord:${attach?.lat},${attach?.lng};title:${body};addr:${attach?.title}&referer=myapp`
@@ -584,7 +634,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       return null
     }
 
-    const renderMsgContent = (msg, isReplyMsg: boolean) => {
+    const renderMsgContent = (msg: IMMessage, isReplyMsg: boolean) => {
       switch (msg.type) {
         case 'text':
         case 'custom':
