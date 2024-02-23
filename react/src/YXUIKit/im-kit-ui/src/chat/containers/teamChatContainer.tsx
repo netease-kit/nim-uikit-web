@@ -41,6 +41,8 @@ import { GroupItemProps } from '../components/ChatTeamSetting/GroupItem'
 import ChatForwardModal from '../components/ChatForwardModal'
 import { MentionedMember } from '../components/ChatMessageInput/ChatMentionMemberList'
 import GroupTransferModal from '../components/ChatGroupTransferModal'
+import { getImgDataUrl, getVideoFirstFrameDataUrl } from '../../utils'
+import { addTask, removeTask } from '../../uploadingTask'
 
 export interface TeamChatContainerProps {
   scene: TMsgScene
@@ -455,12 +457,49 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     )
 
     const onSendImg = useCallback(
-      async (file: File) => {
+      async (file: File, randomId?: string) => {
         try {
+          const previewImg = await getImgDataUrl(file)
           await store.msgStore.sendImageMsgActive({
             scene,
             to,
             file,
+            previewImg,
+            randomId,
+            onUploadStart(task, taskId) {
+              scrollToBottom()
+              addTask(taskId, task)
+            },
+            onUploadDone(taskId) {
+              removeTask(taskId)
+            },
+          })
+        } catch (error) {
+          // message.error(t('sendMsgFailedText'))
+        } finally {
+          scrollToBottom()
+        }
+      },
+      [scene, store.msgStore, to, scrollToBottom]
+    )
+
+    const onSendVideo = useCallback(
+      async (file: File, randomId?: string) => {
+        try {
+          const previewImg = await getVideoFirstFrameDataUrl(file)
+          await store.msgStore.sendVideoMsgActive({
+            scene,
+            to,
+            file,
+            previewImg,
+            randomId,
+            onUploadStart(task, taskId) {
+              scrollToBottom()
+              addTask(taskId, task)
+            },
+            onUploadDone(taskId) {
+              removeTask(taskId)
+            },
           })
         } catch (error) {
           // message.error(t('sendMsgFailedText'))
@@ -1081,6 +1120,8 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             receiveMsgBtnVisible={receiveMsgBtnVisible}
             onReceiveMsgBtnClick={scrollToBottom}
             onResend={onResend}
+            onSendImg={onSendImg}
+            onSendVideo={onSendVideo}
             onMessageAction={onMessageAction}
             onMessageAvatarAction={onMessageAvatarAction}
             onReeditClick={onReeditClick}
@@ -1121,6 +1162,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             onSendText={onSendText}
             onSendFile={onSendFile}
             onSendImg={onSendImg}
+            onSendVideo={onSendVideo}
           />
           <ChatSettingDrawer
             prefix={prefix}

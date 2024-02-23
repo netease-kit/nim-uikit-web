@@ -51,6 +51,8 @@ const ChatTeamMessageList = forwardRef<
       noMore,
       myAccount,
       onResend,
+      onSendImg,
+      onSendVideo,
       onMessageAction,
       onMessageAvatarAction,
       onReeditClick,
@@ -83,6 +85,8 @@ const ChatTeamMessageList = forwardRef<
               replyMsg: replyMsgsMap[msg.idClient],
               members,
               onResend,
+              onSendImg,
+              onSendVideo,
               onReeditClick,
               onMessageAction,
             }) ?? (
@@ -105,6 +109,8 @@ const ChatTeamMessageList = forwardRef<
                 }
                 myAccount={myAccount}
                 onResend={onResend}
+                onSendImg={onSendImg}
+                onSendVideo={onSendVideo}
                 onMessageAction={onMessageAction}
                 onMessageAvatarAction={onMessageAvatarAction}
                 onReeditClick={onReeditClick}

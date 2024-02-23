@@ -48,6 +48,8 @@ const ChatP2pMessageList = observer(
         noMore,
         myAccount,
         onResend,
+        onSendImg,
+        onSendVideo,
         onMessageAction,
         onReeditClick,
         onScroll,
@@ -79,6 +81,8 @@ const ChatP2pMessageList = observer(
                 replyMsg: replyMsgsMap[msg.idClient],
                 member,
                 onResend,
+                onSendImg,
+                onSendVideo,
                 onReeditClick,
                 onMessageAction,
               }) ?? (
@@ -100,6 +104,8 @@ const ChatP2pMessageList = observer(
                   }
                   myAccount={myAccount}
                   onResend={onResend}
+                  onSendImg={onSendImg}
+                  onSendVideo={onSendVideo}
                   onMessageAction={onMessageAction}
                   onReeditClick={onReeditClick}
                   renderMessageAvatar={renderMessageAvatar}

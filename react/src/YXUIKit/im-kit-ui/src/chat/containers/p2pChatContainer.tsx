@@ -35,6 +35,8 @@ import { message } from 'antd'
 import { storeConstants } from '@xkit-yx/im-store'
 import { observer } from 'mobx-react'
 import ChatForwardModal from '../components/ChatForwardModal'
+import { getImgDataUrl, getVideoFirstFrameDataUrl } from '../../utils'
+import { addTask, removeTask } from '../../uploadingTask'
 
 export interface P2pChatContainerProps {
   scene: TMsgScene
@@ -289,12 +291,49 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     )
 
     const onSendImg = useCallback(
-      async (file: File) => {
+      async (file: File, randomId?: string) => {
         try {
+          const previewImg = await getImgDataUrl(file)
           await store.msgStore.sendImageMsgActive({
             scene,
             to,
             file,
+            previewImg,
+            randomId,
+            onUploadStart(task, taskId) {
+              scrollToBottom()
+              addTask(taskId, task)
+            },
+            onUploadDone(taskId) {
+              removeTask(taskId)
+            },
+          })
+        } catch (error) {
+          // message.error(t('sendMsgFailedText'))
+        } finally {
+          scrollToBottom()
+        }
+      },
+      [scene, store.msgStore, to, scrollToBottom]
+    )
+
+    const onSendVideo = useCallback(
+      async (file: File, randomId?: string) => {
+        try {
+          const previewImg = await getVideoFirstFrameDataUrl(file)
+          await store.msgStore.sendVideoMsgActive({
+            scene,
+            to,
+            file,
+            previewImg,
+            randomId,
+            onUploadStart(task, taskId) {
+              scrollToBottom()
+              addTask(taskId, task)
+            },
+            onUploadDone(taskId) {
+              removeTask(taskId)
+            },
           })
         } catch (error) {
           // message.error(t('sendMsgFailedText'))
@@ -599,6 +638,8 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             msgReceiptTime={session?.msgReceiptTime}
             onReceiveMsgBtnClick={scrollToBottom}
             onResend={onResend}
+            onSendImg={onSendImg}
+            onSendVideo={onSendVideo}
             onMessageAction={onMessageAction}
             onReeditClick={onReeditClick}
             onScroll={onMsgListScrollHandler}
@@ -628,6 +669,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             onSendText={onSendText}
             onSendFile={onSendFile}
             onSendImg={onSendImg}
+            onSendVideo={onSendVideo}
             onRemoveReplyMsg={onRemoveReplyMsg}
           />
           <ChatSettingDrawer

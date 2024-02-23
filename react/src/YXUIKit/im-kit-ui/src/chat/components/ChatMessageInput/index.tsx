@@ -8,7 +8,16 @@ import React, {
   useCallback,
   useEffect,
 } from 'react'
-import { Input, Upload, Popover, message, Button, Spin } from 'antd'
+import {
+  Input,
+  Upload,
+  Popover,
+  message,
+  Button,
+  Spin,
+  Dropdown,
+  Menu,
+} from 'antd'
 import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import {
   CommonIcon,
@@ -48,6 +57,7 @@ export interface ChatMessageInputProps {
   onSendText: (value: string, ext?: Record<string, unknown>) => void
   onSendFile: (file: File) => void
   onSendImg: (file: File) => void
+  onSendVideo: (file: File) => void
   onRemoveReplyMsg?: () => void
 }
 
@@ -80,6 +90,7 @@ const ChatMessageInput = observer(
       onSendText,
       onSendFile,
       onSendImg,
+      onSendVideo,
       onRemoveReplyMsg,
     } = props
     const _prefix = `${prefix}-message-input`
@@ -108,7 +119,7 @@ const ChatMessageInput = observer(
         visible: true,
         render: () => {
           return (
-            <Button type="text" disabled={mute}>
+            <Button size="small" disabled={mute}>
               <Popover
                 trigger="click"
                 visible={emojiVisible}
@@ -131,22 +142,61 @@ const ChatMessageInput = observer(
         render: () => {
           return (
             <Button size="small" disabled={mute}>
-              {uploadImageLoading ? (
-                <Spin indicator={LoadingIcon} />
-              ) : (
-                <Upload
-                  beforeUpload={onBeforeUploadImgHandler}
-                  showUploadList={false}
-                  accept=".jpg,.png,.jpeg,.gif"
-                  // action={onUploadImgHandler}
-                  className={`${_prefix}-icon-upload`}
-                >
-                  <CommonIcon
-                    className={`${_prefix}-icon-image`}
-                    type="icon-tupian"
+              <Dropdown
+                placement="top"
+                arrow={false}
+                overlay={
+                  <Menu
+                    items={[
+                      {
+                        key: 'sendImg',
+                        label: (
+                          <Upload
+                            beforeUpload={onBeforeUploadImgHandler}
+                            showUploadList={false}
+                            accept=".jpg,.png,.jpeg,.gif"
+                            // action={onUploadImgHandler}
+                            className={`${_prefix}-icon-upload`}
+                          >
+                            <CommonIcon
+                              className={`${_prefix}-icon-image`}
+                              type="icon-tupian"
+                            />
+                            <span style={{ padding: '0 30px 0 3px' }}>
+                              {t('imgText')}
+                            </span>
+                          </Upload>
+                        ),
+                      },
+                      {
+                        key: 'sendVideo',
+                        label: (
+                          <Upload
+                            beforeUpload={onBeforeUploadVideoHandler}
+                            showUploadList={false}
+                            accept=".mp4,.mov,.avi,.wmv,.mkv,.flv,.rmvb,.3gp,.mpeg,.m4v,.vob,.webm"
+                            // action={onUploadImgHandler}
+                            className={`${_prefix}-icon-upload`}
+                          >
+                            <CommonIcon
+                              className={`${_prefix}-icon-image`}
+                              type="icon-shipin8"
+                            />
+                            <span style={{ padding: '0 30px 0 3px' }}>
+                              {t('videoText')}
+                            </span>
+                          </Upload>
+                        ),
+                      },
+                    ]}
                   />
-                </Upload>
-              )}
+                }
+              >
+                <CommonIcon
+                  className={`${_prefix}-icon-image`}
+                  type="icon-tupian"
+                />
+              </Dropdown>
             </Button>
           )
         },
@@ -481,6 +531,24 @@ const ChatMessageInput = observer(
         )
       } else {
         onSendImg(file)
+      }
+
+      return false
+    }
+
+    const onBeforeUploadVideoHandler = (
+      file: File
+    ): boolean | Promise<void | Blob | File> => {
+      const isLimit = file.size / 1024 / 1000 > MAX_UPLOAD_FILE_SIZE
+
+      if (isLimit) {
+        message.error(
+          `${t('uploadLimitText')}${MAX_UPLOAD_FILE_SIZE}${t(
+            'uploadLimitUnit'
+          )}`
+        )
+      } else {
+        onSendVideo(file)
       }
 
       return false

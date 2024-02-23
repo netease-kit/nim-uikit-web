@@ -300,3 +300,42 @@ export const handleEmojiTranslate = (t) => {
     INPUT_EMOJI_SYMBOL_REG,
   }
 }
+
+export function getImgDataUrl(file: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      resolve(e.target?.result as string)
+    }
+    reader.onerror = (e) => {
+      reject(e)
+    }
+    reader.readAsDataURL(file)
+  })
+}
+
+export function getVideoFirstFrameDataUrl(videoFile: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video')
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
+
+    video.onloadeddata = () => {
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      context?.drawImage(video, 0, 0, canvas.width, canvas.height)
+      const dataURL = canvas.toDataURL('image/jpeg')
+      resolve(dataURL)
+    }
+
+    video.onerror = () => {
+      reject(new Error('Failed to load the video'))
+    }
+
+    const url = URL.createObjectURL(videoFile)
+    video.preload = 'auto'
+    video.autoplay = true
+    video.muted = true
+    video.src = url
+  })
+}
