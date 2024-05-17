@@ -8,6 +8,7 @@ import {
 } from '../../../common'
 import { observer } from 'mobx-react'
 import { SelectModalItemProps } from '../../../common/components/SelectModal'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 export interface ChatTeamMemberModalProps {
   visible: boolean
@@ -31,19 +32,23 @@ const ChatTeamMemberModal: React.FC<ChatTeamMemberModalProps> = observer(
 
     const teamMembers = store.teamMemberStore
       .getTeamMember(teamId)
-      .filter((item) => item.account !== store.userStore.myUserInfo.account)
+      .filter((item) => item.accountId !== store.userStore.myUserInfo.accountId)
 
     const datasource = teamMembers.map((item) => ({
-      key: item.account,
+      key: item.accountId,
       label: store.uiStore.getAppellation({
-        account: item.account,
+        account: item.accountId,
         teamId: item.teamId,
       }),
     }))
 
     const teamManagerAccounts = teamMembers
-      .filter((item) => item.type === 'manager')
-      .map((item) => item.account)
+      .filter(
+        (item) =>
+          item.memberRole ===
+          V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
+      )
+      .map((item) => item.accountId)
 
     const itemAvatarRender = (data: SelectModalItemProps) => {
       return (
@@ -65,25 +70,27 @@ const ChatTeamMemberModal: React.FC<ChatTeamMemberModalProps> = observer(
           data.every((j) => j.key !== i)
         )
         add.length &&
-          (await store.teamStore.addTeamManagersActive({
+          (await store.teamStore.updateTeamMemberRoleActive({
             teamId,
             accounts: add,
+            role: V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER,
           }))
         remove.length &&
-          (await store.teamStore.removeTeamManagersActive({
+          (await store.teamStore.updateTeamMemberRoleActive({
             teamId,
             accounts: remove,
+            role: V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_NORMAL,
           }))
         message.success(t('updateTeamManagerSuccessText'))
         onCancel()
       } catch (error: any) {
         switch (error?.code) {
           // 操作的人不在群中
-          case 804:
+          case 191004:
             message.error(t('userNotInTeam'))
             break
           // 没权限
-          case 802:
+          case 109432:
             message.error(t('noPermission'))
             break
           default:

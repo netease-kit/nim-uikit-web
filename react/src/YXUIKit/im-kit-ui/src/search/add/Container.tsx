@@ -6,6 +6,7 @@ import JoinTeamModal from './components/JoinTeamModal'
 import CreateModal from './components/CreateModal'
 import packageJson from '../../../package.json'
 import { observer } from 'mobx-react'
+import sdkPkg from 'nim-web-sdk-ng/package.json'
 
 export type PanelScene = 'addFriend' | 'joinTeam' | 'createTeam'
 
@@ -28,13 +29,13 @@ export interface AddContainerProps {
 
 export const AddContainer: React.FC<AddContainerProps> = observer(
   ({ onClickChat, prefix = 'search', commonPrefix = 'common' }) => {
-    const { nim, initOptions } = useStateContext()
+    const { nim } = useStateContext()
 
     useEventTracking({
-      appkey: initOptions.appkey,
+      appkey: nim.options.appkey,
       version: packageJson.version,
       component: 'SearchUIKit',
-      imVersion: nim.version,
+      imVersion: sdkPkg.version,
     })
 
     const [addFriendModalVisible, setAddFriendModalVisible] = useState(false)

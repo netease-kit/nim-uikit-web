@@ -1,12 +1,10 @@
 import React, { FC, useMemo } from 'react'
-import { Utils, useTranslation } from '../../../common'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
+import { Utils, useStateContext, useTranslation } from '../../../common'
 import { FriendItem } from './FriendItem'
 import { Spin, Empty } from 'antd'
-// import { List } from 'react-virtualized'
 
 export interface FriendListProps {
-  list: NimKitCoreTypes.IFriendInfo[]
+  accounts: string[]
   loading?: boolean
   onItemClick?: (account: string) => void
   afterSendMsgClick?: () => void
@@ -17,7 +15,7 @@ export interface FriendListProps {
 }
 
 export const FriendList: FC<FriendListProps> = ({
-  list,
+  accounts,
   loading = false,
   onItemClick,
   afterSendMsgClick,
@@ -30,17 +28,23 @@ export const FriendList: FC<FriendListProps> = ({
 
   const { t } = useTranslation()
 
+  const { store } = useStateContext()
+
   const dataSource = useMemo(() => {
-    const group = Utils.groupByPy<NimKitCoreTypes.IFriendInfo>(
-      list,
+    const data = accounts.map((account) => ({
+      account,
+      appellation: store.uiStore.getAppellation({ account }),
+    }))
+
+    const group = Utils.groupByPy(
+      data,
       {
-        firstKey: 'alias',
-        secondKey: 'nick',
-        thirdKey: 'account',
+        firstKey: 'appellation',
       },
       false
     )
-    const res: (NimKitCoreTypes.IFriendInfo | string)[] = []
+
+    const res: ({ account: string; appellation: string } | string)[] = []
     group.forEach((item) => {
       if (!res.includes(item.key)) {
         res.push(item.key)
@@ -48,36 +52,7 @@ export const FriendList: FC<FriendListProps> = ({
       res.push(...item.data)
     })
     return res
-  }, [list])
-
-  // const rowHeight = (index: number) => {
-  //   if (typeof dataSource[index] === 'string') {
-  //     return 57
-  //   }
-  //   return 46
-  // }
-
-  // const rowRenderer = (data: any) => {
-  //   const item = dataSource[data.index]
-  //   // console.log('rowRenderer:', key, index, item)
-  //   if (typeof item === 'string') {
-  //     return (
-  //       <div className={`${_prefix}-subtitle`} key={item}>
-  //         {item}
-  //       </div>
-  //     )
-  //   }
-  //   return (
-  //     <FriendItem
-  //       key={item.account}
-  //       account={item.account}
-  //       onItemClick={onItemClick}
-  //       afterSendMsgClick={afterSendMsgClick}
-  //       prefix={prefix}
-  //       commonPrefix={commonPrefix}
-  //     />
-  //   )
-  // }
+  }, [accounts, store.uiStore])
 
   return (
     <div className={`${_prefix}-wrapper`}>
@@ -89,21 +64,13 @@ export const FriendList: FC<FriendListProps> = ({
       <div className={`${_prefix}-list`}>
         {loading ? (
           <Spin />
-        ) : !list.length ? (
+        ) : !accounts.length ? (
           renderFriendListEmpty ? (
             renderFriendListEmpty()
           ) : (
             <Empty style={{ marginTop: 10 }} />
           )
         ) : (
-          // <List
-          //   width={810}
-          //   height={469}
-          //   rowCount={dataSource.length}
-          //   rowHeight={rowHeight}
-          //   rowRenderer={rowRenderer}
-          //   containerStyle={{ position: 'static' }}
-          // ></List>
           dataSource.map((item) => {
             if (typeof item === 'string') {
               return (

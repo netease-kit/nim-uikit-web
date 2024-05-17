@@ -122,9 +122,7 @@ const GroupCreate: React.FC<GroupCreateProps> = ({
         <div style={{ height: 450 }}>
           <FriendSelectContainer
             prefix={commonPrefix}
-            onSelect={(accounts) =>
-              setSelectedAccounts(accounts.map((item) => item.account))
-            }
+            onSelect={(accounts) => setSelectedAccounts(accounts)}
             selectedAccounts={selectedAccounts}
           />
         </div>

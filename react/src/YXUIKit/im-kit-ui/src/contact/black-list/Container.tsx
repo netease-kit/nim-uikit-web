@@ -3,6 +3,7 @@ import { BlackList } from './components/BlackList'
 import { useEventTracking, useStateContext } from '../../common'
 import packageJson from '../../../package.json'
 import { observer } from 'mobx-react'
+import sdkPkg from 'nim-web-sdk-ng/package.json'
 
 export interface BlackListContainerProps {
   /**
@@ -40,19 +41,18 @@ export const BlackListContainer: FC<BlackListContainerProps> = observer(
     prefix = 'contact',
     commonPrefix = 'common',
   }) => {
-    const { store, initOptions, nim } = useStateContext()
+    const { store, nim } = useStateContext()
 
     useEventTracking({
-      appkey: initOptions.appkey,
+      appkey: nim.options.appkey,
       version: packageJson.version,
       component: 'ContactUIKit',
-      imVersion: nim.version,
+      imVersion: sdkPkg.version,
     })
 
     return (
       <BlackList
         list={store.relationStore.blacklist}
-        // loading={loading}
         onItemClick={onItemClick}
         afterSendMsgClick={afterSendMsgClick}
         renderBlackListHeader={renderBlackListHeader}

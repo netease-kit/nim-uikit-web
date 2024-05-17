@@ -5,10 +5,10 @@ import {
   useStateContext,
   useTranslation,
 } from '../../../common'
-import { TeamMember } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 import classNames from 'classnames'
 import { observer } from 'mobx-react'
-import { storeConstants } from '@xkit-yx/im-store'
+import { storeConstants } from '@xkit-yx/im-store-v2'
+import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
 
 export type MentionedMember = { account: string; appellation: string }
 
@@ -16,7 +16,7 @@ export interface ChatMentionMemberList {
   allowAtAll?: boolean
   prefix?: string
   commonPrefix?: string
-  mentionMembers?: TeamMember[]
+  mentionMembers?: V2NIMTeamMember[]
   onSelect?: (member: MentionedMember) => void
 }
 
@@ -61,9 +61,9 @@ export const ChatAtMemberList: React.FC<ChatMentionMemberList> = observer(
             } else {
               const member = mentionMembers[activeIndex]
               onSelect?.({
-                account: member.account,
+                account: member.accountId,
                 appellation: store.uiStore.getAppellation({
-                  account: member.account,
+                  account: member.accountId,
                   teamId: member.teamId,
                   ignoreAlias: true,
                 }),
@@ -104,12 +104,12 @@ export const ChatAtMemberList: React.FC<ChatMentionMemberList> = observer(
             className={classNames(`${_prefix}-item`, {
               [`${_prefix}-item-active`]: index === activeIndex,
             })}
-            key={member.account}
+            key={member.accountId}
             onClick={() => {
               onSelect?.({
-                account: member.account,
+                account: member.accountId,
                 appellation: store.uiStore.getAppellation({
-                  account: member.account,
+                  account: member.accountId,
                   teamId: member.teamId,
                   ignoreAlias: true,
                 }),
@@ -121,11 +121,11 @@ export const ChatAtMemberList: React.FC<ChatMentionMemberList> = observer(
               prefix={commonPrefix}
               canClick={false}
               size={28}
-              account={member.account}
+              account={member.accountId}
             />
             <span className={`${_prefix}-label`}>
               {store.uiStore.getAppellation({
-                account: member.account,
+                account: member.accountId,
                 teamId: member.teamId,
               })}
             </span>

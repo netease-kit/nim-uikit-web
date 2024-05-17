@@ -1,10 +1,6 @@
 import React, { Fragment, useRef } from 'react'
 import { Dropdown, Menu, Tooltip } from 'antd'
-import {
-  LoadingOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleFilled,
-} from '@ant-design/icons'
+import { LoadingOutlined, ExclamationCircleFilled } from '@ant-design/icons'
 import classNames from 'classnames'
 import moment from 'moment'
 import {
@@ -16,10 +12,11 @@ import {
   useStateContext,
 } from '../../../common'
 import { RollbackOutlined, DeleteOutlined } from '@ant-design/icons'
-import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import { observer } from 'mobx-react'
 import { MsgOperMenuItem } from '../../Container'
 import { mergeActions } from '../../../utils'
+import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 export type MenuItemKey = 'recall' | 'delete' | 'reply' | 'forward' | string
 export type AvatarMenuItem = 'mention'
@@ -36,21 +33,24 @@ export interface MenuItem {
 }
 
 export interface MessageItemProps {
-  myAccount: string
-  msg: IMMessage
-  replyMsg?: IMMessage
+  msg: V2NIMMessageForUI
+  replyMsg?: V2NIMMessageForUI
   normalStatusRenderer?: React.ReactNode
   msgOperMenu?: MsgOperMenuItem[]
-  onSendImg: (file: File, randomId?: string) => Promise<void>
-  onSendVideo: (file: File, randomId?: string) => Promise<void>
-  onResend: (msg: IMMessage) => void
-  onReeditClick: (msg: IMMessage) => void
-  onMessageAction: (key: MenuItemKey, msg: IMMessage) => void
-  onMessageAvatarAction?: (key: AvatarMenuItem, msg: IMMessage) => void
-  renderMessageAvatar?: (msg: IMMessage) => JSX.Element | null | undefined
-  renderMessageName?: (msg: IMMessage) => JSX.Element | null | undefined
-  renderMessageOuterContent?: (msg: IMMessage) => JSX.Element | null | undefined
-  renderMessageInnerContent?: (msg: IMMessage) => JSX.Element | null | undefined
+  onReeditClick: (msg: V2NIMMessageForUI) => void
+  onResend: (msg: V2NIMMessageForUI) => void
+  onMessageAction: (key: MenuItemKey, msg: V2NIMMessageForUI) => void
+  onMessageAvatarAction?: (key: AvatarMenuItem, msg: V2NIMMessageForUI) => void
+  renderMessageAvatar?: (
+    msg: V2NIMMessageForUI
+  ) => JSX.Element | null | undefined
+  renderMessageName?: (msg: V2NIMMessageForUI) => JSX.Element | null | undefined
+  renderMessageOuterContent?: (
+    msg: V2NIMMessageForUI
+  ) => JSX.Element | null | undefined
+  renderMessageInnerContent?: (
+    msg: V2NIMMessageForUI
+  ) => JSX.Element | null | undefined
   prefix?: string
   commonPrefix?: string
 }
@@ -59,15 +59,12 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
   ({
     msg,
     replyMsg,
-    myAccount,
     normalStatusRenderer,
     msgOperMenu,
-    onResend,
-    onSendImg,
-    onSendVideo,
     onMessageAction,
     onMessageAvatarAction,
     onReeditClick,
+    onResend,
     renderMessageAvatar,
     renderMessageName,
     renderMessageOuterContent,
@@ -81,87 +78,71 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
     const _prefix = `${prefix}-message-list-item`
 
     const {
-      from,
-      // fromNick,
-      body,
-      attach,
-      idClient,
-      status,
-      // @ts-ignore
+      text,
+      senderId,
+      receiverId,
+      messageClientId,
+      sendingState,
+
       uploadProgress,
-      // @ts-ignore
-      uploadFileInfo,
-      time,
-      type,
-      scene,
-      to,
+      createTime,
+      messageType,
+      conversationType,
+      isSelf,
+      recallType = '',
+      canRecall = false,
+      canEdit = false,
+      errorCode,
     } = msg
 
     const messageActionDropdownContainerRef = useRef<HTMLDivElement>(null)
     const messageAvatarActionDropdownContainerRef = useRef<HTMLDivElement>(null)
 
-    const isSelf = from === myAccount
-
     const nick = store.uiStore.getAppellation({
-      account: from,
-      teamId: scene === 'team' ? to : undefined,
+      account: senderId,
+      teamId:
+        conversationType ===
+        V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
+          ? receiverId
+          : undefined,
     })
 
     const nickWithoutAlias = store.uiStore.getAppellation({
-      account: from,
-      teamId: scene === 'team' ? to : undefined,
+      account: senderId,
+      teamId:
+        conversationType ===
+        V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
+          ? receiverId
+          : undefined,
       ignoreAlias: true,
     })
 
-    // 内存中插入的 msg 属性，具体内容参考 msg store
-    const {
-      type: attachType = '',
-      canRecall = false,
-      canEdit = false,
-      oldBody = '',
-    } = attach || { type: '', canRecall: false, canEdit: false, oldBody: '' }
-
     const handleResendMsg = () => {
-      // 如果是上传过程中失败的图片和视频消息，则重新发送
-      if (uploadFileInfo && ['image', 'video'].includes(msg.type)) {
-        switch (msg.type) {
-          case 'image':
-            onSendImg(uploadFileInfo.file, msg.idClient)
-            break
-          case 'video':
-            onSendVideo(uploadFileInfo.file, msg.idClient)
-            break
-          default:
-            break
-        }
-      } else {
-        onResend(msg)
-      }
+      onResend(msg)
     }
 
     const renderSendStatus = () => {
-      if (status === 'sending') {
+      if (
+        sendingState ===
+        V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_SENDING
+      ) {
         return <LoadingOutlined className={`${_prefix}-status-icon`} />
       }
-      if (status === 'read') {
-        return <CheckCircleOutlined className={`${_prefix}-status-icon`} />
-      }
-      if (status === 'sendFailed') {
+      if (
+        sendingState ===
+        V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_FAILED
+      ) {
+        const title =
+          errorCode === 102426
+            ? t('sendBlackFailedText')
+            : errorCode === 104404
+            ? t('sendNotFriendFailedText')
+            : t('sendMsgFailedText')
         return (
-          <Tooltip title={t('sendMsgFailedText')}>
+          <Tooltip title={title}>
             <ExclamationCircleFilled
               className={`${_prefix}-status-icon-fail`}
               onClick={handleResendMsg}
-            />
-          </Tooltip>
-        )
-      }
-      if (status === 'refused') {
-        return (
-          <Tooltip title={t('sendBlackFailedText')}>
-            <ExclamationCircleFilled
-              className={`${_prefix}-status-icon-fail`}
-              onClick={() => onResend(msg)}
             />
           </Tooltip>
         )
@@ -170,7 +151,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
     }
 
     const renderMsgDate = () => {
-      const date = moment(time)
+      const date = moment(createTime)
       const isCurrentDay = date.isSame(moment(), 'day')
       const isCurrentYear = date.isSame(moment(), 'year')
       return isCurrentDay
@@ -188,7 +169,12 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
         //   icon: <CopyOutlined />,
         // },
         {
-          show: ['sending', 'sendFailed', 'refused', 'delete'].includes(status)
+          show: [
+            V2NIMConst.V2NIMMessageSendingState
+              .V2NIM_MESSAGE_SENDING_STATE_SENDING,
+            V2NIMConst.V2NIMMessageSendingState
+              .V2NIM_MESSAGE_SENDING_STATE_FAILED,
+          ].includes(sendingState)
             ? 0
             : 1,
           label: t('replyText'),
@@ -203,8 +189,13 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
         },
         {
           show:
-            ['sending', 'sendFailed', 'refused', 'delete'].includes(status) ||
-            type === 'audio'
+            [
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_SENDING,
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_FAILED,
+            ].includes(sendingState) ||
+            messageType === V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_AUDIO
               ? 0
               : 1,
           label: t('forwardText'),
@@ -236,8 +227,8 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
 
     const renderSpecialMsg = () => {
       return (
-        <div key={idClient} className={`${_prefix}-recall`}>
-          {attachType === 'reCallMsg' ? (
+        <div key={messageClientId} className={`${_prefix}-recall`}>
+          {recallType === 'reCallMsg' ? (
             <>
               {`${t('you')}${t('recallMessageText')}`}
               {canEdit ? (
@@ -256,9 +247,10 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       )
     }
 
-    return attachType === 'reCallMsg' || attachType === 'beReCallMsg' ? (
+    return recallType === 'reCallMsg' || recallType === 'beReCallMsg' ? (
       renderSpecialMsg()
-    ) : type === 'notification' ? (
+    ) : messageType ===
+      V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_NOTIFICATION ? (
       <ParseSession replyMsg={replyMsg} msg={msg} prefix={commonPrefix} />
     ) : (
       <div
@@ -272,7 +264,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
               <MyAvatarContainer prefix={commonPrefix} canClick={false} />
             ) : (
               <Dropdown
-                key={idClient}
+                key={messageClientId}
                 trigger={['contextMenu']}
                 overlay={
                   onMessageAvatarAction ? (
@@ -296,7 +288,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
                 >
                   <ComplexAvatarContainer
                     prefix={commonPrefix}
-                    account={from}
+                    account={senderId}
                   />
                 </div>
               </Dropdown>
@@ -305,7 +297,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
         )}
 
         <Dropdown
-          key={idClient}
+          key={messageClientId}
           trigger={['contextMenu']}
           overlay={
             <Menu

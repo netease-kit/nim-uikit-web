@@ -1,6 +1,6 @@
 import React, { FC, ReactNode } from 'react'
 import { Avatar, Badge } from 'antd'
-import { ContactType } from '@xkit-yx/im-store'
+import { ContactType } from '@xkit-yx/im-store-v2'
 
 export interface ContactItemProps {
   icon: ReactNode

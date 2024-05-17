@@ -1,18 +1,29 @@
 import React, { FC, useEffect, useState, useMemo } from 'react'
 import { Modal, Input, Select, Upload, message, Form } from 'antd'
 import { CrudeAvatar } from '../CrudeAvatar'
-import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 import { useTranslation } from '../../hooks/useTranslation'
+import { Gender } from '../UserCard'
 
-export interface MyUserCardProps
-  extends Omit<UserNameCard, 'createTime' | 'updateTime'> {
+export interface MyUserCardProps {
+  account: string
+  nick?: string
+  avatar?: string
+  signature?: string
+  gender?: Gender
+  email?: string
+  birth?: string
+  tel?: string
+  ext?: string
   visible: boolean
-  onSave?: (
-    params: Pick<
-      UserNameCard,
-      'avatar' | 'email' | 'gender' | 'nick' | 'tel' | 'signature'
-    > & { avatarFile?: File }
-  ) => void
+  onSave?: (params: {
+    avatarFile?: File
+    avatar?: string
+    gender?: Gender
+    email?: string
+    nick?: string
+    tel?: string
+    signature?: string
+  }) => void
   onCancel?: () => void
   prefix?: string
 }
@@ -30,11 +41,11 @@ export const MyUserCard: FC<MyUserCardProps> = ({
 
   const genderOptions = useMemo(
     () => [
-      { label: t('man'), value: 'male' },
-      { label: t('woman'), value: 'female' },
-      { label: t('unknow'), value: 'unknown' },
+      { label: t('man'), value: Gender.male },
+      { label: t('woman'), value: Gender.female },
+      { label: t('unknow'), value: Gender.unknown },
     ],
-    []
+    [t]
   )
 
   const [nick, setNick] = useState<string | undefined>(undefined)
@@ -42,9 +53,7 @@ export const MyUserCard: FC<MyUserCardProps> = ({
   const [avatar, setAvatar] = useState<string | undefined>(undefined)
   // 头像 file 对象，用于上传
   const [avatarFile, setAvatarFile] = useState<File | undefined>(undefined)
-  const [gender, setGender] = useState<
-    'unknown' | 'male' | 'female' | undefined
-  >(undefined)
+  const [gender, setGender] = useState<Gender | undefined>(undefined)
   const [tel, setTel] = useState<string | undefined>(undefined)
   const [email, setEmail] = useState<string | undefined>(undefined)
   const [signature, setSignature] = useState<string | undefined>(undefined)

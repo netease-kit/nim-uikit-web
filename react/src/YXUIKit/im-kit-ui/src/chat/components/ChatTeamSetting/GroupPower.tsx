@@ -6,17 +6,19 @@ import {
   useTranslation,
 } from '../../../common'
 import {
-  Team,
-  TeamMember,
-} from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+  V2NIMTeam,
+  V2NIMTeamMember,
+  V2NIMUpdatedTeamInfo,
+} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
 import ChatTeamMemberModal from '../ChatTeamMemberModal'
 import { ALLOW_AT, TAllowAt } from '../../../constant'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 export interface GroupPowerProps {
-  onUpdateTeamInfo: (team: Partial<Team>) => void
+  onUpdateTeamInfo: (team: V2NIMUpdatedTeamInfo) => void
   onTeamMuteChange: (mute: boolean) => void
-  team: Team
-  managers: TeamMember[]
+  team: V2NIMTeam
+  managers: V2NIMTeamMember[]
   isGroupOwner: boolean
   afterSendMsgClick?: () => void
 
@@ -59,12 +61,12 @@ const GroupPower: React.FC<GroupPowerProps> = ({
   const ext: TAllowAt = useMemo(() => {
     let res = {}
     try {
-      res = JSON.parse(team.ext || '{}')
+      res = JSON.parse(team.serverExtension || '{}')
     } catch (error) {
       //
     }
     return res
-  }, [team.ext])
+  }, [team.serverExtension])
 
   return (
     <div className={`${_prefix}-wrap`}>
@@ -94,8 +96,8 @@ const GroupPower: React.FC<GroupPowerProps> = ({
             ) : (
               managers.map((item) => (
                 <ComplexAvatarContainer
-                  key={item.account}
-                  account={item.account}
+                  key={item.accountId}
+                  account={item.accountId}
                   afterSendMsgClick={afterSendMsgClick}
                   prefix={commonPrefix}
                 />
@@ -110,9 +112,22 @@ const GroupPower: React.FC<GroupPowerProps> = ({
           <Select
             className={`${_prefix}-who-select`}
             options={options}
-            value={team.updateTeamMode}
+            value={
+              team.updateInfoMode ===
+              V2NIMConst.V2NIMTeamUpdateInfoMode
+                .V2NIM_TEAM_UPDATE_INFO_MODE_MANAGER
+                ? 'manager'
+                : 'all'
+            }
             onChange={(value) => {
-              onUpdateTeamInfo({ updateTeamMode: value })
+              onUpdateTeamInfo({
+                updateInfoMode:
+                  value === 'manager'
+                    ? V2NIMConst.V2NIMTeamUpdateInfoMode
+                        .V2NIM_TEAM_UPDATE_INFO_MODE_MANAGER
+                    : V2NIMConst.V2NIMTeamUpdateInfoMode
+                        .V2NIM_TEAM_UPDATE_INFO_MODE_ALL,
+              })
             }}
           ></Select>
         </div>
@@ -121,9 +136,20 @@ const GroupPower: React.FC<GroupPowerProps> = ({
           <Select
             className={`${_prefix}-who-select`}
             options={options}
-            value={team.inviteMode}
+            value={
+              team.inviteMode ===
+              V2NIMConst.V2NIMTeamInviteMode.V2NIM_TEAM_INVITE_MODE_MANAGER
+                ? 'manager'
+                : 'all'
+            }
             onChange={(value) => {
-              onUpdateTeamInfo({ inviteMode: value })
+              onUpdateTeamInfo({
+                inviteMode:
+                  value === 'manager'
+                    ? V2NIMConst.V2NIMTeamInviteMode
+                        .V2NIM_TEAM_INVITE_MODE_MANAGER
+                    : V2NIMConst.V2NIMTeamInviteMode.V2NIM_TEAM_INVITE_MODE_ALL,
+              })
             }}
           ></Select>
         </div>
@@ -135,7 +161,7 @@ const GroupPower: React.FC<GroupPowerProps> = ({
             value={ext[ALLOW_AT] || 'all'}
             onChange={(value) => {
               onUpdateTeamInfo({
-                ext: JSON.stringify({ ...ext, [ALLOW_AT]: value }),
+                serverExtension: JSON.stringify({ ...ext, [ALLOW_AT]: value }),
               })
             }}
           ></Select>
@@ -144,7 +170,14 @@ const GroupPower: React.FC<GroupPowerProps> = ({
       <div className={`${_prefix}-action`}>
         <div className={`${_prefix}-action-item`}>
           <label>{t('teamMuteText')}</label>
-          <Switch checked={team.mute} onChange={onTeamMuteChange} />
+          <Switch
+            checked={
+              team.chatBannedMode !==
+              V2NIMConst.V2NIMTeamChatBannedMode
+                .V2NIM_TEAM_CHAT_BANNED_MODE_UNBAN
+            }
+            onChange={onTeamMuteChange}
+          />
         </div>
       </div>
       <ChatTeamMemberModal

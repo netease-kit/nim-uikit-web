@@ -1,14 +1,14 @@
 import React, { FC, useMemo, useState } from 'react'
 import { GroupItem, GroupItemProps } from './GroupItem'
-import { TeamMember } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
 import { Input } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
 import { useStateContext, useTranslation } from '../../../common'
 
 export interface GroupListProps {
-  myMemberInfo: TeamMember
-  members: TeamMember[]
-  onRemoveTeamMemberClick: (member: TeamMember) => void
+  myMemberInfo: V2NIMTeamMember
+  members: V2NIMTeamMember[]
+  onRemoveTeamMemberClick: (member: V2NIMTeamMember) => void
   afterSendMsgClick?: () => void
   renderTeamMemberItem?: (
     params: GroupItemProps
@@ -39,12 +39,12 @@ const GroupList: FC<GroupListProps> = ({
     if (groupSearchText) {
       _sortedMembers = members.filter((item) =>
         store.uiStore
-          .getAppellation({ account: item.account, teamId: item.teamId })
+          .getAppellation({ account: item.accountId, teamId: item.teamId })
           .includes(groupSearchText)
       )
     }
     return _sortedMembers
-  }, [members, groupSearchText])
+  }, [members, groupSearchText, store.uiStore])
 
   return (
     <div className={`${_prefix}-wrap`}>
@@ -68,7 +68,7 @@ const GroupList: FC<GroupListProps> = ({
           }
           return (
             renderTeamMemberItem?.(itemProps) ?? (
-              <GroupItem key={item.account} {...itemProps} />
+              <GroupItem key={item.accountId} {...itemProps} />
             )
           )
         })

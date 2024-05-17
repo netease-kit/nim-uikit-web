@@ -1,14 +1,14 @@
 import React, { FC, useMemo } from 'react'
 import { Divider, message, Spin } from 'antd'
 import { FriendSelectItem } from './FriendSelectItem'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import { groupByPy } from '../../../utils'
 import { useTranslation } from '../../hooks/useTranslation'
+import { useStateContext } from '../../hooks/useStateContext'
 
 export interface FriendSelectUIProps {
-  list: NimKitCoreTypes.IFriendInfo[]
+  accounts?: string[]
   selectedAccounts: string[]
-  onSelect: (selected: NimKitCoreTypes.IFriendInfo[]) => void
+  onSelect: (accounts: string[]) => void
   loading?: boolean
   max?: number
 
@@ -16,7 +16,7 @@ export interface FriendSelectUIProps {
 }
 
 export const FriendSelectUI: FC<FriendSelectUIProps> = ({
-  list,
+  accounts = [],
   selectedAccounts,
   onSelect,
   loading = false,
@@ -26,18 +26,21 @@ export const FriendSelectUI: FC<FriendSelectUIProps> = ({
   const _prefix = `${prefix}-friend-select`
 
   const { t } = useTranslation()
+  const { store } = useStateContext()
 
   const dataSource = useMemo(() => {
-    return groupByPy<NimKitCoreTypes.IFriendInfo>(
-      list,
+    const _data = accounts.map((account) => ({
+      account,
+      appellation: store.uiStore.getAppellation({ account }),
+    }))
+    return groupByPy(
+      _data,
       {
-        firstKey: 'alias',
-        secondKey: 'nick',
-        thirdKey: 'account',
+        firstKey: 'appellation',
       },
       false
     )
-  }, [list])
+  }, [accounts, store.uiStore])
 
   const handleSelect = (account: string, selected: boolean) => {
     let _selectedAccounts: string[] = []
@@ -50,21 +53,19 @@ export const FriendSelectUI: FC<FriendSelectUIProps> = ({
     } else if (!selected && selectedAccounts.includes(account)) {
       _selectedAccounts = selectedAccounts.filter((item) => item !== account)
     }
-    const _selectedList = list.filter((item) =>
-      _selectedAccounts.includes(item.account)
+    const _selectedList = accounts.filter((item) =>
+      _selectedAccounts.includes(item)
     )
     onSelect(_selectedList)
   }
 
   const selectedList = useMemo(() => {
-    return list.filter((item) => selectedAccounts.includes(item.account))
-  }, [list, selectedAccounts])
+    return accounts.filter((item) => selectedAccounts.includes(item))
+  }, [accounts, selectedAccounts])
 
   const strangerList = useMemo(() => {
-    return selectedAccounts.filter((item) =>
-      list.every((j) => j.account !== item)
-    )
-  }, [list, selectedAccounts])
+    return selectedAccounts.filter((item) => accounts.every((j) => j !== item))
+  }, [accounts, selectedAccounts])
 
   return (
     <div className={`${_prefix}-wrapper`}>
@@ -104,10 +105,11 @@ export const FriendSelectUI: FC<FriendSelectUIProps> = ({
             <div className={`${_prefix}-selected-content`}>
               {selectedList.map((item) => (
                 <FriendSelectItem
-                  key={`select_${item.account}`}
+                  key={`select_${item}`}
                   canSelect={false}
                   prefix={prefix}
-                  {...item}
+                  account={item}
+                  appellation={store.uiStore.getAppellation({ account: item })}
                 />
               ))}
             </div>

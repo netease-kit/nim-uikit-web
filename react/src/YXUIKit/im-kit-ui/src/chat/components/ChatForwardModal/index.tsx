@@ -7,26 +7,18 @@ import {
   CrudeAvatar,
   SelectModal,
 } from '../../../common'
-import {
-  IMMessage,
-  TMsgScene,
-} from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
-import { parseSessionId } from '../../../utils'
 import { SelectModalItemProps } from '../../../common/components/SelectModal'
+import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 export interface ChatForwardModalProps {
-  msg: IMMessage
+  msg?: V2NIMMessageForUI
   visible: boolean
   onSend: () => void
   onCancel: () => void
 
   prefix?: string
   commonPrefix?: string
-}
-
-export interface ChatForwardModalItemProps {
-  scene: TMsgScene
-  to: string
 }
 
 const ChatForwardModal: React.FC<ChatForwardModalProps> = ({
@@ -38,7 +30,7 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = ({
   commonPrefix = 'common',
 }) => {
   const { t } = useTranslation()
-  const { store } = useStateContext()
+  const { nim, store } = useStateContext()
 
   const [comment, setComment] = useState('')
   const [isSearching, setIsSearching] = useState(false)
@@ -52,29 +44,44 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = ({
   const datasource: SelectModalItemProps[] = useMemo(() => {
     if (isSearching) {
       const friends = store.uiStore.friends
-        .filter((item) => !store.relationStore.blacklist.includes(item.account))
+        .filter(
+          (item) => !store.relationStore.blacklist.includes(item.accountId)
+        )
         .map((item) => ({
-          key: 'p2p-' + item.account,
-          label: store.uiStore.getAppellation({ account: item.account }),
+          key: nim.V2NIMConversationIdUtil.p2pConversationId(item.accountId),
+          label: store.uiStore.getAppellation({ account: item.accountId }),
         }))
       const teams = store.uiStore.teamList.map((item) => ({
-        key: 'team-' + item.teamId,
+        key: nim.V2NIMConversationIdUtil.teamConversationId(item.teamId),
         label: item.name || item.teamId,
       }))
       return [...friends, ...teams]
     }
-    const res = [...store.sessionStore.sessions.values()]
+    const res = [...store.conversationStore.conversations.values()]
       .map((item) => {
-        if (item.scene === 'p2p') {
+        if (
+          item.type ===
+          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
+        ) {
           return {
-            key: item.id,
-            label: store.uiStore.getAppellation({ account: item.to }),
+            key: item.conversationId,
+            label: store.uiStore.getAppellation({
+              account: nim.V2NIMConversationIdUtil.parseConversationTargetId(
+                item.conversationId
+              ),
+            }),
           }
         }
-        if (item.scene === 'team') {
-          const team = store.teamStore.teams.get(item.to)
+        if (
+          item.type ===
+          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
+        ) {
+          const teamId = nim.V2NIMConversationIdUtil.parseConversationTargetId(
+            item.conversationId
+          )
+          const team = store.teamStore.teams.get(teamId)
           return {
-            key: item.id,
+            key: item.conversationId,
             label: team?.name || team?.teamId || '',
           }
         }
@@ -84,16 +91,23 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = ({
 
     return res
   }, [
+    nim.V2NIMConversationIdUtil,
     isSearching,
-    store.sessionStore.sessions,
+    store.conversationStore.conversations,
     store.teamStore.teams,
     store.relationStore.blacklist,
     store.uiStore,
   ])
 
   const itemAvatarRender = (data: SelectModalItemProps) => {
-    const { scene, to } = parseSessionId(data.key)
-    if (scene === 'p2p') {
+    const to = nim.V2NIMConversationIdUtil.parseConversationTargetId(data.key)
+    const conversationType = nim.V2NIMConversationIdUtil.parseConversationType(
+      data.key
+    )
+    if (
+      conversationType ===
+      V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
+    ) {
       return (
         <ComplexAvatarContainer
           prefix={commonPrefix}
@@ -103,7 +117,10 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = ({
         />
       )
     }
-    if (scene === 'team') {
+    if (
+      conversationType ===
+      V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
+    ) {
       const team = store.teamStore.teams.get(to)
       return (
         <CrudeAvatar
@@ -127,17 +144,9 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = ({
   }
 
   const handleOk = async (data: SelectModalItemProps[]) => {
-    const { scene, to } = parseSessionId(data[0].key)
-    if (scene && to) {
+    if (data[0].key && msg) {
       try {
-        await store.msgStore.forwardMsgActive(
-          {
-            msg,
-            scene: scene as TMsgScene,
-            to,
-          },
-          comment
-        )
+        await store.msgStore.forwardMsgActive(msg, data[0].key, comment)
         onSend()
       } catch (error) {
         message.error(t('forwardFailedText'))

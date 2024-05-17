@@ -1,7 +1,3 @@
-import {
-  NIMInitializeOptions,
-  NIMOtherOptions,
-} from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/NIMInterface'
 import React, {
   FC,
   ReactNode,
@@ -11,46 +7,46 @@ import React, {
   createContext,
   memo,
 } from 'react'
-import RootStore from '@xkit-yx/im-store'
-import { LocalOptions } from '@xkit-yx/im-store'
+import RootStore from '@xkit-yx/im-store-v2'
+import { LocalOptions } from '@xkit-yx/im-store-v2/dist/types/types'
 import { observer } from 'mobx-react'
-import { NimKitCoreFactory, NimKitCoreTypes } from '@xkit-yx/core-kit'
 import { useStateContext } from '../hooks/useStateContext'
+import V2NIM from 'nim-web-sdk-ng'
 import zh from '../locales/zh'
+import sdkPkg from 'nim-web-sdk-ng/package.json'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 export interface ContextProps {
-  nim?: NimKitCoreTypes.INimKitCore
+  nim?: V2NIM
   store?: RootStore
-  initOptions?: NIMInitializeOptions
   localOptions?: Partial<LocalOptions>
   t?: (str: keyof typeof zh) => string
 }
 
 export interface ProviderProps {
   children: ReactNode
-  sdkVersion?: 1 | 2
-  initOptions: NIMInitializeOptions
-  otherOptions?: NIMOtherOptions
   localOptions?: Partial<LocalOptions>
-  funcOptions?: { [key: string]: (...args: any) => void }
-  nimKitCore?: NimKitCoreTypes.INimKitCore
+  nim: V2NIM
+  // 单例模式，用于 vue 带 UI 组件
+  singleton?: boolean
   locale?: 'zh' | 'en'
   localeConfig?: { [key in keyof typeof zh]?: string }
-  renderImIdle?: () => JSX.Element
   renderImDisConnected?: () => JSX.Element
   renderImConnecting?: () => JSX.Element
-  singleton?: boolean
 }
 
 export const Context = createContext<ContextProps>({})
 
 const defaultLocalOptions: Required<LocalOptions> = {
   addFriendNeedVerify: true,
-  teamBeInviteMode: 'needVerify',
-  teamJoinMode: 'noVerify',
-  teamInviteMode: 'manager',
-  teamUpdateTeamMode: 'manager',
-  teamUpdateExtMode: 'manager',
+  teamAgreeMode: V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_NO_AUTH,
+  teamJoinMode: V2NIMConst.V2NIMTeamJoinMode.V2NIM_TEAM_JOIN_MODE_FREE,
+  teamInviteMode: V2NIMConst.V2NIMTeamInviteMode.V2NIM_TEAM_INVITE_MODE_MANAGER,
+  teamUpdateTeamMode:
+    V2NIMConst.V2NIMTeamUpdateInfoMode.V2NIM_TEAM_UPDATE_INFO_MODE_MANAGER,
+  teamUpdateExtMode:
+    V2NIMConst.V2NIMTeamUpdateExtensionMode
+      .V2NIM_TEAM_UPDATE_EXTENSION_MODE_MANAGER,
   leaveOnTransfer: false,
   needMention: true,
   p2pMsgReceiptVisible: false,
@@ -65,43 +61,14 @@ const defaultLocalOptions: Required<LocalOptions> = {
 export const Provider: FC<ProviderProps> = memo(
   ({
     children,
-    initOptions,
-    otherOptions,
-    funcOptions,
     localOptions = defaultLocalOptions,
-    nimKitCore,
-    sdkVersion = 1,
+    nim,
     locale = 'zh',
     localeConfig = zh,
-    renderImIdle,
     renderImDisConnected,
     renderImConnecting,
     singleton = false,
   }) => {
-    // 对象参数的引用很容易变，会导致 nim 重新生成，因此最好将对象参数用 useMemo 包裹一下再传进来
-    const nim = useMemo(() => {
-      let _nim: NimKitCoreTypes.INimKitCore
-      if (nimKitCore) {
-        _nim = nimKitCore
-      } else {
-        const NIM = NimKitCoreFactory(sdkVersion)
-        if (singleton) {
-          _nim = NIM.getInstance({ initOptions, otherOptions, funcOptions })
-        } else {
-          _nim = new NIM({ initOptions, otherOptions, funcOptions })
-        }
-      }
-      _nim.connect()
-      return _nim
-    }, [
-      initOptions,
-      otherOptions,
-      funcOptions,
-      sdkVersion,
-      nimKitCore,
-      singleton,
-    ])
-
     const localeMap = useMemo(
       () => ({
         zh,
@@ -134,8 +101,8 @@ export const Provider: FC<ProviderProps> = memo(
     window.__xkit_store__ = {
       nim,
       store: rootStore,
-      initOptions,
       localOptions: finalLocalOptions,
+      sdkVersion: sdkPkg.version,
     }
 
     useEffect(() => {
@@ -146,25 +113,16 @@ export const Provider: FC<ProviderProps> = memo(
       }
     }, [rootStore, singleton])
 
-    useEffect(() => {
-      return () => {
-        if (!singleton) {
-          nim.destroy()
-        }
-      }
-    }, [nim, singleton])
     return (
       <Context.Provider
         value={{
           store: rootStore,
           nim,
-          initOptions,
           localOptions: finalLocalOptions,
           t,
         }}
       >
         <App
-          renderImIdle={renderImIdle}
           renderImConnecting={renderImConnecting}
           renderImDisConnected={renderImDisConnected}
         >
@@ -176,36 +134,31 @@ export const Provider: FC<ProviderProps> = memo(
 )
 
 export const App: FC<{
-  renderImIdle?: () => JSX.Element
   renderImDisConnected?: () => JSX.Element
   renderImConnecting?: () => JSX.Element
-}> = observer(
-  ({ renderImIdle, renderImConnecting, renderImDisConnected, children }) => {
-    const { store } = useStateContext()
+}> = observer(({ renderImConnecting, renderImDisConnected, children }) => {
+  const { store } = useStateContext()
 
-    const render = () => {
-      switch (store.connectStore.connectState) {
-        case 'connected':
-          return children
-        case 'idle':
-          return renderImIdle ? renderImIdle() : null
-        case 'connecting':
-          return renderImConnecting ? (
-            renderImConnecting()
-          ) : (
-            <span>Loading……</span>
-          )
-        case 'disconnected':
-          return renderImDisConnected ? (
-            renderImDisConnected()
-          ) : (
-            <span>当前网络不可用，请检查网络设置，刷新页面</span>
-          )
-        default:
-          return null
-      }
+  const render = () => {
+    switch (store.connectStore.loginStatus) {
+      case V2NIMConst.V2NIMLoginStatus.V2NIM_LOGIN_STATUS_LOGINED:
+        return children
+      case V2NIMConst.V2NIMLoginStatus.V2NIM_LOGIN_STATUS_LOGINING:
+        return renderImConnecting ? (
+          renderImConnecting()
+        ) : (
+          <span>Loading……</span>
+        )
+      case V2NIMConst.V2NIMLoginStatus.V2NIM_LOGIN_STATUS_LOGOUT:
+        return renderImDisConnected ? (
+          renderImDisConnected()
+        ) : (
+          <span>当前网络不可用，请检查网络设置，刷新页面</span>
+        )
+      default:
+        return null
     }
-
-    return <>{render()}</>
   }
-)
+
+  return <>{render()}</>
+})

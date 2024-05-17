@@ -14,11 +14,10 @@ import {
   Popover,
   message,
   Button,
-  Spin,
   Dropdown,
   Menu,
+  Spin,
 } from 'antd'
-import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import {
   CommonIcon,
   getMsgContentTipByType,
@@ -28,14 +27,16 @@ import {
 } from '../../../common'
 import { Action } from '../../Container'
 import { MAX_UPLOAD_FILE_SIZE } from '../../../constant'
-import { storeConstants } from '@xkit-yx/im-store'
+import { storeConstants } from '@xkit-yx/im-store-v2'
 import { LoadingOutlined, CloseOutlined } from '@ant-design/icons'
-import { TMsgScene } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import { observer } from 'mobx-react'
 import { TextAreaRef } from 'antd/lib/input/TextArea'
-import { TeamMember } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 import ChatAtMemberList, { MentionedMember } from './ChatMentionMemberList'
 import { mergeActions } from '../../../utils'
+import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import { V2NIMConversationType } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 const { TextArea } = Input
 
@@ -43,16 +44,14 @@ export interface ChatMessageInputProps {
   prefix?: string
   commonPrefix?: string
   placeholder?: string
-  replyMsg?: IMMessage
-  mentionMembers?: TeamMember[]
-  scene: TMsgScene
-  to: string
+  replyMsg?: V2NIMMessageForUI
+  mentionMembers?: V2NIMTeamMember[]
+  conversationType: V2NIMConversationType
+  receiverId: string
   actions?: Action[]
   mute?: boolean
   allowAtAll?: boolean
   inputValue?: string
-  uploadImageLoading?: boolean
-  uploadFileLoading?: boolean
   setInputValue: (value: string) => void
   onSendText: (value: string, ext?: Record<string, unknown>) => void
   onSendFile: (file: File) => void
@@ -78,13 +77,11 @@ const ChatMessageInput = observer(
       placeholder = '',
       mentionMembers,
       actions,
-      scene,
-      to,
+      conversationType,
+      receiverId,
       mute = false,
       allowAtAll = true,
       inputValue = '',
-      uploadImageLoading = false,
-      uploadFileLoading = false,
       replyMsg,
       setInputValue,
       onSendText,
@@ -207,22 +204,18 @@ const ChatMessageInput = observer(
         render: () => {
           return (
             <Button size="small" disabled={mute}>
-              {uploadFileLoading ? (
-                <Spin indicator={LoadingIcon} />
-              ) : (
-                <Upload
-                  beforeUpload={onBeforeUploadFileHandler}
-                  showUploadList={false}
-                  disabled={mute}
-                  // action={onUploadFileHandler}
-                  className={`${_prefix}-icon-upload`}
-                >
-                  <CommonIcon
-                    className={`${_prefix}-icon-file`}
-                    type="icon-wenjian"
-                  />
-                </Upload>
-              )}
+              <Upload
+                beforeUpload={onBeforeUploadFileHandler}
+                showUploadList={false}
+                disabled={mute}
+                // action={onUploadFileHandler}
+                className={`${_prefix}-icon-upload`}
+              >
+                <CommonIcon
+                  className={`${_prefix}-icon-file`}
+                  type="icon-wenjian"
+                />
+              </Upload>
             </Button>
           )
         },
@@ -262,7 +255,7 @@ const ChatMessageInput = observer(
         const res = mentionMembers?.filter((member) => {
           return store.uiStore
             .getAppellation({
-              account: member.account,
+              account: member.accountId,
               teamId: member.teamId,
             })
             ?.includes(atMemberSearchText.replace('@', ''))
@@ -276,7 +269,7 @@ const ChatMessageInput = observer(
     useEffect(() => {
       setAtMemberSearchText('')
       setAtVisible(false)
-    }, [to])
+    }, [receiverId])
 
     useEffect(() => {
       if (atMemberSearchText) {
@@ -594,8 +587,12 @@ const ChatMessageInput = observer(
     const replyMsgContent = () => {
       if (replyMsg) {
         const nick = store.uiStore.getAppellation({
-          account: replyMsg.from,
-          teamId: replyMsg.scene === 'team' ? replyMsg.to : undefined,
+          account: replyMsg.senderId,
+          teamId:
+            replyMsg.conversationType ===
+            V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
+              ? replyMsg.receiverId
+              : undefined,
           ignoreAlias: true,
         })
         let content = `${t('replyText')} ${nick}：`

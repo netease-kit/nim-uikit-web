@@ -1,24 +1,23 @@
 import React, { forwardRef } from 'react'
-import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
-import { TeamMember } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 import MessageListItem, { MessageItemProps } from '../ChatMessageItem'
 import { Alert, Spin } from 'antd'
 import { ArrowDownOutlined } from '@ant-design/icons'
 import { ReadPercent, useStateContext, useTranslation } from '../../../common'
-import { storeUtils } from '@xkit-yx/im-store'
+import { storeUtils } from '@xkit-yx/im-store-v2'
 import { MsgOperMenuItem } from '../../Container'
+import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
 
-export interface RenderTeamCustomMessageOptions
-  extends Omit<MessageItemProps, 'myAccount'> {
-  members: TeamMember[]
+export interface RenderTeamCustomMessageOptions extends MessageItemProps {
+  members: V2NIMTeamMember[]
 }
 
 export interface ChatTeamMessageListProps
   extends Omit<MessageItemProps, 'msg' | 'alias'> {
-  msgs: IMMessage[]
+  msgs: V2NIMMessageForUI[]
   msgOperMenu?: MsgOperMenuItem[]
-  replyMsgsMap: Record<string, IMMessage>
-  members: TeamMember[]
+  replyMsgsMap: Record<string, V2NIMMessageForUI>
+  members: V2NIMTeamMember[]
   renderTeamCustomMessage?: (
     options: RenderTeamCustomMessageOptions
   ) => JSX.Element | null | undefined
@@ -49,10 +48,7 @@ const ChatTeamMessageList = forwardRef<
       onReceiveMsgBtnClick,
       loadingMore,
       noMore,
-      myAccount,
       onResend,
-      onSendImg,
-      onSendVideo,
       onMessageAction,
       onMessageAvatarAction,
       onReeditClick,
@@ -82,35 +78,30 @@ const ChatTeamMessageList = forwardRef<
           {renderMsgs.map((msg) => {
             const msgItem = renderTeamCustomMessage?.({
               msg,
-              replyMsg: replyMsgsMap[msg.idClient],
+              replyMsg: replyMsgsMap[msg.messageClientId],
               members,
               onResend,
-              onSendImg,
-              onSendVideo,
               onReeditClick,
               onMessageAction,
             }) ?? (
               <MessageListItem
-                key={msg.idClient}
+                key={msg.messageClientId}
                 prefix={prefix}
                 commonPrefix={commonPrefix}
                 msg={msg}
                 msgOperMenu={msgOperMenu}
-                replyMsg={replyMsgsMap[msg.idClient]}
+                replyMsg={replyMsgsMap[msg.messageClientId]}
                 normalStatusRenderer={
                   localOptions.teamMsgReceiptVisible ? (
                     <ReadPercent
-                      unread={msg.attach?.yxUnread ?? members.length - 1}
-                      read={msg.attach?.yxRead ?? 0}
+                      unread={msg.yxUnread ?? members.length - 1}
+                      read={msg.yxRead ?? 0}
                       hoverable
                       prefix={commonPrefix}
                     />
                   ) : null
                 }
-                myAccount={myAccount}
                 onResend={onResend}
-                onSendImg={onSendImg}
-                onSendVideo={onSendVideo}
                 onMessageAction={onMessageAction}
                 onMessageAvatarAction={onMessageAvatarAction}
                 onReeditClick={onReeditClick}
@@ -121,7 +112,7 @@ const ChatTeamMessageList = forwardRef<
               />
             )
             return (
-              <div id={msg.idClient} key={msg.idClient}>
+              <div id={msg.messageClientId} key={msg.messageClientId}>
                 {msgItem}
               </div>
             )

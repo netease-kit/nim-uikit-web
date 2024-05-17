@@ -5,13 +5,13 @@ import {
   useStateContext,
   useTranslation,
 } from '../../../common'
-import { TeamMember } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
-import { FriendProfile } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/FriendServiceInterface'
 import { SelectModal } from '../../../common'
 import { SelectModalItemProps } from '../../../common/components/SelectModal'
+import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 interface GroupActionModalProps {
   visible: boolean
-  members: (TeamMember & Partial<FriendProfile>)[] // 成员列表
+  members: V2NIMTeamMember[] // 成员列表
   onOk: () => void // 确认操作的回调函数
   onCancel: () => void
   commonPrefix?: string
@@ -48,7 +48,7 @@ const GroupTransferModal: React.FC<GroupActionModalProps> = ({
     } catch (error: any) {
       switch (error?.code) {
         // 无权限
-        case 802:
+        case 109427:
           message.error(t('noPermission'))
           break
         default:
@@ -66,16 +66,18 @@ const GroupTransferModal: React.FC<GroupActionModalProps> = ({
     const _showMembers = members.map((item) => {
       return {
         ...item,
-        key: item.account,
-        disabled: item.type === 'owner',
+        key: item.accountId,
+        disabled:
+          item.memberRole ===
+          V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_OWNER,
         label: store.uiStore.getAppellation({
-          account: item.account,
+          account: item.accountId,
           teamId: item.teamId,
         }),
       }
     })
     return _showMembers
-  }, [[members]])
+  }, [members, store.uiStore])
 
   const itemAvatarRender = (data: SelectModalItemProps) => {
     return (
