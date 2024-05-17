@@ -4,6 +4,7 @@
 <script lang="ts">
 import IMApp from "./components/IMApp/index.vue";
 import { IMUIKit } from "@xkit-yx/im-kit-ui";
+import V2NIM, { V2NIMConst } from 'nim-web-sdk-ng'
 import { app } from "./main";
 export default {
   name: "App",
@@ -25,7 +26,7 @@ export default {
       // 添加好友模式，默认需要验证
       addFriendNeedVerify: true,
       // 群组被邀请模式，默认不需要验证
-      teamBeInviteMode: 'noVerify' as "noVerify" | "needVerify",
+      teamAgreeMode: V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_NO_AUTH,
       // 单聊消息是否显示已读未读 默认 false
       p2pMsgReceiptVisible: true,
       // 群聊消息是否显示已读未读 默认 false
@@ -37,10 +38,25 @@ export default {
       // 是否允许转让群主
       allowTransferTeamOwner: true,
     }
+
+    // 初始化 IM SDK 实例
+    const nim = V2NIM.getInstance({
+      appkey: initOptions.appkey,
+      account: initOptions.account,
+      token: initOptions.token,
+      debugLevel: 'debug',
+      apiVersion: 'v2',
+    })
+
+    // IM 连接
+    nim.V2NIMLoginService.login(initOptions.account, initOptions.token, {
+      retryCount: 5,
+    })
+
+    // 初始化 UIKit 实例
     app.config.globalProperties.$uikit = new IMUIKit({
-      initOptions,
+      nim,
       singleton: true,
-      sdkVersion: 1,
       localOptions
     });
     if (app.config.globalProperties.$uikit) {
