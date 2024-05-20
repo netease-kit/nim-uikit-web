@@ -12,12 +12,14 @@ import GroupDetail from './GroupDetail'
 import GroupList from './GroupList'
 import GroupPower from './GroupPower'
 import { GroupSettingType } from '../../types'
-import {
-  Team,
-  TeamMember,
-} from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
-import { UpdateMyMemberInfoOptions } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 import { GroupItemProps } from './GroupItem'
+import {
+  V2NIMTeam,
+  V2NIMTeamMember,
+  V2NIMUpdatedTeamInfo,
+  V2NIMUpdateSelfMemberInfoParams,
+} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 export interface HistoryStack {
   path: GroupSettingType
@@ -25,8 +27,8 @@ export interface HistoryStack {
 }
 
 export interface ChatTeamSettingProps {
-  members: TeamMember[]
-  team: Team
+  members: V2NIMTeamMember[]
+  team: V2NIMTeam
   myAccount: string
   isGroupOwner: boolean
   isGroupManager: boolean
@@ -36,9 +38,9 @@ export interface ChatTeamSettingProps {
   onLeaveTeam: () => void
   onAddMembersClick: () => void
   onTransferTeamClick: () => void
-  onRemoveTeamMemberClick: (member: TeamMember) => void
-  onUpdateTeamInfo: (team: Partial<Team>) => void
-  onUpdateMyMemberInfo: (params: UpdateMyMemberInfoOptions) => void
+  onRemoveTeamMemberClick: (member: V2NIMTeamMember) => void
+  onUpdateTeamInfo: (team: V2NIMUpdatedTeamInfo) => void
+  onUpdateMyMemberInfo: (params: V2NIMUpdateSelfMemberInfoParams) => void
   onTeamMuteChange: (mute: boolean) => void
   afterSendMsgClick?: () => void
   setNavHistoryStack: (stack: HistoryStack[]) => void
@@ -107,8 +109,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
 
   const handleUpdateMyMemberInfo = (e: React.FocusEvent<HTMLInputElement>) => {
     onUpdateMyMemberInfo({
-      teamId: team.teamId,
-      nickInTeam,
+      teamNick: nickInTeam,
     })
   }
 
@@ -141,25 +142,38 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
   const isOwnerOrManager = isGroupOwner || isGroupManager
 
   const hasUpdateTeamPower = useMemo(() => {
-    if (team.updateTeamMode === 'manager' && isOwnerOrManager) {
+    if (
+      team.updateInfoMode ===
+        V2NIMConst.V2NIMTeamUpdateInfoMode
+          .V2NIM_TEAM_UPDATE_INFO_MODE_MANAGER &&
+      isOwnerOrManager
+    ) {
       return true
     }
-    return team.updateTeamMode === 'all'
-  }, [team.updateTeamMode, isOwnerOrManager])
+    return (
+      team.updateInfoMode ===
+      V2NIMConst.V2NIMTeamUpdateInfoMode.V2NIM_TEAM_UPDATE_INFO_MODE_ALL
+    )
+  }, [team.updateInfoMode, isOwnerOrManager])
 
   const myMemberInfo = useMemo(() => {
     return (
-      members.find((item) => item.account === myAccount) || ({} as TeamMember)
+      members.find((item) => item.accountId === myAccount) ||
+      ({} as V2NIMTeamMember)
     )
   }, [myAccount, members])
 
   const teamManagers = useMemo(() => {
-    return members.filter((item) => item.type === 'manager')
+    return members.filter(
+      (item) =>
+        item.memberRole ===
+        V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
+    )
   }, [members])
 
   useEffect(() => {
-    setNickInTeam(myMemberInfo.nickInTeam || '')
-  }, [myMemberInfo.nickInTeam])
+    setNickInTeam(myMemberInfo.teamNick || '')
+  }, [myMemberInfo.teamNick])
 
   useEffect(() => {
     if (!navHistoryStack.length) {
@@ -210,9 +224,9 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
               {members.slice(0, 6).map((item) => {
                 return (
                   <ComplexAvatarContainer
-                    key={item.account}
+                    key={item.accountId}
                     prefix={commonPrefix}
-                    account={item.account}
+                    account={item.accountId}
                     canClick={false}
                   />
                 )
@@ -231,7 +245,8 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
               placeholder={t('editNickInTeamText')}
             />
           </div>
-          {team.type !== 'normal' && isOwnerOrManager ? (
+          {team.teamType !== V2NIMConst.V2NIMTeamType.V2NIM_TEAM_TYPE_INVALID &&
+          isOwnerOrManager ? (
             <div
               className={`${_prefix}-power ${_prefix}-item`}
               onClick={handleStackPush.bind(null, 'power')}

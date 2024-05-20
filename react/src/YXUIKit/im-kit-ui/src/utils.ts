@@ -1,4 +1,4 @@
-import logDebug from 'yunxin-log-debug'
+import { logDebug } from '@xkit-yx/utils'
 import packageJson from '../package.json'
 
 export { logDebug }
@@ -191,20 +191,6 @@ export const frequencyControl = <
   }
 }
 
-/**
- * 解析 sessionId，形如 scene-accid
- */
-export const parseSessionId = (
-  sessionId: string
-): { scene: string; to: string } => {
-  const [scene, ...to] = sessionId.split('-')
-  return {
-    scene,
-    // 这样处理是为了防止有些用户 accid 中自带 -
-    to: to.join('-'),
-  }
-}
-
 interface IKeyMap {
   [key: string]: string
 }
@@ -281,7 +267,7 @@ export const handleEmojiTranslate = (t) => {
     [t('Ambulance')]: 'icon-a-68',
     [t('Poop')]: 'icon-a-70',
   }
-  // TODO react-string-replace 的行为不是那么的好理解，比如像下面这个正则就一定要加 '()'，后面最好干掉自己实现
+
   const INPUT_EMOJI_SYMBOL_REG = new RegExp(
     '(' +
       Object.keys(EMOJI_ICON_MAP_CONFIG)

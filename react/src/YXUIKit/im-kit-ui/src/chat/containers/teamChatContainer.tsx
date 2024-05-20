@@ -21,56 +21,64 @@ import { useStateContext, useTranslation, CrudeAvatar } from '../../common'
 import { LeftOutlined } from '@ant-design/icons'
 import { Action, ChatSettingActionItem, MsgOperMenuItem } from '../Container'
 import ChatTeamSetting, { HistoryStack } from '../components/ChatTeamSetting'
-import { Session } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/SessionServiceInterface'
 import { debounce, VisibilityObserver } from '@xkit-yx/utils'
-import {
-  IMMessage,
-  TMsgScene,
-} from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import { MenuItemKey, AvatarMenuItem } from '../components/ChatMessageItem'
 import { message } from 'antd'
 import { ALLOW_AT, TAllowAt } from '../../constant'
-import { storeConstants } from '@xkit-yx/im-store'
-import {
-  Team,
-  TeamMember,
-  UpdateMyMemberInfoOptions,
-} from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+import { storeConstants } from '@xkit-yx/im-store-v2'
 import { observer } from 'mobx-react'
 import { GroupItemProps } from '../components/ChatTeamSetting/GroupItem'
 import ChatForwardModal from '../components/ChatForwardModal'
 import { MentionedMember } from '../components/ChatMessageInput/ChatMentionMemberList'
 import GroupTransferModal from '../components/ChatGroupTransferModal'
 import { getImgDataUrl, getVideoFirstFrameDataUrl } from '../../utils'
-import { addTask, removeTask } from '../../uploadingTask'
+import {
+  V2NIMTeam,
+  V2NIMTeamMember,
+  V2NIMUpdatedTeamInfo,
+  V2NIMUpdateSelfMemberInfoParams,
+} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import {
+  V2NIMConversationType,
+  V2NIMConversation,
+} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
+import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMMessageNotificationAttachment } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMMessageService'
 
 export interface TeamChatContainerProps {
-  scene: TMsgScene
-  to: string
+  conversationType: V2NIMConversationType
+  receiverId: string
   settingActions?: ChatSettingActionItem[]
   actions?: Action[]
   msgOperMenu?: MsgOperMenuItem[]
   onSendText?: (data: {
     value: string
-    scene: TMsgScene
-    to: string
+    conversationType: V2NIMConversationType
+    receiverId: string
   }) => Promise<void>
   afterTransferTeam?: (teamId: string) => Promise<void>
   renderTeamCustomMessage?: (
     options: RenderTeamCustomMessageOptions
   ) => JSX.Element | null | undefined
-  renderHeader?: (session: Session) => JSX.Element
+  renderHeader?: (conversation: V2NIMConversation) => JSX.Element
   renderTeamInputPlaceHolder?: (params: {
-    session: Session
+    conversation: V2NIMConversation
     mute: boolean
   }) => string
   renderTeamMemberItem?: (
     params: GroupItemProps
   ) => JSX.Element | null | undefined
-  renderMessageAvatar?: (msg: IMMessage) => JSX.Element | null | undefined
-  renderMessageName?: (msg: IMMessage) => JSX.Element | null | undefined
-  renderMessageOuterContent?: (msg: IMMessage) => JSX.Element | null | undefined
-  renderMessageInnerContent?: (msg: IMMessage) => JSX.Element | null | undefined
+  renderMessageAvatar?: (
+    msg: V2NIMMessageForUI
+  ) => JSX.Element | null | undefined
+  renderMessageName?: (msg: V2NIMMessageForUI) => JSX.Element | null | undefined
+  renderMessageOuterContent?: (
+    msg: V2NIMMessageForUI
+  ) => JSX.Element | null | undefined
+  renderMessageInnerContent?: (
+    msg: V2NIMMessageForUI
+  ) => JSX.Element | null | undefined
 
   prefix?: string
   commonPrefix?: string
@@ -78,8 +86,8 @@ export interface TeamChatContainerProps {
 
 const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
   ({
-    scene,
-    to,
+    conversationType,
+    receiverId,
     settingActions,
     actions,
     msgOperMenu,
@@ -101,94 +109,106 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
 
     const { t } = useTranslation()
 
-    const sessionId = `${scene}-${to}`
+    const conversationId =
+      nim.V2NIMConversationIdUtil.teamConversationId(receiverId)
 
-    const session = store.sessionStore.sessions.get(sessionId)
+    const conversation =
+      store.conversationStore.conversations.get(conversationId)
 
-    const msgs = store.msgStore.getMsg(sessionId)
+    const msgs = store.msgStore.getMsg(conversationId)
 
-    const replyMsg = store.msgStore.replyMsgs.get(sessionId)
+    const replyMsg = store.msgStore.replyMsgs.get(conversationId)
 
-    const team: Team = store.teamStore.teams.get(to) || {
-      teamId: to,
-      type: 'normal',
+    const team: V2NIMTeam = store.teamStore.teams.get(receiverId) || {
+      teamId: receiverId,
+      teamType: V2NIMConst.V2NIMTeamType.V2NIM_TEAM_TYPE_ADVANCED,
       name: '',
       avatar: '',
       intro: '',
       announcement: '',
-      joinMode: 'noVerify',
-      beInviteMode: 'noVerify',
-      inviteMode: 'manager',
-      updateTeamMode: 'manager',
-      updateExtMode: 'manager',
-      owner: '',
-      level: 0,
-      memberNum: 0,
-      memberUpdateTime: Date.now(),
+      joinMode: V2NIMConst.V2NIMTeamJoinMode.V2NIM_TEAM_JOIN_MODE_FREE,
+      agreeMode: V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_NO_AUTH,
+      inviteMode: V2NIMConst.V2NIMTeamInviteMode.V2NIM_TEAM_INVITE_MODE_MANAGER,
+      updateInfoMode:
+        V2NIMConst.V2NIMTeamUpdateInfoMode.V2NIM_TEAM_UPDATE_INFO_MODE_MANAGER,
+      updateExtensionMode:
+        V2NIMConst.V2NIMTeamUpdateExtensionMode
+          .V2NIM_TEAM_UPDATE_EXTENSION_MODE_MANAGER,
+      ownerAccountId: '',
+      memberCount: 0,
       createTime: Date.now(),
       updateTime: Date.now(),
-      ext: '',
-      serverExt: '',
-      valid: false,
-      validToCurrentUser: false,
-      mute: false,
-      muteType: 'none',
+      serverExtension: '',
+      isValidTeam: false,
+      chatBannedMode:
+        V2NIMConst.V2NIMTeamChatBannedMode.V2NIM_TEAM_CHAT_BANNED_MODE_UNBAN,
+      memberLimit: 200,
+      messageNotifyMode:
+        V2NIMConst.V2NIMTeamMessageNotifyMode
+          .V2NIM_TEAM_MESSAGE_NOTIFY_MODE_ALL,
     }
 
-    const teamMembers = store.teamMemberStore.getTeamMember(to)
+    const teamMembers = store.teamMemberStore.getTeamMember(receiverId)
 
     const myUser = store.userStore.myUserInfo
 
     const teamNameOrTeamId = team?.name || team?.teamId || ''
 
-    const isGroupOwner = myUser?.account === team.owner
+    const isGroupOwner = myUser?.accountId === team.ownerAccountId
 
     const isGroupManager = teamMembers
-      .filter((item) => item.type === 'manager')
-      .some((item) => item.account === myUser?.account)
-
-    const mentionMembers = useMemo(() => {
-      return teamMembers.filter(
-        (member) => member.account !== myUser?.account
-        // if (member.account !== myUser?.account) {
-        // member.alias = store.uiStore.getAppellation({
-        //   account: member.account,
-        //   teamId: member.teamId,
-        // })
-        // member.nickInTeam = store.uiStore.getAppellation({
-        //   account: member.account,
-        //   teamId: member.teamId,
-        //   ignoreAlias: true,
-        // })
-        //   return true
-        // }
-        // return false
+      .filter(
+        (item) =>
+          item.memberRole ===
+          V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
       )
-    }, [teamMembers, myUser?.account])
+      .some((item) => item.accountId === myUser?.accountId)
 
     const sortedMembers = useMemo(() => {
-      const owner = teamMembers.filter((item) => item.type === 'owner')
+      const owner = teamMembers.filter(
+        (item) =>
+          item.memberRole ===
+          V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_OWNER
+      )
       const manager = teamMembers
-        .filter((item) => item.type === 'manager')
+        .filter(
+          (item) =>
+            item.memberRole ===
+            V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
+        )
         .sort((a, b) => a.joinTime - b.joinTime)
       const other = teamMembers
-        .filter((item) => !['owner', 'manager'].includes(item.type))
+        .filter(
+          (item) =>
+            item.memberRole ===
+            V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_NORMAL
+        )
         .sort((a, b) => a.joinTime - b.joinTime)
       const _sortedMembers = [...owner, ...manager, ...other]
       return _sortedMembers
     }, [teamMembers])
 
+    const mentionMembers = useMemo(() => {
+      return sortedMembers.filter(
+        (member) => member.accountId !== myUser?.accountId
+      )
+    }, [sortedMembers, myUser?.accountId])
+
     const teamMute = useMemo(() => {
-      if (team.mute) {
+      if (
+        team.chatBannedMode ===
+        V2NIMConst.V2NIMTeamChatBannedMode
+          .V2NIM_TEAM_CHAT_BANNED_MODE_BANNED_NORMAL
+      ) {
         return !isGroupOwner && !isGroupManager
       }
-      return team.mute
-    }, [team.mute, isGroupOwner, isGroupManager])
+      return false
+    }, [team.chatBannedMode, isGroupOwner, isGroupManager])
 
     const allowAtAll = useMemo(() => {
       let ext: TAllowAt = {}
       try {
-        ext = JSON.parse(team.ext || '{}')
+        ext = JSON.parse(team.serverExtension || '{}')
       } catch (error) {
         //
       }
@@ -196,13 +216,13 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         return isGroupOwner || isGroupManager
       }
       return true
-    }, [team.ext, isGroupOwner, isGroupManager])
+    }, [team.serverExtension, isGroupOwner, isGroupManager])
 
     const teamDefaultAddMembers = useMemo(() => {
       return teamMembers
-        .filter((item) => item.account !== myUser?.account)
-        .map((item) => item.account)
-    }, [teamMembers, myUser?.account])
+        .filter((item) => item.accountId !== myUser?.accountId)
+        .map((item) => item.accountId)
+    }, [teamMembers, myUser?.accountId])
 
     const messageListContainerDomRef = useRef<HTMLDivElement>(null)
     const settingDrawDomRef = useRef<HTMLDivElement>(null)
@@ -212,15 +232,15 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       return new VisibilityObserver({
         root: messageListContainerDomRef.current,
       })
-    }, [to])
+    }, [receiverId])
 
     const [groupTransferModalVisible, setGroupTransferModalVisible] =
       useState<boolean>(false)
 
     // 以下是 UI 相关的 state，需要在切换会话时重置
-    const [replyMsgsMap, setReplyMsgsMap] = useState<Record<string, IMMessage>>(
-      {}
-    ) // 回复消息的 map
+    const [replyMsgsMap, setReplyMsgsMap] = useState<
+      Record<string, V2NIMMessageForUI>
+    >({}) // 回复消息的 map
     const [inputValue, setInputValue] = useState('')
     const [navHistoryStack, setNavHistoryStack] = useState<HistoryStack[]>([])
     const [action, setAction] = useState<ChatAction | undefined>(undefined)
@@ -229,9 +249,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     const [groupAddMembersVisible, setGroupAddMembersVisible] = useState(false)
     const [receiveMsgBtnVisible, setReceiveMsgBtnVisible] = useState(false)
     const [settingDrawerVisible, setSettingDrawerVisible] = useState(false)
-    const [forwardMessage, setForwardMessage] = useState<IMMessage | undefined>(
-      undefined
-    )
+    const [forwardMessage, setForwardMessage] = useState<
+      V2NIMMessageForUI | undefined
+    >(undefined)
 
     const SETTING_NAV_TITLE_MAP: { [key in ChatAction]: string } = useMemo(
       () => ({
@@ -267,7 +287,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         try {
           setLoadingMore(true)
           const historyMsgs = await store.msgStore.getHistoryMsgActive({
-            sessionId,
+            conversationId,
             endTime,
             lastMsgId,
             limit: storeConstants.HISTORY_LIMIT,
@@ -277,22 +297,32 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             setNoMore(true)
           }
           return historyMsgs
-        } catch (error) {
+        } catch (error: any) {
           setLoadingMore(false)
-          message.error(t('getHistoryMsgFailedText'))
+          switch (error.code) {
+            case 109404:
+              message.error(t('teamMemberNotExist'))
+              break
+            default:
+              message.error(t('getHistoryMsgFailedText'))
+              break
+          }
         }
       },
-      [sessionId, store.msgStore, t]
+      [conversationId, store.msgStore, t]
     )
 
     // 收消息，发消息时需要调用
-    const scrollToBottom = useCallback(() => {
-      if (messageListContainerDomRef.current) {
-        messageListContainerDomRef.current.scrollTop =
-          messageListContainerDomRef.current.scrollHeight
-      }
-      setReceiveMsgBtnVisible(false)
-    }, [])
+    const scrollToBottom = useCallback(
+      debounce(() => {
+        if (messageListContainerDomRef.current) {
+          messageListContainerDomRef.current.scrollTop =
+            messageListContainerDomRef.current.scrollHeight
+        }
+        setReceiveMsgBtnVisible(false)
+      }, 300),
+      []
+    )
 
     const onMsgListScrollHandler = useCallback(
       debounce(async () => {
@@ -314,14 +344,15 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             const _msg = msgs.filter(
               (item) =>
                 !(
-                  item.type === 'custom' &&
-                  ['beReCallMsg', 'reCallMsg'].includes(item.attach?.type || '')
+                  item.messageType ===
+                    V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CUSTOM &&
+                  ['beReCallMsg', 'reCallMsg'].includes(item.recallType || '')
                 )
             )[0]
             if (_msg) {
-              await getHistory(_msg.time, _msg.idServer)
+              await getHistory(_msg.createTime, _msg.messageServerId)
               // 滚动到加载的那条消息
-              document.getElementById(_msg.idClient)?.scrollIntoView()
+              document.getElementById(_msg.messageClientId)?.scrollIntoView()
             }
           }
         }
@@ -356,14 +387,14 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     }, [])
 
     const onReeditClick = useCallback(
-      (msg: IMMessage) => {
-        const replyMsg = replyMsgsMap[msg.idClient]
+      (msg: V2NIMMessageForUI) => {
+        const replyMsg = replyMsgsMap[msg.messageClientId]
         replyMsg && store.msgStore.replyMsgActive(replyMsg)
         // 处理 @ 消息
-        const { ext } = msg
-        if (ext) {
+        const { serverExtension } = msg
+        if (serverExtension) {
           try {
-            const extObj = JSON.parse(ext)
+            const extObj = JSON.parse(serverExtension)
             const yxAitMsg = extObj.yxAitMsg
             if (yxAitMsg) {
               const mentionedMembers: MentionedMember[] = []
@@ -375,13 +406,13 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
                   })
                 } else {
                   const member = teamMembers.find(
-                    (item) => item.account === key
+                    (item) => item.accountId === key
                   )
                   member &&
                     mentionedMembers.push({
-                      account: member.account,
+                      account: member.accountId,
                       appellation: store.uiStore.getAppellation({
-                        account: member.account,
+                        account: member.accountId,
                         teamId: member.teamId,
                         ignoreAlias: true,
                       }),
@@ -394,23 +425,43 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             }
           } catch {}
         }
-        setInputValue(msg.attach?.oldBody || '')
+        setInputValue(msg.oldText || '')
         chatMessageInputRef.current?.input?.focus()
       },
       [replyMsgsMap, store.msgStore, teamMembers, store.uiStore, t]
     )
 
     const onResend = useCallback(
-      async (msg: IMMessage) => {
+      async (msg: V2NIMMessageForUI) => {
         try {
-          await store.msgStore.resendMsgActive(msg)
-        } catch (error) {
-          // message.error(t('sendMsgFailedText'))
-        } finally {
+          switch (msg.messageType) {
+            case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_IMAGE:
+            case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_VIDEO:
+              await store.msgStore.sendMessageActive({
+                msg,
+                conversationId,
+                progress: () => true,
+                sendBefore: () => {
+                  scrollToBottom()
+                },
+              })
+              break
+            default:
+              await store.msgStore.sendMessageActive({
+                msg,
+                conversationId,
+                sendBefore: () => {
+                  scrollToBottom()
+                },
+              })
+              break
+          }
           scrollToBottom()
+        } catch (error) {
+          //
         }
       },
-      [scrollToBottom, store.msgStore]
+      [store.msgStore, conversationId, scrollToBottom]
     )
 
     const onSendText = useCallback(
@@ -419,15 +470,18 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           if (onSendTextFromProps) {
             await onSendTextFromProps({
               value,
-              scene,
-              to,
+              conversationType,
+              receiverId,
             })
           } else {
-            await store.msgStore.sendTextMsgActive({
-              scene,
-              to,
-              body: value,
-              ext,
+            const textMsg = nim.V2NIMMessageCreator.createTextMessage(value)
+            await store.msgStore.sendMessageActive({
+              msg: textMsg,
+              conversationId,
+              serverExtension: ext,
+              sendBefore: () => {
+                scrollToBottom()
+              },
             })
           }
         } catch (error) {
@@ -436,16 +490,30 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           scrollToBottom()
         }
       },
-      [onSendTextFromProps, scene, store.msgStore, to, scrollToBottom]
+      [
+        onSendTextFromProps,
+        conversationType,
+        store.msgStore,
+        receiverId,
+        conversationId,
+        scrollToBottom,
+        nim.V2NIMMessageCreator,
+      ]
     )
 
     const onSendFile = useCallback(
       async (file: File) => {
         try {
-          await store.msgStore.sendFileMsgActive({
-            scene,
-            to,
+          const fileMsg = nim.V2NIMMessageCreator.createFileMessage(
             file,
+            file.name
+          )
+          await store.msgStore.sendMessageActive({
+            msg: fileMsg,
+            conversationId,
+            sendBefore: () => {
+              scrollToBottom()
+            },
           })
         } catch (error) {
           // message.error(t('sendMsgFailedText'))
@@ -453,25 +521,21 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           scrollToBottom()
         }
       },
-      [scene, store.msgStore, to, scrollToBottom]
+      [store.msgStore, conversationId, scrollToBottom, nim.V2NIMMessageCreator]
     )
 
     const onSendImg = useCallback(
-      async (file: File, randomId?: string) => {
+      async (file: File) => {
         try {
           const previewImg = await getImgDataUrl(file)
-          await store.msgStore.sendImageMsgActive({
-            scene,
-            to,
-            file,
+          const imgMsg = nim.V2NIMMessageCreator.createImageMessage(file)
+          await store.msgStore.sendMessageActive({
+            msg: imgMsg,
+            conversationId,
             previewImg,
-            randomId,
-            onUploadStart(task, taskId) {
+            progress: () => true,
+            sendBefore: () => {
               scrollToBottom()
-              addTask(taskId, task)
-            },
-            onUploadDone(taskId) {
-              removeTask(taskId)
             },
           })
         } catch (error) {
@@ -480,25 +544,21 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           scrollToBottom()
         }
       },
-      [scene, store.msgStore, to, scrollToBottom]
+      [store.msgStore, conversationId, scrollToBottom, nim.V2NIMMessageCreator]
     )
 
     const onSendVideo = useCallback(
-      async (file: File, randomId?: string) => {
+      async (file: File) => {
         try {
           const previewImg = await getVideoFirstFrameDataUrl(file)
-          await store.msgStore.sendVideoMsgActive({
-            scene,
-            to,
-            file,
+          const videoMsg = nim.V2NIMMessageCreator.createVideoMessage(file)
+          await store.msgStore.sendMessageActive({
+            msg: videoMsg,
+            conversationId,
             previewImg,
-            randomId,
-            onUploadStart(task, taskId) {
+            progress: () => true,
+            sendBefore: () => {
               scrollToBottom()
-              addTask(taskId, task)
-            },
-            onUploadDone(taskId) {
-              removeTask(taskId)
             },
           })
         } catch (error) {
@@ -507,15 +567,15 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           scrollToBottom()
         }
       },
-      [scene, store.msgStore, to, scrollToBottom]
+      [store.msgStore, conversationId, scrollToBottom, nim.V2NIMMessageCreator]
     )
 
     const onRemoveReplyMsg = useCallback(() => {
-      replyMsg && store.msgStore.removeReplyMsgActive(replyMsg.sessionId)
+      replyMsg && store.msgStore.removeReplyMsgActive(replyMsg.conversationId)
     }, [replyMsg, store.msgStore])
 
     const onMessageAction = useCallback(
-      async (key: MenuItemKey, msg: IMMessage) => {
+      async (key: MenuItemKey, msg: V2NIMMessageForUI) => {
         const msgOperMenuItem = msgOperMenu?.find((item) => item.key === key)
         if (msgOperMenuItem?.onClick) {
           return msgOperMenuItem?.onClick(msg)
@@ -529,18 +589,18 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             break
           case 'reply':
             const member = mentionMembers.find(
-              (item) => item.account === msg.from
+              (item) => item.accountId === msg.senderId
             )
             member &&
               chatMessageInputRef.current?.onAtMemberSelectHandler({
-                account: member.account,
+                account: member.accountId,
                 appellation: store.uiStore.getAppellation({
-                  account: member.account,
+                  account: member.accountId,
                   teamId: member.teamId,
                   ignoreAlias: true,
                 }),
               })
-            await store.msgStore.replyMsgActive(msg)
+            store.msgStore.replyMsgActive(msg)
             chatMessageInputRef.current?.input?.focus()
             break
           case 'forward':
@@ -554,17 +614,17 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     )
 
     const onMessageAvatarAction = useCallback(
-      async (key: AvatarMenuItem, msg: IMMessage) => {
+      async (key: AvatarMenuItem, msg: V2NIMMessageForUI) => {
         switch (key) {
           case 'mention':
             const member = mentionMembers.find(
-              (item) => item.account === msg.from
+              (item) => item.accountId === msg.senderId
             )
             member &&
               chatMessageInputRef.current?.onAtMemberSelectHandler({
-                account: member.account,
+                account: member.accountId,
                 appellation: store.uiStore.getAppellation({
-                  account: member.account,
+                  account: member.accountId,
                   teamId: member.teamId,
                   ignoreAlias: true,
                 }),
@@ -584,7 +644,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       } catch (error: any) {
         switch (error?.code) {
           // 无权限
-          case 802:
+          case 109427:
             message.error(t('noPermission'))
             break
           default:
@@ -599,15 +659,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         await store.teamStore.leaveTeamActive(team.teamId)
         message.success(t('leaveTeamSuccessText'))
       } catch (error: any) {
-        switch (error?.code) {
-          // 无权限
-          case 802:
-            message.error(t('noPermission'))
-            break
-          default:
-            message.error(t('leaveTeamFailedText'))
-            break
-        }
+        message.error(t('leaveTeamFailedText'))
       }
     }, [store.teamStore, team.teamId, t])
 
@@ -621,7 +673,12 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     }, [afterTransferTeam, team.teamId])
 
     const onAddMembersClick = useCallback(() => {
-      if (team.inviteMode === 'manager' && !isGroupOwner && !isGroupManager) {
+      if (
+        team.inviteMode ===
+          V2NIMConst.V2NIMTeamInviteMode.V2NIM_TEAM_INVITE_MODE_MANAGER &&
+        !isGroupOwner &&
+        !isGroupManager
+      ) {
         message.error(t('noPermission'))
       } else {
         setGroupAddMembersVisible(true)
@@ -640,7 +697,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         } catch (error: any) {
           switch (error?.code) {
             // 无权限
-            case 802:
+            case 109306:
               message.error(t('noPermission'))
               break
             default:
@@ -653,17 +710,17 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     )
 
     const onRemoveTeamMember = useCallback(
-      async (member: TeamMember) => {
+      async (member: V2NIMTeamMember) => {
         try {
           await store.teamMemberStore.removeTeamMemberActive({
             teamId: team.teamId,
-            accounts: [member.account],
+            accounts: [member.accountId],
           })
           message.success(t('removeTeamMemberSuccessText'))
         } catch (error: any) {
           switch (error?.code) {
             // 无权限
-            case 802:
+            case 109306:
               message.error(t('noPermission'))
               break
             default:
@@ -676,17 +733,17 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     )
 
     const onUpdateTeamInfo = useCallback(
-      async (params: Partial<Team>) => {
+      async (params: V2NIMUpdatedTeamInfo) => {
         try {
           await store.teamStore.updateTeamActive({
-            ...params,
             teamId: team.teamId,
+            info: params,
           })
           message.success(t('updateTeamSuccessText'))
         } catch (error: any) {
           switch (error?.code) {
             // 无权限
-            case 802:
+            case 109432:
               message.error(t('noPermission'))
               break
             default:
@@ -699,45 +756,35 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     )
 
     const onUpdateMyMemberInfo = useCallback(
-      async (params: UpdateMyMemberInfoOptions) => {
-        const nickTipVisible = params.nickInTeam !== void 0
-        const bitConfigVisible = params.bitConfigMask !== void 0
+      async (params: V2NIMUpdateSelfMemberInfoParams) => {
+        const nickTipVisible = params.teamNick !== void 0
         try {
-          await store.teamMemberStore.updateMyMemberInfo(params)
+          await store.teamMemberStore.updateMyMemberInfoActive({
+            teamId: team.teamId,
+            memberInfo: params,
+          })
           if (nickTipVisible) {
             message.success(t('updateMyMemberNickSuccess'))
           }
-          if (bitConfigVisible) {
-            message.success(t('updateBitConfigMaskSuccess'))
-          }
         } catch (error: any) {
-          switch (error?.code) {
-            // 无权限
-            case 802:
-              message.error(t('noPermission'))
-              break
-            default:
-              {
-                if (nickTipVisible) {
-                  message.error(t('updateMyMemberNickFailed'))
-                }
-                if (bitConfigVisible) {
-                  message.error(t('updateBitConfigMaskFailed'))
-                }
-              }
-              break
+          if (nickTipVisible) {
+            message.error(t('updateMyMemberNickFailed'))
           }
         }
       },
-      [store.teamMemberStore, t]
+      [store.teamMemberStore, team.teamId, t]
     )
 
     const onTeamMuteChange = useCallback(
       async (mute: boolean) => {
         try {
-          await store.teamStore.muteTeamActive({
+          await store.teamStore.setTeamChatBannedActive({
             teamId: team.teamId,
-            mute,
+            chatBannedMode: mute
+              ? V2NIMConst.V2NIMTeamChatBannedMode
+                  .V2NIM_TEAM_CHAT_BANNED_MODE_BANNED_NORMAL
+              : V2NIMConst.V2NIMTeamChatBannedMode
+                  .V2NIM_TEAM_CHAT_BANNED_MODE_UNBAN,
           })
           message.success(
             mute ? t('muteAllTeamSuccessText') : t('unmuteAllTeamSuccessText')
@@ -745,7 +792,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         } catch (error: any) {
           switch (error?.code) {
             // 无权限
-            case 802:
+            case 109432:
               message.error(t('noPermission'))
               break
             default:
@@ -790,11 +837,16 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
 
     useEffect(() => {
       const notMyMsgs = msgs
-        .filter((item) => item.from !== myUser.account)
-        .filter((item) => !!item.idServer)
+        .filter((item) => item.senderId !== myUser.accountId)
+        .filter((item) => !!item.messageServerId)
         .filter((item) =>
           // 以下这些类型的消息不需要发送已读未读
-          ['notification', 'tip', 'robot', 'g2'].every((j) => j !== item.type)
+          [
+            V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_NOTIFICATION,
+            V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TIPS,
+            V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_ROBOT,
+            V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL,
+          ].every((j) => j !== item.messageType)
         )
 
       const visibleChangeHandler = (params: {
@@ -804,17 +856,11 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         if (params.visible) {
           // 发送已读
           const msg = notMyMsgs.find(
-            (item) => item.idClient === params.target.id
+            (item) => item.messageClientId === params.target.id
           )
           if (msg) {
             store.msgStore
-              .sendTeamMsgReceiptActive([
-                {
-                  teamId: team.teamId,
-                  idClient: msg.idClient,
-                  idServer: msg.idServer ? msg.idServer : '',
-                },
-              ])
+              .sendTeamMsgReceiptActive([msg])
               .catch((err) => {
                 // 忽略这个报错
               })
@@ -827,7 +873,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
 
       const handler = (isObserve: boolean) => {
         notMyMsgs.forEach((item) => {
-          const target = document.getElementById(item.idClient)
+          const target = document.getElementById(item.messageClientId)
           if (target) {
             if (isObserve) {
               visibilityObserver.observe(target)
@@ -849,7 +895,13 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       return () => {
         handler(false)
       }
-    }, [store.msgStore, msgs, visibilityObserver, team.teamId, myUser.account])
+    }, [
+      store.msgStore,
+      msgs,
+      visibilityObserver,
+      team.teamId,
+      myUser.accountId,
+    ])
 
     useEffect(() => {
       return () => {
@@ -861,34 +913,66 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     useEffect(() => {
       resetState()
       scrollToBottom()
-      store.teamStore.getTeamActive(to)
-      store.teamMemberStore.getTeamMemberActive(to)
-    }, [store.teamStore, store.teamMemberStore, to, resetState, scrollToBottom])
+      store.teamStore.getTeamActive(receiverId).catch((err) => {
+        console.warn('获取群组失败：', err.toString())
+      })
+      store.teamMemberStore
+        .getTeamMemberActive({
+          teamId: receiverId,
+          type: 1,
+          queryOption: {
+            limit: Math.max(team.memberLimit, 200),
+            roleQueryType: 0,
+          },
+        })
+        .catch((err) => {
+          console.warn('获取群组成员失败：', err.toString())
+        })
+    }, [
+      team.memberLimit,
+      store.teamStore,
+      store.teamMemberStore,
+      receiverId,
+      resetState,
+      scrollToBottom,
+    ])
 
     // 切换会话时，如果内存中除了撤回消息的其他消息小于10条（差不多一屏幕），需要拉取历史消息
     useEffect(() => {
-      if (
-        store.msgStore
-          .getMsg(sessionId)
-          .filter(
-            (item) =>
-              !['beReCallMsg', 'reCallMsg'].includes(item.attach?.type || '')
-          ).length < 10
-      ) {
+      const memoryMsgs = conversationId
+        ? store.msgStore
+            .getMsg(conversationId)
+            .filter(
+              (item) =>
+                !['beReCallMsg', 'reCallMsg'].includes(item.recallType || '')
+            )
+        : []
+
+      if (memoryMsgs.length < 10) {
         getHistory(Date.now()).then((res) => {
           scrollToBottom()
-          if (session && !session.lastMsg && res && res[0]) {
-            store.sessionStore.addSession([{ ...session, lastMsg: res[0] }])
-          }
+          // TODO 考虑以下这段代码是否还需要
+          // if (conversation && !conversation.lastMessage && res && res[0]) {
+          //   store.conversationStore.addConversation([
+          //     { ...conversation, lastMessage: res[0] },
+          //   ])
+          // }
         })
+      } else {
+        // 获取自己发出去的消息
+        const myMsgs = memoryMsgs.filter(
+          (item) => item.senderId === myUser.accountId
+        )
+        // 获取群组已读未读数
+        store.msgStore.getTeamMsgReadsActive(myMsgs, conversationId)
+        scrollToBottom()
       }
     }, [
       store.msgStore,
-      store.sessionStore,
-      session,
-      sessionId,
+      conversationId,
       getHistory,
       scrollToBottom,
+      myUser.accountId,
     ])
 
     // 处理消息
@@ -900,25 +984,27 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           from: string
           to: string
           idServer: string
+          idClient: string
           time: number
         }> = []
-        const idClients: string[] = []
+        const messageClientIds: string[] = []
         msgs.forEach((msg) => {
-          if (msg.ext) {
+          if (msg.serverExtension) {
             try {
-              const { yxReplyMsg } = JSON.parse(msg.ext)
+              const { yxReplyMsg } = JSON.parse(msg.serverExtension)
               if (yxReplyMsg) {
                 const replyMsg = msgs.find(
-                  (item) => item.idClient === yxReplyMsg.idClient
+                  (item) => item.messageClientId === yxReplyMsg.idClient
                 )
                 if (replyMsg) {
-                  replyMsgsMap[msg.idClient] = replyMsg
+                  replyMsgsMap[msg.messageClientId] = replyMsg
                 } else {
-                  replyMsgsMap[msg.idClient] = 'noFind'
-                  const { scene, from, to, idServer, time } = yxReplyMsg
-                  if (scene && from && to && idServer && time) {
-                    reqMsgs.push({ scene, from, to, idServer, time })
-                    idClients.push(msg.idClient)
+                  replyMsgsMap[msg.messageClientId] = 'noFind'
+                  const { scene, from, to, idServer, idClient, time } =
+                    yxReplyMsg
+                  if (scene && from && to && idServer && idClient && time) {
+                    reqMsgs.push({ scene, from, to, idServer, idClient, time })
+                    messageClientIds.push(msg.messageClientId)
                   }
                 }
               }
@@ -926,9 +1012,25 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           }
         })
         if (reqMsgs.length > 0) {
-          store.msgStore.getMsgByIdServerActive({ reqMsgs }).then((res) => {
+          nim.V2NIMMessageService.getMessageListByRefers(
+            reqMsgs.map((item) => ({
+              senderId: item.from,
+              receiverId: item.to,
+              messageClientId: item.idClient,
+              messageServerId: item.idServer,
+              createTime: item.time,
+              conversationType:
+                item.scene === 'p2p'
+                  ? V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
+                  : V2NIMConst.V2NIMConversationType
+                      .V2NIM_CONVERSATION_TYPE_TEAM,
+              conversationId: nim.V2NIMConversationIdUtil.teamConversationId(
+                item.to
+              ),
+            }))
+          ).then((res) => {
             res.forEach((item, index) => {
-              replyMsgsMap[idClients[index]] = item
+              replyMsgsMap[messageClientIds[index]] = item
             })
             setReplyMsgsMap({ ...replyMsgsMap })
           })
@@ -936,11 +1038,20 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           setReplyMsgsMap({ ...replyMsgsMap })
         }
       }
-    }, [msgs, store, team.teamId])
+    }, [
+      msgs,
+      store,
+      team.teamId,
+      nim.V2NIMMessageService,
+      nim.V2NIMConversationIdUtil,
+    ])
 
     useLayoutEffect(() => {
-      const onMsg = (msg: IMMessage) => {
-        if (messageListContainerDomRef.current && msg.sessionId === sessionId) {
+      const onMsg = (msg: V2NIMMessageForUI[]) => {
+        if (
+          messageListContainerDomRef.current &&
+          msg[0].conversationId === conversationId
+        ) {
           // 当收到消息时，如果已经往上滚动了，是不需要滚动到最底部的
           if (
             messageListContainerDomRef.current.scrollTop <
@@ -955,88 +1066,50 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         }
       }
 
-      nim.on('msg', onMsg)
+      nim.V2NIMMessageService.on('onReceiveMessages', onMsg)
 
       return () => {
-        nim.off('msg', onMsg)
+        nim.V2NIMMessageService.off('onReceiveMessages', onMsg)
       }
-    }, [nim, sessionId])
+    }, [nim, conversationId, scrollToBottom])
 
     useEffect(() => {
-      // const onDismissTeam = (data: { teamId: string }) => {
-      //   const _sessionId = `team-${data.teamId}`
-      //   if (_sessionId === sessionId) {
-      //     message.warning(t('onDismissTeamText'))
-      //   }
-      // }
-      // const onAddTeamMembers = (data: {
-      //   team: Team
-      //   // 以下两个参数是增量
-      //   accounts: string[]
-      //   members: TeamMember[]
-      // }) => {
-      //   const _sessionId = `team-${data.team.teamId}`
-      //   if (_sessionId === sessionId) {
-      //     const nicks = data.members.map(
-      //       (item) => item.nickInTeam || item.account
-      //     )
-      //     message.info(`${nicks.join('，')}${t('enterTeamText')}`)
-      //   }
-      // }
-      // const onRemoveTeamMembers = (data: {
-      //   team: Team
-      //   accounts: string[]
-      // }) => {
-      //   const _sessionId = `team-${data.team.teamId}`
-      //   if (_sessionId === sessionId) {
-      //     if (data.accounts.includes(myUser.account)) {
-      //       message.warning(t('onRemoveTeamText'))
-      //     } else {
-      //       const _tms = store.teamMemberStore.teamMembers.get(data.team.teamId)
-      //       let nicks: string[] = []
-      //       if (_tms) {
-      //         nicks = data.accounts
-      //           .map((item) => {
-      //             const _t = _tms.get(item)
-      //             if (_t) {
-      //               return _t.nickInTeam || _t.account
-      //             }
-      //             return ''
-      //           })
-      //           .filter((item) => !!item)
-      //       }
-      //       message.info(`${nicks.join('，')}${t('leaveTeamText')}`)
-      //     }
-      //   }
-      // }
-
       // 根据 onMsg 处理提示
-      const onMsgToast = (msg: IMMessage) => {
-        if (msg.sessionId === sessionId && msg.type === 'notification') {
-          switch (msg.attach?.type) {
+      const onMsgToast = (msgs: V2NIMMessageForUI[]) => {
+        const msg = msgs[0]
+        if (
+          msg.conversationId === conversationId &&
+          msg.messageType ===
+            V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_NOTIFICATION
+        ) {
+          const attachment =
+            msg.attachment as V2NIMMessageNotificationAttachment
+          switch (attachment?.type) {
             // 主动离开群聊
-            case 'leaveTeam': {
-              if (msg.from === myUser.account) {
+            case V2NIMConst.V2NIMMessageNotificationType
+              .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_LEAVE: {
+              if (msg.senderId === myUser.accountId) {
                 message.success(t('leaveTeamSuccessText'))
               } else {
                 message.info(
                   `${store.uiStore.getAppellation({
-                    account: msg.from,
-                    teamId: msg.to,
+                    account: msg.senderId,
+                    teamId: msg.receiverId,
                   })}${t('leaveTeamText')}`
                 )
               }
               break
             }
             // 踢出群聊
-            case 'removeTeamMembers': {
-              if (msg.attach?.accounts.includes(myUser.account)) {
+            case V2NIMConst.V2NIMMessageNotificationType
+              .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_KICK: {
+              if ((attachment?.targetIds || []).includes(myUser.accountId)) {
                 message.warning(t('onRemoveTeamText'))
               } else {
-                const nicks = msg.attach?.accounts.map((item) =>
+                const nicks = (attachment?.targetIds || []).map((item) =>
                   store.uiStore.getAppellation({
                     account: item,
-                    teamId: msg.to,
+                    teamId: msg.receiverId,
                   })
                 )
                 message.info(`${nicks.join('，')}${t('leaveTeamText')}`)
@@ -1044,28 +1117,35 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
               break
             }
             // 解散群聊
-            case 'dismissTeam':
+            case V2NIMConst.V2NIMMessageNotificationType
+              .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_DISMISS:
               message.warning(t('onDismissTeamText'))
               break
             // 有人主动加入群聊
-            case 'passTeamApply':
+            case V2NIMConst.V2NIMMessageNotificationType
+              .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_APPLY_PASS:
             // 邀请加入群聊对方同意
-            case 'acceptTeamInvite':
+            case V2NIMConst.V2NIMMessageNotificationType
+              .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_INVITE_ACCEPT:
               {
-                if (msg.from === myUser.account) {
+                if (msg.senderId === myUser.accountId) {
                   message.info(
                     `${store.uiStore.getAppellation({
-                      account: msg.from,
-                      teamId: msg.to,
+                      account: msg.senderId,
+                      teamId: msg.receiverId,
                     })}${t('enterTeamText')}`
                   )
                 }
               }
               break
             // 邀请加入群聊无需验证
-            case 'addTeamMembers': {
-              const nicks = msg.attach?.accounts.map((item) =>
-                store.uiStore.getAppellation({ account: item, teamId: msg.to })
+            case V2NIMConst.V2NIMMessageNotificationType
+              .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_INVITE: {
+              const nicks = (attachment?.targetIds || []).map((item) =>
+                store.uiStore.getAppellation({
+                  account: item,
+                  teamId: msg.receiverId,
+                })
               )
               message.info(`${nicks.join('，')}${t('enterTeamText')}`)
               break
@@ -1074,29 +1154,23 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         }
       }
 
-      nim.on('msg', onMsgToast)
-      // nim.on('dismissTeam', onDismissTeam)
-      // nim.on('addTeamMembers', onAddTeamMembers)
-      // nim.on('removeTeamMembers', onRemoveTeamMembers)
+      nim.V2NIMMessageService.on('onReceiveMessages', onMsgToast)
 
       return () => {
-        nim.off('msg', onMsgToast)
-        // nim.off('dismissTeam', onDismissTeam)
-        // nim.off('addTeamMembers', onAddTeamMembers)
-        // nim.off('removeTeamMembers', onRemoveTeamMembers)
+        nim.V2NIMMessageService.off('onReceiveMessages', onMsgToast)
       }
-    }, [nim, sessionId, myUser.account, store.uiStore, t])
+    }, [nim, conversationId, myUser.accountId, store.uiStore, t])
 
-    return session ? (
+    return conversation ? (
       <div className={`${prefix}-wrap`}>
         <div ref={settingDrawDomRef} className={`${prefix}-content`}>
           {renderHeader ? (
-            renderHeader(session)
+            renderHeader(conversation)
           ) : (
             <ChatHeader
               prefix={prefix}
               title={teamNameOrTeamId}
-              subTitle={`(${teamMembers.length} 人)`}
+              subTitle={`(${teamMembers.length} ${t('personUnit')})`}
               avatar={
                 <CrudeAvatar
                   account={team.teamId}
@@ -1116,12 +1190,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             members={teamMembers}
             noMore={noMore}
             loadingMore={loadingMore}
-            myAccount={myUser?.account || ''}
             receiveMsgBtnVisible={receiveMsgBtnVisible}
             onReceiveMsgBtnClick={scrollToBottom}
             onResend={onResend}
-            onSendImg={onSendImg}
-            onSendVideo={onSendVideo}
             onMessageAction={onMessageAction}
             onMessageAvatarAction={onMessageAvatarAction}
             onReeditClick={onReeditClick}
@@ -1140,7 +1211,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             placeholder={
               renderTeamInputPlaceHolder
                 ? renderTeamInputPlaceHolder({
-                    session: session,
+                    conversation,
                     mute: teamMute,
                   })
                 : teamMute
@@ -1149,14 +1220,12 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             }
             replyMsg={replyMsg}
             mentionMembers={mentionMembers}
-            scene={scene}
-            to={to}
+            conversationType={conversationType}
+            receiverId={receiverId}
             actions={actions}
             inputValue={inputValue}
             mute={teamMute}
             allowAtAll={allowAtAll}
-            uploadImageLoading={store.uiStore.uploadImageLoading}
-            uploadFileLoading={store.uiStore.uploadFileLoading}
             setInputValue={setInputValue}
             onRemoveReplyMsg={onRemoveReplyMsg}
             onSendText={onSendText}
@@ -1174,7 +1243,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             <ChatTeamSetting
               members={sortedMembers}
               team={team}
-              myAccount={myUser?.account || ''}
+              myAccount={myUser?.accountId || ''}
               isGroupManager={isGroupManager}
               isGroupOwner={isGroupOwner}
               navHistoryStack={navHistoryStack}
@@ -1212,7 +1281,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         />
         <ChatForwardModal
           visible={!!forwardMessage}
-          msg={forwardMessage!}
+          msg={forwardMessage}
           onSend={handleForwardModalSend}
           onCancel={handleForwardModalClose}
           prefix={prefix}
@@ -1223,7 +1292,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           members={sortedMembers}
           onOk={handleTransferTeam}
           onCancel={handleGroupActionCancel}
-          teamId={to}
+          teamId={receiverId}
         />
       </div>
     ) : null

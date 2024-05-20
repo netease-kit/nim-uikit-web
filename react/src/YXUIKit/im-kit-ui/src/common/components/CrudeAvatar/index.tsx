@@ -1,14 +1,25 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
 import { Avatar, Badge } from 'antd'
-import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 import { Storage } from '@xkit-yx/utils'
+import { urls } from '../GroupAvatarSelect'
 
-export interface CrudeAvatarProps
-  extends Pick<UserNameCard, 'account' | 'avatar' | 'nick'> {
+export interface CrudeAvatarProps {
+  account: string
+  avatar?: string
+  nick?: string
   size?: number
   icon?: React.ReactNode
   count?: number
   dot?: boolean
+}
+
+// 原生端的群组头像，在 web 显示不了，需要做一下映射。后面等移动端上线后统一用下面的。
+const appUrlMap = {
+  'https://s.netease.im/safe/ABg8YjWQWvcqO6sAAAAAAAAAAAA?_im_url=1': urls[0],
+  'https://s.netease.im/safe/ABg8YjmQWvcqO6sAAAAAAAABAAA?_im_url=1': urls[1],
+  'https://s.netease.im/safe/ABg8YjyQWvcqO6sAAAAAAAABAAA?_im_url=1': urls[2],
+  'https://s.netease.im/safe/ABg8YkCQWvcqO6sAAAAAAAABAAA?_im_url=1': urls[3],
+  'https://s.netease.im/safe/ABg8YkSQWvcqO6sAAAAAAAABAAA?_im_url=1': urls[4],
 }
 
 export const CrudeAvatar: FC<CrudeAvatarProps> = ({
@@ -22,6 +33,7 @@ export const CrudeAvatar: FC<CrudeAvatarProps> = ({
 }) => {
   const [imgFailed, setImgFailed] = useState(false)
   const [bgColor, setBgColor] = useState('')
+  const [webAvatar, setWebAvatar] = useState<string | void>()
 
   const text = useMemo(() => {
     // 头像不用随备注而改变，产品需求
@@ -49,13 +61,16 @@ export const CrudeAvatar: FC<CrudeAvatarProps> = ({
   }, [account])
 
   useEffect(() => {
+    let webUrl = ''
     if (avatar) {
       setImgFailed(false)
+      webUrl = appUrlMap[avatar]
     }
+    setWebAvatar(webUrl ? webUrl : avatar)
   }, [avatar])
 
   const avatarStyle = useMemo(() => {
-    if (avatar && !imgFailed) {
+    if (webAvatar && !imgFailed) {
       return {
         verticalAlign: 'middle',
       }
@@ -64,7 +79,7 @@ export const CrudeAvatar: FC<CrudeAvatarProps> = ({
       backgroundColor: bgColor,
       verticalAlign: 'middle',
     }
-  }, [avatar, imgFailed, bgColor])
+  }, [webAvatar, imgFailed, bgColor])
 
   return (
     <Badge
@@ -77,7 +92,7 @@ export const CrudeAvatar: FC<CrudeAvatarProps> = ({
       <Avatar
         style={avatarStyle}
         alt={text}
-        src={avatar}
+        src={webAvatar}
         size={size}
         icon={icon}
         onError={() => {

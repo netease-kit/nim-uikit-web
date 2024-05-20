@@ -4,6 +4,8 @@ import { message, Modal } from 'antd'
 import { useStateContext } from '../../hooks/useStateContext'
 import { useTranslation } from '../../hooks/useTranslation'
 import { observer } from 'mobx-react'
+import { Gender } from '../UserCard'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 export type ComplexAvatarContainerProps = Pick<
   ComplexAvatarProps,
@@ -42,7 +44,7 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
     const { t } = useTranslation()
 
     const [visible, setVisible] = useState(false)
-    // const [relation, setRelation] = useState<Relation>('stranger')
+
     const { relation, isInBlacklist } = store.uiStore.getRelation(account)
 
     const userInfo = store.uiStore.getFriendWithUserNameCard(account)
@@ -66,14 +68,20 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
     const handleOnAddFriendClick = async () => {
       try {
         if (localOptions.addFriendNeedVerify) {
-          await store.friendStore.applyFriendActive(account)
+          await store.friendStore.addFriendActive(account, {
+            addMode: V2NIMConst.V2NIMFriendAddMode.V2NIM_FRIEND_MODE_TYPE_APPLY,
+            postscript: '',
+          })
           message.success(t('applyFriendSuccessText'))
         } else {
-          await store.friendStore.addFriendActive(account)
+          await store.friendStore.addFriendActive(account, {
+            addMode: V2NIMConst.V2NIMFriendAddMode.V2NIM_FRIEND_MODE_TYPE_ADD,
+            postscript: '',
+          })
           message.success(t('addFriendSuccessText'))
         }
         // 发送申请或添加好友成功后解除黑名单
-        await store.relationStore.setBlackActive({ account, isAdd: false })
+        await store.relationStore.removeUserFromBlockListActive(account)
         setVisible(false)
         afterAddFriend?.(account)
       } catch (error) {
@@ -106,10 +114,7 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
 
     const handleOnBlockFriendClick = async () => {
       try {
-        await store.relationStore.setBlackActive({
-          account,
-          isAdd: true,
-        })
+        await store.relationStore.addUserToBlockListActive(account)
         message.success(t('blackSuccessText'))
         setVisible(false)
         afterBlockFriend?.(account)
@@ -120,10 +125,7 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
 
     const handleOnRemoveBlockFriendClick = async () => {
       try {
-        await store.relationStore.setBlackActive({
-          account,
-          isAdd: false,
-        })
+        await store.relationStore.removeUserFromBlockListActive(account)
         message.success(t('removeBlackSuccessText'))
         setVisible(false)
         afterRemoveBlockFriend?.(account)
@@ -134,7 +136,10 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
 
     const handleOnSendMsgClick = async () => {
       setVisible(false)
-      await store.sessionStore.insertSessionActive('p2p', account)
+      await store.conversationStore.insertConversationActive(
+        V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
+        account
+      )
       afterSendMsgClick?.()
     }
 
@@ -144,8 +149,10 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
 
     const handleChangeAlias = async (alias: string) => {
       try {
-        if (userInfo.account) {
-          await store.friendStore.updateFriendActive(userInfo.account, alias)
+        if (userInfo.accountId) {
+          await store.friendStore.setFriendInfoActive(userInfo.accountId, {
+            alias,
+          })
           message.success(t('updateAliasSuccessText'))
         }
       } catch (error) {
@@ -171,6 +178,13 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
         dot={dot}
         size={size}
         icon={icon}
+        account={userInfo.accountId}
+        gender={userInfo.gender as Gender}
+        nick={userInfo.name}
+        tel={userInfo.mobile}
+        signature={userInfo.sign}
+        birth={userInfo.birthday}
+        ext={userInfo.serverExtension}
         {...userInfo}
       />
     )

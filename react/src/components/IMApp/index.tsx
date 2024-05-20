@@ -10,7 +10,7 @@ import {
   MyAvatarContainer,
   useStateContext,
   ComplexAvatarContainer,
-} from '@xkit-yx/im-kit-ui'
+} from '@xkit-yx/im-kit-ui/src'
 import {
   ConfigProvider,
   Badge,
@@ -28,7 +28,7 @@ import en from './locales/en'
 import zh from './locales/zh'
 import classNames from 'classnames'
 import { observer } from 'mobx-react'
-import '@xkit-yx/im-kit-ui/es/style'
+import '@xkit-yx/im-kit-ui/src/style'
 import 'antd/es/badge/style'
 import './iconfont.css'
 import './index.less'
@@ -44,13 +44,15 @@ import '@xkit-yx/call-kit-react-ui/es/style'
 import Calling from './components/call'
 //demo国际化函数
 import { convertSecondsToTime, g2StatusMap, renderMsgDate, t } from './util'
-import { parseSessionId } from '@xkit-yx/im-kit-ui/src/utils'
-import { LocalOptions } from '@xkit-yx/im-store'
 import { DeleteOutlined } from '@ant-design/icons'
 import {
   pauseAllAudio,
   pauseAllVideo,
 } from '@xkit-yx/im-kit-ui/src/common/components/CommonParseSession'
+import { LocalOptions } from '@xkit-yx/im-store-v2/dist/types/types'
+import V2NIM, { V2NIMConst } from 'nim-web-sdk-ng'
+import { RenderP2pCustomMessageOptions } from '@xkit-yx/im-kit-ui/es/chat/components/ChatP2pMessageList'
+
 interface IMContainerProps {
   appkey: string //传入您的App Key
   account: string // 传入您的云信IM账号
@@ -65,23 +67,19 @@ interface IMAppProps {
   onLogout?: () => void
   locale: 'zh' | 'en'
   changeLanguage?: (value: 'zh' | 'en') => void
-  sdkVersion: 1 | 2
   addFriendNeedVerify: boolean
   p2pMsgReceiptVisible: boolean
   teamMsgReceiptVisible: boolean
   needMention: boolean
   teamManagerVisible: boolean
 }
-// @ts-ignore: Unreachable code error
 
 const IMApp: React.FC<IMAppProps> = observer((props) => {
   const {
     onLogout,
     locale,
     changeLanguage,
-    sdkVersion,
     addFriendNeedVerify,
-    account,
     appkey,
     p2pMsgReceiptVisible,
     teamMsgReceiptVisible,
@@ -93,12 +91,16 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
   const [isSettingModalOpen, setIsSettingModalOpen] = useState<boolean>(false)
   // 是否显示呼叫弹窗
   const [callingVisible, setCallingVisible] = useState<boolean>(false)
-  // IMUIKit store实例
-  const { store } = useStateContext()
-  // im sdk实例
-  const nim = store.nim
-  // 当前选中会话场景和会话接受方 scene：p2p ｜ team, to: accid
-  const { scene, to } = parseSessionId(store.uiStore.selectedSession)
+  // IMUIKit store 与 nim sdk 实例
+  const { store, nim } = useStateContext()
+
+  const conversationId = store.uiStore.selectedConversation
+  const conversationType = nim.V2NIMConversationIdUtil.parseConversationType(
+    store.uiStore.selectedConversation
+  )
+  const receiverId = nim.V2NIMConversationIdUtil.parseConversationTargetId(
+    store.uiStore.selectedConversation
+  )
 
   const messageActionDropdownContainerRef = useRef<HTMLDivElement>(null)
 
@@ -113,11 +115,8 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
     if (callViewProviderRef.current?.neCall) {
       //注册呼叫结束事件监听
       callViewProviderRef.current?.neCall?.on('onRecordSend', (options) => {
-        const sessionId = store.uiStore.selectedSession
-        // @ts-ignore 消息列表增加话单消息
-        store.msgStore.addMsg(sessionId, [options])
-        // @ts-ignore 使增加的消息出现在视野可见区域
-        document.getElementById(options.idClient)?.scrollIntoView()
+        store.msgStore.addMsg(options.conversationId, [options])
+        document.getElementById(options.messageClientId)?.scrollIntoView()
       })
       // 设置呼叫超时时间
       callViewProviderRef.current?.neCall?.setTimeout(30)
@@ -128,13 +127,16 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
         pauseAllVideo()
       })
     }
-  }, [callViewProviderRef.current?.neCall])
+  }, [callViewProviderRef.current?.neCall, store.msgStore])
 
   // 发起呼叫
   const handleCall = useCallback(
     async (callType) => {
       try {
-        await callViewProviderRef.current?.call?.({ accId: to, callType })
+        await callViewProviderRef.current?.call?.({
+          accId: receiverId,
+          callType,
+        })
         setCallingVisible(false)
       } catch (error) {
         switch (error.code) {
@@ -153,7 +155,7 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
         }
       }
     },
-    [to]
+    [receiverId]
   )
 
   // 重新渲染发送按钮，增加呼叫按钮
@@ -173,7 +175,9 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
       },
       {
         action: 'calling',
-        visible: scene === 'team' || sdkVersion === 2 ? false : true,
+        visible:
+          conversationType ===
+          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
         render: () => {
           return (
             <Button type="text" disabled={false}>
@@ -194,26 +198,29 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
         visible: true,
       },
     ],
-    [handleCall, callingVisible, scene, sdkVersion]
+    [callingVisible, handleCall, conversationType]
   )
 
   // 根据msg.type 自定义渲染话单消息，当msg.type 为 g2 代表的是话单消息，使用renderP2pCustomMessage进行自定义渲染
   const renderP2pCustomMessage = useCallback(
-    (msg) => {
-      msg = msg.msg
+    (options: RenderP2pCustomMessageOptions) => {
+      const msg = options.msg
       // msg.type 为 g2 代表的是话单消息 renderP2pCustomMessage 返回 null 就会按照组件默认的逻辑进行展示消息
-      if (msg.type !== 'g2' || sdkVersion == 2) {
+      if (
+        msg.messageType !== V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL
+      ) {
         return null
       }
-      const { attach } = msg
-      const duration = attach?.durations[0]?.duration
-      const status = attach?.status
-      const type = attach?.type
+      const attach = msg.attachment as any
+      const raw = JSON.parse(attach?.raw || '{}')
+      const duration = raw.durations[0]?.duration
+      const status = raw.status
+      const type = raw.type
       const icon = type == 1 ? 'icon-yuyin8' : 'icon-shipin8'
-      const myAccount = store.userStore.myUserInfo.account
+      const myAccount = store.userStore.myUserInfo.accountId
       //判断当前消息是发出的消息还是接收的消息
-      const isSelf = msg.from === myAccount
-      const account = isSelf ? myAccount : to
+      const isSelf = msg.senderId === myAccount
+      const account = isSelf ? myAccount : receiverId
       const deleteG2Message = (msg) => {
         console.log('msg:', msg)
         store.msgStore.deleteMsgActive([msg])
@@ -222,14 +229,13 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
         <div className={classNames('wrapper', { 'wrapper-self': isSelf })}>
           <ComplexAvatarContainer account={account} />
           <Dropdown
-            key={msg.idClient}
+            key={msg.messageClientId}
             trigger={['contextMenu']}
             getPopupContainer={(triggerNode) =>
               messageActionDropdownContainerRef.current || triggerNode
             }
             overlay={
               <Menu
-                // @ts-ignore
                 onClick={() => deleteG2Message(msg)}
                 items={[
                   {
@@ -263,7 +269,7 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
                   </span>
                 )}
               </div>
-              <div className="time">{renderMsgDate(msg.time)}</div>
+              <div className="time">{renderMsgDate(msg.createTime)}</div>
             </div>
           </Dropdown>
         </div>
@@ -271,10 +277,10 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
     },
     [
       handleCall,
-      sdkVersion,
-      to,
+      receiverId,
       store.uiStore,
-      store.userStore.myUserInfo.account,
+      store.msgStore,
+      store.userStore.myUserInfo.accountId,
     ]
   )
 
@@ -305,7 +311,7 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
                 <div className="icon-label">{t('session')}</div>
               </div>
             </Badge>
-            <Badge dot={!!store.sysMsgStore.unreadSysMsgCount}>
+            <Badge dot={!!store.sysMsgStore.getTotalUnreadMsgsCount()}>
               <div
                 className={classNames('contact-icon', {
                   active: model === 'contact',
@@ -356,12 +362,17 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
                 <ContactInfoContainer
                   afterSendMsgClick={() => setModel('chat')}
                   onGroupItemClick={() => setModel('chat')}
-                  afterAcceptApplyFriend={(account) => {
+                  afterAcceptApplyFriend={(data) => {
+                    const textMsg = nim.V2NIMMessageCreator.createTextMessage(
+                      t('passFriendAskText')
+                    )
                     store.msgStore
-                      .sendTextMsgActive({
-                        scene: 'p2p',
-                        to: account,
-                        body: t('passFriendAskText'),
+                      .sendMessageActive({
+                        msg: textMsg,
+                        conversationId:
+                          nim.V2NIMConversationIdUtil.p2pConversationId(
+                            data.operatorAccountId
+                          ),
                       })
                       .then(() => {
                         setModel('chat')
@@ -384,17 +395,20 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
     onLogout,
     p2pMsgReceiptVisible,
     teamMsgReceiptVisible,
-    sdkVersion,
     renderP2pCustomMessage,
-    store.sysMsgStore.unreadSysMsgCount,
+    store.sysMsgStore,
+    store.msgStore,
+    nim.V2NIMMessageCreator,
+    nim.V2NIMConversationIdUtil,
+    needMention,
+    teamManagerVisible,
   ])
-  // IM elite(IM 2) sdk 没有信令， 无法初始化呼叫组件
-  return sdkVersion === 1 ? (
+
+  return (
     <CallViewProvider
       ref={callViewProviderRef}
       neCallConfig={{
-        // @ts-ignore
-        nim: nim.nim,
+        nim,
         appkey,
         debug: true,
       }}
@@ -405,8 +419,6 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
     >
       {renderContent()}
     </CallViewProvider>
-  ) : (
-    renderContent()
   )
 })
 
@@ -414,9 +426,6 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
   const { appkey, account, token, onLogout } = props
   // 国际化语言类型
   const [curLanguage, setCurLanguage] = useState<'zh' | 'en'>('zh')
-  // sdk版本
-  const urlParams = new URLSearchParams(window.location.search)
-  const sdkVersion = (Number(urlParams.get('sdkVersion')) as 1 | 2) || 1
   // 添加好友是否需要验证
   const [addFriendNeedVerify, setAddFriendNeedVerify] = useState<boolean>(true)
   //单聊消息是否显示已读未读
@@ -429,38 +438,35 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
   const [needMention, setNeedMention] = useState<boolean>(true)
   // 是否开启群管理员功能
   const [teamManagerVisible, setTeamManagerVisible] = useState<boolean>(true)
-  const languageMap = { zh, en }
-  // 初始化参数
-  const initOptions = useMemo(() => {
-    return {
-      appkey,
-      account,
-      token,
-      lbsUrls: ['https://lbs.netease.im/lbs/webconf.jsp'],
-      linkUrl: 'weblink.netease.im',
-      needReconnect: true,
-      reconnectionAttempts: 5,
-    }
-  }, [appkey, account, token])
+  const languageMap = useMemo(() => ({ zh, en }), [])
   // 本地默认行为参数
-  const localOptions: Partial<LocalOptions> = {
-    // 添加好友模式，默认需要验证
+  const localOptions: Partial<LocalOptions> = useMemo(() => {
+    return {
+      // 添加好友模式，默认需要验证
+      addFriendNeedVerify,
+      // 群组被邀请模式，默认不需要验证
+      teamAgreeMode:
+        V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_NO_AUTH,
+      // 单聊消息是否显示已读未读
+      p2pMsgReceiptVisible,
+      // 群聊消息是否显示已读未读
+      teamMsgReceiptVisible,
+      // 是否需要@消息
+      needMention,
+      // 是否开启群管理员
+      teamManagerVisible,
+      // 是否显示在线离线状态
+      loginStateVisible: false,
+      // 是否允许转让群主
+      allowTransferTeamOwner: true,
+    }
+  }, [
     addFriendNeedVerify,
-    // 群组被邀请模式，默认不需要验证
-    teamBeInviteMode: 'noVerify',
-    // 单聊消息是否显示已读未读
-    p2pMsgReceiptVisible,
-    // 群聊消息是否显示已读未读
-    teamMsgReceiptVisible,
-    // 是否需要@消息
     needMention,
-    // 是否开启群管理员
+    p2pMsgReceiptVisible,
     teamManagerVisible,
-    // 是否显示在线离线状态
-    loginStateVisible: true,
-    // 是否允许转让群主
-    allowTransferTeamOwner: true,
-  }
+    teamMsgReceiptVisible,
+  ])
 
   const changeLanguage = useCallback((value: 'zh' | 'en') => {
     setCurLanguage(value)
@@ -494,15 +500,37 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
       setTeamManagerVisible(_teamManagerVisible === 'true')
     }
   }, [])
+
+  const nim = useMemo(() => {
+    const nim = V2NIM.getInstance({
+      appkey,
+      account,
+      token,
+      debugLevel: 'debug',
+      apiVersion: 'v2',
+    })
+    return nim
+  }, [account, token, appkey])
+
+  useEffect(() => {
+    nim.V2NIMLoginService.login(account, token, {
+      retryCount: 5,
+    })
+
+    return () => {
+      nim.V2NIMLoginService.logout()
+    }
+  }, [nim, account, token])
+
   return (
     <ConfigProvider locale={curLanguage === 'zh' ? zhCN : enUS}>
       <div className="im-app-example">
         <div className="container">
           <Provider
-            sdkVersion={sdkVersion}
             localeConfig={languageMap[curLanguage]}
-            initOptions={initOptions}
             localOptions={localOptions}
+            nim={nim}
+            singleton={true}
           >
             <IMApp
               onLogout={onLogout}
@@ -511,7 +539,6 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
               locale={curLanguage}
               changeLanguage={changeLanguage}
               addFriendNeedVerify={addFriendNeedVerify}
-              sdkVersion={sdkVersion}
               p2pMsgReceiptVisible={p2pMsgReceiptVisible}
               teamMsgReceiptVisible={teamMsgReceiptVisible}
               needMention={needMention}

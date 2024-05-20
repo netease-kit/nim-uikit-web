@@ -1,8 +1,9 @@
-import React, { FC, useEffect } from 'react'
+import React, { FC } from 'react'
 import { FriendList } from './components/FriendList'
 import { useEventTracking, useStateContext } from '../../common'
 import packageJson from '../../../package.json'
 import { observer } from 'mobx-react'
+import sdkPkg from 'nim-web-sdk-ng/package.json'
 
 export interface FriendListContainerProps {
   /**
@@ -40,29 +41,22 @@ export const FriendListContainer: FC<FriendListContainerProps> = observer(
     prefix = 'contact',
     commonPrefix = 'common',
   }) => {
-    const { nim, store, initOptions } = useStateContext()
+    const { nim, store } = useStateContext()
 
     useEventTracking({
-      appkey: initOptions.appkey,
+      appkey: nim.options.appkey,
       version: packageJson.version,
       component: 'ContactUIKit',
-      imVersion: nim.version,
+      imVersion: sdkPkg.version,
     })
 
-    useEffect(() => {
-      // 订阅好友列表
-      const accounts = store.uiStore.friendsWithoutBlacklist.map(
-        (item) => item.account
-      )
-      store.eventStore.subscribeLoginStateActive(accounts).catch((err) => {
-        // 忽略报错
-      })
-    }, [store.uiStore.friendsWithoutBlacklist, store.eventStore])
+    const friendsWithoutBlacklist = store.uiStore.friends
+      .filter((item) => !store.relationStore.blacklist.includes(item.accountId))
+      .map((item) => item.accountId)
 
     return (
       <FriendList
-        list={store.uiStore.friendsWithoutBlacklist}
-        // loading={loading}
+        accounts={friendsWithoutBlacklist}
         onItemClick={onItemClick}
         afterSendMsgClick={afterSendMsgClick}
         renderFriendListHeader={renderFriendListHeader}

@@ -2,8 +2,9 @@ import React, { useState, useMemo } from 'react'
 import { Modal } from 'antd'
 import { SearchInput, CrudeAvatar, useTranslation } from '../../../../common'
 import { CrudeAvatarProps } from '../../../../common/components/CrudeAvatar'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
-import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import { V2NIMFriend } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMFriendService'
+import { V2NIMUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMUserService'
 
 export interface SearchItemProps extends CrudeAvatarProps {
   onClick: () => void
@@ -20,7 +21,6 @@ const SearchItem: React.FC<SearchItemProps> = ({
 
   return (
     <div className={`${_prefix}-content-section-item`} onClick={onClick}>
-      {/* TODO CrudeAvatar 可以不用了，p2p 都用 ComplexAvatar */}
       <CrudeAvatar {...props} />
       <span className={`${_prefix}-content-section-item-name`}>
         {props.alias || props.nick || props.account}
@@ -29,7 +29,7 @@ const SearchItem: React.FC<SearchItemProps> = ({
   )
 }
 
-export type SectionListItem = NimKitCoreTypes.IFriendInfo | Team
+export type SectionListItem = (V2NIMFriend & V2NIMUser) | V2NIMTeam
 
 export type Section = {
   id: string
@@ -39,8 +39,8 @@ export type Section = {
 
 export interface SearchModalProps {
   visible: boolean
-  friends: NimKitCoreTypes.IFriendInfo[]
-  teams: Team[]
+  friends: (V2NIMFriend & V2NIMUser)[]
+  teams: V2NIMTeam[]
   onCancel: () => void
   onResultItemClick: (item: SectionListItem) => void
   renderEmpty?: () => JSX.Element
@@ -90,9 +90,9 @@ const SearchModal: React.FC<SearchModalProps> = ({
             ...item,
             list: item.list.filter((item) => {
               return (
-                (item as NimKitCoreTypes.IFriendInfo).alias ||
-                (item as NimKitCoreTypes.IFriendInfo).nick ||
-                (item as NimKitCoreTypes.IFriendInfo).account
+                (item as V2NIMFriend & V2NIMUser).alias ||
+                (item as V2NIMFriend & V2NIMUser).name ||
+                (item as V2NIMFriend & V2NIMUser).accountId
               ).includes(searchText)
             }),
           }
@@ -101,9 +101,9 @@ const SearchModal: React.FC<SearchModalProps> = ({
           return {
             ...item,
             list: item.list.filter((item) => {
-              return ((item as Team).name || (item as Team).teamId).includes(
-                searchText
-              )
+              return (
+                (item as V2NIMTeam).name || (item as V2NIMTeam).teamId
+              ).includes(searchText)
             }),
           }
         }
@@ -167,17 +167,19 @@ const SearchModal: React.FC<SearchModalProps> = ({
               </div>
               {section.list.map((item) => (
                 <SearchItem
-                  // @ts-ignore
-                  key={item.account || item.teamId}
+                  key={
+                    (item as V2NIMFriend & V2NIMUser).accountId ||
+                    (item as V2NIMTeam).teamId
+                  }
                   onClick={() => handleItemClick(item)}
                   prefix={prefix}
-                  // @ts-ignore
-                  account={item.account || item.teamId}
+                  account={
+                    (item as V2NIMFriend & V2NIMUser).accountId ||
+                    (item as V2NIMTeam).teamId
+                  }
                   avatar={item.avatar}
-                  // @ts-ignore
-                  nick={item.nick || item.name}
-                  // @ts-ignore
-                  alias={item.alias || ''}
+                  nick={item.name}
+                  alias={(item as V2NIMFriend & V2NIMUser).alias || ''}
                 />
               ))}
             </div>

@@ -7,12 +7,25 @@ import {
   MoreOutlined,
 } from '@ant-design/icons'
 import { CrudeAvatar } from '../CrudeAvatar'
-import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 import { useTranslation } from '../../hooks/useTranslation'
-import { Relation } from '@xkit-yx/im-store'
+import { Relation } from '@xkit-yx/im-store-v2'
 
-export interface UserCardProps
-  extends Omit<UserNameCard, 'createTime' | 'updateTime'> {
+export enum Gender {
+  unknown = 0,
+  male = 1,
+  female = 2,
+}
+
+export interface UserCardProps {
+  account: string
+  nick?: string
+  avatar?: string
+  signature?: string
+  gender?: Gender
+  email?: string
+  birth?: string
+  tel?: string
+  ext?: string
   alias?: string
   visible: boolean
   relation: Relation
@@ -49,9 +62,9 @@ export const UserCard: FC<UserCardProps> = ({
 
   const genderOptions = useMemo(
     () => [
-      { label: t('man'), value: 'male' },
-      { label: t('woman'), value: 'female' },
-      { label: t('unknow'), value: 'unknown' },
+      { label: t('man'), value: Gender.male },
+      { label: t('woman'), value: Gender.female },
+      { label: t('unknow'), value: Gender.unknown },
     ],
     [t]
   )

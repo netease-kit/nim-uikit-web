@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Modal, Input, Radio, Button, Checkbox } from 'antd'
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons'
 import { useTranslation } from '../../../common'

@@ -6,13 +6,14 @@ import {
   useTranslation,
   useStateContext,
 } from '../../../common'
-import { TeamMember } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
 import { observer } from 'mobx-react'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 export interface GroupItemProps {
-  myMemberInfo: TeamMember
-  member: TeamMember
-  onRemoveTeamMemberClick: (member: TeamMember) => void
+  myMemberInfo: V2NIMTeamMember
+  member: V2NIMTeamMember
+  onRemoveTeamMemberClick: (member: V2NIMTeamMember) => void
   afterSendMsgClick?: () => void
 
   prefix?: string
@@ -39,7 +40,7 @@ export const GroupItem: FC<GroupItemProps> = observer(
 
     const [isActive, setIsActive] = useState(false)
 
-    const isSelf = member.account === myMemberInfo.account
+    const isSelf = member.accountId === myMemberInfo.accountId
 
     const renderRemoveBtn = () => {
       return (
@@ -64,21 +65,34 @@ export const GroupItem: FC<GroupItemProps> = observer(
     }
 
     const renderButton = () => {
-      if (member.type === 'owner') {
+      if (
+        member.memberRole ===
+        V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_OWNER
+      ) {
         return <span className={`${_prefix}-owner`}>{t('teamOwnerText')}</span>
       }
 
-      if (member.type === 'manager') {
-        return myMemberInfo.type === 'owner' && isActive ? (
+      if (
+        member.memberRole ===
+        V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
+      ) {
+        return myMemberInfo.memberRole ===
+          V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_OWNER &&
+          isActive ? (
           renderRemoveBtn()
         ) : (
           <span className={`${_prefix}-manager`}>{t('teamManagerText')}</span>
         )
       }
 
-      if (member.type === 'normal') {
-        return (myMemberInfo.type === 'owner' ||
-          myMemberInfo.type === 'manager') &&
+      if (
+        member.memberRole ===
+        V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_NORMAL
+      ) {
+        return (myMemberInfo.memberRole ===
+          V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_OWNER ||
+          myMemberInfo.memberRole ===
+            V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER) &&
           isActive &&
           !isSelf
           ? renderRemoveBtn()
@@ -104,11 +118,11 @@ export const GroupItem: FC<GroupItemProps> = observer(
             prefix={commonPrefix}
             afterSendMsgClick={afterSendMsgClick}
             canClick={!isSelf}
-            account={member.account}
+            account={member.accountId}
           />
           <span className={`${_prefix}-label`}>
             {store.uiStore.getAppellation({
-              account: member.account,
+              account: member.accountId,
               teamId: member.teamId,
             })}
           </span>
