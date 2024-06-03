@@ -620,9 +620,9 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     const renderLocation = (msg: V2NIMMessageForUI) => {
       const attachment = msg.attachment as V2NIMMessageLocationAttachment
       const text = msg.text
-      const amapUrl = `https://uri.amap.com/marker?position=${attachment?.lng},${attachment?.lat}&name=${text}`
-      const txmapUrl = `https://apis.map.qq.com/uri/v1/marker?marker=coord:${attachment?.lat},${attachment?.lng};title:${text};addr:${attachment?.title}&referer=myapp`
-      const bdmapUrl = `http://api.map.baidu.com/marker?location=${attachment?.lat},${attachment?.lng}&title=${text}&content=${attachment?.title}&output=html&coord_type=gcj02&src=myapp`
+      const amapUrl = `https://uri.amap.com/marker?position=${attachment?.longitude},${attachment?.latitude}&name=${text}`
+      const txmapUrl = `https://apis.map.qq.com/uri/v1/marker?marker=coord:${attachment?.latitude},${attachment?.longitude};title:${text};addr:${attachment?.address}&referer=myapp`
+      const bdmapUrl = `http://api.map.baidu.com/marker?location=${attachment?.latitude},${attachment?.longitude}&title=${text}&content=${attachment?.address}&output=html&coord_type=gcj02&src=myapp`
       const menu = (
         <div className={`${_prefix}-map-menu`}>
           <div>
@@ -654,7 +654,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           <div className={`${_prefix}-location-card`} ref={locationDomRef}>
             <div className={`${_prefix}-location-title`}>{text}</div>
             <div className={`${_prefix}-location-subTitle`}>
-              {attachment?.title}
+              {attachment?.address}
             </div>
             <img
               src="https://yx-web-nosdn.netease.im/common/00685d88b3d4bead5e95479408b5b30f/map.png"

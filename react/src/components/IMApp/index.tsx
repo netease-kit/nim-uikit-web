@@ -51,7 +51,7 @@ import {
 } from '@xkit-yx/im-kit-ui/src/common/components/CommonParseSession'
 import { LocalOptions } from '@xkit-yx/im-store-v2/dist/types/types'
 import V2NIM, { V2NIMConst } from 'nim-web-sdk-ng'
-import { RenderP2pCustomMessageOptions } from '@xkit-yx/im-kit-ui/es/chat/components/ChatP2pMessageList'
+import { RenderP2pCustomMessageOptions } from '@xkit-yx/im-kit-ui/src/chat/components/ChatP2pMessageList'
 
 interface IMContainerProps {
   appkey: string //传入您的App Key
@@ -263,11 +263,11 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
               >
                 <i className={classNames('iconfont', 'g2-icon', icon)}></i>
                 <span>{g2StatusMap[status]}</span>
-                {duration && (
+                {duration ? (
                   <span className="g2-time">
                     {convertSecondsToTime(duration)}
                   </span>
-                )}
+                ) : null}
               </div>
               <div className="time">{renderMsgDate(msg.createTime)}</div>
             </div>
