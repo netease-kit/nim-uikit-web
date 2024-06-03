@@ -1,3 +1,5 @@
 import 'antd/lib/image/style'
 import 'antd/lib/progress/style'
+import 'antd/lib/popover/style'
+import 'antd/lib/message/style'
 import './index.less'

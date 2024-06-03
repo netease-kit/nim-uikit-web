@@ -1,18 +1,17 @@
-import React, { FC, useMemo, useEffect, useCallback, useState } from 'react'
-import { Spin } from 'antd'
+import React, { FC } from 'react'
 import { GroupList } from './components/GroupList'
 import { useEventTracking, useStateContext } from '../../common'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
-import { logger } from '../../utils'
-import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import sdkPkg from 'nim-web-sdk-ng/package.json'
 import packageJson from '../../../package.json'
 import { observer } from 'mobx-react'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 export interface GroupListContainerProps {
   /**
    群组点击事件
    */
-  onItemClick?: (team: Team) => void
+  onItemClick?: (team: V2NIMTeam) => void
   /**
    自定义渲染群组列表为空时内容
    */
@@ -34,17 +33,20 @@ export const GroupListContainer: FC<GroupListContainerProps> = observer(
     renderGroupListHeader,
     prefix = 'contact',
   }) => {
-    const { nim, store, initOptions } = useStateContext()
+    const { nim, store } = useStateContext()
 
     useEventTracking({
-      appkey: initOptions.appkey,
+      appkey: nim.options.appkey,
       version: packageJson.version,
       component: 'ContactUIKit',
-      imVersion: nim.version,
+      imVersion: sdkPkg.version,
     })
 
-    const handleItemClick = async (team: Team) => {
-      await store.sessionStore.insertSessionActive('team', team.teamId)
+    const handleItemClick = async (team: V2NIMTeam) => {
+      await store.conversationStore.insertConversationActive(
+        V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
+        team.teamId
+      )
       onItemClick?.(team)
     }
 

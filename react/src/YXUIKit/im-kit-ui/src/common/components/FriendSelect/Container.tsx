@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC } from 'react'
 import { FriendSelectUI, FriendSelectUIProps } from './FriendSelectUI'
 import { useStateContext } from '../../hooks/useStateContext'
 import { observer } from 'mobx-react'
@@ -9,26 +9,10 @@ export const FriendSelectContainer: FC<FriendSelectContainerProps> = observer(
   (props) => {
     const { store } = useStateContext()
 
-    // const [loading, setLoading] = useState(false)
+    const friendsWithoutBlacklist = store.uiStore.friends
+      .filter((item) => !store.relationStore.blacklist.includes(item.accountId))
+      .map((item) => item.accountId)
 
-    // useEffect(() => {
-    //   setLoading(true)
-    //   store.uiStore
-    //     .getFriendsWithoutBlacklist()
-    //     .then(() => {
-    //       setLoading(false)
-    //     })
-    //     .catch(() => {
-    //       setLoading(false)
-    //     })
-    // }, [store.uiStore])
-
-    return (
-      <FriendSelectUI
-        list={store.uiStore.friendsWithoutBlacklist}
-        // loading={loading}
-        {...props}
-      />
-    )
+    return <FriendSelectUI accounts={friendsWithoutBlacklist} {...props} />
   }
 )

@@ -1,13 +1,13 @@
 import React, { FC } from 'react'
 import { GroupItem } from './GroupItem'
-import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
 import { useTranslation } from '../../../common'
 import { Spin, Empty } from 'antd'
 
 export interface GroupListProps {
-  list: Team[]
+  list: V2NIMTeam[]
   loading?: boolean
-  onItemClick?: (team: Team) => void
+  onItemClick?: (team: V2NIMTeam) => void
   renderGroupListHeader?: () => JSX.Element
   renderGroupListEmpty?: () => JSX.Element
   prefix?: string

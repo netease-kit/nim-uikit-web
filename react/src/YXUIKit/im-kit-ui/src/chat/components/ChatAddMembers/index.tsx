@@ -74,9 +74,7 @@ const ChatAddMemebers: React.FC<ChatAddMemebersProps> = ({
       <div style={{ height: 450 }}>
         <FriendSelectContainer
           prefix={commonPrefix}
-          onSelect={(selectedList) =>
-            setSelectedAccounts(selectedList.map((item) => item.account))
-          }
+          onSelect={(selectedList) => setSelectedAccounts(selectedList)}
           selectedAccounts={selectedAccounts}
         />
       </div>

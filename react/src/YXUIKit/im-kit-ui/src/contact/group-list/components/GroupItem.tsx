@@ -1,9 +1,9 @@
 import React, { FC } from 'react'
 import { CrudeAvatar } from '../../../common'
-import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
 
-export interface GroupItemProps extends Team {
-  onItemClick?: (team: Team) => void
+export interface GroupItemProps extends V2NIMTeam {
+  onItemClick?: (team: V2NIMTeam) => void
   prefix?: string
 }
 

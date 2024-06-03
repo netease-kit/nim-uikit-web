@@ -26,8 +26,6 @@ import {
   UseEventTrackingProps,
 } from './common'
 
-import { NimKitCoreTypes, NimKitCoreFactory } from '@xkit-yx/core-kit'
-
 import { ConversationContainer } from './conversation'
 import {
   ContactListContainer,
@@ -38,14 +36,15 @@ import {
 } from './contact'
 import { ChatContainer, ChatMessageItem } from './chat'
 import { AddContainer, SearchContainer } from './search'
-import RootStore from '@xkit-yx/im-store'
-import { NIMInitializeOptions } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/NIMInterface'
+import RootStore from '@xkit-yx/im-store-v2'
+import V2NIM from 'nim-web-sdk-ng'
+import { LocalOptions } from '@xkit-yx/im-store-v2/dist/types/types'
 
 export class IMUIKit {
   get context(): {
-    nim: NimKitCoreTypes.INimKitCore
+    nim: V2NIM
     store: RootStore
-    initOptions: NIMInitializeOptions
+    localOptions: LocalOptions
   } | void {
     // @ts-ignore
     return window.__xkit_store__
@@ -83,22 +82,18 @@ export class IMUIKit {
   }
 
   getStateContext(): {
-    nim: NimKitCoreTypes.INimKitCore
+    nim: V2NIM
     store: RootStore
-    initOptions: NIMInitializeOptions
+    localOptions: LocalOptions
   } | void {
     return this.context
   }
 
   destroy(): void {
     this.context?.store.destroy()
-    this.context?.nim.destroy()
 
-    const NIM = NimKitCoreFactory(this.providerProps.sdkVersion || 1)
     // @ts-ignore
     RootStore.ins = void 0
-    //@ts-ignore
-    NIM.ins = void 0
   }
 }
 
@@ -124,8 +119,6 @@ export {
   useStateContext,
   useTranslation,
   useEventTracking,
-  NimKitCoreTypes,
-  NimKitCoreFactory,
   ConversationContainer,
   ContactListContainer,
   BlackListContainer,

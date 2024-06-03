@@ -2,7 +2,7 @@ import React, { FC } from 'react'
 import { UserOutlined, TeamOutlined } from '@ant-design/icons'
 import { ContactItemProps, ContactItem } from './ContactItem'
 import { useTranslation } from '../../../common'
-import { ContactType } from '@xkit-yx/im-store'
+import { ContactType } from '@xkit-yx/im-store-v2'
 
 export interface ContactListProps {
   selectedContactType: ContactType | ''

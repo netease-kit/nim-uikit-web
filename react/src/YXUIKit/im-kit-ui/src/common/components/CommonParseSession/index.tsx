@@ -1,18 +1,25 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Image, Popover, Progress } from 'antd'
+import { Image, Popover, Progress, message } from 'antd'
 import reactStringReplace from 'react-string-replace'
 import CommonIcon from '../CommonIcon'
 import { getFileType, parseFileSize, addUrlSearch } from '@xkit-yx/utils'
-import { handleEmojiTranslate } from '../../../utils'
-import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
+import { handleEmojiTranslate, logger } from '../../../utils'
+import {
+  V2NIMMessage,
+  V2NIMMessageImageAttachment,
+  V2NIMMessageFileAttachment,
+  V2NIMMessageAudioAttachment,
+  V2NIMMessageLocationAttachment,
+  V2NIMMessageVideoAttachment,
+  V2NIMMessageNotificationAttachment,
+} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMMessageService'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
 import { useTranslation, useStateContext } from '../../index'
-import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 import { observer } from 'mobx-react'
-import { parseSessionId } from '../../../utils'
 import { ALLOW_AT, TAllowAt } from '../../../constant'
-import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 import { getBlobImg } from '../../../urlToBlob'
-import { abortTask } from '../../../uploadingTask'
+import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 // 对话框中要展示的文件icon标识
 const fileIconMap = {
@@ -29,8 +36,8 @@ const fileIconMap = {
 
 export interface IParseSessionProps {
   prefix?: string
-  msg: IMMessage
-  replyMsg?: IMMessage
+  msg: V2NIMMessageForUI
+  replyMsg?: V2NIMMessage
 }
 
 export const pauseAllAudio = (): HTMLAudioElement => {
@@ -60,35 +67,43 @@ export const pauseAllVideo = (): void => {
 export const ParseSession: React.FC<IParseSessionProps> = observer(
   ({ prefix = 'common', msg, replyMsg }) => {
     const _prefix = `${prefix}-parse-session`
-    const { store, localOptions } = useStateContext()
-    // const imagePreview = useRef<HTMLDivElement | null>(null)
+    const { nim, store, localOptions } = useStateContext()
     const { t } = useTranslation()
     const locationDomRef = useRef<HTMLDivElement | null>(null)
     const audioContainerRef = useRef<HTMLDivElement>(null)
     const notSupportMessageText = t('notSupportMessageText')
-    // const { type, body, idClient, sessionId, ext } = msg
     const [audioIconType, setAudioIconType] = useState('icon-yuyin3')
-    const { scene, to } = parseSessionId(msg.sessionId)
     const [imgUrl, setImgUrl] = useState('')
     const [replyImgUrl, setReplyImgUrl] = useState('')
+    const myAccount = store.userStore.myUserInfo.accountId
 
     useEffect(() => {
-      if (msg.type === 'image' && msg.attach && msg.attach.url) {
-        const url = `${msg.attach.url}?download=${msg.attach.name}`
+      if (
+        msg.messageType ===
+          V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_IMAGE &&
+        msg.attachment &&
+        (msg.attachment as V2NIMMessageImageAttachment).url
+      ) {
+        const url = `${
+          (msg.attachment as V2NIMMessageImageAttachment).url
+        }?download=${(msg.attachment as V2NIMMessageImageAttachment).name}`
         getBlobImg(url).then((blobUrl) => {
           setImgUrl(blobUrl)
         })
       }
-    }, [msg.attach, msg.type])
+    }, [msg.attachment, msg.messageType])
 
     useEffect(() => {
       if (
         replyMsg &&
-        replyMsg.type === 'image' &&
-        replyMsg.attach &&
-        replyMsg.attach.url
+        replyMsg.messageType ===
+          V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_IMAGE &&
+        replyMsg.attachment &&
+        (replyMsg.attachment as V2NIMMessageImageAttachment).url
       ) {
-        const url = `${replyMsg.attach.url}?download=${replyMsg.attach.name}`
+        const url = `${
+          (replyMsg.attachment as V2NIMMessageImageAttachment).url
+        }?download=${(replyMsg.attachment as V2NIMMessageImageAttachment).name}`
         getBlobImg(url).then((blobUrl) => {
           setReplyImgUrl(blobUrl)
         })
@@ -97,50 +112,68 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
 
     let animationFlag = false
 
-    const teamId = scene === 'team' ? to : ''
+    const teamId =
+      msg.conversationType ===
+      V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
+        ? nim.V2NIMConversationIdUtil.parseConversationTargetId(
+            msg.conversationId
+          )
+        : ''
 
     const { EMOJI_ICON_MAP_CONFIG, INPUT_EMOJI_SYMBOL_REG } =
       handleEmojiTranslate(t)
 
-    const renderCustomText = (msg: IMMessage) => {
-      const { body, idClient, ext } = msg
+    const renderCustomText = (msg: V2NIMMessageForUI) => {
+      const { text, messageClientId, serverExtension } = msg
 
-      let text = reactStringReplace(body, /(https?:\/\/\S+)/gi, (match, i) => (
-        <a key={idClient + match + i} href={match} target="_blank">
-          {match}
-        </a>
-      ))
-      text = reactStringReplace(text, INPUT_EMOJI_SYMBOL_REG, (match, i) => {
-        return (
-          <CommonIcon
-            key={idClient + match + i}
-            className={`${_prefix}-emoji-icon`}
-            type={EMOJI_ICON_MAP_CONFIG[match]}
-          />
+      let finalText = reactStringReplace(
+        text,
+        /(https?:\/\/\S+)/gi,
+        (match, i) => (
+          <a key={messageClientId + match + i} href={match} target="_blank">
+            {match}
+          </a>
         )
-      })
-      if (ext) {
+      )
+      finalText = reactStringReplace(
+        finalText,
+        INPUT_EMOJI_SYMBOL_REG,
+        (match, i) => {
+          return (
+            <CommonIcon
+              key={messageClientId + match + i}
+              className={`${_prefix}-emoji-icon`}
+              type={EMOJI_ICON_MAP_CONFIG[match]}
+            />
+          )
+        }
+      )
+      if (serverExtension) {
         try {
-          const extObj = JSON.parse(ext)
+          const extObj = JSON.parse(serverExtension)
           const yxAitMsg = extObj.yxAitMsg
           if (yxAitMsg && localOptions.needMention) {
             Object.keys(yxAitMsg).forEach((key) => {
               const item = yxAitMsg[key]
-              text = reactStringReplace(text, item.text, (match, i) => {
-                return (
-                  <span
-                    key={idClient + match + i}
-                    className={`${_prefix}-mention`}
-                  >
-                    {match}
-                  </span>
-                )
-              })
+              finalText = reactStringReplace(
+                finalText,
+                item.text,
+                (match, i) => {
+                  return (
+                    <span
+                      key={messageClientId + match + i}
+                      className={`${_prefix}-mention`}
+                    >
+                      {match}
+                    </span>
+                  )
+                }
+              )
             })
           }
         } catch {}
       }
-      return <div className={`${_prefix}-text-wrapper`}>{text}</div>
+      return <div className={`${_prefix}-text-wrapper`}>{finalText}</div>
     }
 
     const playAudioAnimation = () => {
@@ -161,9 +194,8 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       handler()
     }
 
-    const renderUploadMsg = (msg: IMMessage) => {
-      // @ts-ignore
-      const { uploadProgress, previewImg, idClient } = msg
+    const renderUploadMsg = (msg: V2NIMMessageForUI) => {
+      const { uploadProgress, previewImg, sendingState } = msg
 
       return (
         <div className={`${_prefix}-upload-container`}>
@@ -174,33 +206,46 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
               'https://yx-web-nosdn.netease.im/common/33d3e1fa8de771277ea4466564ef37aa/emptyImg.png'
             }
           />
-          <div className={`${_prefix}-upload-mask`}>
-            <div
-              className={`${_prefix}-upload-progress`}
-              onClick={() => {
-                abortTask(idClient)
-              }}
-            >
-              <Progress
-                type="circle"
-                status="exception"
-                percent={uploadProgress || 0}
-                width={40}
-                strokeColor="#899095"
-                trailColor="rgba(0,0,0,0.5)"
-              />
+          {sendingState ===
+            V2NIMConst.V2NIMMessageSendingState
+              .V2NIM_MESSAGE_SENDING_STATE_SENDING &&
+          uploadProgress !== void 0 &&
+          uploadProgress < 100 ? (
+            <div className={`${_prefix}-upload-mask`}>
+              <div
+                className={`${_prefix}-upload-progress`}
+                onClick={() => {
+                  store.msgStore
+                    .cancelMessageAttachmentUploadActive(msg)
+                    .catch(() => {
+                      message.error(t('cancelUploadFailedText'))
+                    })
+                }}
+              >
+                <Progress
+                  type="circle"
+                  status="exception"
+                  percent={uploadProgress || 0}
+                  width={40}
+                  strokeColor="#899095"
+                  trailColor="rgba(0,0,0,0.5)"
+                />
+              </div>
             </div>
-          </div>
+          ) : null}
         </div>
       )
     }
 
-    const renderImage = (msg: IMMessage, isReplyMsg: boolean) => {
-      // @ts-ignore
-      const { uploadProgress, uploadFileInfo } = msg
+    const renderImage = (msg: V2NIMMessageForUI, isReplyMsg: boolean) => {
+      const { uploadProgress, sendingState } = msg
+      const attachment = msg.attachment as V2NIMMessageImageAttachment
 
-      // uploadProgress 属性只会在上传中存在，uploadFileInfo 在上传中和上传失败时都存在
-      if (uploadProgress !== void 0 || uploadFileInfo) {
+      // 上传中或没有真实 url 时走这里
+      if (
+        (uploadProgress !== void 0 && uploadProgress < 100) ||
+        !attachment.url
+      ) {
         return renderUploadMsg(msg)
       }
 
@@ -226,50 +271,73 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
-    const renderFile = (msg: IMMessage) => {
+    const renderFile = (msg: V2NIMMessageForUI) => {
+      let downloadHref = ''
+      try {
+        downloadHref = addUrlSearch(
+          (msg.attachment as V2NIMMessageFileAttachment)?.url,
+          `download=${(msg.attachment as V2NIMMessageFileAttachment)?.name}`
+        )
+      } catch (error) {
+        //
+      }
+
       return (
         <div className={`${_prefix}-file-box`}>
           <CommonIcon
             className={`${_prefix}-file-icon`}
             type={
-              fileIconMap[getFileType(msg?.attach?.ext)] || 'icon-weizhiwenjian'
+              fileIconMap[
+                getFileType((msg.attachment as V2NIMMessageFileAttachment)?.ext)
+              ] || 'icon-weizhiwenjian'
             }
           />
           <div className={`${_prefix}-file-info`}>
-            <a
-              download={msg?.attach?.name}
-              href={addUrlSearch(
-                msg?.attach?.url,
-                `download=${msg?.attach?.name}`
+            {downloadHref ? (
+              <a
+                download={(msg.attachment as V2NIMMessageFileAttachment)?.name}
+                href={downloadHref}
+                target="_blank"
+              >
+                {(msg.attachment as V2NIMMessageFileAttachment)?.name}
+              </a>
+            ) : (
+              <span>
+                {(msg.attachment as V2NIMMessageFileAttachment)?.name}
+              </span>
+            )}
+            <span>
+              {parseFileSize(
+                (msg.attachment as V2NIMMessageFileAttachment)?.size
               )}
-              target="_blank"
-            >
-              {msg?.attach?.name}
-            </a>
-            <span>{parseFileSize(msg?.attach?.size)}</span>
+            </span>
           </div>
         </div>
       )
     }
 
-    const renderNotification = (msg: IMMessage) => {
-      switch (msg.attach?.type) {
-        case 'updateTeam': {
-          const team: Team = msg.attach?.team || {}
+    const renderNotification = (msg: V2NIMMessageForUI) => {
+      const attachment = msg.attachment as V2NIMMessageNotificationAttachment
+      switch (attachment?.type) {
+        case V2NIMConst.V2NIMMessageNotificationType
+          .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_UPDATE_TINFO: {
+          const team: V2NIMTeam = (attachment?.updatedTeamInfo ||
+            {}) as V2NIMTeam
           const content: string[] = []
-          if (team.avatar !== undefined) {
+          if (team.avatar !== void 0) {
             content.push(t('updateTeamAvatar'))
           }
-          if (team.name !== undefined) {
+          if (team.name !== void 0) {
             content.push(`${t('updateTeamName')}“${team.name}”`)
           }
-          if (team.intro !== undefined) {
+          if (team.intro !== void 0) {
             content.push(t('updateTeamIntro'))
           }
-          if (team.inviteMode) {
+          if (team.inviteMode !== void 0) {
             content.push(
               `${t('updateTeamInviteMode')}“${
-                team.inviteMode === 'all'
+                team.inviteMode ===
+                V2NIMConst.V2NIMTeamInviteMode.V2NIM_TEAM_INVITE_MODE_ALL
                   ? t('teamAll')
                   : localOptions.teamManagerVisible
                   ? t('teamOwnerAndManagerText')
@@ -277,10 +345,12 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
               }”`
             )
           }
-          if (team.updateTeamMode) {
+          if (team.updateInfoMode !== void 0) {
             content.push(
               `${t('updateTeamUpdateTeamMode')}“${
-                team.updateTeamMode === 'all'
+                team.updateInfoMode ===
+                V2NIMConst.V2NIMTeamUpdateInfoMode
+                  .V2NIM_TEAM_UPDATE_INFO_MODE_ALL
                   ? t('teamAll')
                   : localOptions.teamManagerVisible
                   ? t('teamOwnerAndManagerText')
@@ -288,21 +358,25 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
               }”`
             )
           }
-          if (team.muteType) {
+          if (team.chatBannedMode !== void 0) {
             content.push(
               `${t('updateTeamMute')}${
-                team.muteType === 'none' ? t('closeText') : t('openText')
+                team.chatBannedMode ===
+                V2NIMConst.V2NIMTeamChatBannedMode
+                  .V2NIM_TEAM_CHAT_BANNED_MODE_UNBAN
+                  ? t('closeText')
+                  : t('openText')
               }`
             )
           }
-          if (team.ext) {
+          if (team.serverExtension !== void 0) {
             let ext: TAllowAt = {}
             try {
-              ext = JSON.parse(team.ext)
+              ext = JSON.parse(team.serverExtension)
             } catch (error) {
               //
             }
-            if (ext[ALLOW_AT] !== undefined) {
+            if (ext[ALLOW_AT] !== void 0) {
               content.push(
                 `${t('updateAllowAt')}“${
                   ext[ALLOW_AT] === 'manager'
@@ -314,50 +388,41 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
               )
             }
           }
-          const attachUser = (msg.attach?.users as UserNameCard[]).find(
-            (_) => _.account === msg.from
-          )
           return content.length ? (
             <div className={`${_prefix}-noti`}>
               {store.uiStore.getAppellation({
-                account: msg.from,
+                account: msg.senderId,
                 teamId,
-                nickFromMsg: attachUser?.nick,
               })}{' '}
               {content.join('、')}
             </div>
           ) : null
         }
-        // 有人主动加入群聊
-        case 'passTeamApply':
+        // 申请加入群聊成功
+        case V2NIMConst.V2NIMMessageNotificationType
+          .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_APPLY_PASS:
         // 邀请加入群聊对方同意
-        case 'acceptTeamInvite': {
-          const attachUser = (msg.attach?.users as UserNameCard[]).find(
-            (_) => _.account === msg.from
-          )
+        case V2NIMConst.V2NIMMessageNotificationType
+          .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_INVITE_ACCEPT: {
           return (
             <div className={`${_prefix}-noti`}>
               {store.uiStore.getAppellation({
-                account: msg.from,
+                account: msg.senderId,
                 teamId,
-                nickFromMsg: attachUser?.nick,
               })}{' '}
               {t('joinTeamText')}
             </div>
           )
         }
         // 邀请加入群聊无需验证
-        case 'addTeamMembers': {
-          const accounts: string[] = msg.attach?.accounts || []
+        case V2NIMConst.V2NIMMessageNotificationType
+          .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_INVITE: {
+          const accounts: string[] = attachment?.targetIds || []
           const nicks = accounts
             .map((item) => {
-              const attachUser = (msg.attach?.users as UserNameCard[]).find(
-                (_) => _.account === item
-              )
               return store.uiStore.getAppellation({
                 account: item,
                 teamId,
-                nickFromMsg: attachUser?.nick,
               })
             })
             .filter((item) => !!item)
@@ -369,17 +434,14 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           )
         }
         // 踢出群聊
-        case 'removeTeamMembers': {
-          const accounts: string[] = msg.attach?.accounts || []
+        case V2NIMConst.V2NIMMessageNotificationType
+          .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_KICK: {
+          const accounts: string[] = attachment?.targetIds || []
           const nicks = accounts
             .map((item) => {
-              const attachUser = (msg.attach?.users as UserNameCard[]).find(
-                (_) => _.account === item
-              )
               return store.uiStore.getAppellation({
                 account: item,
                 teamId,
-                nickFromMsg: attachUser?.nick,
               })
             })
             .filter((item) => !!item)
@@ -391,17 +453,14 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           )
         }
         // 增加群管理员
-        case 'addTeamManagers': {
-          const accounts: string[] = msg.attach?.accounts || []
+        case V2NIMConst.V2NIMMessageNotificationType
+          .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_ADD_MANAGER: {
+          const accounts: string[] = attachment?.targetIds || []
           const nicks = accounts
             .map((item) => {
-              const attachUser = (msg.attach?.users as UserNameCard[]).find(
-                (_) => _.account === item
-              )
               return store.uiStore.getAppellation({
                 account: item,
                 teamId,
-                nickFromMsg: attachUser?.nick,
               })
             })
             .filter((item) => !!item)
@@ -413,17 +472,14 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           )
         }
         // 移除群管理员
-        case 'removeTeamManagers': {
-          const accounts: string[] = msg.attach?.accounts || []
+        case V2NIMConst.V2NIMMessageNotificationType
+          .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_REMOVE_MANAGER: {
+          const accounts: string[] = attachment?.targetIds || []
           const nicks = accounts
             .map((item) => {
-              const attachUser = (msg.attach?.users as UserNameCard[]).find(
-                (_) => _.account === item
-              )
               return store.uiStore.getAppellation({
                 account: item,
                 teamId,
-                nickFromMsg: attachUser?.nick,
               })
             })
             .filter((item) => !!item)
@@ -435,33 +491,27 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           )
         }
         // 主动退出群聊
-        case 'leaveTeam': {
-          const attachUser = (msg.attach?.users as UserNameCard[]).find(
-            (_) => _.account === msg.from
-          )
+        case V2NIMConst.V2NIMMessageNotificationType
+          .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_LEAVE: {
           return (
             <div className={`${_prefix}-noti`}>
               {store.uiStore.getAppellation({
-                account: msg.from,
+                account: msg.senderId,
                 teamId,
-                nickFromMsg: attachUser?.nick,
               })}{' '}
               {t('leaveTeamText')}
             </div>
           )
         }
         // 转让群主
-        case 'transferTeam': {
-          const attachUser = (msg.attach?.users as UserNameCard[]).find(
-            (_) => _.account === msg.attach?.account
-          )
+        case V2NIMConst.V2NIMMessageNotificationType
+          .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_OWNER_TRANSFER: {
           return (
             <div className={`${_prefix}-noti`}>
               <span className={`${_prefix}-noti-transfer`}>
                 {store.uiStore.getAppellation({
-                  account: msg.attach?.account,
+                  account: (attachment?.targetIds || [])[0],
                   teamId,
-                  nickFromMsg: attachUser?.nick,
                 })}
               </span>
               {t('newGroupOwnerText')}
@@ -473,9 +523,9 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       }
     }
 
-    const renderAudio = (msg: IMMessage) => {
-      const { flow, attach } = msg
-      const duration = Math.floor(attach?.dur / 1000) || 0
+    const renderAudio = (msg: V2NIMMessageForUI) => {
+      const attachment = msg.attachment as V2NIMMessageAudioAttachment
+      const duration = Math.floor(attachment?.duration / 1000) || 0
 
       const containerWidth = 80 + 15 * (duration - 1)
 
@@ -487,21 +537,23 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         >
           <div
             className={
-              flow === 'in' ? `${_prefix}-audio-in` : `${_prefix}-audio-out`
+              msg.senderId === myAccount
+                ? `${_prefix}-audio-out`
+                : `${_prefix}-audio-in`
             }
             onClick={() => {
               pauseAllVideo()
               const oldAudio = pauseAllAudio()
               const msgId = oldAudio?.getAttribute('msgId')
               // 如果是自己，暂停动画
-              if (msgId === msg.idClient) {
+              if (msgId === msg.messageClientId) {
                 animationFlag = false
                 return
               }
-              const audio = new Audio(attach?.url)
+              const audio = new Audio(attachment?.url)
               // 播放音频，并开始动画
               audio.id = 'yx-audio-message'
-              audio.setAttribute('msgId', msg.idClient)
+              audio.setAttribute('msgId', msg.messageClientId)
               audio.play()
               audioContainerRef.current?.appendChild(audio)
               audio.addEventListener('ended', () => {
@@ -525,25 +577,37 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
-    const renderVideo = (msg: IMMessage) => {
-      // @ts-ignore
-      const { uploadProgress, uploadFileInfo, attach } = msg
+    const renderVideo = (msg: V2NIMMessageForUI) => {
+      const uploadProgress = msg.uploadProgress
+      const attachment = msg.attachment as V2NIMMessageVideoAttachment
 
-      // uploadProgress 属性只会在上传中存在，uploadFileInfo 在上传中和上传失败时都存在
-      if (uploadProgress !== void 0 || uploadFileInfo) {
+      let url = attachment.url
+
+      if (attachment.file && !url) {
+        try {
+          url = URL.createObjectURL(attachment.file)
+        } catch (error) {
+          logger.warn('createObjectURL fail: ', attachment)
+        }
+      }
+
+      // 上传中或没有真实 url 时走这里
+      if ((uploadProgress !== void 0 && uploadProgress < 100) || !url) {
         return renderUploadMsg(msg)
       }
 
-      const url = `${attach?.url}?download=${msg.idClient}.${attach?.ext}`
+      url = url.startsWith('blob:')
+        ? url
+        : `${url}?download=${msg.messageClientId}.${attachment?.ext}`
       return (
         <video
           src={url}
-          id={`msg-video-${msg.idClient}`}
+          id={`msg-video-${msg.messageClientId}`}
           className={`${_prefix}-video`}
           controls
           onPlay={() => {
             // 播放视频，暂停其他视频和音频
-            pauseOtherVideo(msg.idClient)
+            pauseOtherVideo(msg.messageClientId)
             pauseAllAudio()
           }}
           onError={() => {
@@ -553,11 +617,12 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
-    const renderLocation = (msg: IMMessage) => {
-      const { attach, body } = msg
-      const amapUrl = `https://uri.amap.com/marker?position=${attach?.lng},${attach?.lat}&name=${body}`
-      const txmapUrl = `https://apis.map.qq.com/uri/v1/marker?marker=coord:${attach?.lat},${attach?.lng};title:${body};addr:${attach?.title}&referer=myapp`
-      const bdmapUrl = `http://api.map.baidu.com/marker?location=${attach?.lat},${attach?.lng}&title=${body}&content=${attach?.title}&output=html&coord_type=gcj02&src=myapp`
+    const renderLocation = (msg: V2NIMMessageForUI) => {
+      const attachment = msg.attachment as V2NIMMessageLocationAttachment
+      const text = msg.text
+      const amapUrl = `https://uri.amap.com/marker?position=${attachment?.longitude},${attachment?.latitude}&name=${text}`
+      const txmapUrl = `https://apis.map.qq.com/uri/v1/marker?marker=coord:${attachment?.latitude},${attachment?.longitude};title:${text};addr:${attachment?.address}&referer=myapp`
+      const bdmapUrl = `http://api.map.baidu.com/marker?location=${attachment?.latitude},${attachment?.longitude}&title=${text}&content=${attachment?.address}&output=html&coord_type=gcj02&src=myapp`
       const menu = (
         <div className={`${_prefix}-map-menu`}>
           <div>
@@ -587,9 +652,9 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           }
         >
           <div className={`${_prefix}-location-card`} ref={locationDomRef}>
-            <div className={`${_prefix}-location-title`}>{body}</div>
+            <div className={`${_prefix}-location-title`}>{text}</div>
             <div className={`${_prefix}-location-subTitle`}>
-              {attach?.title}
+              {attachment?.address}
             </div>
             <img
               src="https://yx-web-nosdn.netease.im/common/00685d88b3d4bead5e95479408b5b30f/map.png"
@@ -608,7 +673,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           content = t('recallReplyMessageText')
         }
         const nick = store.uiStore.getAppellation({
-          account: replyMsg.from,
+          account: replyMsg.senderId,
           teamId,
           ignoreAlias: true,
         })
@@ -634,28 +699,28 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       return null
     }
 
-    const renderMsgContent = (msg: IMMessage, isReplyMsg: boolean) => {
-      switch (msg.type) {
-        case 'text':
-        case 'custom':
+    const renderMsgContent = (msg: V2NIMMessageForUI, isReplyMsg: boolean) => {
+      switch (msg.messageType) {
+        case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TEXT:
+        case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CUSTOM:
           return renderCustomText(msg)
-        case 'image':
+        case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_IMAGE:
           return renderImage(msg, isReplyMsg)
-        case 'file':
+        case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_FILE:
           return renderFile(msg)
-        case 'notification':
+        case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_NOTIFICATION:
           return renderNotification(msg)
-        case 'audio':
+        case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_AUDIO:
           return renderAudio(msg)
-        case 'g2':
+        case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL:
           return `[${t('callMsgText')}，${notSupportMessageText}]`
-        case 'geo':
+        case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_LOCATION:
           return renderLocation(msg)
-        case 'robot':
+        case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_ROBOT:
           return `[${t('robotMsgText')}，${notSupportMessageText}]`
-        case 'tip':
+        case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TIPS:
           return `[${t('tipMsgText')}，${notSupportMessageText}]`
-        case 'video':
+        case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_VIDEO:
           return renderVideo(msg)
         default:
           return `[${t('unknowMsgText')}，${notSupportMessageText}]`
@@ -672,32 +737,32 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
 )
 
 export const getMsgContentTipByType = (
-  msg: Pick<IMMessage, 'type' | 'body'>,
+  msg: Pick<V2NIMMessage, 'messageType' | 'text'>,
   t
 ): string => {
-  const { type, body } = msg
-  switch (type) {
-    case 'text':
-      return body || `[${t('textMsgText')}]`
-    case 'custom':
-      return body || `[${t('customMsgText')}]`
-    case 'audio':
+  const { messageType, text } = msg
+  switch (messageType) {
+    case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TEXT:
+      return text || `[${t('textMsgText')}]`
+    case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CUSTOM:
+      return text || `[${t('customMsgText')}]`
+    case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_AUDIO:
       return `[${t('audioMsgText')}]`
-    case 'file':
+    case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_FILE:
       return `[${t('fileMsgText')}]`
-    case 'g2':
+    case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL:
       return `[${t('callMsgText')}]`
-    case 'geo':
+    case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_LOCATION:
       return `[${t('geoMsgText')}]`
-    case 'image':
+    case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_IMAGE:
       return `[${t('imgMsgText')}]`
-    case 'notification':
+    case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_NOTIFICATION:
       return `[${t('notiMsgText')}]`
-    case 'robot':
+    case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_ROBOT:
       return `[${t('robotMsgText')}]`
-    case 'tip':
+    case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TIPS:
       return `[${t('tipMsgText')}]`
-    case 'video':
+    case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_VIDEO:
       return `[${t('videoMsgText')}]`
     default:
       return `[${t('unknowMsgText')}]`

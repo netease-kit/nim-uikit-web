@@ -7,7 +7,7 @@ import {
   useTranslation,
   useStateContext,
 } from '../../../../common'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 export interface CreateModalProps {
   visible: boolean
@@ -30,9 +30,7 @@ const CreateModal: React.FC<CreateModalProps> = ({
 
   const { store } = useStateContext()
 
-  const [selectedList, setSelectedList] = useState<
-    NimKitCoreTypes.IFriendInfo[]
-  >([])
+  const [selectedList, setSelectedList] = useState<string[]>([])
   const [groupName, setGroupName] = useState('')
   const [avatarUrl, setAvatarUrl] = useState(
     urls[Math.floor(Math.random() * 5)]
@@ -44,7 +42,7 @@ const CreateModal: React.FC<CreateModalProps> = ({
     try {
       setCreating(true)
       const team = await store.teamStore.createTeamActive({
-        accounts: selectedList.map((item) => item.account),
+        accounts: selectedList,
         avatar: avatarUrl,
         name: groupName.trim(),
       })
@@ -59,7 +57,10 @@ const CreateModal: React.FC<CreateModalProps> = ({
 
   const handleChat = async () => {
     if (teamId) {
-      await store.sessionStore.insertSessionActive('team', teamId)
+      await store.conversationStore.insertConversationActive(
+        V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
+        teamId
+      )
       onChat(teamId)
       resetState()
     }
@@ -138,11 +139,11 @@ const CreateModal: React.FC<CreateModalProps> = ({
           {t('addTeamMemberText')}
         </div>
         <FriendSelectContainer
-          onSelect={(list) => {
-            setSelectedList(list)
+          onSelect={(accounts) => {
+            setSelectedList(accounts)
           }}
           max={10}
-          selectedAccounts={selectedList.map((item) => item.account)}
+          selectedAccounts={selectedList}
           prefix={commonPrefix}
         />
       </div>

@@ -1,6 +1,6 @@
 {
   "name": "@xkit-yx/im-kit-ui",
-  "version": "9.8.0",
+  "version": "10.0.1",
   "description": "云信即时通讯组件",
   "license": "MIT",
   "main": "lib/index.js",
@@ -33,7 +33,6 @@
     "gulp-typescript": "^6.0.0-alpha.1",
     "less": "^4.1.1",
     "less-plugin-npm-import": "^2.1.0",
-    "nim-web-sdk-ng": "0.17.0",
     "postcss": "^8.3.5",
     "postcss-nested": "^5.0.5",
     "react": "^16.8.0",
@@ -46,8 +45,7 @@
     "typescript": "^4.6.4"
   },
   "peerDependencies": {
-    "@xkit-yx/core-kit": "^0.3.2",
-    "@xkit-yx/utils": "^0.4.3",
+    "@xkit-yx/im-store-v2": "^0.0.1",
     "antd": "^4.16.3",
     "mobx": "^6.6.1",
     "mobx-react": "^7.5.2",
@@ -56,13 +54,13 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.0.1",
-    "@xkit-yx/core-kit": "^0.13.0",
-    "@xkit-yx/im-store": "^0.2.0",
-    "@xkit-yx/utils": "^0.5.6",
+    "@xkit-yx/im-store-v2": "^0.1.1",
+    "@xkit-yx/utils": "^0.6.0",
     "antd": "^4.16.3",
     "mobx": "^6.6.1",
     "mobx-react": "^7.5.2",
+    "nim-web-sdk-ng": "10.2.700",
     "react-string-replace": "^1.1.0"
   },
-  "gitHead": "2460a56b946207f24db9a8d74c10d3776aa5f267"
+  "gitHead": "4e09464e7bb40f8b578b2704e7931ea1e6928417"
 }

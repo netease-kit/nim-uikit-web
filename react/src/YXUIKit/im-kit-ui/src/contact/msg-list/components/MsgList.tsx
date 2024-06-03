@@ -1,21 +1,28 @@
 import React, { FC } from 'react'
-import { useTranslation } from '../../../common'
-import { MsgItem } from './MsgItem'
+import { useStateContext, useTranslation } from '../../../common'
+import { MsgItem, TMsgItem, TMsgItemType } from './MsgItem'
 import { Spin, Empty } from 'antd'
-import { SystemMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/SystemMessageServiceInterface'
+import {
+  V2NIMFriendAddApplicationForUI,
+  V2NIMTeamJoinActionInfoForUI,
+} from '@xkit-yx/im-store-v2/dist/types/types'
 
 export interface MsgListProps {
-  msgs: SystemMessage[]
+  msgs: TMsgItem[]
   listLoading?: boolean
   applyTeamLoaidng?: boolean
   teamInviteLoading?: boolean
   applyFriendLoading?: boolean
-  onAcceptApplyTeamClick?: (options: { teamId: string; from: string }) => void
-  onRejectApplyTeamClick?: (options: { teamId: string; from: string }) => void
-  onAcceptTeamInviteClick?: (options: { teamId: string; from: string }) => void
-  onRejectTeamInviteClick?: (options: { teamId: string; from: string }) => void
-  onAcceptApplyFriendClick?: (account: string) => void
-  onRejectApplyFriendClick?: (account: string) => void
+  onAcceptApplyTeamClick?: (actionInfo: V2NIMTeamJoinActionInfoForUI) => void
+  onRejectApplyTeamClick?: (actionInfo: V2NIMTeamJoinActionInfoForUI) => void
+  onAcceptTeamInviteClick?: (actionInfo: V2NIMTeamJoinActionInfoForUI) => void
+  onRejectTeamInviteClick?: (actionInfo: V2NIMTeamJoinActionInfoForUI) => void
+  onAcceptApplyFriendClick?: (
+    application: V2NIMFriendAddApplicationForUI
+  ) => void
+  onRejectApplyFriendClick?: (
+    application: V2NIMFriendAddApplicationForUI
+  ) => void
   afterSendMsgClick?: () => void
   renderMsgListHeader?: () => JSX.Element
   renderMsgListEmpty?: () => JSX.Element
@@ -43,6 +50,8 @@ export const MsgList: FC<MsgListProps> = ({
 }) => {
   const _prefix = `${prefix}-msg`
 
+  const { store } = useStateContext()
+
   const { t } = useTranslation()
 
   return (
@@ -62,7 +71,15 @@ export const MsgList: FC<MsgListProps> = ({
         <div className={`${_prefix}-content`}>
           {msgs.map((item) => (
             <MsgItem
-              key={`${item.idServer}_${item.from}_${item.to}_${item.type}`}
+              key={
+                item.messageType === TMsgItemType.FRIEND
+                  ? store.sysMsgStore.createFriendApplyMsgKey(
+                      item as V2NIMFriendAddApplicationForUI
+                    )
+                  : store.sysMsgStore.createTeamJoinActionMsgKey(
+                      item as V2NIMTeamJoinActionInfoForUI
+                    )
+              }
               msg={item}
               applyTeamLoaidng={applyTeamLoaidng}
               teamInviteLoading={teamInviteLoading}
