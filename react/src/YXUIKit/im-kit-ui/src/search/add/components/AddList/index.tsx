@@ -1,6 +1,6 @@
 import React from 'react'
-import { AddItemProps } from '../AddItem'
-import AddItem from '../AddItem'
+import AddItem, { AddItemProps } from '../AddItem'
+
 export interface AddListProps {
   list: Omit<AddItemProps, 'prefix'>[]
   prefix: string
@@ -8,6 +8,7 @@ export interface AddListProps {
 
 const AddList: React.FC<AddListProps> = ({ list, prefix }) => {
   const _prefix = `${prefix}-add-list`
+
   return (
     <div className={_prefix}>
       {list.map((item) => {

@@ -144,13 +144,15 @@ export const UserCard: FC<UserCardProps> = ({
           <span className={`${_prefix}-header-nick`}>
             {props.alias || props.nick || props.account}
           </span>
-          <Dropdown overlay={controlsMenuRenderer}>
-            <Button
-              className={`${_prefix}-header-controls`}
-              type="text"
-              icon={<MoreOutlined />}
-            ></Button>
-          </Dropdown>
+          {relation !== 'ai' ? (
+            <Dropdown overlay={controlsMenuRenderer}>
+              <Button
+                className={`${_prefix}-header-controls`}
+                type="text"
+                icon={<MoreOutlined />}
+              ></Button>
+            </Dropdown>
+          ) : null}
         </div>
         <div className={`${_prefix}-content`}>
           {relation === 'friend' ? (
@@ -171,30 +173,38 @@ export const UserCard: FC<UserCardProps> = ({
               {props.account}
             </span>
           </div>
-          <div className={`${_prefix}-content-form-item`}>
-            <label>{t('genderText')}</label>
-            <span className={`${_prefix}-content-form-item-text`}>
-              {
-                (
-                  genderOptions.find((item) => item.value === props.gender) || {
-                    label: t('unknow'),
-                  }
-                ).label
-              }
-            </span>
-          </div>
-          <div className={`${_prefix}-content-form-item`}>
-            <label>{t('phoneText')}</label>
-            <span className={`${_prefix}-content-form-item-text`}>
-              {props.tel || ''}
-            </span>
-          </div>
-          <div className={`${_prefix}-content-form-item`}>
-            <label>{t('emailText')}</label>
-            <span className={`${_prefix}-content-form-item-text`}>
-              {props.email || ''}
-            </span>
-          </div>
+          {relation !== 'ai' ? (
+            <div className={`${_prefix}-content-form-item`}>
+              <label>{t('genderText')}</label>
+              <span className={`${_prefix}-content-form-item-text`}>
+                {
+                  (
+                    genderOptions.find(
+                      (item) => item.value === props.gender
+                    ) || {
+                      label: t('unknow'),
+                    }
+                  ).label
+                }
+              </span>
+            </div>
+          ) : null}
+          {relation !== 'ai' ? (
+            <div className={`${_prefix}-content-form-item`}>
+              <label>{t('phoneText')}</label>
+              <span className={`${_prefix}-content-form-item-text`}>
+                {props.tel || ''}
+              </span>
+            </div>
+          ) : null}
+          {relation !== 'ai' ? (
+            <div className={`${_prefix}-content-form-item`}>
+              <label>{t('emailText')}</label>
+              <span className={`${_prefix}-content-form-item-text`}>
+                {props.email || ''}
+              </span>
+            </div>
+          ) : null}
           <div className={`${_prefix}-content-form-item`}>
             <label>{t('signText')}</label>
             <span className={`${_prefix}-content-form-item-text`}>

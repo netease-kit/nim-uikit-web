@@ -8,16 +8,7 @@ import React, {
   useCallback,
   useEffect,
 } from 'react'
-import {
-  Input,
-  Upload,
-  Popover,
-  message,
-  Button,
-  Dropdown,
-  Menu,
-  Spin,
-} from 'antd'
+import { Input, Upload, Popover, message, Button, Dropdown, Menu } from 'antd'
 import {
   CommonIcon,
   getMsgContentTipByType,
@@ -28,15 +19,20 @@ import {
 import { Action } from '../../Container'
 import { MAX_UPLOAD_FILE_SIZE } from '../../../constant'
 import { storeConstants } from '@xkit-yx/im-store-v2'
-import { LoadingOutlined, CloseOutlined } from '@ant-design/icons'
+import { CloseOutlined } from '@ant-design/icons'
 import { observer } from 'mobx-react'
 import { TextAreaRef } from 'antd/lib/input/TextArea'
 import ChatAtMemberList, { MentionedMember } from './ChatMentionMemberList'
 import { mergeActions } from '../../../utils'
-import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import {
+  V2NIMMessageForUI,
+  YxAitMsg,
+  YxServerExt,
+} from '@xkit-yx/im-store-v2/dist/types/types'
 import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
 import { V2NIMConversationType } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
 import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMAIService'
 
 const { TextArea } = Input
 
@@ -45,15 +41,17 @@ export interface ChatMessageInputProps {
   commonPrefix?: string
   placeholder?: string
   replyMsg?: V2NIMMessageForUI
-  mentionMembers?: V2NIMTeamMember[]
+  mentionMembers?: (V2NIMTeamMember | V2NIMAIUser)[]
   conversationType: V2NIMConversationType
   receiverId: string
   actions?: Action[]
   mute?: boolean
   allowAtAll?: boolean
   inputValue?: string
+  translateOpen: boolean
   setInputValue: (value: string) => void
-  onSendText: (value: string, ext?: Record<string, unknown>) => void
+  onTranslate: (open: boolean) => void
+  onSendText: (value: string, ext?: YxServerExt) => void
   onSendFile: (file: File) => void
   onSendImg: (file: File) => void
   onSendVideo: (file: File) => void
@@ -70,20 +68,21 @@ const ChatMessageInput = observer(
   forwardRef<
     ChatMessageInputRef,
     React.PropsWithChildren<ChatMessageInputProps>
-  >((props, ref) => {
+  >(function ChatMessageInputContent(props, ref) {
     const {
       prefix = 'chat',
       commonPrefix = 'common',
       placeholder = '',
       mentionMembers,
       actions,
-      conversationType,
       receiverId,
       mute = false,
       allowAtAll = true,
       inputValue = '',
+      translateOpen,
       replyMsg,
       setInputValue,
+      onTranslate,
       onSendText,
       onSendFile,
       onSendImg,
@@ -106,9 +105,9 @@ const ChatMessageInput = observer(
 
     const { EMOJI_ICON_MAP_CONFIG } = Utils.handleEmojiTranslate(t)
 
-    const LoadingIcon = (
-      <LoadingOutlined className={`${_prefix}-loading-spin`} spin />
-    )
+    const onTranslateHandler = () => {
+      onTranslate(!translateOpen)
+    }
 
     const defaultActions: Action[] = [
       {
@@ -221,6 +220,25 @@ const ChatMessageInput = observer(
         },
       },
       {
+        action: 'aiTranslate',
+        visible:
+          localOptions.aiVisible && !!store.aiUserStore.getAITranslateUser(),
+        render: () => {
+          return (
+            <Button onClick={onTranslateHandler} size="small" disabled={mute}>
+              <CommonIcon
+                className={
+                  translateOpen
+                    ? `${_prefix}-icon-translate-active`
+                    : `${_prefix}-icon-translate`
+                }
+                type="icon-a-rongqi484"
+              />
+            </Button>
+          )
+        },
+      },
+      {
         action: 'sendMsg',
         visible: true,
         render: () => {
@@ -256,10 +274,11 @@ const ChatMessageInput = observer(
           return store.uiStore
             .getAppellation({
               account: member.accountId,
-              teamId: member.teamId,
+              teamId: (member as V2NIMTeamMember).teamId,
             })
             ?.includes(atMemberSearchText.replace('@', ''))
         })
+
         return res
       } else {
         return mentionMembers
@@ -284,7 +303,8 @@ const ChatMessageInput = observer(
     }, [filterAtMembers, atMemberSearchText])
 
     const onAtMembersExtHandler = () => {
-      let ext
+      let ext: YxServerExt | void = void 0
+
       if (selectedAtMembers.length) {
         selectedAtMembers
           .filter((member) => {
@@ -294,16 +314,19 @@ const ChatMessageInput = observer(
             ) {
               return false
             }
+
             return true
           })
           .forEach((member) => {
             const substr = `@${member.appellation} `
             const positions: number[] = []
             let pos = inputValue.indexOf(substr)
+
             while (pos !== -1) {
               positions.push(pos)
               pos = inputValue.indexOf(substr, pos + 1)
             }
+
             if (positions.length) {
               if (!ext) {
                 ext = {
@@ -315,14 +338,16 @@ const ChatMessageInput = observer(
                   },
                 }
               } else {
-                ext.yxAitMsg[member.account] = {
+                ;(ext.yxAitMsg as YxAitMsg)[member.account] = {
                   text: substr,
                   segments: [],
                 }
               }
+
               positions.forEach((position) => {
                 const start = position
-                ext.yxAitMsg[member.account].segments.push({
+
+                ;(ext?.yxAitMsg as YxAitMsg)[member.account].segments.push({
                   start,
                   end: start + substr.length - 1,
                   broken: false,
@@ -331,7 +356,8 @@ const ChatMessageInput = observer(
             }
           })
       }
-      return ext
+
+      return ext as unknown as YxServerExt
     }
 
     const onTextAreaSelectionRangeHandler = () => {
@@ -339,13 +365,16 @@ const ChatMessageInput = observer(
         cursorIndex: number
       ): { selectionStart: number; selectionEnd: number } | undefined {
         let selectionStart, selectionEnd
+
         selectedAtMembers.some((member) => {
           const alias = `@${member.appellation} `
           const regex = new RegExp(alias, 'g')
           let match
+
           while ((match = regex.exec(inputValue))) {
             const start = match.index
             const end = start + alias.length
+
             if (cursorIndex > start && cursorIndex < end) {
               selectionStart = start
               selectionEnd = end
@@ -358,8 +387,10 @@ const ChatMessageInput = observer(
           selectionEnd: selectionEnd ?? cursorIndex,
         }
       }
+
       setTimeout(() => {
         const input = textAreaRef.current?.resizableTextArea?.textArea
+
         //当needMention为false时  避免不必要的计算
         if (input && localOptions.needMention) {
           const selectionStart =
@@ -368,6 +399,7 @@ const ChatMessageInput = observer(
           const selectionEnd =
             getCursorPosition(input.selectionEnd)?.selectionEnd ??
             input.selectionEnd
+
           input.setSelectionRange(selectionStart, selectionEnd)
         }
       }, 0)
@@ -377,17 +409,21 @@ const ChatMessageInput = observer(
       const newValue = e.target.value as string
       const input = textAreaRef.current?.resizableTextArea?.textArea
       let atMemberSearchText = ''
+
       if (input) {
         const cursorIndex = input.selectionStart
         const subStr = newValue.slice(0, cursorIndex)
         const atIndex = subStr.lastIndexOf('@')
+
         if (atIndex !== -1) {
           atMemberSearchText = newValue.slice(atIndex, cursorIndex)
         }
       }
+
       if (localOptions.needMention) {
         setAtMemberSearchText(atMemberSearchText)
       }
+
       setInputValue(newValue)
     }
 
@@ -400,6 +436,7 @@ const ChatMessageInput = observer(
           member,
         ])
         const input = textAreaRef.current?.resizableTextArea?.textArea
+
         if (input) {
           input.focus()
           input.setRangeText(
@@ -412,6 +449,7 @@ const ChatMessageInput = observer(
           )
           setInputValue(input.value)
         }
+
         setAtMemberSearchText('')
       },
       [atMemberSearchText, selectedAtMembers, setInputValue, atVisible]
@@ -424,11 +462,14 @@ const ChatMessageInput = observer(
         setAtMemberSearchText('')
         return
       }
+
       const trimValue = inputValue.trim()
+
       if (!trimValue) {
         message.warning(t('sendEmptyText'))
         return
       }
+
       onSendText(inputValue, onAtMembersExtHandler())
       setInputValue('')
       setSelectedAtMembers([])
@@ -441,13 +482,16 @@ const ChatMessageInput = observer(
         e.preventDefault()
         return
       }
+
       const trimValue = inputValue.trim()
+
       if (!e.shiftKey) {
         e.preventDefault()
         if (!trimValue) {
           message.warning(t('sendEmptyText'))
           return
         }
+
         onSendText(inputValue, onAtMembersExtHandler())
         setInputValue('')
         setSelectedAtMembers([])
@@ -462,16 +506,20 @@ const ChatMessageInput = observer(
         e.nativeEvent.preventDefault()
       } else if (e.key === 'Backspace') {
         const input = textAreaRef.current?.resizableTextArea?.textArea
+
         if (input) {
           const cursorIndex = input?.selectionStart
           let atIndex
+
           selectedAtMembers.some((member) => {
             const alias = `@${member.appellation} `
             const regex = new RegExp(alias, 'g')
             let match
+
             while ((match = regex.exec(inputValue))) {
               const start = match.index
               const end = start + alias.length
+
               if (cursorIndex === end) {
                 atIndex = start
                 return true
@@ -556,17 +604,19 @@ const ChatMessageInput = observer(
 
     const onEmojiClickHandler = (tag: string) => {
       const input = textAreaRef.current?.resizableTextArea?.textArea
+
       if (input) {
         input.focus()
         input.setRangeText(tag, input.selectionStart, input.selectionEnd, 'end')
         setInputValue(input.value)
       }
+
       setEmojiVisible(false)
     }
 
     const emojiContent = (
       <>
-        {Object.keys(EMOJI_ICON_MAP_CONFIG).map((tag: string, index) => (
+        {Object.keys(EMOJI_ICON_MAP_CONFIG).map((tag: string) => (
           <span
             onClick={() => {
               onEmojiClickHandler(tag)
@@ -595,8 +645,11 @@ const ChatMessageInput = observer(
               : undefined,
           ignoreAlias: true,
         })
-        let content = `${t('replyText')} ${nick}：`
-        content += replyMsg ? getMsgContentTipByType(replyMsg, t) : ''
+        const content: React.ReactNode[] = [
+          <>{`${t('replyText')} ${nick}：`}</>,
+        ]
+
+        content.push(replyMsg ? getMsgContentTipByType(replyMsg, t) : '')
         return <div className={`${_prefix}-reply-content`}>{content}</div>
       }
     }

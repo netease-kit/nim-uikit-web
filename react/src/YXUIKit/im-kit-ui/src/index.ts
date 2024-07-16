@@ -4,6 +4,7 @@ import {
   Utils,
   CrudeAvatar,
   SearchInput,
+  SelectModal,
   CommonIcon,
   ComplexAvatarUI,
   ComplexAvatarContainer,
@@ -16,9 +17,11 @@ import {
   MyUserCard,
   GroupAvatarSelect,
   urls,
-  FriendSelectContainer,
+  FriendSelect,
+  CreateTeamModal,
   Welcome,
   ReadPercent,
+  RichText,
   ParseSession,
   useStateContext,
   useTranslation,
@@ -33,8 +36,10 @@ import {
   FriendListContainer,
   GroupListContainer,
   ContactInfoContainer,
+  AIListContainer,
+  MsgListContainer,
 } from './contact'
-import { ChatContainer, ChatMessageItem } from './chat'
+import { ChatContainer, ChatMessageItem, ChatCollectionList } from './chat'
 import { AddContainer, SearchContainer } from './search'
 import RootStore from '@xkit-yx/im-store-v2'
 import V2NIM from 'nim-web-sdk-ng'
@@ -55,14 +60,18 @@ export class IMUIKit {
     T extends
       | typeof ComplexAvatarContainer
       | typeof MyAvatarContainer
-      | typeof FriendSelectContainer
+      | typeof FriendSelect
+      | typeof CreateTeamModal
       | typeof ConversationContainer
       | typeof ContactListContainer
       | typeof BlackListContainer
+      | typeof AIListContainer
+      | typeof MsgListContainer
       | typeof FriendListContainer
       | typeof GroupListContainer
       | typeof ContactInfoContainer
       | typeof ChatContainer
+      | typeof ChatCollectionList
       | typeof AddContainer
       | typeof SearchContainer
   >(item: T, props: React.ComponentProps<T> | null, view: HTMLElement): void {
@@ -112,21 +121,27 @@ export {
   MyUserCard,
   GroupAvatarSelect,
   urls,
-  FriendSelectContainer,
+  FriendSelect,
+  CreateTeamModal,
   Welcome,
   ReadPercent,
   ParseSession,
+  RichText,
+  SelectModal,
   useStateContext,
   useTranslation,
   useEventTracking,
   ConversationContainer,
   ContactListContainer,
   BlackListContainer,
+  AIListContainer,
+  MsgListContainer,
   FriendListContainer,
   GroupListContainer,
   ContactInfoContainer,
   ChatContainer,
   ChatMessageItem,
+  ChatCollectionList,
   AddContainer,
   SearchContainer,
 }

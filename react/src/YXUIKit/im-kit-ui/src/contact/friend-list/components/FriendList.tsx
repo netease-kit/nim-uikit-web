@@ -45,10 +45,12 @@ export const FriendList: FC<FriendListProps> = ({
     )
 
     const res: ({ account: string; appellation: string } | string)[] = []
+
     group.forEach((item) => {
       if (!res.includes(item.key)) {
         res.push(item.key)
       }
+
       res.push(...item.data)
     })
     return res
@@ -79,6 +81,7 @@ export const FriendList: FC<FriendListProps> = ({
                 </div>
               )
             }
+
             return (
               <FriendItem
                 key={item.account}

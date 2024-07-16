@@ -1,4 +1,5 @@
 @import '../../../style/theme.less';
+@import '~antd/lib/style/themes/variable.less';
 
 @prefix-cls: ~'@{chat-prefix}-forward-modal';
 
@@ -6,4 +7,61 @@
   margin-top: 12px;
   border-radius: @yx-primary-border-radius;
   border-color: @yx-border-color-10;
+}
+
+.@{prefix-cls}-tabs {
+  .@{ant-prefix}-tabs-nav-list {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .@{ant-prefix}-tabs-tab {
+    margin: 0;
+    padding: 14px 28px;
+  }
+}
+
+.@{prefix-cls}-recent {
+  display: flex;
+  flex-direction: column;
+
+  &-title {
+    font-size: @yx-font-size-12;
+    color: @yx-text-color-2;
+    margin-top: 16px;
+    margin-bottom: 8px;
+  }
+
+  &-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  &-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    &:not(:last-child) {
+      margin-right: 16px;
+    }
+
+    .@{ant-prefix}-checkbox-wrapper {
+      margin: 0;
+    }
+  }
+
+  &-label {
+    font-size: @yx-font-size-12;
+    color: @yx-primary-text-color;
+    margin: 5px 0;
+    display: inline-block;
+    width: 45px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }

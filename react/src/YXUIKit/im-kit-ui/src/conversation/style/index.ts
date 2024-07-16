@@ -7,5 +7,4 @@ import 'antd/lib/empty/style'
 import '../../common/components/CrudeAvatar/style'
 import '../../common/components/CommonParseSession/style'
 
-import './conversationItem.less'
-import './conversationList.less'
+import './index.less'

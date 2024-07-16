@@ -1,8 +1,12 @@
 import React, { Fragment, useRef } from 'react'
 import { Dropdown, Menu, Tooltip } from 'antd'
-import { LoadingOutlined, ExclamationCircleFilled } from '@ant-design/icons'
+import {
+  LoadingOutlined,
+  ExclamationCircleFilled,
+  RollbackOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons'
 import classNames from 'classnames'
-import moment from 'moment'
 import {
   ParseSession,
   ComplexAvatarContainer,
@@ -11,14 +15,24 @@ import {
   CommonIcon,
   useStateContext,
 } from '../../../common'
-import { RollbackOutlined, DeleteOutlined } from '@ant-design/icons'
 import { observer } from 'mobx-react'
 import { MsgOperMenuItem } from '../../Container'
-import { mergeActions } from '../../../utils'
-import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import { formatDate, getAIErrorMap, mergeActions } from '../../../utils'
+import {
+  V2NIMMessageForUI,
+  YxTopMessage,
+} from '@xkit-yx/im-store-v2/dist/types/types'
 import { V2NIMConst } from 'nim-web-sdk-ng'
 
-export type MenuItemKey = 'recall' | 'delete' | 'reply' | 'forward' | string
+export type MenuItemKey =
+  | 'recall'
+  | 'delete'
+  | 'reply'
+  | 'collection'
+  | 'forward'
+  | 'top'
+  | 'unTop'
+  | string
 export type AvatarMenuItem = 'mention'
 
 export interface MenuItem {
@@ -34,6 +48,7 @@ export interface MenuItem {
 
 export interface MessageItemProps {
   msg: V2NIMMessageForUI
+  topMessage?: YxTopMessage
   replyMsg?: V2NIMMessageForUI
   normalStatusRenderer?: React.ReactNode
   msgOperMenu?: MsgOperMenuItem[]
@@ -59,6 +74,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
   ({
     msg,
     replyMsg,
+    topMessage,
     normalStatusRenderer,
     msgOperMenu,
     onMessageAction,
@@ -78,12 +94,10 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
     const _prefix = `${prefix}-message-list-item`
 
     const {
-      text,
       senderId,
       receiverId,
       messageClientId,
       sendingState,
-
       uploadProgress,
       createTime,
       messageType,
@@ -91,12 +105,14 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       isSelf,
       recallType = '',
       canRecall = false,
-      canEdit = false,
       errorCode,
+      messageStatus,
     } = msg
 
     const messageActionDropdownContainerRef = useRef<HTMLDivElement>(null)
     const messageAvatarActionDropdownContainerRef = useRef<HTMLDivElement>(null)
+
+    const aiErrorMap = getAIErrorMap(t)
 
     const nick = store.uiStore.getAppellation({
       account: senderId,
@@ -128,6 +144,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       ) {
         return <LoadingOutlined className={`${_prefix}-status-icon`} />
       }
+
       if (
         sendingState ===
         V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_FAILED
@@ -138,6 +155,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
             : errorCode === 104404
             ? t('sendNotFriendFailedText')
             : t('sendMsgFailedText')
+
         return (
           <Tooltip title={title}>
             <ExclamationCircleFilled
@@ -147,18 +165,8 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
           </Tooltip>
         )
       }
-      return normalStatusRenderer || null
-    }
 
-    const renderMsgDate = () => {
-      const date = moment(createTime)
-      const isCurrentDay = date.isSame(moment(), 'day')
-      const isCurrentYear = date.isSame(moment(), 'year')
-      return isCurrentDay
-        ? date.format('HH:mm:ss')
-        : isCurrentYear
-        ? date.format('MM-DD HH:mm:ss')
-        : date.format('YYYY-MM-DD HH:mm:ss')
+      return normalStatusRenderer || null
     }
 
     const renderMenuItems = () => {
@@ -203,6 +211,61 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
           icon: <CommonIcon type="icon-zhuanfa" />,
         },
         {
+          show:
+            [
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_SENDING,
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_FAILED,
+            ].includes(sendingState) ||
+            messageType === V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL
+              ? 0
+              : 1,
+          label: t('collection'),
+          key: 'collection',
+          icon: <CommonIcon type="icon-shoucang" />,
+        },
+        {
+          show:
+            conversationType ===
+              V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P ||
+            [
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_SENDING,
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_FAILED,
+            ].includes(sendingState) ||
+            messageType ===
+              V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL ||
+            (topMessage?.idClient === messageClientId &&
+              topMessage.operation === 0)
+              ? 0
+              : 1,
+          label: t('topText'),
+          key: 'top',
+          icon: <CommonIcon type="icon-xiaoxizhiding" />,
+        },
+        {
+          show:
+            conversationType ===
+              V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P ||
+            [
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_SENDING,
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_FAILED,
+            ].includes(sendingState) ||
+            messageType === V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL
+              ? 0
+              : topMessage?.idClient === messageClientId &&
+                topMessage.operation === 0
+              ? 1
+              : 0,
+          label: t('unTopText'),
+          key: 'unTop',
+          icon: <CommonIcon type="icon-quxiaozhiding" />,
+        },
+        {
           show: canRecall ? 1 : 0,
           label: t('recallText'),
           key: 'recall',
@@ -212,6 +275,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       const menuItems = msgOperMenu
         ? mergeActions(defaultMenuItems, msgOperMenu, 'key')
         : defaultMenuItems
+
       return menuItems.filter((item) => item.show)
     }
 
@@ -225,30 +289,18 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       ]
     }
 
-    const renderSpecialMsg = () => {
-      return (
-        <div key={messageClientId} className={`${_prefix}-recall`}>
-          {recallType === 'reCallMsg' ? (
-            <>
-              {`${t('you')}${t('recallMessageText')}`}
-              {canEdit ? (
-                <span
-                  className={`${_prefix}-reedit`}
-                  onClick={() => onReeditClick(msg)}
-                >
-                  {t('reeditText')}
-                </span>
-              ) : null}
-            </>
-          ) : (
-            `${isSelf ? t('you') : nick} ${t('recallMessageText')}`
-          )}
-        </div>
-      )
-    }
-
-    return recallType === 'reCallMsg' || recallType === 'beReCallMsg' ? (
-      renderSpecialMsg()
+    return messageType ===
+      V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TIPS &&
+      Object.keys(aiErrorMap)
+        .map((item) => Number(item))
+        .includes(messageStatus.errorCode) ? (
+      <ParseSession msg={msg} prefix={commonPrefix} />
+    ) : recallType === 'reCallMsg' || recallType === 'beReCallMsg' ? (
+      <ParseSession
+        msg={msg}
+        prefix={commonPrefix}
+        onReeditClick={onReeditClick}
+      />
     ) : messageType ===
       V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_NOTIFICATION ? (
       <ParseSession replyMsg={replyMsg} msg={msg} prefix={commonPrefix} />
@@ -327,6 +379,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
                       replyMsg={replyMsg}
                       msg={msg}
                       prefix={commonPrefix}
+                      showThreadReply={true}
                     />
                   )}
                 </div>
@@ -337,7 +390,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
                 [`${_prefix}-date-self`]: isSelf,
               })}
             >
-              {renderMsgDate()}
+              {formatDate(createTime)}
             </div>
           </div>
         </Dropdown>

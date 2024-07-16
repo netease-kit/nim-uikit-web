@@ -9,6 +9,7 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react'
 import { storeConstants } from '@xkit-yx/im-store-v2'
 import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMAIService'
 
 export type MentionedMember = { account: string; appellation: string }
 
@@ -16,7 +17,7 @@ export interface ChatMentionMemberList {
   allowAtAll?: boolean
   prefix?: string
   commonPrefix?: string
-  mentionMembers?: V2NIMTeamMember[]
+  mentionMembers?: (V2NIMTeamMember | V2NIMAIUser)[]
   onSelect?: (member: MentionedMember) => void
 }
 
@@ -48,9 +49,11 @@ export const ChatAtMemberList: React.FC<ChatMentionMemberList> = observer(
         const handleKeyDown = (e: KeyboardEvent) => {
           if (e.key === 'ArrowUp') {
             const index = activeIndex - 1
+
             setActiveIndex(index < -1 ? maxIndex : index)
           } else if (e.key === 'ArrowDown') {
             const index = activeIndex + 1
+
             setActiveIndex(index > maxIndex ? -1 : index)
           } else if (e.key === 'Enter') {
             if (activeIndex === -1) {
@@ -60,17 +63,19 @@ export const ChatAtMemberList: React.FC<ChatMentionMemberList> = observer(
               })
             } else {
               const member = mentionMembers[activeIndex]
+
               onSelect?.({
                 account: member.accountId,
                 appellation: store.uiStore.getAppellation({
                   account: member.accountId,
-                  teamId: member.teamId,
+                  teamId: (member as V2NIMTeamMember).teamId,
                   ignoreAlias: true,
                 }),
               })
             }
           }
         }
+
         document.addEventListener('keydown', handleKeyDown)
         return () => {
           document.removeEventListener('keydown', handleKeyDown)
@@ -110,7 +115,7 @@ export const ChatAtMemberList: React.FC<ChatMentionMemberList> = observer(
                 account: member.accountId,
                 appellation: store.uiStore.getAppellation({
                   account: member.accountId,
-                  teamId: member.teamId,
+                  teamId: (member as V2NIMTeamMember).teamId,
                   ignoreAlias: true,
                 }),
               })
@@ -126,7 +131,7 @@ export const ChatAtMemberList: React.FC<ChatMentionMemberList> = observer(
             <span className={`${_prefix}-label`}>
               {store.uiStore.getAppellation({
                 account: member.accountId,
-                teamId: member.teamId,
+                teamId: (member as V2NIMTeamMember).teamId,
               })}
             </span>
           </div>

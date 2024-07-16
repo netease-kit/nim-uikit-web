@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import { useTranslation, useEventTracking, useStateContext } from '../../common'
 import { SearchOutlined } from '@ant-design/icons'
-import SearchModal from './components/SearchModal'
-import { SectionListItem } from './components/SearchModal'
+import SearchModal, { SectionListItem } from './components/SearchModal'
 import packageJson from '../../../package.json'
 import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
 import { V2NIMConversationType } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
@@ -63,6 +62,7 @@ export const SearchContainer: React.FC<SearchContainerProps> = observer(
     const handleChat = async (item: SectionListItem) => {
       let conversationType: V2NIMConversationType
       let receiverId = ''
+
       if ((item as V2NIMFriend & V2NIMUser).accountId) {
         conversationType =
           V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
@@ -97,6 +97,7 @@ export const SearchContainer: React.FC<SearchContainerProps> = observer(
           name: '',
           createTime: Date.now(),
         }
+
         return {
           ...item,
           ...user,

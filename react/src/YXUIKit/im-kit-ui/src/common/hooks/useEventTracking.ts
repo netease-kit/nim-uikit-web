@@ -21,6 +21,7 @@ export const useEventTracking = ({
       component: component,
       imVersion: imVersion,
     })
+
     eventTracking.track('init', '')
   }, [appkey, version, component, imVersion])
 }

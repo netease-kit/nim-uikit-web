@@ -3,9 +3,9 @@ import {
   SearchInput,
   useTranslation,
   useStateContext,
+  CrudeAvatar,
 } from '../../../../common'
 import React, { useState } from 'react'
-import { CrudeAvatar } from '../../../../common'
 import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
 import { observer } from 'mobx-react'
 import { V2NIMConst } from 'nim-web-sdk-ng'
@@ -50,11 +50,13 @@ const JoinTeamModal: React.FC<JoinTeamModalProps> = observer(
       try {
         setSearching(true)
         const team = await store.teamStore.getTeamForceActive(searchValue)
+
         if (!team) {
           setSearchResEmpty(true)
         } else {
           setSearchRes(team)
         }
+
         setSearching(false)
       } catch (error) {
         setSearchResEmpty(true)
@@ -72,13 +74,16 @@ const JoinTeamModal: React.FC<JoinTeamModalProps> = observer(
             message.error(t('notSupportJoinText'))
             return
           }
+
           setAdding(true)
           await store.teamStore.applyTeamActive(searchRes.teamId)
           // 目前没有申请加入群组，直接写死
           message.success(t('joinTeamSuccessText'))
         }
+
         setAdding(false)
       } catch (error) {
+        message.error(t('joinTeamFailedText'))
         setAdding(false)
       }
     }

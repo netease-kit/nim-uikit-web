@@ -57,21 +57,27 @@ export const MyAvatarContainer: FC<MyAvatarContainerProps> = observer(
       signature?: string
     }) => {
       const params: V2NIMUserUpdateParams = {}
+
       if (gender !== void 0) {
         params.gender = gender
       }
+
       if (email !== void 0) {
         params.email = email
       }
+
       if (nick !== void 0) {
         params.name = nick
       }
+
       if (tel !== void 0) {
         params.mobile = tel
       }
+
       if (signature !== void 0) {
         params.sign = signature
       }
+
       store.userStore
         .updateSelfUserProfileActive(params, avatarFile)
         .then(() => {

@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react'
 import P2pChatContainer from './containers/p2pChatContainer'
 import TeamChatContainer from './containers/teamChatContainer'
-import { useStateContext, useEventTracking, Welcome, Utils } from '../common'
+import { useStateContext, useEventTracking, Welcome } from '../common'
 import { RenderP2pCustomMessageOptions } from './components/ChatP2pMessageList'
 import { RenderTeamCustomMessageOptions } from './components/ChatTeamMessageList'
 import { ChatMessageInputProps } from './components/ChatMessageInput'

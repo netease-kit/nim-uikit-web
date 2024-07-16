@@ -109,7 +109,7 @@ export const MyUserCard: FC<MyUserCardProps> = ({
     onCancel?.()
   }
 
-  const handleSave = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
+  const handleSave = () => {
     if (
       email &&
       !email.includes('@') &&
@@ -119,6 +119,7 @@ export const MyUserCard: FC<MyUserCardProps> = ({
       message.error(t('emailErrorText'))
       return
     }
+
     onSave?.({
       avatar,
       avatarFile,
@@ -130,17 +131,20 @@ export const MyUserCard: FC<MyUserCardProps> = ({
     })
   }
 
-  const handleBeforeUpload = (file: any, FileList: any[]) => {
+  const handleBeforeUpload = (file: any) => {
     const LIMIT = 5
     const isLt5M = file.size / 1024 / 1024 < LIMIT
+
     if (!isLt5M) {
       message.error(`${t('uploadLimitText')}${LIMIT}${t('uploadLimitUnit')}`)
     }
+
     return isLt5M
   }
 
   const handleUpload = (file: any): any => {
     const reader = new FileReader()
+
     reader.readAsDataURL(file)
     reader.onload = () => {
       setAvatar(reader.result as string)

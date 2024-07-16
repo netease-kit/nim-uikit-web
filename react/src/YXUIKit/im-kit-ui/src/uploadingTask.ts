@@ -15,6 +15,7 @@ export const removeTask = (id): boolean => {
 
 export const abortTask = (id: string): void => {
   const task = taskMap.get(id)
+
   if (task) {
     task.abort()
     removeTask(id)

@@ -1,7 +1,10 @@
 import React, { FC, useState, useEffect, useMemo } from 'react'
 import { Modal, Button, Input } from 'antd'
-import { ExclamationCircleOutlined } from '@ant-design/icons'
-import { RightOutlined, PlusOutlined } from '@ant-design/icons'
+import {
+  ExclamationCircleOutlined,
+  RightOutlined,
+  PlusOutlined,
+} from '@ant-design/icons'
 import {
   ComplexAvatarContainer,
   CrudeAvatar,
@@ -107,7 +110,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
     setNickInTeam(e.target.value.trim())
   }
 
-  const handleUpdateMyMemberInfo = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleUpdateMyMemberInfo = () => {
     onUpdateMyMemberInfo({
       teamNick: nickInTeam,
     })
@@ -150,6 +153,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
     ) {
       return true
     }
+
     return (
       team.updateInfoMode ===
       V2NIMConst.V2NIMTeamUpdateInfoMode.V2NIM_TEAM_UPDATE_INFO_MODE_ALL

@@ -47,18 +47,23 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
 
     const { relation, isInBlacklist } = store.uiStore.getRelation(account)
 
-    const userInfo = store.uiStore.getFriendWithUserNameCard(account)
+    const userInfo =
+      relation === 'ai'
+        ? store.aiUserStore.aiUsers.get(account)
+        : store.uiStore.getFriendWithUserNameCard(account)
 
     useEffect(() => {
-      store.userStore.getUserActive(account)
-    }, [store.userStore, account])
+      if (relation !== 'ai') {
+        store.userStore.getUserActive(account)
+      }
+    }, [store.userStore, account, relation])
 
     useEffect(() => {
-      if (visible) {
+      if (visible && relation !== 'ai') {
         // 从服务端更新下个人信息
         store.userStore.getUserForceActive(account)
       }
-    }, [store.uiStore, store.userStore, account, visible])
+    }, [store.uiStore, store.userStore, account, visible, relation])
 
     const handleCancel = () => {
       setVisible(false)
@@ -80,6 +85,7 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
           })
           message.success(t('addFriendSuccessText'))
         }
+
         // 发送申请或添加好友成功后解除黑名单
         await store.relationStore.removeUserFromBlockListActive(account)
         setVisible(false)
@@ -149,7 +155,7 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
 
     const handleChangeAlias = async (alias: string) => {
       try {
-        if (userInfo.accountId) {
+        if (userInfo?.accountId) {
           await store.friendStore.setFriendInfoActive(userInfo.accountId, {
             alias,
           })
@@ -178,13 +184,13 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
         dot={dot}
         size={size}
         icon={icon}
-        account={userInfo.accountId}
-        gender={userInfo.gender as Gender}
-        nick={userInfo.name}
-        tel={userInfo.mobile}
-        signature={userInfo.sign}
-        birth={userInfo.birthday}
-        ext={userInfo.serverExtension}
+        account={userInfo?.accountId || ''}
+        gender={userInfo?.gender as Gender}
+        nick={userInfo?.name}
+        tel={userInfo?.mobile}
+        signature={userInfo?.sign}
+        birth={userInfo?.birthday}
+        ext={userInfo?.serverExtension}
         {...userInfo}
       />
     )
