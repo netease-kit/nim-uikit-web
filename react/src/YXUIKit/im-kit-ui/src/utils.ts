@@ -1,5 +1,7 @@
 import { logDebug } from '@xkit-yx/utils'
+import moment from 'moment'
 import packageJson from '../package.json'
+import { V2NIMMessage } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMMessageService'
 
 export { logDebug }
 
@@ -26,9 +28,11 @@ export function mergeArrs<T>(
     // @ts-ignore
     const exist = map.get(item[key])
     let finalItem = item
+
     if (exist) {
       finalItem = { ...exist, ...item }
     }
+
     // @ts-ignore
     map.set(item[key], finalItem)
   })
@@ -44,6 +48,7 @@ export const mergeActions = <T>(
 ): T[] => {
   return propsActions.map((i) => {
     const defaultAction = defaultActions.find((j) => i[key] === j[key])
+
     if (defaultAction) {
       return {
         ...defaultAction,
@@ -69,6 +74,7 @@ export const groupByPy = <T>(
 
   const add = (k: string, v: T) => {
     const _k = isLowerCase ? k.toLowerCase() : k.toUpperCase()
+
     if (!res[_k]) {
       res[_k] = [v]
     } else {
@@ -81,8 +87,10 @@ export const groupByPy = <T>(
       item[keys.firstKey] ||
       item[keys.secondKey || ''] ||
       item[keys.thirdKey || '']
+
     if (!!v && typeof v === 'string') {
       const str = v[0]
+
       if (/^[a-zA-Z]$/.test(str)) {
         add(str.toLowerCase(), item)
       } else if (/^[\u4e00-\u9fa5]$/.test(str)) {
@@ -93,6 +101,7 @@ export const groupByPy = <T>(
             (!zh[ki - 1] || zh[ki - 1].localeCompare(str, 'zh') <= 0) &&
             str.localeCompare(zh[ki], 'zh') == -1
         )
+
         if (k && k !== '*') {
           add(k, item)
         } else {
@@ -130,6 +139,7 @@ export const frequencyControl = <
   return function (args) {
     return new Promise((resolve, reject) => {
       const p = promiseQueue.find((item) => item.args === args)
+
       if (p) {
         p.queue.push({ resolve, reject })
       } else {
@@ -146,6 +156,7 @@ export const frequencyControl = <
         if (!pq.length) {
           return
         }
+
         requesting = true
         fn.call(
           // @ts-ignore
@@ -155,8 +166,10 @@ export const frequencyControl = <
           .then((res) => {
             while (pq.length) {
               const p = pq.shift()
+
               if (p) {
                 const _ = res.find((j) => j.account === p.args)
+
                 p.queue.forEach((j) => j.resolve(_))
               }
             }
@@ -164,6 +177,7 @@ export const frequencyControl = <
           .catch((err) => {
             while (pq.length) {
               const p = pq.shift()
+
               if (p) {
                 p.queue.forEach((item) => item.reject(err))
               }
@@ -233,7 +247,7 @@ export const handleEmojiTranslate = (t) => {
     [t('ill')]: 'icon-a-34',
     [t('Mad')]: 'icon-a-35',
     [t('Ghost')]: 'icon-a-36',
-    [t('Angry')]: 'icon-a-37',
+    [t('huff')]: 'icon-a-37',
     [t('Angry')]: 'icon-a-38',
     [t('Unhappy')]: 'icon-a-39',
     [t('Frown')]: 'icon-a-40',
@@ -261,7 +275,7 @@ export const handleEmojiTranslate = (t) => {
     [t('NoWords')]: 'icon-a-62',
     [t('Monkey')]: 'icon-a-63',
     [t('Bomb')]: 'icon-a-64',
-    [t('Sleep')]: 'icon-a-65',
+    [t('Sleeping')]: 'icon-a-65',
     [t('Cloud')]: 'icon-a-66',
     [t('Rocket')]: 'icon-a-67',
     [t('Ambulance')]: 'icon-a-68',
@@ -275,12 +289,14 @@ export const handleEmojiTranslate = (t) => {
           const left = `\\${item.slice(0, 1)}`
           const right = `\\${item.slice(-1)}`
           const mid = item.slice(1, -1)
+
           return `${left}${mid}${right}`
         })
         .join('|') +
       ')',
     'g'
   )
+
   return {
     EMOJI_ICON_MAP_CONFIG,
     INPUT_EMOJI_SYMBOL_REG,
@@ -290,12 +306,15 @@ export const handleEmojiTranslate = (t) => {
 export function getImgDataUrl(file: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
+
     reader.onload = (e) => {
       resolve(e.target?.result as string)
     }
+
     reader.onerror = (e) => {
       reject(e)
     }
+
     reader.readAsDataURL(file)
   })
 }
@@ -311,6 +330,7 @@ export function getVideoFirstFrameDataUrl(videoFile: File): Promise<string> {
       canvas.height = video.videoHeight
       context?.drawImage(video, 0, 0, canvas.width, canvas.height)
       const dataURL = canvas.toDataURL('image/jpeg')
+
       resolve(dataURL)
     }
 
@@ -319,9 +339,59 @@ export function getVideoFirstFrameDataUrl(videoFile: File): Promise<string> {
     }
 
     const url = URL.createObjectURL(videoFile)
+
     video.preload = 'auto'
     video.autoplay = true
     video.muted = true
     video.src = url
   })
+}
+
+export const formatDate = (time: number): string => {
+  const date = moment(time)
+  const isCurrentDay = date.isSame(moment(), 'day')
+  const isCurrentYear = date.isSame(moment(), 'year')
+
+  return isCurrentDay
+    ? date.format('HH:mm:ss')
+    : isCurrentYear
+    ? date.format('MM-DD HH:mm:ss')
+    : date.format('YYYY-MM-DD HH:mm:ss')
+}
+
+export const hasQueryParams = (url: string): boolean => {
+  try {
+    const parsedUrl = new URL(url)
+
+    return parsedUrl.search !== ''
+  } catch (error) {
+    return false
+  }
+}
+
+export const getDownloadUrl = (msg: V2NIMMessage) => {
+  return hasQueryParams(msg.attachment.url)
+    ? `${msg.attachment.url}&download=${msg.messageClientId}${msg.attachment.ext}`
+    : `${msg.attachment.url}?download=${msg.messageClientId}${msg.attachment.ext}`
+}
+
+export const getAIErrorMap = (t): { [key: number]: string } => {
+  return {
+    102404: t('memberNotExistsText'),
+    189308: t('tipAIFailedMessageText'),
+    189451: t('aiAntiSpamText'),
+    107337: t('aiFunctionDisabled'),
+    102422: t('aiMemberBanned'),
+    102421: t('aiMemberChatBanned'),
+    104404: t('aiFriendNotExists'),
+    107451: t('aiMessageHitAntiSpam'),
+    102304: t('notAnAi'),
+    109404: t('aiTeamMemberNotExists'),
+    108306: t('aiNormalTeamChatBanned'),
+    109424: t('aiTeamChatBanned'),
+    106403: t('aiBlockFailedText'),
+    416: t('aiRateLimit'),
+    414: t('aiParameterError'),
+    107336: t('tipAIMessageText'),
+  }
 }

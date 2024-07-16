@@ -1,5 +1,7 @@
 import 'antd/lib/image/style'
 import 'antd/lib/progress/style'
 import 'antd/lib/popover/style'
+import 'antd/lib/tooltip/style'
 import 'antd/lib/message/style'
+import 'antd/lib/dropdown/style'
 import './index.less'

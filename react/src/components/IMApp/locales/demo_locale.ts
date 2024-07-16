@@ -27,6 +27,7 @@ export const demo_zh = {
   needMentionText: '是否需要@消息',
   teamManagerEnableText: '是否开启群管理员功能',
   deleteText: '删除',
+  collectionText: '收藏',
 }
 
 export const demo_en = {
@@ -59,4 +60,5 @@ export const demo_en = {
   needMentionText: 'Whether or not an @ message is needed',
   teamManagerEnableText: 'Whether or not team manager is needed',
   deleteText: 'delete',
+  collectionText: 'collection',
 }

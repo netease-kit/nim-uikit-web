@@ -10,13 +10,18 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 10px;
   }
 
   &-left {
     height: 100%;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     flex: 1;
+  }
+
+  &-list {
+    flex: 1;
+    overflow-y: auto;
   }
 
   &-right {
@@ -39,7 +44,7 @@
   &-selected-title {
     font-size: @yx-primary-font-size;
     color: @yx-text-color-3;
-    height: 22px;
+    padding: 12px;
   }
 
   &-selected-content {
@@ -50,7 +55,7 @@
   &-item {
     display: flex;
     align-items: center;
-    margin-top: 8px;
+    padding: 8px 0;
 
     &-checkbox.@{ant-prefix}-checkbox-wrapper {
       margin-right: 8px;
@@ -60,6 +65,18 @@
       margin-left: 8px;
       color: @yx-primary-text-color;
       font-size: @yx-font-size-12;
+    }
+  }
+
+  &-tabs {
+    .@{ant-prefix}-tabs-nav-list {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .@{ant-prefix}-tabs-tab {
+      margin: 0;
+      padding: 12px 35px;
     }
   }
 }

@@ -16,6 +16,7 @@ export const GroupItem: FC<GroupItemProps> = ({
   ...props
 }) => {
   const _prefix = `${prefix}-group-item`
+
   return (
     <div
       className={_prefix}

@@ -15,12 +15,12 @@ import MessageInput, {
   ChatMessageInputRef,
 } from '../components/ChatMessageInput'
 import ChatSettingDrawer from '../components/ChatSettingDrawer'
-import GroupCreate from '../components/ChatCreateTeam'
 import { ChatAction } from '../types'
 import {
   useStateContext,
   useTranslation,
   ComplexAvatarContainer,
+  CreateTeamModal,
 } from '../../common'
 import { Action, ChatSettingActionItem, MsgOperMenuItem } from '../Container'
 import ChatP2pSetting from '../components/ChatP2pSetting'
@@ -30,14 +30,23 @@ import { message } from 'antd'
 import { storeConstants } from '@xkit-yx/im-store-v2'
 import { observer } from 'mobx-react'
 import ChatForwardModal from '../components/ChatForwardModal'
-import { getImgDataUrl, getVideoFirstFrameDataUrl } from '../../utils'
+import { getImgDataUrl, getVideoFirstFrameDataUrl, logger } from '../../utils'
 import {
   V2NIMConversationType,
   V2NIMConversation,
 } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
 import { V2NIMMessage } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMMessageService'
-import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import {
+  V2NIMMessageForUI,
+  YxReplyMsg,
+  YxServerExt,
+} from '@xkit-yx/im-store-v2/dist/types/types'
 import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMError } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/types'
+import { ChatAISearch } from '../components/ChatAISearch'
+import { V2NIMFriend } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMFriendService'
+import { ChatAITranslate } from '../components/ChatAITranslate'
+import { MentionedMember } from '../components/ChatMessageInput/ChatMentionMemberList'
 
 export interface P2pChatContainerProps {
   conversationType: V2NIMConversationType
@@ -104,13 +113,26 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     // 当前输入框的回复消息
     const replyMsg = store.msgStore.replyMsgs.get(conversationId)
 
-    const user = store.uiStore.getFriendWithUserNameCard(receiverId)
+    const { relation } = store.uiStore.getRelation(receiverId)
+
+    const user =
+      relation === 'ai'
+        ? store.aiUserStore.aiUsers.get(receiverId)
+        : store.uiStore.getFriendWithUserNameCard(receiverId)
 
     const myUser = store.userStore.myUserInfo
 
     const userNickOrAccount = store.uiStore.getAppellation({
-      account: user.accountId,
+      account: user?.accountId || '',
     })
+
+    const mentionMembers = useMemo(() => {
+      if (relation === 'ai' || !localOptions.aiVisible) {
+        return []
+      }
+
+      return store.aiUserStore.getAIChatUser()
+    }, [store.aiUserStore, relation, localOptions.aiVisible])
 
     // TODO sdk 暂不支持用户在线状态
     // const isOnline = store.eventStore.stateMap.get(receiverId) === 'online'
@@ -142,6 +164,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     const [forwardMessage, setForwardMessage] = useState<
       V2NIMMessageForUI | undefined
     >(undefined)
+    const [translateOpen, setTranslateOpen] = useState(false)
 
     const getHistory = useCallback(
       async (endTime: number, lastMsgId?: string) => {
@@ -158,6 +181,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           if (historyMsgs.length < storeConstants.HISTORY_LIMIT) {
             setNoMore(true)
           }
+
           return historyMsgs
         } catch (error) {
           setLoadingMore(false)
@@ -168,16 +192,18 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     )
 
     // 收消息，发消息时需要调用
-    const scrollToBottom = useCallback(
-      debounce(() => {
-        if (messageListContainerDomRef.current) {
-          messageListContainerDomRef.current.scrollTop =
-            messageListContainerDomRef.current.scrollHeight
-        }
-        setReceiveMsgBtnVisible(false)
-      }, 300),
-      []
-    )
+    const scrollToBottom = useCallback(() => {
+      if (messageListContainerDomRef.current) {
+        messageListContainerDomRef.current.scrollTop =
+          messageListContainerDomRef.current.scrollHeight
+      }
+
+      setReceiveMsgBtnVisible(false)
+    }, [])
+
+    const onAISendHandler = useCallback(() => {
+      message.success(t('aiSendingText'))
+    }, [t])
 
     const onMsgListScrollHandler = useCallback(
       debounce(async () => {
@@ -204,6 +230,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
                   ['beReCallMsg', 'reCallMsg'].includes(item.recallType || '')
                 )
             )[0]
+
             if (_msg) {
               await getHistory(_msg.createTime, _msg.messageServerId)
               // 滚动到加载的那条消息
@@ -220,9 +247,11 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         const settingAction = settingActions?.find(
           (item) => item.action === action
         )
+
         if (settingAction?.onClick) {
           return settingAction?.onClick()
         }
+
         switch (action) {
           case 'chatSetting':
             setAction(action)
@@ -244,10 +273,52 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       (msg: V2NIMMessageForUI) => {
         setInputValue(msg.oldText || '')
         const replyMsg = replyMsgsMap[msg.messageClientId]
+
         replyMsg && store.msgStore.replyMsgActive(replyMsg)
+        // 处理 @ 消息
+        const { serverExtension } = msg
+
+        if (serverExtension) {
+          try {
+            const extObj: YxServerExt = JSON.parse(serverExtension)
+            const yxAitMsg = extObj.yxAitMsg
+
+            if (yxAitMsg) {
+              const _mentionedMembers: MentionedMember[] = []
+
+              Object.keys(yxAitMsg).forEach((key) => {
+                if (key === storeConstants.AT_ALL_ACCOUNT) {
+                  _mentionedMembers.push({
+                    account: storeConstants.AT_ALL_ACCOUNT,
+                    appellation: t('teamAll'),
+                  })
+                } else {
+                  const member = mentionMembers.find(
+                    (item) => item.accountId === key
+                  )
+
+                  member &&
+                    _mentionedMembers.push({
+                      account: member.accountId,
+                      appellation: store.uiStore.getAppellation({
+                        account: member.accountId,
+                        ignoreAlias: true,
+                      }),
+                    })
+                }
+              })
+              chatMessageInputRef.current?.setSelectedAtMembers(
+                _mentionedMembers
+              )
+            }
+          } catch {
+            //
+          }
+        }
+
         chatMessageInputRef.current?.input?.focus()
       },
-      [replyMsgsMap, store.msgStore]
+      [replyMsgsMap, mentionMembers, store.msgStore, store.uiStore, t]
     )
 
     const onResend = useCallback(
@@ -263,6 +334,17 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
                 sendBefore: () => {
                   scrollToBottom()
                 },
+                onAISend: onAISendHandler,
+              })
+              break
+            case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TEXT:
+              await store.msgStore.sendMessageActive({
+                msg,
+                conversationId,
+                sendBefore: () => {
+                  scrollToBottom()
+                },
+                onAISend: onAISendHandler,
               })
               break
             default:
@@ -272,19 +354,21 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
                 sendBefore: () => {
                   scrollToBottom()
                 },
+                onAISend: onAISendHandler,
               })
               break
           }
+
           scrollToBottom()
         } catch (error) {
           //
         }
       },
-      [store.msgStore, conversationId, scrollToBottom]
+      [store.msgStore, conversationId, scrollToBottom, onAISendHandler]
     )
 
     const onSendText = useCallback(
-      async (value: string) => {
+      async (value: string, ext?: YxServerExt) => {
         try {
           if (onSendTextFromProps) {
             await onSendTextFromProps({
@@ -294,12 +378,15 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             })
           } else {
             const textMsg = nim.V2NIMMessageCreator.createTextMessage(value)
+
             await store.msgStore.sendMessageActive({
               msg: textMsg,
               conversationId,
+              serverExtension: ext as Record<string, unknown>,
               sendBefore: () => {
                 scrollToBottom()
               },
+              onAISend: onAISendHandler,
             })
           }
         } catch (error) {
@@ -316,6 +403,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         conversationId,
         scrollToBottom,
         nim.V2NIMMessageCreator,
+        onAISendHandler,
       ]
     )
 
@@ -326,12 +414,14 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             file,
             file.name
           )
+
           await store.msgStore.sendMessageActive({
             msg: fileMsg,
             conversationId,
             sendBefore: () => {
               scrollToBottom()
             },
+            onAISend: onAISendHandler,
           })
         } catch (error) {
           // message.error(t('sendMsgFailedText'))
@@ -339,7 +429,13 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           scrollToBottom()
         }
       },
-      [store.msgStore, conversationId, scrollToBottom, nim.V2NIMMessageCreator]
+      [
+        store.msgStore,
+        conversationId,
+        scrollToBottom,
+        nim.V2NIMMessageCreator,
+        onAISendHandler,
+      ]
     )
 
     const onSendImg = useCallback(
@@ -347,6 +443,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         try {
           const previewImg = await getImgDataUrl(file)
           const imgMsg = nim.V2NIMMessageCreator.createImageMessage(file)
+
           await store.msgStore.sendMessageActive({
             msg: imgMsg,
             conversationId,
@@ -355,6 +452,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             sendBefore: () => {
               scrollToBottom()
             },
+            onAISend: onAISendHandler,
           })
         } catch (error) {
           // message.error(t('sendMsgFailedText'))
@@ -362,7 +460,13 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           scrollToBottom()
         }
       },
-      [store.msgStore, conversationId, scrollToBottom, nim.V2NIMMessageCreator]
+      [
+        store.msgStore,
+        conversationId,
+        scrollToBottom,
+        nim.V2NIMMessageCreator,
+        onAISendHandler,
+      ]
     )
 
     const onSendVideo = useCallback(
@@ -370,6 +474,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         try {
           const previewImg = await getVideoFirstFrameDataUrl(file)
           const videoMsg = nim.V2NIMMessageCreator.createVideoMessage(file)
+
           await store.msgStore.sendMessageActive({
             msg: videoMsg,
             conversationId,
@@ -378,6 +483,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             sendBefore: () => {
               scrollToBottom()
             },
+            onAISend: onAISendHandler,
           })
         } catch (error) {
           // message.error(t('sendMsgFailedText'))
@@ -385,7 +491,13 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           scrollToBottom()
         }
       },
-      [store.msgStore, conversationId, scrollToBottom, nim.V2NIMMessageCreator]
+      [
+        store.msgStore,
+        conversationId,
+        scrollToBottom,
+        nim.V2NIMMessageCreator,
+        onAISendHandler,
+      ]
     )
 
     const onRemoveReplyMsg = useCallback(() => {
@@ -395,9 +507,11 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     const onMessageAction = useCallback(
       async (key: MenuItemKey, msg: V2NIMMessageForUI) => {
         const msgOperMenuItem = msgOperMenu?.find((item) => item.key === key)
+
         if (msgOperMenuItem?.onClick) {
           return msgOperMenuItem?.onClick(msg)
         }
+
         switch (key) {
           case 'delete':
             await store.msgStore.deleteMsgActive([msg])
@@ -406,8 +520,44 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             await store.msgStore.reCallMsgActive(msg)
             break
           case 'reply':
-            store.msgStore.replyMsgActive(msg)
-            chatMessageInputRef.current?.input?.focus()
+            {
+              // const member = mentionMembers.find(
+              //   (item) => item.accountId === msg.senderId
+              // )
+
+              // member &&
+              //   chatMessageInputRef.current?.onAtMemberSelectHandler({
+              //     account: member.accountId,
+              //     appellation: store.uiStore.getAppellation({
+              //       account: member.accountId,
+              //       ignoreAlias: true,
+              //     }),
+              //   })
+              store.msgStore.replyMsgActive(msg)
+              chatMessageInputRef.current?.input?.focus()
+            }
+
+            break
+          case 'collection':
+            try {
+              await nim.V2NIMMessageService.addCollection({
+                collectionType: msg.messageType + 1000,
+                collectionData: JSON.stringify({
+                  message: nim.V2NIMMessageConverter.messageSerialization(msg),
+                  conversationName: conversation?.name,
+                  senderName: store.uiStore.getAppellation({
+                    account: msg.senderId,
+                  }),
+                  avatar: store.userStore.users.get(msg.senderId)?.avatar,
+                }),
+                uniqueId: msg.messageServerId,
+              })
+              message.success(t('collectionSuccess'))
+            } catch (error: unknown) {
+              message.error(t('collectionFailed'))
+              logger.error('收藏失败：', (error as V2NIMError).toString())
+            }
+
             break
           case 'forward':
             setForwardMessage(msg)
@@ -416,33 +566,48 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             break
         }
       },
-      [msgOperMenu, store.msgStore]
+      [
+        msgOperMenu,
+        mentionMembers,
+        store.msgStore,
+        store.userStore.users,
+        store.uiStore,
+        conversation?.name,
+        nim.V2NIMMessageConverter,
+        nim.V2NIMMessageService,
+        t,
+      ]
     )
 
-    const onGroupCreate = useCallback(
-      async ({
-        name,
-        avatar,
-        selectedAccounts,
-      }: {
-        name: string
-        avatar: string
-        selectedAccounts: string[]
-      }) => {
-        try {
-          await store.teamStore.createTeamActive({
-            name,
-            avatar,
-            accounts: selectedAccounts,
-          })
-          resetSettingState()
-          message.success(t('createTeamSuccessText'))
-        } catch (error: any) {
-          message.error(t('createTeamFailedText'))
+    const createAIWelcomeMsg = useCallback(() => {
+      const aiExt = store.aiUserStore.getAIUserServerExt(receiverId)
+
+      if (aiExt.welcomeText) {
+        const welcomeMsg = nim.V2NIMMessageCreator.createTextMessage(
+          aiExt.welcomeText || 'hello'
+        )
+
+        welcomeMsg.senderId = receiverId
+        welcomeMsg.receiverId = store.userStore.myUserInfo.accountId
+        welcomeMsg.conversationId = conversationId
+        welcomeMsg.sendingState =
+          V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_SUCCEEDED
+        welcomeMsg.isSelf = false
+        welcomeMsg.aiConfig = {
+          accountId: receiverId,
+          aiStatus: 2,
         }
-      },
-      [store.teamStore, t]
-    )
+
+        store.msgStore.addMsg(conversationId, [welcomeMsg])
+      }
+    }, [
+      conversationId,
+      nim.V2NIMMessageCreator,
+      receiverId,
+      store.aiUserStore,
+      store.msgStore,
+      store.userStore.myUserInfo.accountId,
+    ])
 
     const resetSettingState = () => {
       setAction(undefined)
@@ -457,7 +622,9 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       setNoMore(false)
       setReceiveMsgBtnVisible(false)
       setForwardMessage(undefined)
-    }, [])
+      setTranslateOpen(false)
+      store.aiUserStore.resetAIProxy()
+    }, [store.aiUserStore])
 
     const handleForwardModalSend = () => {
       scrollToBottom()
@@ -466,6 +633,10 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
 
     const handleForwardModalClose = () => {
       setForwardMessage(undefined)
+    }
+
+    const handleCreateModalClose = () => {
+      setGroupCreateVisible(false)
     }
 
     useEffect(() => {
@@ -491,10 +662,16 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           const msg = notMyMsgs.find(
             (item) => item.messageClientId === params.target.id
           )
+
           if (msg) {
-            store.msgStore.sendMsgReceiptActive(msg).finally(() => {
-              visibilityObserver.unobserve(params.target)
-            })
+            store.msgStore
+              .sendMsgReceiptActive(msg)
+              .catch(() => {
+                // 忽略这个报错
+              })
+              .finally(() => {
+                visibilityObserver.unobserve(params.target)
+              })
           }
         }
       }
@@ -502,6 +679,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       const handler = (isObserve: boolean) => {
         notMyMsgs.forEach((item) => {
           const target = document.getElementById(item.messageClientId)
+
           if (target) {
             if (isObserve) {
               visibilityObserver.observe(target)
@@ -550,6 +728,10 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
 
       if (memoryMsgs.length < 10) {
         getHistory(Date.now()).then((res) => {
+          if (!res?.length && !memoryMsgs.length && relation === 'ai') {
+            createAIWelcomeMsg()
+          }
+
           scrollToBottom()
           // TODO 考虑以下这段代码是否还需要
           // if (conversation && !conversation.lastMessage && res && res[0]) {
@@ -561,69 +743,99 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       } else {
         scrollToBottom()
       }
-    }, [store.msgStore, conversationId, getHistory, scrollToBottom])
+    }, [
+      store.msgStore,
+      conversationId,
+      relation,
+      getHistory,
+      scrollToBottom,
+      createAIWelcomeMsg,
+    ])
 
     // 处理消息
     useEffect(() => {
       if (msgs.length !== 0) {
         const replyMsgsMap = {}
-        const reqMsgs: Array<{
-          scene: 'p2p' | 'team'
-          from: string
-          to: string
-          idServer: string
-          idClient: string
-          time: number
-        }> = []
+        const reqMsgs: YxReplyMsg[] = []
         const messageClientIds: Record<string, string> = {}
+
         msgs.forEach((msg) => {
           if (msg.serverExtension) {
             try {
-              const { yxReplyMsg } = JSON.parse(msg.serverExtension)
+              const { yxReplyMsg } = JSON.parse(
+                msg.serverExtension
+              ) as YxServerExt
+
               if (yxReplyMsg) {
                 const replyMsg = msgs.find(
                   (item) => item.messageClientId === yxReplyMsg.idClient
                 )
+
                 if (replyMsg) {
                   replyMsgsMap[msg.messageClientId] = replyMsg
                 } else {
                   replyMsgsMap[msg.messageClientId] = 'noFind'
-                  const { scene, from, to, idServer, idClient, time } =
-                    yxReplyMsg
-                  if (scene && from && to && idServer && idClient && time) {
-                    reqMsgs.push({ scene, from, to, idServer, idClient, time })
+                  const {
+                    scene,
+                    from,
+                    to,
+                    idServer,
+                    idClient,
+                    time,
+                    receiverId,
+                  } = yxReplyMsg
+
+                  if (
+                    scene &&
+                    from &&
+                    to &&
+                    idServer &&
+                    idClient &&
+                    time &&
+                    receiverId
+                  ) {
+                    reqMsgs.push({
+                      scene,
+                      from,
+                      to,
+                      idServer,
+                      idClient,
+                      time,
+                      receiverId,
+                    })
                     messageClientIds[idServer] = msg.messageClientId
                   }
                 }
               }
-            } catch {}
+            } catch {
+              //
+            }
           }
         })
         if (reqMsgs.length > 0) {
           nim.V2NIMMessageService.getMessageListByRefers(
             reqMsgs.map((item) => ({
               senderId: item.from,
-              receiverId: item.to,
+              receiverId: item.receiverId,
               messageClientId: item.idClient,
               messageServerId: item.idServer,
               createTime: item.time,
-              conversationType:
-                item.scene === 'p2p'
-                  ? V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
-                  : V2NIMConst.V2NIMConversationType
-                      .V2NIM_CONVERSATION_TYPE_TEAM,
-              conversationId: nim.V2NIMConversationIdUtil.p2pConversationId(
-                item.to
-              ),
+              conversationType: item.scene,
+              conversationId: item.to,
             }))
-          ).then((res) => {
-            res.forEach((item) => {
-              if (item.messageServerId) {
-                replyMsgsMap[messageClientIds[item.messageServerId]] = item
-              }
+          )
+            .then((res) => {
+              res.forEach((item) => {
+                if (item.messageServerId) {
+                  replyMsgsMap[messageClientIds[item.messageServerId]] =
+                    store.msgStore.handleReceiveAIMsg(item)
+                }
+              })
+              setReplyMsgsMap({ ...replyMsgsMap })
             })
-            setReplyMsgsMap({ ...replyMsgsMap })
-          })
+            .catch((err) => {
+              logger.error('获取回复消息失败：', (err as V2NIMError).toString())
+            })
         } else {
           setReplyMsgsMap({ ...replyMsgsMap })
         }
@@ -708,7 +920,16 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             renderMessageInnerContent={renderMessageInnerContent}
             renderMessageOuterContent={renderMessageOuterContent}
           />
-
+          <ChatAITranslate
+            key={receiverId}
+            onClose={() => {
+              setTranslateOpen(false)
+            }}
+            prefix={prefix}
+            inputValue={inputValue}
+            visible={translateOpen}
+            setInputValue={setInputValue}
+          />
           <MessageInput
             ref={chatMessageInputRef}
             prefix={prefix}
@@ -717,18 +938,23 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
                 ? renderP2pInputPlaceHolder(conversation)
                 : `${t('sendToText')} ${userNickOrAccount}${t('sendUsageText')}`
             }
+            translateOpen={translateOpen}
+            onTranslate={setTranslateOpen}
             replyMsg={replyMsg}
+            mentionMembers={mentionMembers}
             conversationType={conversationType}
             receiverId={receiverId}
             actions={actions}
             inputValue={inputValue}
             setInputValue={setInputValue}
+            allowAtAll={false}
             onSendText={onSendText}
             onSendFile={onSendFile}
             onSendImg={onSendImg}
             onSendVideo={onSendVideo}
             onRemoveReplyMsg={onRemoveReplyMsg}
           />
+          <ChatAISearch key={conversationId} prefix={prefix} />
           <ChatSettingDrawer
             prefix={prefix}
             visible={settingDrawerVisible}
@@ -737,9 +963,9 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             title={t('setText')}
           >
             <ChatP2pSetting
-              alias={user.alias || ''}
-              account={user.accountId || ''}
-              nick={user.name || ''}
+              alias={(user as V2NIMFriend)?.alias || ''}
+              account={user?.accountId || ''}
+              nick={user?.name || ''}
               onCreateGroupClick={() => {
                 setGroupCreateVisible(true)
               }}
@@ -752,15 +978,13 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           settingActions={settingActions}
           onActionClick={onActionClick}
         />
-        <GroupCreate
+        <CreateTeamModal
           defaultAccounts={createDefaultAccounts}
           visible={groupCreateVisible}
-          onGroupCreate={onGroupCreate}
-          onCancel={() => {
-            setGroupCreateVisible(false)
-          }}
-          prefix={prefix}
-          commonPrefix={commonPrefix}
+          // onAfterCreate={resetSettingState}
+          onChat={handleCreateModalClose}
+          onCancel={handleCreateModalClose}
+          prefix={commonPrefix}
         />
         <ChatForwardModal
           visible={!!forwardMessage}

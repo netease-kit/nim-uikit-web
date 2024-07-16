@@ -1,7 +1,6 @@
 import React, { FC } from 'react'
 import {
   ComplexAvatarContainer,
-  CrudeAvatar,
   useTranslation,
   useStateContext,
 } from '../../../common'
@@ -49,13 +48,11 @@ export interface MsgItemProps {
 export const MsgItem: FC<MsgItemProps> = observer(
   ({
     msg,
-    applyTeamLoaidng = false,
-    teamInviteLoading = false,
     applyFriendLoading = false,
-    onAcceptApplyTeamClick,
-    onRejectApplyTeamClick,
-    onAcceptTeamInviteClick,
-    onRejectTeamInviteClick,
+    // onAcceptApplyTeamClick,
+    // onRejectApplyTeamClick,
+    // onAcceptTeamInviteClick,
+    // onRejectTeamInviteClick,
     onAcceptApplyFriendClick,
     onRejectApplyFriendClick,
     afterSendMsgClick,
@@ -69,21 +66,21 @@ export const MsgItem: FC<MsgItemProps> = observer(
 
     const { store } = useStateContext()
 
-    const handleRejectApplyTeamClick = () => {
-      onRejectApplyTeamClick?.(msg as V2NIMTeamJoinActionInfoForUI)
-    }
+    // const handleRejectApplyTeamClick = () => {
+    //   onRejectApplyTeamClick?.(msg as V2NIMTeamJoinActionInfoForUI)
+    // }
 
-    const handleAcceptApplyTeamClick = () => {
-      onAcceptApplyTeamClick?.(msg as V2NIMTeamJoinActionInfoForUI)
-    }
+    // const handleAcceptApplyTeamClick = () => {
+    //   onAcceptApplyTeamClick?.(msg as V2NIMTeamJoinActionInfoForUI)
+    // }
 
-    const handleRejectTeamInviteClick = () => {
-      onRejectTeamInviteClick?.(msg as V2NIMTeamJoinActionInfoForUI)
-    }
+    // const handleRejectTeamInviteClick = () => {
+    //   onRejectTeamInviteClick?.(msg as V2NIMTeamJoinActionInfoForUI)
+    // }
 
-    const handleAcceptTeamInviteClick = () => {
-      onAcceptTeamInviteClick?.(msg as V2NIMTeamJoinActionInfoForUI)
-    }
+    // const handleAcceptTeamInviteClick = () => {
+    //   onAcceptTeamInviteClick?.(msg as V2NIMTeamJoinActionInfoForUI)
+    // }
 
     const handleRejectApplyFriendClick = () => {
       onRejectApplyFriendClick?.(msg as V2NIMFriendAddApplicationForUI)
@@ -98,6 +95,7 @@ export const MsgItem: FC<MsgItemProps> = observer(
       // 自己是否是申请者
       const isMeApplicant =
         applyMsg.applicantAccountId === store.userStore.myUserInfo.accountId
+
       switch (applyMsg.status) {
         case V2NIMConst.V2NIMFriendAddApplicationStatus
           .V2NIM_FRIEND_ADD_APPLICATION_STATUS_AGREED:
@@ -155,6 +153,9 @@ export const MsgItem: FC<MsgItemProps> = observer(
                     account: applyMsg.applicantAccountId,
                   })}
                 </span>
+                <span className={`${_prefix}-label`}>
+                  {t('applyFriendText')}
+                </span>
               </div>
               <div className={`${_prefix}-state`}>
                 <CloseCircleFilled className={`${_prefix}-state-icon`} />
@@ -189,7 +190,7 @@ export const MsgItem: FC<MsgItemProps> = observer(
           )
         case V2NIMConst.V2NIMFriendAddApplicationStatus
           .V2NIM_FRIEND_ADD_APPLICATION_STATUS_INIT:
-          return (
+          return isMeApplicant ? null : (
             <>
               <div className={`${_prefix}-flex`}>
                 <ComplexAvatarContainer
@@ -232,6 +233,7 @@ export const MsgItem: FC<MsgItemProps> = observer(
     const renderTeamJoinActionMsg = () => {
       // TODO 暂不支持群相关申请
       const teamJoinActionMsg = msg as V2NIMTeamJoinActionInfoForUI
+
       switch (teamJoinActionMsg.actionType) {
         case V2NIMConst.V2NIMTeamJoinActionType
           .V2NIM_TEAM_JOIN_ACTION_TYPE_APPLICATION:

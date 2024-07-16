@@ -9,6 +9,7 @@ export interface FriendSelectItemProps {
   prefix?: string
   account: string
   appellation: string
+  disabled?: boolean
 }
 
 export const FriendSelectItem: FC<FriendSelectItemProps> = ({
@@ -18,6 +19,7 @@ export const FriendSelectItem: FC<FriendSelectItemProps> = ({
   prefix = 'common',
   account,
   appellation,
+  disabled = false,
 }) => {
   const _prefix = `${prefix}-friend-select-item`
 
@@ -29,6 +31,7 @@ export const FriendSelectItem: FC<FriendSelectItemProps> = ({
           onChange={(e) => {
             onSelect?.(account, e.target.checked)
           }}
+          disabled={disabled}
           className={`${_prefix}-checkbox`}
         />
       ) : null}

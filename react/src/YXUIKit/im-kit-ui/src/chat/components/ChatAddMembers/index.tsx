@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { message, Modal } from 'antd'
-import { FriendSelectContainer, useTranslation } from '../../../common'
+import { FriendSelect, useTranslation } from '../../../common'
 // import { SearchInput } from '@x-kit-react/search-kit'
 
 interface ChatAddMemebersProps {
@@ -24,19 +24,12 @@ const ChatAddMemebers: React.FC<ChatAddMemebersProps> = ({
   prefix = 'chat',
   commonPrefix = 'common',
 }) => {
-  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([])
+  const [selectedAccounts, setSelectedAccounts] =
+    useState<string[]>(defaultAccounts)
   // const [searchText, setSearchText] = useState('')
 
   useEffect(() => {
-    if (visible) {
-      setSelectedAccounts([...new Set(defaultAccounts)])
-    }
-  }, [defaultAccounts, visible])
-
-  useEffect(() => {
-    if (!visible) {
-      resetState()
-    }
+    resetState()
   }, [visible])
 
   const { t } = useTranslation()
@@ -47,6 +40,7 @@ const ChatAddMemebers: React.FC<ChatAddMemebersProps> = ({
       message.error(t('addTeamMemberConfirmText'))
       return
     }
+
     onGroupAddMembers(selectedAccounts)
   }
 
@@ -55,7 +49,7 @@ const ChatAddMemebers: React.FC<ChatAddMemebersProps> = ({
   }
 
   const resetState = () => {
-    setSelectedAccounts([])
+    setSelectedAccounts(defaultAccounts)
   }
 
   return (
@@ -72,10 +66,12 @@ const ChatAddMemebers: React.FC<ChatAddMemebersProps> = ({
     >
       {/* <SearchInput value={searchText} onChange={setSearchText} /> */}
       <div style={{ height: 450 }}>
-        <FriendSelectContainer
+        <FriendSelect
+          max={200}
           prefix={commonPrefix}
           onSelect={(selectedList) => setSelectedAccounts(selectedList)}
           selectedAccounts={selectedAccounts}
+          disabledAccounts={defaultAccounts}
         />
       </div>
     </Modal>

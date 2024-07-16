@@ -11,10 +11,9 @@ import RootStore from '@xkit-yx/im-store-v2'
 import { LocalOptions } from '@xkit-yx/im-store-v2/dist/types/types'
 import { observer } from 'mobx-react'
 import { useStateContext } from '../hooks/useStateContext'
-import V2NIM from 'nim-web-sdk-ng'
+import V2NIM, { V2NIMConst } from 'nim-web-sdk-ng'
 import zh from '../locales/zh'
 import sdkPkg from 'nim-web-sdk-ng/package.json'
-import { V2NIMConst } from 'nim-web-sdk-ng'
 
 export interface ContextProps {
   nim?: V2NIM
@@ -46,7 +45,7 @@ const defaultLocalOptions: Required<LocalOptions> = {
     V2NIMConst.V2NIMTeamUpdateInfoMode.V2NIM_TEAM_UPDATE_INFO_MODE_MANAGER,
   teamUpdateExtMode:
     V2NIMConst.V2NIMTeamUpdateExtensionMode
-      .V2NIM_TEAM_UPDATE_EXTENSION_MODE_MANAGER,
+      .V2NIM_TEAM_UPDATE_EXTENSION_MODE_ALL,
   leaveOnTransfer: false,
   needMention: true,
   p2pMsgReceiptVisible: false,
@@ -54,8 +53,11 @@ const defaultLocalOptions: Required<LocalOptions> = {
   loginStateVisible: false,
   allowTransferTeamOwner: false,
   teamManagerVisible: false,
+  aiVisible: true,
   teamManagerLimit: 10,
   sendMsgBefore: async (options: any) => options,
+  aiUserAgentProvider: {},
+  conversationLimit: 100,
 }
 
 export const Provider: FC<ProviderProps> = memo(
@@ -94,6 +96,7 @@ export const Provider: FC<ProviderProps> = memo(
       if (singleton) {
         return RootStore.getInstance(nim, finalLocalOptions)
       }
+
       return new RootStore(nim, finalLocalOptions)
     }, [nim, singleton, finalLocalOptions])
 

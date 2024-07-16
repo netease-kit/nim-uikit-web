@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import AddList, { AddListProps } from '../AddList'
 import { CommonIcon, useTranslation } from '../../../../common'
 import { PanelScene } from '../../Container'
+
 export interface AddPanelProps {
   trigger: string // hover || focus || click
   onClick: (scene: PanelScene) => void
@@ -52,6 +53,7 @@ const AddPanel: React.FC<AddPanelProps> = ({
       <AddList {...props} />
     </div>
   )
+
   return (
     <div className={_prefix}>
       <Popover

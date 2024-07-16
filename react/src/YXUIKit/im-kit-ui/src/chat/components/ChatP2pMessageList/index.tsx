@@ -31,7 +31,7 @@ export interface ChatP2pMessageListProps
 
 const ChatP2pMessageList = observer(
   forwardRef<HTMLDivElement, ChatP2pMessageListProps>(
-    (
+    function ChatP2pMessageListContent(
       {
         prefix = 'chat',
         commonPrefix = 'common',
@@ -55,12 +55,14 @@ const ChatP2pMessageList = observer(
         renderMessageInnerContent,
       },
       ref
-    ) => {
+    ) {
       const _prefix = `${prefix}-message-list`
 
       const { t } = useTranslation()
 
       const { store, localOptions } = useStateContext()
+
+      const { relation } = store.uiStore.getRelation(receiverId)
 
       const renderMsgs = storeUtils.getFilterMsgs(msgs)
 
@@ -104,6 +106,7 @@ const ChatP2pMessageList = observer(
                   renderMessageOuterContent={renderMessageOuterContent}
                 />
               )
+
               return (
                 <div id={msg.messageClientId} key={msg.messageClientId}>
                   {msgItem}
@@ -120,7 +123,7 @@ const ChatP2pMessageList = observer(
               <ArrowDownOutlined />
             </div>
           ) : null}
-          {store.uiStore.getRelation(receiverId).relation === 'stranger' ? (
+          {relation === 'stranger' ? (
             <Alert
               className={`${_prefix}-stranger-noti`}
               banner

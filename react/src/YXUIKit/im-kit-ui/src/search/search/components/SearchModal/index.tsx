@@ -97,6 +97,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
             }),
           }
         }
+
         if (item.id === 'groups') {
           return {
             ...item,
@@ -107,6 +108,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
             }),
           }
         }
+
         return { ...item }
       })
       .filter((item) => !!item.list.length)

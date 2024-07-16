@@ -53,19 +53,23 @@ export const CrudeAvatar: FC<CrudeAvatarProps> = ({
     const store = new Storage('localStorage', '__xkit__')
     const key = `avatarColor-${account}`
     let bgColor = store.get(key)
+
     if (!bgColor) {
       bgColor = colorMap[Math.floor(Math.random() * 7)]
       store.set(key, bgColor)
     }
+
     setBgColor(bgColor)
   }, [account])
 
   useEffect(() => {
     let webUrl = ''
+
     if (avatar) {
       setImgFailed(false)
       webUrl = appUrlMap[avatar]
     }
+
     setWebAvatar(webUrl ? webUrl : avatar)
   }, [avatar])
 
@@ -75,6 +79,7 @@ export const CrudeAvatar: FC<CrudeAvatarProps> = ({
         verticalAlign: 'middle',
       }
     }
+
     return {
       backgroundColor: bgColor,
       verticalAlign: 'middle',

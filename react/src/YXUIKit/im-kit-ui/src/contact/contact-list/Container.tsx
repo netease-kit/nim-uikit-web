@@ -41,6 +41,7 @@ export const ContactListContainer: FC<ContactListContainerProps> = observer(
       if (contactType === 'msgList') {
         store.sysMsgStore.setAllApplyMsgRead()
       }
+
       onItemClick?.(contactType)
     }
 

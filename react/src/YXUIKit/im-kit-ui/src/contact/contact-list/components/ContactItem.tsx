@@ -5,6 +5,7 @@ import { ContactType } from '@xkit-yx/im-store-v2'
 export interface ContactItemProps {
   icon: ReactNode
   label: string
+  show: boolean
   contactType: ContactType
   isSelectd?: boolean
   backgroundColor: string

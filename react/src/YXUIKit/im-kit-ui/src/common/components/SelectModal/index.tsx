@@ -7,9 +7,11 @@ export interface SelectModalItemProps {
   key: string
   label: string
   disabled?: boolean
+  hide?: boolean
 }
 
 export interface SelectModalProps {
+  tabRenderer?: React.ReactNode
   datasource: SelectModalItemProps[]
   visible: boolean
   onSearchChange?: (value: string) => void
@@ -22,11 +24,13 @@ export interface SelectModalProps {
   defaultValue?: string[]
   bottomRenderer?: React.ReactNode
   itemAvatarRender?: (data: SelectModalItemProps) => React.ReactNode
+  recentRenderer?: React.ReactNode
   type?: 'radio' | 'checkbox'
   max?: number
   min?: number
   searchPlaceholder?: string
   leftTitle?: string
+  showLeftTitle?: boolean
   rightTitle?: string
   closable?: boolean
   width?: number
@@ -37,6 +41,7 @@ export interface SelectModalProps {
 const emptyArr = []
 
 export const SelectModal: React.FC<SelectModalProps> = ({
+  tabRenderer,
   datasource,
   visible,
   onSearchChange,
@@ -49,11 +54,13 @@ export const SelectModal: React.FC<SelectModalProps> = ({
   defaultValue = emptyArr,
   bottomRenderer,
   itemAvatarRender,
+  recentRenderer,
   type = 'radio',
   max = Infinity,
   min = 0,
   searchPlaceholder,
   leftTitle,
+  showLeftTitle = true,
   rightTitle,
   closable = true,
   width = 720,
@@ -92,22 +99,33 @@ export const SelectModal: React.FC<SelectModalProps> = ({
   const _prefix = `${prefix}-select-modal`
 
   const getItemsFromKeys = (keys: string[]) => {
-    return datasource.filter((item) => keys.some((j) => j === item.key))
+    return datasource
+      .filter((item) => keys.some((j) => j === item.key))
+      .reduce((unique, item) => {
+        if (!unique.some((uniqueItem) => uniqueItem.key === item.key)) {
+          unique.push(item)
+        }
+
+        return unique
+      }, [] as SelectModalItemProps[])
   }
 
   const handleSearchTextChange = (e: any) => {
     const value = e.target.value
+
     setSearchText(value)
     onSearchChange?.(value)
   }
 
   const handleSelect = (e: any) => {
     let value: string[] = []
+
     if (type === 'radio') {
       value = [e.target.value]
     } else {
       value = e
     }
+
     setSelected(value)
     onSelectChange?.(getItemsFromKeys(value))
   }
@@ -141,14 +159,15 @@ export const SelectModal: React.FC<SelectModalProps> = ({
         value={selected[0]}
         style={{ width: '100%' }}
       >
-        {datasource.map((item) => {
-          const isVisible = item.label.includes(searchText)
+        {datasource.map((item, index) => {
+          const isVisible = !item.hide && item.label.includes(searchText)
+
           return (
             <div
               className={`${_prefix}-content-item ${
                 item.key === selected[0] ? `${_prefix}-content-item-focus` : ''
               }`}
-              key={item.key}
+              key={`${item.key}_${index}`}
               style={{ display: isVisible ? 'flex' : 'none' }}
             >
               <Radio value={item.key} disabled={item.disabled} />
@@ -169,14 +188,15 @@ export const SelectModal: React.FC<SelectModalProps> = ({
         style={{ width: '100%' }}
         disabled={selected.length >= max}
       >
-        {datasource.map((item) => {
-          const isVisible = item.label.includes(searchText)
+        {datasource.map((item, index) => {
+          const isVisible = !item.hide && item.label.includes(searchText)
+
           return (
             <div
               className={`${_prefix}-content-item ${
                 item.key === selected[0] ? `${_prefix}-content-item-focus` : ''
               }`}
-              key={item.key}
+              key={`${item.key}_${index}`}
               style={{ display: isVisible ? 'flex' : 'none' }}
             >
               <Checkbox value={item.key} disabled={item.disabled} />
@@ -193,9 +213,11 @@ export const SelectModal: React.FC<SelectModalProps> = ({
     return selected.length
       ? selected.map((key) => {
           const item = datasource.find((item) => item.key === key)
+
           if (!item) {
             return null
           }
+
           return (
             <div className={`${_prefix}-content-chose`} key={key}>
               {itemAvatarRender?.(item)}
@@ -235,12 +257,17 @@ export const SelectModal: React.FC<SelectModalProps> = ({
             onChange={handleSearchTextChange}
             placeholder={searchPlaceholder}
           />
-          <div className={`${_prefix}-content-l-title`}>
-            {searchText ? t('searchText') : leftTitle}
-          </div>
+          {!searchText ? recentRenderer : null}
+          {showLeftTitle ? (
+            <div className={`${_prefix}-content-l-title`}>
+              {searchText ? t('searchText') : leftTitle}
+            </div>
+          ) : null}
+          {tabRenderer}
           <div className={`${_prefix}-content-l-list`}>
-            {!datasource.filter((item) => item.label.includes(searchText))
-              .length ? (
+            {!datasource.filter(
+              (item) => !item.hide && item.label.includes(searchText)
+            ).length ? (
               <div className={`${_prefix}-content-empty`}>
                 {t('searchNoResText')}
               </div>

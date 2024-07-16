@@ -1,0 +1,62 @@
+@import '~antd/lib/style/themes/variable.less';
+@import './theme.less';
+
+.@{create-team-prefix} {
+  .@{ant-prefix}-modal-content {
+    border-radius: @yx-border-radius-8;
+
+    .@{ant-prefix}-modal-header {
+      border-radius: @yx-border-radius-8 @yx-border-radius-8 0 0;
+    }
+  }
+
+  &-group-name {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+
+    &-content {
+      width: 80px;
+      height: 16px;
+      text-align: center;
+      font-family: 'PingFang SC';
+      font-style: normal;
+      font-weight: 400;
+      font-size: @yx-primary-font-size;
+      line-height: 16px;
+      color: @yx-text-color-1;
+    }
+
+    &-input {
+      width: 260px;
+      height: 32px;
+      margin-left: 16px;
+    }
+  }
+
+  &-group-avatar {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+
+    &-content {
+      width: 85px;
+      height: 16px;
+      text-align: center;
+      font-family: 'PingFang SC';
+      font-style: normal;
+      font-weight: 400;
+      font-size: @yx-primary-font-size;
+      line-height: 16px;
+      color: @yx-text-color-1;
+      margin-right: 16px;
+    }
+  }
+
+  &-group-friendList {
+    width: 100%;
+    height: 320px;
+    margin-top: 24px;
+    border-top: 1px solid @yx-border-color-7;
+  }
+}

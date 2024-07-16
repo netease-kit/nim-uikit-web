@@ -47,6 +47,7 @@ const GroupDetail: FC<GroupDetailmProps> = ({
 
   const onUpdateTeamInfoSubmitHandler = () => {
     const obj: V2NIMUpdatedTeamInfo = { avatar, name, intro }
+
     Object.keys(obj).forEach((key) => {
       if (obj[key] === team[key]) {
         delete obj[key]

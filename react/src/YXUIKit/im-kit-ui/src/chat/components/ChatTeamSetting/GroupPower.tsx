@@ -11,8 +11,8 @@ import {
   V2NIMUpdatedTeamInfo,
 } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
 import ChatTeamMemberModal from '../ChatTeamMemberModal'
-import { ALLOW_AT, TAllowAt } from '../../../constant'
 import { V2NIMConst } from 'nim-web-sdk-ng'
+import { YxServerExt } from '@xkit-yx/im-store-v2/dist/types/types'
 
 export interface GroupPowerProps {
   onUpdateTeamInfo: (team: V2NIMUpdatedTeamInfo) => void
@@ -58,13 +58,15 @@ const GroupPower: React.FC<GroupPowerProps> = ({
     ]
   }, [localOptions.teamManagerVisible, t])
 
-  const ext: TAllowAt = useMemo(() => {
+  const ext: YxServerExt = useMemo(() => {
     let res = {}
+
     try {
       res = JSON.parse(team.serverExtension || '{}')
     } catch (error) {
       //
     }
+
     return res
   }, [team.serverExtension])
 
@@ -158,10 +160,36 @@ const GroupPower: React.FC<GroupPowerProps> = ({
           <Select
             className={`${_prefix}-who-select`}
             options={options}
-            value={ext[ALLOW_AT] || 'all'}
+            value={ext.yxAllowAt || 'all'}
             onChange={(value) => {
               onUpdateTeamInfo({
-                serverExtension: JSON.stringify({ ...ext, [ALLOW_AT]: value }),
+                serverExtension: JSON.stringify({
+                  ...ext,
+                  yxAllowAt: value,
+                } as YxServerExt),
+              })
+            }}
+          ></Select>
+        </div>
+        <div className={`${_prefix}-who-item`}>
+          <label>{t('teamTopModeText')}</label>
+          <Select
+            className={`${_prefix}-who-select`}
+            options={options}
+            value={ext.yxAllowTop || 'manager'}
+            onChange={(value) => {
+              const newExt: YxServerExt = {
+                ...ext,
+                yxAllowTop: value,
+                lastOpt: 'yxAllowTop',
+              }
+
+              onUpdateTeamInfo({
+                serverExtension: JSON.stringify(newExt),
+                // 为了兼容老数据，修改该权限时需要将 updateExtensionMode 修改为所有人
+                updateExtensionMode:
+                  V2NIMConst.V2NIMTeamUpdateExtensionMode
+                    .V2NIM_TEAM_UPDATE_EXTENSION_MODE_ALL,
               })
             }}
           ></Select>

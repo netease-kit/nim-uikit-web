@@ -43,15 +43,16 @@ export const ConversationItem: FC<ConversationItemProps> = ({
   conversationNameRenderer,
   renderConversationMsgIsRead,
   prefix = 'conversation',
-  commonPrefix = 'common',
 }) => {
   const date = useMemo(() => {
     if (!time) {
       return ''
     }
+
     const _d = moment(time)
     const isCurrentDay = _d.isSame(moment(), 'day')
     const isCurrentYear = _d.isSame(moment(), 'year')
+
     return _d.format(
       isCurrentDay ? 'HH:mm' : isCurrentYear ? 'MM-DD' : 'YYYY-MM'
     )
@@ -72,15 +73,18 @@ export const ConversationItem: FC<ConversationItemProps> = ({
     ) {
       return t('recallMessageText')
     }
+
     if (messageType === void 0) {
       return ''
     }
+
     if (
       sendingState ===
       V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_SENDING
     ) {
       return ''
     }
+
     if (
       sendingState ===
       V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_FAILED

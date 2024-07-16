@@ -1,0 +1,153 @@
+@import './theme.less';
+
+@conversation-prefix-cls: ~'@{conversation-prefix}-wrapper';
+@conversation-list-prefix-cls: ~'@{conversation-prefix}-list';
+@conversation-item-prefix-cls: ~'@{conversation-prefix}-item';
+@ai-prefix-cls: ~'@{conversation-prefix}-ai';
+
+.@{conversation-prefix-cls} {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: @yx-primary-color;
+}
+
+.@{conversation-list-prefix-cls}-loading {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.@{conversation-list-prefix-cls}-wrapper {
+  width: 100%;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.@{conversation-item-prefix-cls} {
+  width: 100%;
+  display: flex;
+  padding: 12px;
+  background-color: @yx-primary-color;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+  align-items: center;
+
+  &-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin: 0 6px 0 10px;
+    flex: 1;
+    min-width: 0;
+
+    &-name {
+      font-size: @yx-primary-font-size;
+      color: @yx-primary-text-color;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &-msg {
+      font-size: @yx-font-size-12;
+      color: @yx-text-color-2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+    }
+    &-msg-body {
+      font-size: @yx-font-size-12;
+      color: @yx-text-color-2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    &-mention {
+      font-size: @yx-font-size-12;
+      color: @yx-text-color-7;
+    }
+    &-read-status {
+      margin-right: 4px;
+    }
+    &-read-icon {
+      font-size: @yx-primary-font-size;
+      color: @yx-text-color-4 !important;
+      position: relative;
+      top: 1px;
+    }
+  }
+
+  &-state {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    align-items: flex-end;
+    white-space: nowrap;
+
+    &-date {
+      font-size: @yx-font-size-12;
+      color: @yx-text-color-2;
+    }
+
+    &-mute {
+      color: @yx-icon-color-1;
+      height: 22px;
+    }
+  }
+
+  &-top {
+    background-color: @yx-primary-color-hover;
+  }
+
+  &-select {
+    background-color: @yx-primary-color-active;
+  }
+
+  &:hover {
+    background-color: @yx-primary-color-active;
+  }
+}
+
+.@{ai-prefix-cls} {
+  &-list {
+    width: 100%;
+    max-height: 216px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 6px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid @yx-border-color-2;
+  }
+
+  &-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px;
+    cursor: pointer;
+
+    &:hover {
+      background-color: @yx-primary-color-active;
+    }
+
+    &-name {
+      display: inline-block;
+      text-align: center;
+      max-width: 36px;
+      margin-top: 5px;
+      font-size: @yx-font-size-12;
+      color: @yx-text-color-1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}

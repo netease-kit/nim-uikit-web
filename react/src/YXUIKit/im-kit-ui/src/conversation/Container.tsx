@@ -9,6 +9,7 @@ import { observer } from 'mobx-react'
 import { V2NIMConversation } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
 import sdkPkg from 'nim-web-sdk-ng/package.json'
 import { V2NIMConst } from 'nim-web-sdk-ng'
+import { PinAIList } from './components/pinAIList'
 
 export interface ConversationContainerProps {
   /**
@@ -97,7 +98,9 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
     renderConversationName,
     renderConversationMsg,
   }) => {
-    const { nim, store } = useStateContext()
+    const _prefix = `${prefix}-wrapper`
+
+    const { nim, store, localOptions } = useStateContext()
 
     useEventTracking({
       appkey: nim.options.appkey,
@@ -155,23 +158,30 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
     }, [store.uiStore.conversations])
 
     return (
-      <ConversationList
-        conversations={conversations}
-        selectedConversation={store.uiStore.selectedConversation}
-        onConversationItemClick={handleConversationItemClick}
-        onConversationItemDeleteClick={handleConversationItemDeleteClick}
-        onConversationItemStickTopChange={handleConversationItemStickTopChange}
-        onConversationItemMuteChange={handleConversationItemMuteChange}
-        renderCustomP2pConversation={renderCustomP2pConversation}
-        renderCustomTeamConversation={renderCustomTeamConversation}
-        renderConversationListEmpty={renderConversationListEmpty}
-        renderP2pConversationAvatar={renderP2pConversationAvatar}
-        renderTeamConversationAvatar={renderTeamConversationAvatar}
-        renderConversationName={renderConversationName}
-        renderConversationMsg={renderConversationMsg}
-        prefix={prefix}
-        commonPrefix={commonPrefix}
-      />
+      <div className={_prefix}>
+        {localOptions.aiVisible ? (
+          <PinAIList prefix={prefix} commonPrefix={commonPrefix} />
+        ) : null}
+        <ConversationList
+          conversations={conversations}
+          selectedConversation={store.uiStore.selectedConversation}
+          onConversationItemClick={handleConversationItemClick}
+          onConversationItemDeleteClick={handleConversationItemDeleteClick}
+          onConversationItemStickTopChange={
+            handleConversationItemStickTopChange
+          }
+          onConversationItemMuteChange={handleConversationItemMuteChange}
+          renderCustomP2pConversation={renderCustomP2pConversation}
+          renderCustomTeamConversation={renderCustomTeamConversation}
+          renderConversationListEmpty={renderConversationListEmpty}
+          renderP2pConversationAvatar={renderP2pConversationAvatar}
+          renderTeamConversationAvatar={renderTeamConversationAvatar}
+          renderConversationName={renderConversationName}
+          renderConversationMsg={renderConversationMsg}
+          prefix={prefix}
+          commonPrefix={commonPrefix}
+        />
+      </div>
     )
   }
 )

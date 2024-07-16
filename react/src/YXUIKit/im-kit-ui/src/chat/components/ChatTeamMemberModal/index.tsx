@@ -34,13 +34,17 @@ const ChatTeamMemberModal: React.FC<ChatTeamMemberModalProps> = observer(
       .getTeamMember(teamId)
       .filter((item) => item.accountId !== store.userStore.myUserInfo.accountId)
 
-    const datasource = teamMembers.map((item) => ({
-      key: item.accountId,
-      label: store.uiStore.getAppellation({
-        account: item.accountId,
-        teamId: item.teamId,
-      }),
-    }))
+    const aiUsers = store.aiUserStore.getAIUserList()
+
+    const datasource = teamMembers
+      .filter((item) => aiUsers.every((ai) => ai.accountId !== item.accountId))
+      .map((item) => ({
+        key: item.accountId,
+        label: store.uiStore.getAppellation({
+          account: item.accountId,
+          teamId: item.teamId,
+        }),
+      }))
 
     const teamManagerAccounts = teamMembers
       .filter(
@@ -69,6 +73,7 @@ const ChatTeamMemberModal: React.FC<ChatTeamMemberModalProps> = observer(
         const remove = teamManagerAccounts.filter((i) =>
           data.every((j) => j.key !== i)
         )
+
         add.length &&
           (await store.teamStore.updateTeamMemberRoleActive({
             teamId,
