@@ -375,6 +375,21 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       [msgOperMenu, store.msgStore]
     )
 
+    const resetSettingState = useCallback(() => {
+      setAction(undefined)
+      setGroupCreateVisible(false)
+      setSettingDrawerVisible(false)
+    }, [])
+
+    const resetState = useCallback(() => {
+      resetSettingState()
+      setInputValue('')
+      setLoadingMore(false)
+      setNoMore(false)
+      setReceiveMsgBtnVisible(false)
+      setForwardMessage(undefined)
+    }, [resetSettingState])
+
     const onGroupCreate = useCallback(
       async ({
         name,
@@ -405,23 +420,8 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           }
         }
       },
-      [store.teamStore, t]
+      [store.teamStore, t, resetSettingState]
     )
-
-    const resetSettingState = () => {
-      setAction(undefined)
-      setGroupCreateVisible(false)
-      setSettingDrawerVisible(false)
-    }
-
-    const resetState = useCallback(() => {
-      resetSettingState()
-      setInputValue('')
-      setLoadingMore(false)
-      setNoMore(false)
-      setReceiveMsgBtnVisible(false)
-      setForwardMessage(undefined)
-    }, [])
 
     const handleForwardModalSend = () => {
       scrollToBottom()
@@ -593,7 +593,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       return () => {
         nim.off('msg', onMsg)
       }
-    }, [nim, sessionId])
+    }, [nim, sessionId, scrollToBottom])
 
     return session ? (
       <div className={`${prefix}-wrap`}>

@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import { Modal } from 'antd'
 import { SearchInput, CrudeAvatar, useTranslation } from '../../../../common'
 import { CrudeAvatarProps } from '../../../../common/components/CrudeAvatar'
 import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+import { AutoSizer, List } from 'react-virtualized'
 
 export interface SearchItemProps extends CrudeAvatarProps {
   onClick: () => void
@@ -20,7 +21,6 @@ const SearchItem: React.FC<SearchItemProps> = ({
 
   return (
     <div className={`${_prefix}-content-section-item`} onClick={onClick}>
-      {/* TODO CrudeAvatar 可以不用了，p2p 都用 ComplexAvatar */}
       <CrudeAvatar {...props} />
       <span className={`${_prefix}-content-section-item-name`}>
         {props.alias || props.nick || props.account}
@@ -32,8 +32,7 @@ const SearchItem: React.FC<SearchItemProps> = ({
 export type SectionListItem = NimKitCoreTypes.IFriendInfo | Team
 
 export type Section = {
-  id: string
-  title: string
+  id: 'friends' | 'groups'
   list: SectionListItem[]
 }
 
@@ -70,65 +69,126 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const sections: Section[] = useMemo(() => {
     return [
       {
-        id: 'friends',
-        title: t('searchFriendTitle'),
+        id: 'friends' as Section['id'],
         list: friends,
       },
       {
-        id: 'groups',
-        title: t('searchTeamTitle'),
+        id: 'groups' as Section['id'],
         list: teams,
       },
     ].filter((item) => !!item.list.length)
-  }, [friends, teams, t])
+  }, [friends, teams])
 
-  const searchedSections: Section[] = useMemo(() => {
-    return sections
-      .map((item) => {
+  const searchedSections: (SectionListItem | 'friends' | 'groups')[] =
+    useMemo(() => {
+      const finalSections = sections
+        .map((item) => {
+          if (item.id === 'friends') {
+            return {
+              ...item,
+              list: item.list.filter((item) => {
+                return (
+                  (item as NimKitCoreTypes.IFriendInfo).alias ||
+                  (item as NimKitCoreTypes.IFriendInfo).nick ||
+                  (item as NimKitCoreTypes.IFriendInfo).account
+                ).includes(searchText)
+              }),
+            }
+          }
+
+          if (item.id === 'groups') {
+            return {
+              ...item,
+              list: item.list.filter((item) => {
+                return ((item as Team).name || (item as Team).teamId).includes(
+                  searchText
+                )
+              }),
+            }
+          }
+
+          return { ...item }
+        })
+        .filter((item) => !!item.list.length)
+
+      const res: (SectionListItem | 'friends' | 'groups')[] = []
+
+      finalSections.forEach((item) => {
         if (item.id === 'friends') {
-          return {
-            ...item,
-            list: item.list.filter((item) => {
-              return (
-                (item as NimKitCoreTypes.IFriendInfo).alias ||
-                (item as NimKitCoreTypes.IFriendInfo).nick ||
-                (item as NimKitCoreTypes.IFriendInfo).account
-              ).includes(searchText)
-            }),
-          }
+          res.push('friends')
+          item.list.forEach((item) => {
+            res.push(item)
+          })
+        } else if (item.id === 'groups') {
+          res.push('groups')
+          item.list.forEach((item) => {
+            res.push(item)
+          })
         }
-        if (item.id === 'groups') {
-          return {
-            ...item,
-            list: item.list.filter((item) => {
-              return ((item as Team).name || (item as Team).teamId).includes(
-                searchText
-              )
-            }),
-          }
-        }
-        return { ...item }
       })
-      .filter((item) => !!item.list.length)
-  }, [sections, searchText])
+
+      return res
+    }, [sections, searchText])
 
   const handleSearchChange = (value: string) => {
     setSearchText(value)
   }
 
-  const handleItemClick = (data: SectionListItem) => {
-    onResultItemClick(data)
-    resetState()
-  }
+  const resetState = useCallback(() => {
+    setSearchText('')
+  }, [])
+
+  const handleItemClick = useCallback(
+    (data: SectionListItem) => {
+      onResultItemClick(data)
+      resetState()
+    },
+    [onResultItemClick, resetState]
+  )
 
   const handleCancel = () => {
     onCancel()
     resetState()
   }
 
-  const resetState = () => {
-    setSearchText('')
-  }
+  const rowRenderer = useCallback(
+    ({ index, key, style }) => {
+      const item = searchedSections[index]
+
+      if (typeof item === 'string') {
+        return (
+          <div style={style} key={key}>
+            <div className={`${_prefix}-content-section-title`}>
+              {t(item === 'friends' ? 'searchFriendTitle' : 'searchTeamTitle')}
+            </div>
+          </div>
+        )
+      }
+
+      return (
+        <div style={style} key={key}>
+          <SearchItem
+            key={
+              (item as NimKitCoreTypes.IFriendInfo).account ||
+              (item as Team).teamId
+            }
+            onClick={() => handleItemClick(item)}
+            prefix={prefix}
+            account={
+              (item as NimKitCoreTypes.IFriendInfo).account ||
+              (item as Team).teamId
+            }
+            avatar={item.avatar}
+            nick={
+              (item as NimKitCoreTypes.IFriendInfo).nick || (item as Team).name
+            }
+            alias={(item as NimKitCoreTypes.IFriendInfo).alias || ''}
+          />
+        </div>
+      )
+    },
+    [_prefix, prefix, searchedSections, t, handleItemClick]
+  )
 
   return (
     <Modal
@@ -160,28 +220,18 @@ const SearchModal: React.FC<SearchModalProps> = ({
         )
       ) : (
         <div className={`${_prefix}-content`}>
-          {searchedSections.map((section) => (
-            <div className={`${_prefix}-content-section`} key={section.id}>
-              <div className={`${_prefix}-content-section-title`}>
-                {section.title}
-              </div>
-              {section.list.map((item) => (
-                <SearchItem
-                  // @ts-ignore
-                  key={item.account || item.teamId}
-                  onClick={() => handleItemClick(item)}
-                  prefix={prefix}
-                  // @ts-ignore
-                  account={item.account || item.teamId}
-                  avatar={item.avatar}
-                  // @ts-ignore
-                  nick={item.nick || item.name}
-                  // @ts-ignore
-                  alias={item.alias || ''}
-                />
-              ))}
-            </div>
-          ))}
+          <AutoSizer>
+            {({ height, width }) => (
+              <List
+                height={height}
+                overscanRowCount={10}
+                rowCount={searchedSections.length}
+                rowHeight={52}
+                rowRenderer={rowRenderer}
+                width={width}
+              />
+            )}
+          </AutoSizer>
         </div>
       )}
     </Modal>

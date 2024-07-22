@@ -620,6 +620,22 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       afterTransferTeam?.(team.teamId)
     }, [afterTransferTeam, team.teamId])
 
+    const resetSettingState = useCallback(() => {
+      setNavHistoryStack([])
+      setAction(undefined)
+      setGroupAddMembersVisible(false)
+      setSettingDrawerVisible(false)
+    }, [])
+
+    const resetState = useCallback(() => {
+      resetSettingState()
+      setInputValue('')
+      setLoadingMore(false)
+      setNoMore(false)
+      setReceiveMsgBtnVisible(false)
+      setForwardMessage(undefined)
+    }, [resetSettingState])
+
     const onAddMembersClick = useCallback(() => {
       if (team.inviteMode === 'manager' && !isGroupOwner && !isGroupManager) {
         message.error(t('noPermission'))
@@ -649,7 +665,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           }
         }
       },
-      [store.teamMemberStore, team.teamId, t]
+      [store.teamMemberStore, team.teamId, t, resetSettingState]
     )
 
     const onRemoveTeamMember = useCallback(
@@ -758,22 +774,6 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       },
       [store.teamStore, team.teamId, t]
     )
-
-    const resetSettingState = () => {
-      setNavHistoryStack([])
-      setAction(undefined)
-      setGroupAddMembersVisible(false)
-      setSettingDrawerVisible(false)
-    }
-
-    const resetState = useCallback(() => {
-      resetSettingState()
-      setInputValue('')
-      setLoadingMore(false)
-      setNoMore(false)
-      setReceiveMsgBtnVisible(false)
-      setForwardMessage(undefined)
-    }, [])
 
     const handleForwardModalSend = () => {
       scrollToBottom()
@@ -960,7 +960,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       return () => {
         nim.off('msg', onMsg)
       }
-    }, [nim, sessionId])
+    }, [nim, sessionId, scrollToBottom])
 
     useEffect(() => {
       // const onDismissTeam = (data: { teamId: string }) => {
