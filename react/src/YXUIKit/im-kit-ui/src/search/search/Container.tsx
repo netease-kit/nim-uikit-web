@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useTranslation, useEventTracking, useStateContext } from '../../common'
 import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import { SearchOutlined } from '@ant-design/icons'
@@ -57,23 +57,26 @@ export const SearchContainer: React.FC<SearchContainerProps> = observer(
 
     const [visible, setVisible] = useState(false)
 
-    const handleChat = async (item: SectionListItem) => {
-      let scene: TMsgScene
-      let to = ''
-      if ((item as NimKitCoreTypes.IFriendInfo).account) {
-        scene = 'p2p'
-        to = (item as NimKitCoreTypes.IFriendInfo).account
-      } else if ((item as Team).teamId) {
-        scene = 'team'
-        to = (item as Team).teamId
-      } else {
-        throw Error('unknow scene')
-      }
+    const handleChat = useCallback(
+      async (item: SectionListItem) => {
+        let scene: TMsgScene
+        let to = ''
+        if ((item as NimKitCoreTypes.IFriendInfo).account) {
+          scene = 'p2p'
+          to = (item as NimKitCoreTypes.IFriendInfo).account
+        } else if ((item as Team).teamId) {
+          scene = 'team'
+          to = (item as Team).teamId
+        } else {
+          throw Error('unknow scene')
+        }
 
-      await store.sessionStore.insertSessionActive(scene, to)
-      setVisible(false)
-      onClickChat?.()
-    }
+        await store.sessionStore.insertSessionActive(scene, to)
+        setVisible(false)
+        onClickChat?.()
+      },
+      [onClickChat, store.sessionStore]
+    )
 
     const handleOpenModal = async () => {
       setVisible(true)

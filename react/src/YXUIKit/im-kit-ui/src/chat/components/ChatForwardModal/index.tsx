@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Input, message } from 'antd'
 import {
   useTranslation,
@@ -91,31 +91,34 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = ({
     store.uiStore,
   ])
 
-  const itemAvatarRender = (data: SelectModalItemProps) => {
-    const { scene, to } = parseSessionId(data.key)
-    if (scene === 'p2p') {
-      return (
-        <ComplexAvatarContainer
-          prefix={commonPrefix}
-          canClick={false}
-          account={to}
-          size={32}
-        />
-      )
-    }
-    if (scene === 'team') {
-      const team = store.teamStore.teams.get(to)
-      return (
-        <CrudeAvatar
-          account={to}
-          avatar={team?.avatar || ''}
-          nick={team?.name || ''}
-          size={32}
-        />
-      )
-    }
-    return null
-  }
+  const itemAvatarRender = useCallback(
+    (data: SelectModalItemProps) => {
+      const { scene, to } = parseSessionId(data.key)
+      if (scene === 'p2p') {
+        return (
+          <ComplexAvatarContainer
+            prefix={commonPrefix}
+            canClick={false}
+            account={to}
+            size={32}
+          />
+        )
+      }
+      if (scene === 'team') {
+        const team = store.teamStore.teams.get(to)
+        return (
+          <CrudeAvatar
+            account={to}
+            avatar={team?.avatar || ''}
+            nick={team?.name || ''}
+            size={32}
+          />
+        )
+      }
+      return null
+    },
+    [commonPrefix, store.teamStore.teams]
+  )
 
   const handleCommentChange = (e: any) => {
     setComment(e.target.value)
@@ -146,15 +149,17 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = ({
     }
   }
 
+  const handleSearchChang = useCallback((value) => {
+    setIsSearching(!!value)
+  }, [])
+
   return (
     <SelectModal
       title={t('forwardText')}
       visible={visible}
       datasource={datasource}
       itemAvatarRender={itemAvatarRender}
-      onSearchChange={(value) => {
-        setIsSearching(!!value)
-      }}
+      onSearchChange={handleSearchChang}
       type="radio"
       min={1}
       okText={t('sendBtnText')}

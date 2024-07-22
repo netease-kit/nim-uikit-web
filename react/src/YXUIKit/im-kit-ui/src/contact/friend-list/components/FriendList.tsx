@@ -1,9 +1,9 @@
-import React, { FC, useMemo } from 'react'
+import React, { FC, useCallback, useMemo } from 'react'
 import { Utils, useTranslation } from '../../../common'
 import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import { FriendItem } from './FriendItem'
 import { Spin, Empty } from 'antd'
-// import { List } from 'react-virtualized'
+import { AutoSizer, List } from 'react-virtualized'
 
 export interface FriendListProps {
   list: NimKitCoreTypes.IFriendInfo[]
@@ -40,44 +40,29 @@ export const FriendList: FC<FriendListProps> = ({
       },
       false
     )
-    const res: (NimKitCoreTypes.IFriendInfo | string)[] = []
-    group.forEach((item) => {
-      if (!res.includes(item.key)) {
-        res.push(item.key)
-      }
-      res.push(...item.data)
-    })
-    return res
+
+    return group.map((item) => item.data).flat()
   }, [list])
 
-  // const rowHeight = (index: number) => {
-  //   if (typeof dataSource[index] === 'string') {
-  //     return 57
-  //   }
-  //   return 46
-  // }
+  const rowRenderer = useCallback(
+    ({ index, key, style }) => {
+      const item = dataSource[index]
 
-  // const rowRenderer = (data: any) => {
-  //   const item = dataSource[data.index]
-  //   // console.log('rowRenderer:', key, index, item)
-  //   if (typeof item === 'string') {
-  //     return (
-  //       <div className={`${_prefix}-subtitle`} key={item}>
-  //         {item}
-  //       </div>
-  //     )
-  //   }
-  //   return (
-  //     <FriendItem
-  //       key={item.account}
-  //       account={item.account}
-  //       onItemClick={onItemClick}
-  //       afterSendMsgClick={afterSendMsgClick}
-  //       prefix={prefix}
-  //       commonPrefix={commonPrefix}
-  //     />
-  //   )
-  // }
+      return (
+        <div style={style} key={key}>
+          <FriendItem
+            key={item.account}
+            account={item.account}
+            onItemClick={onItemClick}
+            afterSendMsgClick={afterSendMsgClick}
+            prefix={prefix}
+            commonPrefix={commonPrefix}
+          />
+        </div>
+      )
+    },
+    [afterSendMsgClick, commonPrefix, dataSource, onItemClick, prefix]
+  )
 
   return (
     <div className={`${_prefix}-wrapper`}>
@@ -96,33 +81,18 @@ export const FriendList: FC<FriendListProps> = ({
             <Empty style={{ marginTop: 10 }} />
           )
         ) : (
-          // <List
-          //   width={810}
-          //   height={469}
-          //   rowCount={dataSource.length}
-          //   rowHeight={rowHeight}
-          //   rowRenderer={rowRenderer}
-          //   containerStyle={{ position: 'static' }}
-          // ></List>
-          dataSource.map((item) => {
-            if (typeof item === 'string') {
-              return (
-                <div className={`${_prefix}-subtitle`} key={item}>
-                  {item}
-                </div>
-              )
-            }
-            return (
-              <FriendItem
-                key={item.account}
-                account={item.account}
-                onItemClick={onItemClick}
-                afterSendMsgClick={afterSendMsgClick}
-                prefix={prefix}
-                commonPrefix={commonPrefix}
+          <AutoSizer>
+            {({ height, width }) => (
+              <List
+                height={height}
+                overscanRowCount={10}
+                rowCount={dataSource.length}
+                rowHeight={46}
+                rowRenderer={rowRenderer}
+                width={width}
               />
-            )
-          })
+            )}
+          </AutoSizer>
         )}
       </div>
     </div>

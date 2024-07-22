@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { message } from 'antd'
 import {
   useTranslation,
@@ -33,28 +33,35 @@ const ChatTeamMemberModal: React.FC<ChatTeamMemberModalProps> = observer(
       .getTeamMember(teamId)
       .filter((item) => item.account !== store.userStore.myUserInfo.account)
 
-    const datasource = teamMembers.map((item) => ({
-      key: item.account,
-      label: store.uiStore.getAppellation({
-        account: item.account,
-        teamId: item.teamId,
-      }),
-    }))
+    const datasource = useMemo(
+      () =>
+        teamMembers.map((item) => ({
+          key: item.account,
+          label: store.uiStore.getAppellation({
+            account: item.account,
+            teamId: item.teamId,
+          }),
+        })),
+      [store.uiStore, teamMembers]
+    )
 
     const teamManagerAccounts = teamMembers
       .filter((item) => item.type === 'manager')
       .map((item) => item.account)
 
-    const itemAvatarRender = (data: SelectModalItemProps) => {
-      return (
-        <ComplexAvatarContainer
-          account={data.key}
-          canClick={false}
-          prefix={commonPrefix}
-          size={32}
-        />
-      )
-    }
+    const itemAvatarRender = useCallback(
+      (data: SelectModalItemProps) => {
+        return (
+          <ComplexAvatarContainer
+            account={data.key}
+            canClick={false}
+            prefix={commonPrefix}
+            size={32}
+          />
+        )
+      },
+      [commonPrefix]
+    )
 
     const handleOk = async (data: SelectModalItemProps[]) => {
       try {
