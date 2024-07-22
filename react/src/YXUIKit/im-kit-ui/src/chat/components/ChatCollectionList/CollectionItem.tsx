@@ -104,6 +104,8 @@ const CollectionItem: React.FC<CollectionItemProps> = ({
       <Dropdown
         trigger={['contextMenu']}
         overlay={<Menu onClick={handleMenuClick} items={menuItems} />}
+        getPopupContainer={(triggerNode) => triggerNode}
+        overlayClassName={`${_prefix}-dropdown`}
       >
         <div className={`${_prefix}-wrap`}>
           <ParseSession msg={msg} prefix={commonPrefix} />

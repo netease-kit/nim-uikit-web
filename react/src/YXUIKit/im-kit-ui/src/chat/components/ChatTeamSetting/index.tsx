@@ -48,7 +48,11 @@ export interface ChatTeamSettingProps {
   afterSendMsgClick?: () => void
   setNavHistoryStack: (stack: HistoryStack[]) => void
   renderTeamMemberItem?: (
-    params: GroupItemProps
+    params: GroupItemProps & {
+      renderKey: string
+      renderIndex: number
+      renderStyle: React.CSSProperties
+    }
   ) => JSX.Element | null | undefined
 
   prefix?: string

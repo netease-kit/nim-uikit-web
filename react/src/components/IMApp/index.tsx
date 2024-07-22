@@ -295,15 +295,40 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
     ]
   )
 
+  const goChat = useCallback(() => {
+    setModel('chat')
+  }, [])
+
+  const afterAcceptApplyFriend = useCallback(
+    (data) => {
+      const textMsg = nim.V2NIMMessageCreator.createTextMessage(
+        t('passFriendAskText')
+      )
+
+      store.msgStore
+        .sendMessageActive({
+          msg: textMsg,
+          conversationId: nim.V2NIMConversationIdUtil.p2pConversationId(
+            data.operatorAccountId
+          ),
+        })
+        .then(() => {
+          setModel('chat')
+        })
+    },
+    [nim.V2NIMConversationIdUtil, nim.V2NIMMessageCreator, store.msgStore]
+  )
+
+
   const renderContent = useCallback(() => {
     return (
       <>
         <div className="header">
           <div className="search">
-            <SearchContainer onClickChat={() => setModel('chat')} />
+            <SearchContainer onClickChat={goChat} />
           </div>
           <div className="add">
-            <AddContainer onClickChat={() => setModel('chat')} />
+            <AddContainer onClickChat={goChat} />
           </div>
         </div>
         <div className="content">
@@ -316,7 +341,7 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
                 className={classNames('chat-icon', {
                   active: model === 'chat',
                 })}
-                onClick={() => setModel('chat')}
+                onClick={goChat}
               >
                 <i className="iconfont">&#xe6c9;</i>
                 <div className="icon-label">{t('session')}</div>
@@ -382,25 +407,9 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
               </div>
               <div className="right-content">
                 <ContactInfoContainer
-                  afterSendMsgClick={() => setModel('chat')}
-                  onGroupItemClick={() => setModel('chat')}
-                  afterAcceptApplyFriend={(data) => {
-                    const textMsg = nim.V2NIMMessageCreator.createTextMessage(
-                      t('passFriendAskText')
-                    )
-
-                    store.msgStore
-                      .sendMessageActive({
-                        msg: textMsg,
-                        conversationId:
-                          nim.V2NIMConversationIdUtil.p2pConversationId(
-                            data.operatorAccountId
-                          ),
-                      })
-                      .then(() => {
-                        setModel('chat')
-                      })
-                  }}
+                  afterSendMsgClick={goChat}
+                  onGroupItemClick={goChat}
+                  afterAcceptApplyFriend={afterAcceptApplyFriend}
                 />
               </div>
             </div>

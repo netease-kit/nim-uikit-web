@@ -1,10 +1,11 @@
-import React, { FC, useMemo, useState } from 'react'
+import React, { FC, useCallback, useMemo, useState } from 'react'
 import { Divider, Spin, Tabs } from 'antd'
 import { FriendSelectItem } from './FriendSelectItem'
 import { groupByPy } from '../../../utils'
 import { useTranslation } from '../../hooks/useTranslation'
 import { useStateContext } from '../../hooks/useStateContext'
 import { observer } from 'mobx-react'
+import { AutoSizer, List } from 'react-virtualized'
 
 const emptyArr = []
 
@@ -77,7 +78,10 @@ export const FriendSelect: FC<FriendSelectUIProps> = observer(
             firstKey: 'appellation',
           },
           false
-        ),
+        )
+          .map((item) => item.data)
+          .flat()
+          .filter((item) => item.visible),
       }
     }, [store.uiStore, store.relationStore.blacklist, store.aiUserStore, tab])
 
@@ -87,17 +91,22 @@ export const FriendSelect: FC<FriendSelectUIProps> = observer(
       )
     }, [dataSource.arrData, selectedAccounts])
 
-    const handleSelect = (account: string, selected: boolean) => {
-      let _selectedAccounts: string[] = []
+    const handleSelect = useCallback(
+      (account: string, selected: boolean) => {
+        let _selectedAccounts: string[] = []
 
-      if (selected && !selectedAccounts.includes(account)) {
-        _selectedAccounts = selectedAccounts.concat(account)
-      } else if (!selected && selectedAccounts.includes(account)) {
-        _selectedAccounts = selectedAccounts.filter((item) => item !== account)
-      }
+        if (selected && !selectedAccounts.includes(account)) {
+          _selectedAccounts = selectedAccounts.concat(account)
+        } else if (!selected && selectedAccounts.includes(account)) {
+          _selectedAccounts = selectedAccounts.filter(
+            (item) => item !== account
+          )
+        }
 
-      onSelect(_selectedAccounts)
-    }
+        onSelect(_selectedAccounts)
+      },
+      [onSelect, selectedAccounts]
+    )
 
     const selectedList = useMemo(() => {
       return dataSource.arrData.filter((item) =>
@@ -132,6 +141,38 @@ export const FriendSelect: FC<FriendSelectUIProps> = observer(
       ) : null
     }
 
+    const rowRenderer = useCallback(
+      ({ index, key, style }) => {
+        const item = dataSource.groupByPyData[index]
+
+        return (
+          <div style={style} key={key}>
+            <FriendSelectItem
+              key={item.account}
+              isSelected={selectedAccounts.includes(item.account)}
+              onSelect={handleSelect}
+              canSelect={true}
+              disabled={
+                disabledAccounts.includes(item.account) ||
+                (selectedAccounts.length >= max &&
+                  !selectedAccounts.includes(item.account))
+              }
+              prefix={prefix}
+              {...item}
+            />
+          </div>
+        )
+      },
+      [
+        dataSource.groupByPyData,
+        disabledAccounts,
+        handleSelect,
+        max,
+        prefix,
+        selectedAccounts,
+      ]
+    )
+
     return (
       <div className={`${_prefix}-wrapper`}>
         {loading ? (
@@ -141,34 +182,18 @@ export const FriendSelect: FC<FriendSelectUIProps> = observer(
             <div className={`${_prefix}-left`}>
               {renderTab()}
               <div className={`${_prefix}-list`}>
-                {dataSource.groupByPyData.map(({ key, data }) => {
-                  if (data.every((item) => !item.visible)) {
-                    return null
-                  }
-
-                  return (
-                    <div key={key}>
-                      <div className={`${_prefix}-subtitle-item`}>{key}</div>
-                      {data
-                        .filter((item) => item.visible)
-                        .map((item) => (
-                          <FriendSelectItem
-                            key={`${key}_${item.account}`}
-                            isSelected={selectedAccounts.includes(item.account)}
-                            onSelect={handleSelect}
-                            canSelect={true}
-                            disabled={
-                              disabledAccounts.includes(item.account) ||
-                              (selectedAccounts.length >= max &&
-                                !selectedAccounts.includes(item.account))
-                            }
-                            prefix={prefix}
-                            {...item}
-                          />
-                        ))}
-                    </div>
-                  )
-                })}
+                <AutoSizer>
+                  {({ height, width }) => (
+                    <List
+                      height={height}
+                      overscanRowCount={10}
+                      rowCount={dataSource.groupByPyData.length}
+                      rowHeight={48}
+                      rowRenderer={rowRenderer}
+                      width={width}
+                    />
+                  )}
+                </AutoSizer>
               </div>
             </div>
             <Divider className={`${_prefix}-divider`} type="vertical" />

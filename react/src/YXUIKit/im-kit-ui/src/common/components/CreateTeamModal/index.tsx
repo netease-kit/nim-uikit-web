@@ -1,5 +1,5 @@
 import { Button, message, Modal, Input } from 'antd'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   urls,
   FriendSelect,
@@ -86,6 +86,10 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = observer(
       setCreating(false)
     }
 
+    const handleSelect = useCallback((accounts: string[]) => {
+      setSelectedList(accounts)
+    }, [])
+
     const footer = (
       <div className={`${_prefix}-footer`}>
         <Button onClick={onCancel}>{t('cancelText')}</Button>
@@ -146,9 +150,7 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = observer(
         <div className={`${_prefix}-group-friendList`}>
           <FriendSelect
             disabledAccounts={defaultAccounts}
-            onSelect={(accounts) => {
-              setSelectedList(accounts)
-            }}
+            onSelect={handleSelect}
             max={200}
             selectedAccounts={selectedList}
             prefix={prefix}

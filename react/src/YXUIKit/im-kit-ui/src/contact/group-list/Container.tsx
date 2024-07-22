@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useCallback } from 'react'
 import { GroupList } from './components/GroupList'
 import { useEventTracking, useStateContext } from '../../common'
 import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
@@ -42,13 +42,16 @@ export const GroupListContainer: FC<GroupListContainerProps> = observer(
       imVersion: sdkPkg.version,
     })
 
-    const handleItemClick = async (team: V2NIMTeam) => {
-      await store.conversationStore.insertConversationActive(
-        V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
-        team.teamId
-      )
-      onItemClick?.(team)
-    }
+    const handleItemClick = useCallback(
+      async (team: V2NIMTeam) => {
+        await store.conversationStore.insertConversationActive(
+          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
+          team.teamId
+        )
+        onItemClick?.(team)
+      },
+      [onItemClick, store.conversationStore]
+    )
 
     return (
       <GroupList

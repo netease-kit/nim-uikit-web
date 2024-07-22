@@ -317,9 +317,9 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = observer(
       }
     }
 
-    const handleSelectChange = (value: SelectModalItemProps[]) => {
+    const handleSelectChange = useCallback((value: SelectModalItemProps[]) => {
       setSelected(value.map((item) => item.key))
-    }
+    }, [])
 
     const handleSelectDelete = (value: SelectModalItemProps) => {
       setSelected(selected.filter((item) => item !== value.key))

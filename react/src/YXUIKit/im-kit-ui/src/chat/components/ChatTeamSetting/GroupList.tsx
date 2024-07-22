@@ -1,10 +1,11 @@
-import React, { FC, useEffect, useMemo, useState } from 'react'
+import React, { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { GroupItem, GroupItemProps } from './GroupItem'
 import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
 import { Input } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
 import { useStateContext, useTranslation } from '../../../common'
 import { observer } from 'mobx-react'
+import { AutoSizer, List } from 'react-virtualized'
 
 export interface GroupListProps {
   myMemberInfo: V2NIMTeamMember
@@ -12,7 +13,11 @@ export interface GroupListProps {
   onRemoveTeamMemberClick: (member: V2NIMTeamMember) => void
   afterSendMsgClick?: () => void
   renderTeamMemberItem?: (
-    params: GroupItemProps
+    params: GroupItemProps & {
+      renderKey: string
+      renderIndex: number
+      renderStyle: React.CSSProperties
+    }
   ) => JSX.Element | null | undefined
   prefix?: string
   commonPrefix?: string
@@ -62,6 +67,44 @@ const GroupList: FC<GroupListProps> = observer(
       return _sortedMembers
     }, [members, groupSearchText, store.uiStore])
 
+    const rowRenderer = useCallback(
+      ({ index, key, style }) => {
+        const item = showMembers[index]
+        const itemProps: GroupItemProps & {
+          renderKey: string
+          renderIndex: number
+          renderStyle: React.CSSProperties
+        } = {
+          member: item,
+          onRemoveTeamMemberClick,
+          afterSendMsgClick,
+          myMemberInfo,
+          prefix,
+          commonPrefix,
+          renderIndex: index,
+          renderKey: key,
+          renderStyle: style,
+        }
+
+        return (
+          renderTeamMemberItem?.(itemProps) ?? (
+            <div key={key} style={style}>
+              <GroupItem key={item.accountId} {...itemProps} />
+            </div>
+          )
+        )
+      },
+      [
+        afterSendMsgClick,
+        commonPrefix,
+        myMemberInfo,
+        onRemoveTeamMemberClick,
+        prefix,
+        renderTeamMemberItem,
+        showMembers,
+      ]
+    )
+
     return (
       <div className={`${_prefix}-wrap`}>
         <Input
@@ -72,26 +115,24 @@ const GroupList: FC<GroupListProps> = observer(
           placeholder={t('searchTeamMemberPlaceholder')}
           onChange={(e) => handleSearch(e.target.value)}
         />
-        {showMembers.length ? (
-          showMembers.map((item) => {
-            const itemProps = {
-              member: item,
-              onRemoveTeamMemberClick,
-              afterSendMsgClick,
-              myMemberInfo,
-              prefix,
-              commonPrefix,
-            }
-
-            return (
-              renderTeamMemberItem?.(itemProps) ?? (
-                <GroupItem key={item.accountId} {...itemProps} />
-              )
-            )
-          })
-        ) : (
-          <div className={`${_prefix}-no-result`}>{t('searchNoResText')}</div>
-        )}
+        <div className={`${_prefix}-list`}>
+          {showMembers.length ? (
+            <AutoSizer>
+              {({ height, width }) => (
+                <List
+                  height={height}
+                  overscanRowCount={10}
+                  rowCount={showMembers.length}
+                  rowHeight={60}
+                  rowRenderer={rowRenderer}
+                  width={width}
+                />
+              )}
+            </AutoSizer>
+          ) : (
+            <div className={`${_prefix}-no-result`}>{t('searchNoResText')}</div>
+          )}
+        </div>
       </div>
     )
   }

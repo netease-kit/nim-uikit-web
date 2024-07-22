@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { message, Modal } from 'antd'
 import { FriendSelect, useTranslation } from '../../../common'
 // import { SearchInput } from '@x-kit-react/search-kit'
@@ -52,6 +52,10 @@ const ChatAddMemebers: React.FC<ChatAddMemebersProps> = ({
     setSelectedAccounts(defaultAccounts)
   }
 
+  const handleSelect = useCallback((selectedList: string[]) => {
+    setSelectedAccounts(selectedList)
+  }, [])
+
   return (
     <Modal
       className={`${_prefix}-wrap`}
@@ -69,7 +73,7 @@ const ChatAddMemebers: React.FC<ChatAddMemebersProps> = ({
         <FriendSelect
           max={200}
           prefix={commonPrefix}
-          onSelect={(selectedList) => setSelectedAccounts(selectedList)}
+          onSelect={handleSelect}
           selectedAccounts={selectedAccounts}
           disabledAccounts={defaultAccounts}
         />
