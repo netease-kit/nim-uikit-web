@@ -166,6 +166,23 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     >(undefined)
     const [translateOpen, setTranslateOpen] = useState(false)
 
+    const resetSettingState = useCallback(() => {
+      setAction(undefined)
+      setGroupCreateVisible(false)
+      setSettingDrawerVisible(false)
+    }, [])
+
+    const resetState = useCallback(() => {
+      resetSettingState()
+      setInputValue('')
+      setLoadingMore(false)
+      setNoMore(false)
+      setReceiveMsgBtnVisible(false)
+      setForwardMessage(undefined)
+      setTranslateOpen(false)
+      store.aiUserStore.resetAIProxy()
+    }, [store.aiUserStore, resetSettingState])
+
     const getHistory = useCallback(
       async (endTime: number, lastMsgId?: string) => {
         try {
@@ -568,7 +585,6 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       },
       [
         msgOperMenu,
-        mentionMembers,
         store.msgStore,
         store.userStore.users,
         store.uiStore,
@@ -608,23 +624,6 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       store.msgStore,
       store.userStore.myUserInfo.accountId,
     ])
-
-    const resetSettingState = () => {
-      setAction(undefined)
-      setGroupCreateVisible(false)
-      setSettingDrawerVisible(false)
-    }
-
-    const resetState = useCallback(() => {
-      resetSettingState()
-      setInputValue('')
-      setLoadingMore(false)
-      setNoMore(false)
-      setReceiveMsgBtnVisible(false)
-      setForwardMessage(undefined)
-      setTranslateOpen(false)
-      store.aiUserStore.resetAIProxy()
-    }, [store.aiUserStore])
 
     const handleForwardModalSend = () => {
       scrollToBottom()

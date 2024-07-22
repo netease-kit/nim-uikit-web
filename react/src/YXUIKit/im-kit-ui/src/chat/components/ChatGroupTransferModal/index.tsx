@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { message } from 'antd'
 import {
   ComplexAvatarContainer,
@@ -54,9 +54,9 @@ const GroupTransferModal: React.FC<GroupActionModalProps> = observer(
       }
     }
 
-    const handleSelect = (value: SelectModalItemProps[]) => {
+    const handleSelect = useCallback((value: SelectModalItemProps[]) => {
       setSelectedMemberId(value[0].key)
-    }
+    }, [])
 
     const datasource: SelectModalItemProps[] = useMemo(() => {
       const aiUsers = store.aiUserStore.getAIUserList()
@@ -81,16 +81,19 @@ const GroupTransferModal: React.FC<GroupActionModalProps> = observer(
       return _showMembers
     }, [members, store.uiStore, store.aiUserStore])
 
-    const itemAvatarRender = (data: SelectModalItemProps) => {
-      return (
-        <ComplexAvatarContainer
-          prefix={commonPrefix}
-          canClick={false}
-          account={data.key}
-          size={32}
-        />
-      )
-    }
+    const itemAvatarRender = useCallback(
+      (data: SelectModalItemProps) => {
+        return (
+          <ComplexAvatarContainer
+            prefix={commonPrefix}
+            canClick={false}
+            account={data.key}
+            size={32}
+          />
+        )
+      },
+      [commonPrefix]
+    )
 
     return (
       <SelectModal

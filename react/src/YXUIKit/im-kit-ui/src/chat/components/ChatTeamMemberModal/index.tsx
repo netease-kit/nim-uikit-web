@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { message } from 'antd'
 import {
   useTranslation,
@@ -36,15 +36,21 @@ const ChatTeamMemberModal: React.FC<ChatTeamMemberModalProps> = observer(
 
     const aiUsers = store.aiUserStore.getAIUserList()
 
-    const datasource = teamMembers
-      .filter((item) => aiUsers.every((ai) => ai.accountId !== item.accountId))
-      .map((item) => ({
-        key: item.accountId,
-        label: store.uiStore.getAppellation({
-          account: item.accountId,
-          teamId: item.teamId,
-        }),
-      }))
+    const datasource = useMemo(
+      () =>
+        teamMembers
+          .filter((item) =>
+            aiUsers.every((ai) => ai.accountId !== item.accountId)
+          )
+          .map((item) => ({
+            key: item.accountId,
+            label: store.uiStore.getAppellation({
+              account: item.accountId,
+              teamId: item.teamId,
+            }),
+          })),
+      [aiUsers, store.uiStore, teamMembers]
+    )
 
     const teamManagerAccounts = teamMembers
       .filter(
@@ -54,16 +60,19 @@ const ChatTeamMemberModal: React.FC<ChatTeamMemberModalProps> = observer(
       )
       .map((item) => item.accountId)
 
-    const itemAvatarRender = (data: SelectModalItemProps) => {
-      return (
-        <ComplexAvatarContainer
-          account={data.key}
-          canClick={false}
-          prefix={commonPrefix}
-          size={32}
-        />
-      )
-    }
+    const itemAvatarRender = useCallback(
+      (data: SelectModalItemProps) => {
+        return (
+          <ComplexAvatarContainer
+            account={data.key}
+            canClick={false}
+            prefix={commonPrefix}
+            size={32}
+          />
+        )
+      },
+      [commonPrefix]
+    )
 
     const handleOk = async (data: SelectModalItemProps[]) => {
       try {

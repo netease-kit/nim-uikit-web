@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useTranslation, useEventTracking, useStateContext } from '../../common'
 import { SearchOutlined } from '@ant-design/icons'
 import SearchModal, { SectionListItem } from './components/SearchModal'
@@ -59,29 +59,32 @@ export const SearchContainer: React.FC<SearchContainerProps> = observer(
 
     const [visible, setVisible] = useState(false)
 
-    const handleChat = async (item: SectionListItem) => {
-      let conversationType: V2NIMConversationType
-      let receiverId = ''
+    const handleChat = useCallback(
+      async (item: SectionListItem) => {
+        let conversationType: V2NIMConversationType
+        let receiverId = ''
 
-      if ((item as V2NIMFriend & V2NIMUser).accountId) {
-        conversationType =
-          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
-        receiverId = (item as V2NIMFriend & V2NIMUser).accountId
-      } else if ((item as V2NIMTeam).teamId) {
-        conversationType =
-          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
-        receiverId = (item as V2NIMTeam).teamId
-      } else {
-        throw Error('unknow scene')
-      }
+        if ((item as V2NIMFriend & V2NIMUser).accountId) {
+          conversationType =
+            V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
+          receiverId = (item as V2NIMFriend & V2NIMUser).accountId
+        } else if ((item as V2NIMTeam).teamId) {
+          conversationType =
+            V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
+          receiverId = (item as V2NIMTeam).teamId
+        } else {
+          throw Error('unknow scene')
+        }
 
-      await store.conversationStore.insertConversationActive(
-        conversationType,
-        receiverId
-      )
-      setVisible(false)
-      onClickChat?.()
-    }
+        await store.conversationStore.insertConversationActive(
+          conversationType,
+          receiverId
+        )
+        setVisible(false)
+        onClickChat?.()
+      },
+      [onClickChat, store.conversationStore]
+    )
 
     const handleOpenModal = async () => {
       setVisible(true)

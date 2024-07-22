@@ -1,7 +1,8 @@
-import React, { FC, useMemo } from 'react'
+import React, { FC, useCallback, useMemo } from 'react'
 import { Utils, useStateContext, useTranslation } from '../../../common'
 import { FriendItem } from './FriendItem'
 import { Spin, Empty } from 'antd'
+import { AutoSizer, List } from 'react-virtualized'
 
 export interface FriendListProps {
   accounts: string[]
@@ -53,8 +54,40 @@ export const FriendList: FC<FriendListProps> = ({
 
       res.push(...item.data)
     })
-    return res
+
+    return res.filter((item) => typeof item !== 'string') as {
+      account: string
+      appellation: string
+    }[]
   }, [accounts, store.uiStore])
+
+  const rowRenderer = useCallback(
+    ({ index, key, style }) => {
+      const item = dataSource[index]
+
+      // if (typeof item === 'string') {
+      //     return (
+      //       <div className={`${_prefix}-subtitle`} key={item}>
+      //         {item}
+      //       </div>
+      //     )
+      //   }
+
+      return (
+        <div style={style} key={key}>
+          <FriendItem
+            key={item.account}
+            account={item.account}
+            onItemClick={onItemClick}
+            afterSendMsgClick={afterSendMsgClick}
+            prefix={prefix}
+            commonPrefix={commonPrefix}
+          />
+        </div>
+      )
+    },
+    [afterSendMsgClick, commonPrefix, dataSource, onItemClick, prefix]
+  )
 
   return (
     <div className={`${_prefix}-wrapper`}>
@@ -73,26 +106,18 @@ export const FriendList: FC<FriendListProps> = ({
             <Empty style={{ marginTop: 10 }} />
           )
         ) : (
-          dataSource.map((item) => {
-            if (typeof item === 'string') {
-              return (
-                <div className={`${_prefix}-subtitle`} key={item}>
-                  {item}
-                </div>
-              )
-            }
-
-            return (
-              <FriendItem
-                key={item.account}
-                account={item.account}
-                onItemClick={onItemClick}
-                afterSendMsgClick={afterSendMsgClick}
-                prefix={prefix}
-                commonPrefix={commonPrefix}
+          <AutoSizer>
+            {({ height, width }) => (
+              <List
+                height={height}
+                overscanRowCount={10}
+                rowCount={dataSource.length}
+                rowHeight={46}
+                rowRenderer={rowRenderer}
+                width={width}
               />
-            )
-          })
+            )}
+          </AutoSizer>
         )}
       </div>
     </div>

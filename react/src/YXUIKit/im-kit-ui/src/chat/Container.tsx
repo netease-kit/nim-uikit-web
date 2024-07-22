@@ -115,7 +115,11 @@ export interface ChatContainerProps {
    自定义渲染群组成员 item
    */
   renderTeamMemberItem?: (
-    params: GroupItemProps
+    params: GroupItemProps & {
+      renderKey: string
+      renderIndex: number
+      renderStyle: React.CSSProperties
+    }
   ) => JSX.Element | null | undefined
   /**
    自定义渲染消息头像
