@@ -19,6 +19,8 @@ export interface ChatAITranslateProps {
   prefix?: string
 }
 
+const defaultLangs = ['英语', '日语', '韩语', '俄语', '法语', '德语']
+
 export const ChatAITranslate: FC<ChatAITranslateProps> = observer(
   ({ inputValue, setInputValue, onClose, visible, prefix = 'chat' }) => {
     const _prefix = `${prefix}-ai-translate`
@@ -28,7 +30,11 @@ export const ChatAITranslate: FC<ChatAITranslateProps> = observer(
 
     const aiErrorMap = getAIErrorMap(t)
 
-    const options = store.aiUserStore.getAITranslateLangs().map((lang) => ({
+    const options = (
+      store.aiUserStore.getAITranslateLangs().length
+        ? store.aiUserStore.getAITranslateLangs()
+        : defaultLangs
+    ).map((lang) => ({
       label: lang,
       value: lang,
     }))
@@ -37,10 +43,10 @@ export const ChatAITranslate: FC<ChatAITranslateProps> = observer(
       ? store.aiUserStore.aiResMsgs[0]
       : ''
 
-    const [selectedLang, setSelectedLang] = useState(options[0].value)
+    const [selectedLang, setSelectedLang] = useState(options[0]?.value || '')
 
     const resetState = () => {
-      setSelectedLang(options[0].value)
+      setSelectedLang(options[0]?.value || '')
     }
 
     useEffect(() => {

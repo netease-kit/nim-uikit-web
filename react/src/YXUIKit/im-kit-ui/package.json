@@ -1,6 +1,6 @@
 {
   "name": "@xkit-yx/im-kit-ui",
-  "version": "10.3.1",
+  "version": "10.3.3",
   "description": "云信即时通讯组件",
   "license": "MIT",
   "main": "lib/index.js",
@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.0.1",
-    "@xkit-yx/im-store-v2": "^0.2.0",
+    "@xkit-yx/im-store-v2": "^0.2.1",
     "@xkit-yx/utils": "^0.7.1",
     "antd": "^4.16.3",
     "mobx": "^6.6.1",
@@ -63,5 +63,5 @@
     "react-string-replace": "^1.1.0",
     "react-virtualized": "^9.22.5"
   },
-  "gitHead": "45e04861b1ab80e65b14e6b57c9fd1de60a9a1b0"
+  "gitHead": "92925c6ca2358ac833adfd557c54b79e0345a01e"
 }
