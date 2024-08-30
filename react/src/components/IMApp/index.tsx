@@ -54,12 +54,18 @@ import {
 import { LocalOptions } from '@xkit-yx/im-store-v2/dist/types/types'
 import V2NIM, { V2NIMConst } from 'nim-web-sdk-ng'
 import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMAIService'
-import { RenderP2pCustomMessageOptions } from '@xkit-yx/im-kit-ui/src/chat/components/ChatP2pMessageList'
+import {
+  NIMInitializeOptions,
+  NIMOtherOptions,
+} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/NIMInterface'
+import { RenderP2pCustomMessageOptions } from '@xkit-yx/im-kit-ui/es/chat/components/ChatP2pMessageList'
 
 interface IMContainerProps {
   appkey: string //传入您的App Key
   account: string // 传入您的云信IM账号
   token: string // 传入您的Token
+  initOptions?: NIMInitializeOptions
+  otherOptions?: NIMOtherOptions
   onLogout?: () => void
   changeLanguage?: (value: 'zh' | 'en') => void
 }
@@ -319,7 +325,6 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
     [nim.V2NIMConversationIdUtil, nim.V2NIMMessageCreator, store.msgStore]
   )
 
-
   const renderContent = useCallback(() => {
     return (
       <>
@@ -341,7 +346,7 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
                 className={classNames('chat-icon', {
                   active: model === 'chat',
                 })}
-                onClick={goChat}
+                onClick={() => setModel('chat')}
               >
                 <i className="iconfont">&#xe6c9;</i>
                 <div className="icon-label">{t('session')}</div>
@@ -430,11 +435,10 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
     teamMsgReceiptVisible,
     renderP2pCustomMessage,
     store.sysMsgStore,
-    store.msgStore,
-    nim.V2NIMMessageCreator,
-    nim.V2NIMConversationIdUtil,
     needMention,
     teamManagerVisible,
+    afterAcceptApplyFriend,
+    goChat,
   ])
 
   return (
@@ -456,7 +460,7 @@ const IMApp: React.FC<IMAppProps> = observer((props) => {
 })
 
 const IMAppContainer: React.FC<IMContainerProps> = (props) => {
-  const { appkey, account, token, onLogout } = props
+  const { appkey, account, token, initOptions, otherOptions, onLogout } = props
   // 国际化语言类型
   const [curLanguage, setCurLanguage] = useState<'zh' | 'en'>('zh')
   // 添加好友是否需要验证
@@ -566,26 +570,41 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
   }, [])
 
   const nim = useMemo(() => {
-    const nim = V2NIM.getInstance({
-      appkey,
-      account,
-      token,
-      debugLevel: 'debug',
-      apiVersion: 'v2',
-    })
+    console.log(
+      'V2NIM.getInstance: ',
+      {
+        appkey,
+        debugLevel: 'debug',
+        apiVersion: 'v2',
+        ...initOptions,
+      },
+      otherOptions
+    )
+    const nim = V2NIM.getInstance(
+      {
+        appkey,
+        debugLevel: 'debug',
+        apiVersion: 'v2',
+        ...initOptions,
+      },
+      otherOptions
+    )
 
     return nim
-  }, [account, token, appkey])
+  }, [appkey, initOptions, otherOptions])
 
   useEffect(() => {
-    nim.V2NIMLoginService.login(account, token, {
-      retryCount: 5,
-    })
-
-    return () => {
-      nim.V2NIMLoginService.logout()
+    if (account && token) {
+      nim.V2NIMLoginService.login(account, token, {
+        retryCount: 5,
+      })
     }
-  }, [nim, account, token])
+  }, [account, token, nim.V2NIMLoginService])
+
+  const handleLogout = useCallback(async () => {
+    await nim.V2NIMLoginService.logout()
+    onLogout?.()
+  }, [onLogout, nim.V2NIMLoginService])
 
   return (
     <ConfigProvider locale={curLanguage === 'zh' ? zhCN : enUS}>
@@ -598,7 +617,7 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
             singleton={true}
           >
             <IMApp
-              onLogout={onLogout}
+              onLogout={handleLogout}
               appkey={appkey}
               account={account}
               locale={curLanguage}
