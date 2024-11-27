@@ -1,7 +1,7 @@
-body{
-  background: #d8dee5;
-}
 .im-app-example {
+  width: 100vw;
+  height: 100vh;
+  background: #d8dee5;
   .container {
     width: 1070px;
     height: 670px;
@@ -12,6 +12,8 @@ body{
     left: 50%;
     transform: translate(-50%, -50%);
     background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
   }
 
   .header {
@@ -38,7 +40,9 @@ body{
   }
 
   .left {
+    flex: 0 0 60px;
     width: 60px;
+    box-sizing: border-box;
     border-right: 1px solid #e8e8e8;
     display: flex;
     flex-direction: column;
@@ -76,6 +80,7 @@ body{
     font-size: 22px;
     color: rgba(0, 0, 0, 0.6);
     height: 45px;
+    width: 36px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -114,7 +119,7 @@ body{
     width: 300px;
     height: 102px;
     left: 10px;
-    top: 510px;
+    top: 490px;
     padding: 4px 4px 4px 40px;
     cursor: pointer;
 
@@ -193,9 +198,20 @@ body{
 
   .right {
     flex: 1;
+  }
+  .right-content-wrap {
+    height: 574px;
     display: flex;
+    box-sizing: border-box;
   }
 
+  .security-tip {
+    background: #fff5e1;
+    height: 36px;
+    text-align: center;
+    line-height: 36px;
+    color: #eb9718;
+  }
   .right-list {
     width: 200px;
     border-right: 1px solid #e8e8e8;

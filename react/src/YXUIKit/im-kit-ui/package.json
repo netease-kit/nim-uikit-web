@@ -1,6 +1,6 @@
 {
   "name": "@xkit-yx/im-kit-ui",
-  "version": "10.3.3",
+  "version": "10.5.1",
   "description": "云信即时通讯组件",
   "license": "MIT",
   "main": "lib/index.js",

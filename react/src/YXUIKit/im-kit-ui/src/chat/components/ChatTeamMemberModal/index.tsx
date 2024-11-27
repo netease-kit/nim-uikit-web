@@ -8,7 +8,7 @@ import {
 } from '../../../common'
 import { observer } from 'mobx-react'
 import { SelectModalItemProps } from '../../../common/components/SelectModal'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 export interface ChatTeamMemberModalProps {
   visible: boolean
@@ -124,6 +124,8 @@ const ChatTeamMemberModal: React.FC<ChatTeamMemberModalProps> = observer(
         type="checkbox"
         max={localOptions.teamManagerLimit}
         leftTitle={t('teamMemberText')}
+        cancelText={t('cancelText')}
+        okText={t('okText')}
         onOk={handleOk}
         onCancel={onCancel}
         prefix={commonPrefix}

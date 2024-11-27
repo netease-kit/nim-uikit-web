@@ -2,6 +2,7 @@ import React, { FC } from 'react'
 import { Select, Modal, Form } from 'antd'
 import '../index.less'
 import { t } from '../util'
+
 interface IProps {
   isSettingModalOpen: boolean
   handleSettingCancel: () => void
@@ -31,20 +32,6 @@ const SettingModal: FC<IProps> = ({
       width={locale === 'zh' ? 420 : 460}
     >
       <Form labelCol={{ span: locale === 'zh' ? 12 : 14 }}>
-        {/* <Form.Item label={t('sdkVersionSelectionText')}>
-          <Select
-            options={[
-              { label: 'IM SDK', value: 1 },
-              { label: 'IM Elite SDK ', value: 2 },
-            ]}
-            style={{ width: '150px' }}
-            value={sdkVersion}
-            onChange={(value) => {
-              sessionStorage.setItem('sdkVersion', value.toString())
-              window.location.reload()
-            }}
-          />
-        </Form.Item> */}
         <Form.Item label={t('p2pMsgVisibleModeText')}>
           <Select
             options={[

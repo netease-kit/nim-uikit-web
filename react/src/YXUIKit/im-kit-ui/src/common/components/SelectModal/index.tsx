@@ -21,7 +21,7 @@ export interface SelectModalProps {
   onDelete?: (value: SelectModalItemProps) => void
   onOk: (data: SelectModalItemProps[]) => Promise<void>
   onCancel: () => void
-  okText?: string
+  okText: string
   title?: string
   defaultValue?: string[]
   bottomRenderer?: React.ReactNode
@@ -36,6 +36,7 @@ export interface SelectModalProps {
   rightTitle?: string
   closable?: boolean
   width?: number
+  cancelText: string
 
   prefix?: string
 }
@@ -66,6 +67,7 @@ export const SelectModal: React.FC<SelectModalProps> = ({
   rightTitle,
   closable = true,
   width = 720,
+  cancelText,
 
   prefix = 'common',
 }) => {
@@ -297,6 +299,7 @@ export const SelectModal: React.FC<SelectModalProps> = ({
   return (
     <Modal
       okText={okText}
+      cancelText={cancelText}
       title={title}
       okButtonProps={{ disabled: selected.length < min, loading: sending }}
       width={width}
