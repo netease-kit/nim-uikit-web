@@ -34,21 +34,21 @@ import { getImgDataUrl, getVideoFirstFrameDataUrl, logger } from '../../utils'
 import {
   V2NIMTeam,
   V2NIMTeamMember,
-  V2NIMUpdatedTeamInfo,
+  V2NIMUpdateTeamInfoParams,
   V2NIMUpdateSelfMemberInfoParams,
-} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+} from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
 import {
   V2NIMConversationType,
   V2NIMConversation,
-} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
+} from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversationService'
 import {
   V2NIMMessageForUI,
   YxReplyMsg,
   YxServerExt,
 } from '@xkit-yx/im-store-v2/dist/types/types'
-import { V2NIMConst } from 'nim-web-sdk-ng'
-import { V2NIMMessageNotificationAttachment } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMMessageService'
-import { V2NIMError } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/types'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
+import { V2NIMMessageNotificationAttachment } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
+import { V2NIMError } from 'nim-web-sdk-ng/dist/esm/nim/src/types'
 import ChatTopMessage from '../components/ChatTopMsg'
 import { ChatAISearch } from '../components/ChatAISearch'
 import { ChatAITranslate } from '../components/ChatAITranslate'
@@ -91,8 +91,11 @@ export interface TeamChatContainerProps {
     msg: V2NIMMessageForUI
   ) => JSX.Element | null | undefined
 
+  msgRecallTime?: number
   prefix?: string
   commonPrefix?: string
+  scrollIntoMode?: 'nearest'
+  maxUploadFileSize: number
 }
 
 const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
@@ -102,6 +105,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     settingActions,
     actions,
     msgOperMenu,
+    maxUploadFileSize,
     onSendText: onSendTextFromProps,
     afterTransferTeam,
     renderTeamCustomMessage,
@@ -113,8 +117,10 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     renderMessageInnerContent,
     renderMessageOuterContent,
 
+    msgRecallTime = 2 * 60 * 1000,
     prefix = 'chat',
     commonPrefix = 'common',
+    scrollIntoMode,
   }) => {
     const { store, nim, localOptions } = useStateContext()
 
@@ -125,6 +131,13 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
 
     const conversation =
       store.conversationStore.conversations.get(conversationId)
+
+    // 群免打扰变更设置
+    // 注意, 现有逻辑取名不准确, 使得设置禁言叫 mute, 设置免打扰也叫 mute
+    // 为了避免歧义, 在这里回调函数起名叫 disturb 代表和免打扰有关
+    // 并且之所以需要强转, 是因为 conversation.mute 只有 true/false 布尔值,
+    // 而群免打扰属性是三态的枚举值, 只不过我们这里忽略了只针对普通群成员设置免打扰的情况
+    const teamDoNotDisturbMode = Number(Boolean(conversation?.mute))
 
     const msgs = store.msgStore.getMsg(conversationId)
 
@@ -154,9 +167,6 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       chatBannedMode:
         V2NIMConst.V2NIMTeamChatBannedMode.V2NIM_TEAM_CHAT_BANNED_MODE_UNBAN,
       memberLimit: 200,
-      messageNotifyMode:
-        V2NIMConst.V2NIMTeamMessageNotifyMode
-          .V2NIM_TEAM_MESSAGE_NOTIFY_MODE_ALL,
     }
 
     const teamMembers = store.teamMemberStore.getTeamMember(receiverId)
@@ -411,7 +421,14 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             if (_msg) {
               await getHistory(_msg.createTime, _msg.messageServerId)
               // 滚动到加载的那条消息
-              document.getElementById(_msg.messageClientId)?.scrollIntoView()
+              document.getElementById(_msg.messageClientId)?.scrollIntoView(
+                scrollIntoMode == 'nearest'
+                  ? {
+                      block: 'nearest', // 滚动到目标元素的最近可见位置
+                      inline: 'nearest', // 避免水平方向的滚动
+                    }
+                  : true
+              )
             }
           }
         }
@@ -762,8 +779,20 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             await store.msgStore.deleteMsgActive([msg])
             break
           case 'recall':
-            await store.msgStore.reCallMsgActive(msg)
+            try {
+              const diffTime = Date.now() - msg.createTime
+
+              if (diffTime > msgRecallTime) {
+                message.error(t('msgRecallTimeErrorText'))
+              } else {
+                await store.msgStore.reCallMsgActive(msg)
+              }
+            } catch (error) {
+              logger.error('reCallMsg error', (error as V2NIMError).toString())
+            }
+
             break
+
           case 'reply':
             {
               const member = mentionMembers.find(
@@ -814,6 +843,14 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             break
           case 'unTop':
             handleTopMessage(msg, false)
+            break
+          case 'voiceToText':
+            try {
+              await store.msgStore.voiceToTextActive(msg)
+            } catch (err) {
+              message.error(t('voiceToTextFailedText'))
+            }
+
             break
           default:
             break
@@ -958,7 +995,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     )
 
     const onUpdateTeamInfo = useCallback(
-      async (params: V2NIMUpdatedTeamInfo) => {
+      async (params: V2NIMUpdateTeamInfoParams) => {
         try {
           await store.teamStore.updateTeamActive({
             teamId: team.teamId,
@@ -1032,6 +1069,27 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       [store.teamStore, team.teamId, t]
     )
 
+    // 群免打扰的修改.
+    const onTeamDisturbChange = useCallback(
+      async (mute: boolean) => {
+        try {
+          await store.teamStore.setTeamMessageMuteModeActive(
+            team.teamId,
+            team.teamType,
+            mute
+              ? V2NIMConst.V2NIMTeamMessageMuteMode
+                  .V2NIM_TEAM_MESSAGE_MUTE_MODE_ON
+              : V2NIMConst.V2NIMTeamMessageMuteMode
+                  .V2NIM_TEAM_MESSAGE_MUTE_MODE_OFF
+          )
+          message.success(t('updateTeamSuccessText'))
+        } catch (error) {
+          message.error(t('updateTeamFailedText'))
+        }
+      },
+      [store.teamStore, team.teamId, team.teamType, t]
+    )
+
     const handleForwardModalSend = () => {
       scrollToBottom()
       setForwardMessage(undefined)
@@ -1078,6 +1136,10 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
               .finally(() => {
                 visibilityObserver.unobserve(params.target)
               })
+            // 会话列表@消息判断需要，标记当前会话最后已读时间
+            store.conversationStore.markConversationReadActive(
+              msg.conversationId
+            )
           }
         }
       }
@@ -1369,12 +1431,30 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
               .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_APPLY_PASS:
               {
                 if (msg.senderId === myUser.accountId) {
-                  message.info(
-                    `${store.uiStore.getAppellation({
-                      account: msg.senderId,
-                      teamId: msg.receiverId,
-                    })}${t('enterTeamText')}`
-                  )
+                  const accounts: string[] = attachment?.targetIds || []
+                  const nicks = accounts
+                    .map((item) => {
+                      if (
+                        !(
+                          msg.conversationType !==
+                            V2NIMConst.V2NIMConversationType
+                              .V2NIM_CONVERSATION_TYPE_TEAM ||
+                          store.userStore.users.has(item) ||
+                          store.aiUserStore.aiUsers.has(item)
+                        )
+                      ) {
+                        store.userStore.getUserActive(item)
+                      }
+
+                      return store.uiStore.getAppellation({
+                        account: item,
+                        teamId: msg.receiverId,
+                      })
+                    })
+                    .filter((item) => !!item)
+                    .join('、')
+
+                  message.info(`${nicks}${t('enterTeamText')}`)
                 }
               }
 
@@ -1484,6 +1564,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             ref={chatMessageInputRef}
             prefix={prefix}
             commonPrefix={commonPrefix}
+            maxUploadFileSize={maxUploadFileSize}
             placeholder={
               renderTeamInputPlaceHolder
                 ? renderTeamInputPlaceHolder({
@@ -1522,6 +1603,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             <ChatTeamSetting
               members={sortedMembers}
               team={team}
+              teamDoNotDisturbMode={teamDoNotDisturbMode}
               myAccount={myUser?.accountId || ''}
               isGroupManager={isGroupManager}
               isGroupOwner={isGroupOwner}
@@ -1535,6 +1617,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
               onUpdateTeamInfo={onUpdateTeamInfo}
               onUpdateMyMemberInfo={onUpdateMyMemberInfo}
               onTeamMuteChange={onTeamMuteChange}
+              onTeamDisturbChange={onTeamDisturbChange}
               onTransferTeamClick={onTransferMemberClick}
               renderTeamMemberItem={renderTeamMemberItem}
               prefix={prefix}

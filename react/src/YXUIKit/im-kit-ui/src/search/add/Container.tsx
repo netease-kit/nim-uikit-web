@@ -9,6 +9,7 @@ import AddFriendModal from './components/AddFriendModal'
 import JoinTeamModal from './components/JoinTeamModal'
 import packageJson from '../../../package.json'
 import { observer } from 'mobx-react'
+// todo, v10.6.0 有静态方法可以获取版本号
 import sdkPkg from 'nim-web-sdk-ng/package.json'
 
 export type PanelScene = 'addFriend' | 'joinTeam' | 'createTeam'

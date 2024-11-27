@@ -7,7 +7,7 @@ import { message } from 'antd'
 import { useStateContext } from '../../hooks/useStateContext'
 import { useTranslation } from '../../hooks/useTranslation'
 import { observer } from 'mobx-react'
-import { V2NIMUserUpdateParams } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMUserService'
+import { V2NIMUserUpdateParams } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService'
 import { Gender } from '../UserCard'
 
 export type MyAvatarContainerProps = Pick<

@@ -2,6 +2,7 @@ import React, { FC, useEffect, useMemo, useState } from 'react'
 import { Avatar, Badge } from 'antd'
 import { Storage } from '@xkit-yx/utils'
 import { urls } from '../GroupAvatarSelect'
+import { getAvatarBackgroundColor } from '../../../utils'
 
 export interface CrudeAvatarProps {
   account: string
@@ -40,39 +41,6 @@ export const CrudeAvatar: FC<CrudeAvatarProps> = ({
     return (nick || account || '').slice(-2)
   }, [nick, account])
 
-  useEffect(() => {
-    const colorMap: { [key: number]: string } = {
-      0: '#60CFA7',
-      1: '#53C3F3',
-      2: '#537FF4',
-      3: '#854FE2',
-      4: '#BE65D9',
-      5: '#E9749D',
-      6: '#F9B751',
-    }
-    const store = new Storage('localStorage', '__xkit__')
-    const key = `avatarColor-${account}`
-    let bgColor = store.get(key)
-
-    if (!bgColor) {
-      bgColor = colorMap[Math.floor(Math.random() * 7)]
-      store.set(key, bgColor)
-    }
-
-    setBgColor(bgColor)
-  }, [account])
-
-  useEffect(() => {
-    let webUrl = ''
-
-    if (avatar) {
-      setImgFailed(false)
-      webUrl = appUrlMap[avatar]
-    }
-
-    setWebAvatar(webUrl ? webUrl : avatar)
-  }, [avatar])
-
   const avatarStyle = useMemo(() => {
     if (webAvatar && !imgFailed) {
       return {
@@ -86,6 +54,40 @@ export const CrudeAvatar: FC<CrudeAvatarProps> = ({
     }
   }, [webAvatar, imgFailed, bgColor])
 
+  useEffect(() => {
+    try {
+      /**
+       * 原实现方案，改为和移动端统一方案
+       const store = new Storage('localStorage', '__xkit__')
+        const key = `avatarColor-${account}`
+        let bgColor = store.get(key)
+
+        if (!bgColor) {
+          // 此处计算方式待优化
+          bgColor = colorMap[Math.floor(Math.random() * 7)]
+          store.set(key, bgColor)
+        }
+       */
+
+      const bgColor = getAvatarBackgroundColor(account)
+
+      setBgColor(bgColor)
+    } catch (error) {
+      console.log('CrudeAvatar avatarColor: ', error)
+    }
+  }, [account])
+
+  useEffect(() => {
+    let webUrl = ''
+
+    if (avatar) {
+      setImgFailed(false)
+      webUrl = appUrlMap[avatar]
+    }
+
+    setWebAvatar(webUrl ? webUrl : avatar)
+  }, [avatar])
+
   return (
     <Badge
       dot={dot}
@@ -94,19 +96,37 @@ export const CrudeAvatar: FC<CrudeAvatarProps> = ({
       overflowCount={99}
       showZero={false}
     >
-      <Avatar
-        style={avatarStyle}
-        alt={text}
-        src={webAvatar}
-        size={size}
-        icon={icon}
-        onError={() => {
-          setImgFailed(true)
-          return true
-        }}
-      >
-        {text}
-      </Avatar>
+      {webAvatar ? (
+        <Avatar
+          style={avatarStyle}
+          alt={text}
+          src={webAvatar}
+          size={size}
+          icon={icon}
+          onError={() => {
+            setImgFailed(true)
+            return true
+          }}
+        >
+          {text}
+        </Avatar>
+      ) : (
+        <div
+          style={{
+            ...avatarStyle,
+            width: size,
+            height: size,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: `${size / 2}px`,
+            color: '#fff',
+          }}
+        >
+          {text}
+        </div>
+      )}
     </Badge>
   )
 }

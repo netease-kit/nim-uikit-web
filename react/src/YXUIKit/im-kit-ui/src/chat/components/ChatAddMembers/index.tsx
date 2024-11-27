@@ -26,7 +26,6 @@ const ChatAddMemebers: React.FC<ChatAddMemebersProps> = ({
 }) => {
   const [selectedAccounts, setSelectedAccounts] =
     useState<string[]>(defaultAccounts)
-  // const [searchText, setSearchText] = useState('')
 
   useEffect(() => {
     resetState()
@@ -52,9 +51,22 @@ const ChatAddMemebers: React.FC<ChatAddMemebersProps> = ({
     setSelectedAccounts(defaultAccounts)
   }
 
-  const handleSelect = useCallback((selectedList: string[]) => {
-    setSelectedAccounts(selectedList)
-  }, [])
+  const handleSelect = useCallback(
+    (selectedList: string[]) => {
+      // 去除已入群的成员
+      function removeCommonElements(arr1, arr2) {
+        return arr2.filter((item) => !arr1.includes(item))
+      }
+
+      const resultSelectedList = removeCommonElements(
+        defaultAccounts,
+        selectedList
+      )
+
+      setSelectedAccounts(resultSelectedList)
+    },
+    [defaultAccounts]
+  )
 
   return (
     <Modal
@@ -68,10 +80,8 @@ const ChatAddMemebers: React.FC<ChatAddMemebersProps> = ({
       destroyOnClose={true}
       okText={t('addTeamMemberText')}
     >
-      {/* <SearchInput value={searchText} onChange={setSearchText} /> */}
       <div style={{ height: 450 }}>
         <FriendSelect
-          max={200}
           prefix={commonPrefix}
           onSelect={handleSelect}
           selectedAccounts={selectedAccounts}

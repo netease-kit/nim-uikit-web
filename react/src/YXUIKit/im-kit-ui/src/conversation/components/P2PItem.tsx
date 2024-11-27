@@ -8,10 +8,9 @@ import {
   ReadPercent,
 } from '../../common'
 import { ConversationItem } from './ConversationItem'
-import { CheckCircleOutlined } from '@ant-design/icons'
 import { observer } from 'mobx-react'
 import { V2NIMConversationForUI } from '@xkit-yx/im-store-v2/dist/types/types'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 export interface P2PItemProps extends V2NIMConversationForUI {
   isSelected: boolean
@@ -121,11 +120,9 @@ export const P2PItem: FC<P2PItemProps> = observer(
           {(msgReceiptTime ?? 0) -
             (lastMessage?.messageRefer.createTime ?? 0) >=
           0 ? (
-            <CheckCircleOutlined
-              className={`${prefix}-item-content-read-icon`}
-            />
+            <ReadPercent size={14} unread={0} read={1} prefix={commonPrefix} />
           ) : (
-            <ReadPercent radius={7} unread={1} read={0} prefix={commonPrefix} />
+            <ReadPercent size={14} unread={1} read={0} prefix={commonPrefix} />
           )}
         </div>
       ) : null

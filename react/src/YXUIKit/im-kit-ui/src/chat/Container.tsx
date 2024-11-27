@@ -14,10 +14,11 @@ import { SettingActionItemProps } from './components/ChatActionBar'
 import {
   V2NIMConversationType,
   V2NIMConversation,
-} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
+} from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversationService'
 import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
 import sdkPkg from 'nim-web-sdk-ng/package.json'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
+import { MAX_UPLOAD_FILE_SIZE } from '../constant'
 
 export interface ActionRenderProps extends ChatMessageInputProps {
   conversationType: V2NIMConversationType
@@ -28,7 +29,7 @@ export interface Action {
   /**
     按钮类型
     */
-  action: 'emoji' | 'sendImg' | 'sendFile' | string
+  action: 'emoji' | 'sendImg' | 'sendFile' | 'aiTranslate' | 'sendMsg' | string
   /**
     是否显示该按钮，自带按钮默认 true，新增自定义按钮默认 false
     */
@@ -152,6 +153,22 @@ export interface ChatContainerProps {
      公共样式前缀
      */
   commonPrefix?: string
+  /**
+    消息可撤回的最大时间，单位毫秒，默认 2 * 60 * 1000, 最大支持7天内的消息可撤回
+  */
+  msgRecallTime?: number
+  /**
+    是否展示陌生人提示
+  */
+  strangerTipVisible?: boolean
+  /**
+    上拉加载消息滚动模式，组件在上拉加载消息时，默认会自动滚动到最新的消息，当组件位于可滚动的页面中时，可能会造成滚动异常，设置nearest即可
+  */
+  scrollIntoMode?: 'nearest'
+  /**
+   * 最大上传文件大小，单位Mb，默认 100M
+   */
+  maxUploadFileSize?: number
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = observer(
@@ -161,6 +178,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
     p2pSettingActions,
     teamSettingActions,
     msgOperMenu,
+    maxUploadFileSize = MAX_UPLOAD_FILE_SIZE,
     onSendText,
     afterTransferTeam,
     renderEmpty,
@@ -175,8 +193,11 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
     renderMessageInnerContent,
     renderMessageOuterContent,
 
+    msgRecallTime = 2 * 60 * 1000,
     prefix = 'chat',
     commonPrefix = 'common',
+    strangerTipVisible = true,
+    scrollIntoMode,
   }) => {
     const { store, nim } = useStateContext()
 
@@ -205,8 +226,10 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           commonPrefix={commonPrefix}
           onSendText={onSendText}
           actions={actions}
+          maxUploadFileSize={maxUploadFileSize}
           conversationType={conversationType}
           receiverId={receiverId}
+          msgRecallTime={msgRecallTime}
           settingActions={p2pSettingActions}
           msgOperMenu={msgOperMenu}
           renderP2pCustomMessage={renderP2pCustomMessage}
@@ -216,16 +239,20 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           renderMessageName={renderMessageName}
           renderMessageInnerContent={renderMessageInnerContent}
           renderMessageOuterContent={renderMessageOuterContent}
+          strangerTipVisible={strangerTipVisible}
+          scrollIntoMode={scrollIntoMode}
         />
       ) : conversationType ===
         V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM ? (
         <TeamChatContainer
           prefix={prefix}
           commonPrefix={commonPrefix}
+          maxUploadFileSize={maxUploadFileSize}
           conversationType={conversationType}
           receiverId={receiverId}
           onSendText={onSendText}
           actions={actions}
+          msgRecallTime={msgRecallTime}
           settingActions={teamSettingActions}
           msgOperMenu={msgOperMenu}
           afterTransferTeam={afterTransferTeam}
@@ -237,6 +264,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           renderMessageName={renderMessageName}
           renderMessageInnerContent={renderMessageInnerContent}
           renderMessageOuterContent={renderMessageOuterContent}
+          scrollIntoMode={scrollIntoMode}
         />
       ) : null
     ) : renderEmpty ? (

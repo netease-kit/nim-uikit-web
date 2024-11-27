@@ -27,6 +27,10 @@ export interface ChatP2pMessageListProps
   msgReceiptTime?: number
   onReceiveMsgBtnClick?: () => void
   onScroll?: (e: React.UIEvent<HTMLDivElement, UIEvent>) => void
+  /**
+    是否展示陌生人提示
+  */
+  strangerTipVisible?: boolean
 }
 
 const ChatP2pMessageList = observer(
@@ -44,6 +48,7 @@ const ChatP2pMessageList = observer(
         onReceiveMsgBtnClick,
         loadingMore,
         noMore,
+        strangerTipVisible = true,
         onResend,
         onMessageAction,
         onReeditClick,
@@ -94,6 +99,7 @@ const ChatP2pMessageList = observer(
                         unread={msg.createTime <= msgReceiptTime ? 0 : 1}
                         read={msg.createTime <= msgReceiptTime ? 1 : 0}
                         prefix={commonPrefix}
+                        size={16}
                       />
                     ) : null
                   }
@@ -123,7 +129,7 @@ const ChatP2pMessageList = observer(
               <ArrowDownOutlined />
             </div>
           ) : null}
-          {relation === 'stranger' ? (
+          {relation === 'stranger' && strangerTipVisible ? (
             <Alert
               className={`${_prefix}-stranger-noti`}
               banner

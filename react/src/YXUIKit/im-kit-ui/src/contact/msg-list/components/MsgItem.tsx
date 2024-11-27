@@ -11,7 +11,7 @@ import {
   V2NIMFriendAddApplicationForUI,
   V2NIMTeamJoinActionInfoForUI,
 } from '@xkit-yx/im-store-v2/dist/types/types'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 export enum TMsgItemType {
   FRIEND = 'friend',

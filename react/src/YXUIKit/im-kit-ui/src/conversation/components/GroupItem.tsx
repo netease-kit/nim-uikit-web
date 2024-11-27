@@ -13,6 +13,7 @@ export interface GroupItemProps extends V2NIMConversationForUI {
   isSelected: boolean
   onStickTopChange: (isTop: boolean) => void
   onDeleteClick: () => void
+  onMuteChange: (mute: boolean) => void
   onItemClick: () => void
   avatarRenderer?: JSX.Element | null
   conversationNameRenderer?: JSX.Element | null
@@ -24,7 +25,9 @@ export interface GroupItemProps extends V2NIMConversationForUI {
 export const GroupItem: FC<GroupItemProps> = ({
   onStickTopChange,
   onDeleteClick,
+  onMuteChange,
   conversationId,
+  mute = false,
   name,
   avatar,
   unreadCount,
@@ -57,15 +60,15 @@ export const GroupItem: FC<GroupItemProps> = ({
         ),
         key: 'stickTop',
       },
-      // {
-      //   label: ext === '0' ? t('unmuteSessionText') : t('muteSessionText'),
-      //   icon: isMute ? (
-      //     <CommonIcon type="icon-quxiaoxiaoximiandarao" />
-      //   ) : (
-      //     <CommonIcon type="icon-xiaoximiandarao" />
-      //   ),
-      //   key: 'muteSession',
-      // },
+      {
+        label: mute ? t('unmuteSessionText') : t('muteSessionText'),
+        icon: mute ? (
+          <CommonIcon type="icon-quxiaoxiaoximiandarao" />
+        ) : (
+          <CommonIcon type="icon-xiaoximiandarao" />
+        ),
+        key: 'muteConversation',
+      },
       {
         label: t('deleteSessionText'),
         icon: <CommonIcon type="icon-shanchu" />,
@@ -81,6 +84,9 @@ export const GroupItem: FC<GroupItemProps> = ({
             case 'stickTop':
               onStickTopChange(!stickTop)
               break
+            case 'muteConversation':
+              onMuteChange(!mute)
+              break
             case 'deleteConversation':
               onDeleteClick()
               break
@@ -91,12 +97,12 @@ export const GroupItem: FC<GroupItemProps> = ({
         items={items}
       ></Menu>
     )
-  }, [stickTop, onStickTopChange, onDeleteClick, t])
+  }, [stickTop, onStickTopChange, onDeleteClick, onMuteChange, t])
 
   return (
     <ConversationItem
       isTop={stickTop}
-      isMute={false}
+      isMute={mute}
       conversationName={name || teamId}
       time={lastMessage?.messageRefer.createTime || updateTime}
       lastMessage={lastMessage}
@@ -115,6 +121,7 @@ export const GroupItem: FC<GroupItemProps> = ({
             account={teamId}
             avatar={avatar}
             count={isSelected ? 0 : unreadCount}
+            dot={isSelected ? false : mute && unreadCount > 0}
           />
         )
       }

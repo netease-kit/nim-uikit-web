@@ -3,7 +3,7 @@ import { observer } from 'mobx-react'
 import React, { FC, useState } from 'react'
 import { useStateContext, useTranslation } from '../../../common'
 import { LoadingOutlined } from '@ant-design/icons'
-import { V2NIMAIModelRoleType } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMAIService'
+import { V2NIMAIModelRoleType } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMAIService'
 import { getAIErrorMap } from '../../../utils'
 
 export interface ChatAISearchProps {
@@ -97,7 +97,7 @@ export const ChatAISearch: FC<ChatAISearchProps> = observer(
             bordered={true}
             className={`${_prefix}-textarea`}
             value={inputValue}
-            onInput={onInputChangeHandler}
+            onChange={onInputChangeHandler}
             onPressEnter={onPressEnterHandler}
             autoSize={{ maxRows: 3 }}
           />

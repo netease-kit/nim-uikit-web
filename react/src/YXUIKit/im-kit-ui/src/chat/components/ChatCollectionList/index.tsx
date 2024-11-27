@@ -6,9 +6,9 @@ import {
   V2NIMCollection,
   V2NIMCollectionOption,
   V2NIMMessage,
-} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMMessageService'
+} from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
 import { logger } from '../../../utils'
-import { V2NIMError } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/types'
+import { V2NIMError } from 'nim-web-sdk-ng/dist/esm/nim/src/types'
 import { MenuItem } from '../ChatMessageItem'
 import { debounce } from '@xkit-yx/utils'
 import ChatForwardModal from '../ChatForwardModal'

@@ -11,12 +11,12 @@ import RootStore from '@xkit-yx/im-store-v2'
 import { LocalOptions } from '@xkit-yx/im-store-v2/dist/types/types'
 import { observer } from 'mobx-react'
 import { useStateContext } from '../hooks/useStateContext'
-import V2NIM, { V2NIMConst } from 'nim-web-sdk-ng'
+import { NIM, V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 import zh from '../locales/zh'
 import sdkPkg from 'nim-web-sdk-ng/package.json'
 
 export interface ContextProps {
-  nim?: V2NIM
+  nim?: NIM
   store?: RootStore
   localOptions?: Partial<LocalOptions>
   t?: (str: keyof typeof zh) => string
@@ -25,7 +25,7 @@ export interface ContextProps {
 export interface ProviderProps {
   children: ReactNode
   localOptions?: Partial<LocalOptions>
-  nim: V2NIM
+  nim: NIM
   // 单例模式，用于 vue 带 UI 组件
   singleton?: boolean
   locale?: 'zh' | 'en'
@@ -58,83 +58,84 @@ const defaultLocalOptions: Required<LocalOptions> = {
   sendMsgBefore: async (options: any) => options,
   aiUserAgentProvider: {},
   conversationLimit: 100,
+  debug: 'debug',
 }
 
-export const Provider: FC<ProviderProps> = memo(
-  ({
-    children,
-    localOptions = defaultLocalOptions,
-    nim,
-    locale = 'zh',
-    localeConfig = zh,
-    renderImDisConnected,
-    renderImConnecting,
-    singleton = false,
-  }) => {
-    const localeMap = useMemo(
-      () => ({
-        zh,
-      }),
-      []
-    )
+export const Provider: FC<ProviderProps> = memo(function Main({
+  children,
+  localOptions = defaultLocalOptions,
+  nim,
+  locale = 'zh',
+  localeConfig = zh,
+  renderImDisConnected,
+  renderImConnecting,
+  singleton = false,
+}) {
+  const localeMap = useMemo(
+    () => ({
+      zh,
+    }),
+    []
+  )
 
-    const t = useCallback(
-      (str: keyof typeof zh) => {
-        return {
-          ...(localeMap[locale] || zh),
-          ...localeConfig,
-        }[str]
-      },
-      [locale, localeConfig, localeMap]
-    )
+  const t = useCallback(
+    (str: keyof typeof zh) => {
+      return {
+        ...(localeMap[locale] || zh),
+        ...localeConfig,
+      }[str]
+    },
+    [locale, localeConfig, localeMap]
+  )
 
-    const finalLocalOptions = useMemo(() => {
-      return { ...defaultLocalOptions, ...localOptions }
-    }, [localOptions])
+  const finalLocalOptions = useMemo(() => {
+    return { ...defaultLocalOptions, ...localOptions }
+  }, [localOptions])
 
-    const rootStore = useMemo(() => {
-      if (singleton) {
-        return RootStore.getInstance(nim, finalLocalOptions)
-      }
-
-      return new RootStore(nim, finalLocalOptions)
-    }, [nim, singleton, finalLocalOptions])
-
-    // @ts-ignore
-    window.__xkit_store__ = {
-      nim,
-      store: rootStore,
-      localOptions: finalLocalOptions,
-      sdkVersion: sdkPkg.version,
+  const rootStore = useMemo(() => {
+    if (singleton) {
+      // @ts-ignore
+      return RootStore.getInstance(nim, finalLocalOptions)
     }
 
-    useEffect(() => {
-      return () => {
-        if (!singleton) {
-          rootStore.destroy()
-        }
-      }
-    }, [rootStore, singleton])
+    // @ts-ignore
+    return new RootStore(nim, finalLocalOptions)
+  }, [nim, singleton, finalLocalOptions])
 
-    return (
-      <Context.Provider
-        value={{
-          store: rootStore,
-          nim,
-          localOptions: finalLocalOptions,
-          t,
-        }}
-      >
-        <App
-          renderImConnecting={renderImConnecting}
-          renderImDisConnected={renderImDisConnected}
-        >
-          {children}
-        </App>
-      </Context.Provider>
-    )
+  // @ts-ignore
+  window.__xkit_store__ = {
+    nim,
+    store: rootStore,
+    localOptions: finalLocalOptions,
+    sdkVersion: sdkPkg.version,
   }
-)
+
+  useEffect(() => {
+    return () => {
+      if (!singleton) {
+        rootStore.destroy()
+      }
+    }
+  }, [rootStore, singleton])
+
+  return (
+    <Context.Provider
+      value={{
+        store: rootStore,
+        nim,
+        localOptions: finalLocalOptions,
+        t,
+      }}
+    >
+      <App
+        renderImConnecting={renderImConnecting}
+        renderImDisConnected={renderImDisConnected}
+      >
+        {children}
+      </App>
+    </Context.Provider>
+  )
+})
 
 export const App: FC<{
   renderImDisConnected?: () => JSX.Element

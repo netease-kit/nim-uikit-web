@@ -5,10 +5,10 @@ import {
   useStateContext,
   useTranslation,
 } from '../../common'
-import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMAIService'
+import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMAIService'
 import { message } from 'antd'
 import { logger } from '../../utils'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 export interface PinAIItemProps {
   aiUser: V2NIMAIUser

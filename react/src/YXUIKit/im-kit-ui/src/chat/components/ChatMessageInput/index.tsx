@@ -17,7 +17,6 @@ import {
   useStateContext,
 } from '../../../common'
 import { Action } from '../../Container'
-import { MAX_UPLOAD_FILE_SIZE } from '../../../constant'
 import { storeConstants } from '@xkit-yx/im-store-v2'
 import { CloseOutlined } from '@ant-design/icons'
 import { observer } from 'mobx-react'
@@ -29,10 +28,11 @@ import {
   YxAitMsg,
   YxServerExt,
 } from '@xkit-yx/im-store-v2/dist/types/types'
-import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
-import { V2NIMConversationType } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
-import { V2NIMConst } from 'nim-web-sdk-ng'
-import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMAIService'
+import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
+import { V2NIMConversationType } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversationService'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
+import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMAIService'
+import { useImgPaste } from './useImgPaste'
 
 const { TextArea } = Input
 
@@ -49,6 +49,7 @@ export interface ChatMessageInputProps {
   allowAtAll?: boolean
   inputValue?: string
   translateOpen: boolean
+  maxUploadFileSize: number
   setInputValue: (value: string) => void
   onTranslate: (open: boolean) => void
   onSendText: (value: string, ext?: YxServerExt) => void
@@ -81,6 +82,7 @@ const ChatMessageInput = observer(
       inputValue = '',
       translateOpen,
       replyMsg,
+      maxUploadFileSize,
       setInputValue,
       onTranslate,
       onSendText,
@@ -143,6 +145,7 @@ const ChatMessageInput = observer(
                 arrow={false}
                 overlay={
                   <Menu
+                    className={`${_prefix}-icon-box-img`}
                     items={[
                       {
                         key: 'sendImg',
@@ -154,13 +157,15 @@ const ChatMessageInput = observer(
                             // action={onUploadImgHandler}
                             className={`${_prefix}-icon-upload`}
                           >
-                            <CommonIcon
-                              className={`${_prefix}-icon-image`}
-                              type="icon-tupian"
-                            />
-                            <span style={{ padding: '0 30px 0 3px' }}>
-                              {t('imgText')}
-                            </span>
+                            <div>
+                              <CommonIcon
+                                className={`${_prefix}-icon-image`}
+                                type="icon-tupian"
+                              />
+                              <span style={{ padding: '0 5px 0 3px' }}>
+                                {t('imgText')}
+                              </span>
+                            </div>
                           </Upload>
                         ),
                       },
@@ -178,7 +183,7 @@ const ChatMessageInput = observer(
                               className={`${_prefix}-icon-image`}
                               type="icon-shipin8"
                             />
-                            <span style={{ padding: '0 30px 0 3px' }}>
+                            <span style={{ padding: '0 5px 0 3px' }}>
                               {t('videoText')}
                             </span>
                           </Upload>
@@ -264,10 +269,12 @@ const ChatMessageInput = observer(
       },
     ]
 
+    // 消息右键菜单
     const finalActions = actions
       ? mergeActions(defaultActions, actions, 'action')
       : defaultActions
 
+    // @成员处理
     const filterAtMembers = useMemo(() => {
       if (atMemberSearchText) {
         const res = mentionMembers?.filter((member) => {
@@ -284,23 +291,6 @@ const ChatMessageInput = observer(
         return mentionMembers
       }
     }, [mentionMembers, atMemberSearchText, store.uiStore])
-
-    useEffect(() => {
-      setAtMemberSearchText('')
-      setAtVisible(false)
-    }, [receiverId])
-
-    useEffect(() => {
-      if (atMemberSearchText) {
-        if (filterAtMembers?.length) {
-          setAtVisible(true)
-        } else {
-          setAtVisible(false)
-        }
-      } else {
-        setAtVisible(false)
-      }
-    }, [filterAtMembers, atMemberSearchText])
 
     const onAtMembersExtHandler = () => {
       let ext: YxServerExt | void = void 0
@@ -360,6 +350,7 @@ const ChatMessageInput = observer(
       return ext as unknown as YxServerExt
     }
 
+    // 用户处理input中的@成员昵称
     const onTextAreaSelectionRangeHandler = () => {
       function getCursorPosition(
         cursorIndex: number
@@ -455,6 +446,7 @@ const ChatMessageInput = observer(
       [atMemberSearchText, selectedAtMembers, setInputValue, atVisible]
     )
 
+    // 点击发送消息
     const onClickSendMsgHandler = (e) => {
       if (atVisible) {
         e.preventDefault()
@@ -475,6 +467,7 @@ const ChatMessageInput = observer(
       setSelectedAtMembers([])
     }
 
+    // 回车发送
     const onPressEnterHandler = (
       e: React.KeyboardEvent<HTMLTextAreaElement>
     ) => {
@@ -498,6 +491,7 @@ const ChatMessageInput = observer(
       }
     }
 
+    // 键盘相关事件处理 @相关
     const onKeyDownHandler = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
         setAtVisible(false)
@@ -541,16 +535,15 @@ const ChatMessageInput = observer(
 
     const onClickHandler = onTextAreaSelectionRangeHandler
 
+    // 文件上传前处理
     const onBeforeUploadFileHandler = (
       file: File
     ): boolean | Promise<void | Blob | File> => {
-      const isLimit = file.size / 1024 / 1000 > MAX_UPLOAD_FILE_SIZE
+      const isLimit = file.size / 1024 / 1000 > maxUploadFileSize
 
       if (isLimit) {
         message.error(
-          `${t('uploadLimitText')}${MAX_UPLOAD_FILE_SIZE}${t(
-            'uploadLimitUnit'
-          )}`
+          `${t('uploadLimitText')}${maxUploadFileSize}${t('uploadLimitUnit')}`
         )
       } else {
         onSendFile(file)
@@ -559,16 +552,15 @@ const ChatMessageInput = observer(
       return false
     }
 
+    // 图片上传前处理
     const onBeforeUploadImgHandler = (
       file: File
     ): boolean | Promise<void | Blob | File> => {
-      const isLimit = file.size / 1024 / 1000 > MAX_UPLOAD_FILE_SIZE
+      const isLimit = file.size / 1024 / 1000 > maxUploadFileSize
 
       if (isLimit) {
         message.error(
-          `${t('uploadLimitText')}${MAX_UPLOAD_FILE_SIZE}${t(
-            'uploadLimitUnit'
-          )}`
+          `${t('uploadLimitText')}${maxUploadFileSize}${t('uploadLimitUnit')}`
         )
       } else {
         onSendImg(file)
@@ -577,16 +569,15 @@ const ChatMessageInput = observer(
       return false
     }
 
+    // 视频上传前处理
     const onBeforeUploadVideoHandler = (
       file: File
     ): boolean | Promise<void | Blob | File> => {
-      const isLimit = file.size / 1024 / 1000 > MAX_UPLOAD_FILE_SIZE
+      const isLimit = file.size / 1024 / 1000 > maxUploadFileSize
 
       if (isLimit) {
         message.error(
-          `${t('uploadLimitText')}${MAX_UPLOAD_FILE_SIZE}${t(
-            'uploadLimitUnit'
-          )}`
+          `${t('uploadLimitText')}${maxUploadFileSize}${t('uploadLimitUnit')}`
         )
       } else {
         onSendVideo(file)
@@ -595,13 +586,7 @@ const ChatMessageInput = observer(
       return false
     }
 
-    // const onUploadImgHandler = (file: any): any => {
-    //   onSendImg(file)
-    // }
-    // const onUploadFileHandler = (file: any): any => {
-    //   onSendFile(file)
-    // }
-
+    // 点击表情
     const onEmojiClickHandler = (tag: string) => {
       const input = textAreaRef.current?.resizableTextArea?.textArea
 
@@ -634,6 +619,7 @@ const ChatMessageInput = observer(
       </>
     )
 
+    // 键盘上方的回复消息
     const replyMsgContent = () => {
       if (replyMsg) {
         const nick = store.uiStore.getAppellation({
@@ -653,6 +639,43 @@ const ChatMessageInput = observer(
         return <div className={`${_prefix}-reply-content`}>{content}</div>
       }
     }
+
+    // 粘贴图片发送
+    const { handleImgPaste } = useImgPaste({ onSendImg })
+
+    useEffect(() => {
+      if (textAreaRef.current) {
+        textAreaRef?.current?.focus()
+        textAreaRef.current.resizableTextArea?.textArea.addEventListener(
+          'paste',
+          handleImgPaste
+        )
+      }
+
+      return () => {
+        textAreaRef.current?.resizableTextArea?.textArea.removeEventListener(
+          'paste',
+          handleImgPaste
+        )
+      }
+    }, [textAreaRef, store.uiStore.selectedConversation])
+
+    useEffect(() => {
+      setAtMemberSearchText('')
+      setAtVisible(false)
+    }, [receiverId])
+
+    useEffect(() => {
+      if (atMemberSearchText) {
+        if (filterAtMembers?.length) {
+          setAtVisible(true)
+        } else {
+          setAtVisible(false)
+        }
+      } else {
+        setAtVisible(false)
+      }
+    }, [filterAtMembers, atMemberSearchText])
 
     useImperativeHandle(
       ref,
@@ -708,11 +731,13 @@ const ChatMessageInput = observer(
               placeholder={placeholder}
               value={inputValue}
               disabled={mute}
-              onInput={onInputChangeHandler}
+              // antd 问题 onInput会出现在火狐浏览器上无法输入中文 此处改为onchange
+              //onInput={onInputChangeHandler}
+              onChange={onInputChangeHandler}
               onPressEnter={onPressEnterHandler}
               onKeyDown={onKeyDownHandler}
               onClick={onClickHandler}
-              autoSize={{ maxRows: 2 }}
+              autoSize={{ maxRows: 3 }}
             />
             <div className={`${_prefix}-icon-box`}>
               {finalActions.map((item) =>

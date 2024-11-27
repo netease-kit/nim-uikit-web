@@ -1,11 +1,11 @@
 import React, { FC, useCallback } from 'react'
 import { GroupList } from './components/GroupList'
 import { useEventTracking, useStateContext } from '../../common'
-import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
 import sdkPkg from 'nim-web-sdk-ng/package.json'
 import packageJson from '../../../package.json'
 import { observer } from 'mobx-react'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 export interface GroupListContainerProps {
   /**

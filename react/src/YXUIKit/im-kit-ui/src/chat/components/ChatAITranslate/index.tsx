@@ -8,7 +8,7 @@ import {
   LoadingOutlined,
 } from '@ant-design/icons'
 import { getAIErrorMap, logger } from '../../../utils'
-import { V2NIMError } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/types'
+import { V2NIMError } from 'nim-web-sdk-ng/dist/esm/nim/src/types'
 
 export interface ChatAITranslateProps {
   inputValue: string

@@ -5,6 +5,7 @@ import packageJson from '../../../package.json'
 import { observer } from 'mobx-react'
 import { message } from 'antd'
 import { logger } from '../../utils'
+// todo v10.6.0
 import sdkPkg from 'nim-web-sdk-ng/package.json'
 import {
   V2NIMFriendAddApplicationForUI,
