@@ -1,12 +1,15 @@
 import React, { FC, useEffect, useState } from 'react'
 import { Form, Input, Button } from 'antd'
 import { GroupAvatarSelect, useTranslation, CrudeAvatar } from '../../../common'
-import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+import {
+  V2NIMTeam,
+  V2NIMUpdatedTeamInfo,
+} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
 
 export interface GroupDetailmProps {
-  team: Team
+  team: V2NIMTeam
   hasPower: boolean
-  onUpdateTeamInfo: (team: Partial<Team>) => void
+  onUpdateTeamInfo: (team: V2NIMUpdatedTeamInfo) => void
 
   prefix?: string
   commonPrefix?: string
@@ -43,13 +46,14 @@ const GroupDetail: FC<GroupDetailmProps> = ({
   }, [team.name])
 
   const onUpdateTeamInfoSubmitHandler = () => {
-    const obj: Partial<Team> = { avatar, name, intro }
+    const obj: V2NIMUpdatedTeamInfo = { avatar, name, intro }
+
     Object.keys(obj).forEach((key) => {
       if (obj[key] === team[key]) {
         delete obj[key]
       }
     })
-    onUpdateTeamInfo({ ...obj, teamId: team.teamId })
+    onUpdateTeamInfo(obj)
   }
 
   return (

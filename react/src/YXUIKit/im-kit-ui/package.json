@@ -1,42 +1,27 @@
 {
-  "_from": "@xkit-yx/im-kit-ui@^9.6.0",
-  "_id": "@xkit-yx/im-kit-ui@9.6.0",
-  "_inBundle": false,
-  "_integrity": "sha512-J5t6zWcqjtW6PQv4t8Mj3JmY2yUaGJ8X5lxxCoivtiEl5hNXOAA3U7REcdFhxkeq7TFSl0eXxeWokmfcg7mGuA==",
-  "_location": "/@xkit-yx/im-kit-ui",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "@xkit-yx/im-kit-ui@^9.6.0",
-    "name": "@xkit-yx/im-kit-ui",
-    "escapedName": "@xkit-yx%2fim-kit-ui",
-    "scope": "@xkit-yx",
-    "rawSpec": "^9.6.0",
-    "saveSpec": null,
-    "fetchSpec": "^9.6.0"
-  },
-  "_requiredBy": [
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/@xkit-yx/im-kit-ui/-/im-kit-ui-9.6.0.tgz",
-  "_shasum": "14695835abff91d327fcbf0b4dcdeda746dd7bcf",
-  "_spec": "@xkit-yx/im-kit-ui@^9.6.0",
-  "_where": "/Users/leeing/Documents/yunxin-projects/nim-uikit-web/react",
-  "author": "",
-  "bundleDependencies": false,
-  "dependencies": {
-    "@ant-design/icons": "^5.0.1",
-    "@xkit-yx/core-kit": "^0.10.6",
-    "@xkit-yx/im-store": "^0.0.11",
-    "@xkit-yx/utils": "^0.5.5",
-    "antd": "^4.16.3",
-    "mobx": "^6.6.1",
-    "mobx-react": "^7.5.2",
-    "react-string-replace": "^1.1.0"
-  },
-  "deprecated": false,
+  "name": "@xkit-yx/im-kit-ui",
+  "version": "10.5.1",
   "description": "云信即时通讯组件",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "typings": "es/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "start": "rollup -cw --environment DEV",
+    "dev": "gulp watch",
+    "build": "gulp",
+    "p": "npm run build && npm publish"
+  },
+  "files": [
+    "src",
+    "lib",
+    "es",
+    "copySourceCode.js"
+  ],
+  "author": "",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.1.0",
     "@rollup/plugin-json": "^4.1.0",
@@ -48,7 +33,6 @@
     "gulp-typescript": "^6.0.0-alpha.1",
     "less": "^4.1.1",
     "less-plugin-npm-import": "^2.1.0",
-    "nim-web-sdk-ng": "0.15.0",
     "postcss": "^8.3.5",
     "postcss-nested": "^5.0.5",
     "react": "^16.8.0",
@@ -56,39 +40,28 @@
     "rollup": "^2.39.0",
     "rollup-plugin-postcss": "^4.0.0",
     "rollup-plugin-terser": "^7.0.2",
-    "rollup-plugin-typescript2": "^0.30.0",
+    "rollup-plugin-typescript2": "^0.31.0",
     "sass": "^1.58.3",
     "typescript": "^4.6.4"
   },
-  "files": [
-    "src",
-    "lib",
-    "es",
-    "copySourceCode.js"
-  ],
-  "gitHead": "b3bbc966437ee1b3e69ef1c4ffeae88003030588",
-  "license": "MIT",
-  "main": "lib/index.js",
-  "module": "es/index.js",
-  "name": "@xkit-yx/im-kit-ui",
   "peerDependencies": {
-    "@xkit-yx/core-kit": "^0.3.2",
-    "@xkit-yx/utils": "^0.4.3",
+    "@xkit-yx/im-store-v2": "^0.0.1",
     "antd": "^4.16.3",
     "mobx": "^6.6.1",
     "mobx-react": "^7.5.2",
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0"
   },
-  "publishConfig": {
-    "access": "public"
+  "dependencies": {
+    "@ant-design/icons": "^5.0.1",
+    "@xkit-yx/im-store-v2": "^0.2.1",
+    "@xkit-yx/utils": "^0.7.1",
+    "antd": "^4.16.3",
+    "mobx": "^6.6.1",
+    "mobx-react": "^7.5.2",
+    "nim-web-sdk-ng": "10.3.0",
+    "react-string-replace": "^1.1.0",
+    "react-virtualized": "^9.22.5"
   },
-  "scripts": {
-    "build": "gulp",
-    "dev": "gulp watch",
-    "p": "npm run build && npm publish",
-    "start": "rollup -cw --environment DEV"
-  },
-  "typings": "es/index.d.ts",
-  "version": "9.6.0"
+  "gitHead": "92925c6ca2358ac833adfd557c54b79e0345a01e"
 }

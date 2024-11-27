@@ -1,24 +1,22 @@
 import React, { forwardRef } from 'react'
-import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import MessageListItem, { MessageItemProps } from '../ChatMessageItem'
 import { Alert, Spin } from 'antd'
 import { ArrowDownOutlined } from '@ant-design/icons'
 import { useTranslation, ReadPercent, useStateContext } from '../../../common'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
-import { storeUtils } from '@xkit-yx/im-store'
+import { storeUtils } from '@xkit-yx/im-store-v2'
 import { MsgOperMenuItem } from '../../Container'
 import { observer } from 'mobx-react'
+import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
 
-export interface RenderP2pCustomMessageOptions
-  extends Omit<MessageItemProps, 'myAccount'> {
-  member: NimKitCoreTypes.IFriendInfo
+export interface RenderP2pCustomMessageOptions extends MessageItemProps {
+  receiverId: string
 }
 
 export interface ChatP2pMessageListProps
   extends Omit<MessageItemProps, 'msg' | 'alias'> {
-  msgs: IMMessage[]
-  replyMsgsMap: Record<string, IMMessage>
-  member: NimKitCoreTypes.IFriendInfo
+  msgs: V2NIMMessageForUI[]
+  replyMsgsMap: Record<string, V2NIMMessageForUI>
+  receiverId: string
   renderP2pCustomMessage?: (
     options: RenderP2pCustomMessageOptions
   ) => JSX.Element | null | undefined
@@ -33,20 +31,19 @@ export interface ChatP2pMessageListProps
 
 const ChatP2pMessageList = observer(
   forwardRef<HTMLDivElement, ChatP2pMessageListProps>(
-    (
+    function ChatP2pMessageListContent(
       {
         prefix = 'chat',
         commonPrefix = 'common',
         msgs,
         replyMsgsMap,
-        member,
+        receiverId,
         receiveMsgBtnVisible = false,
         msgReceiptTime = 0,
         msgOperMenu,
         onReceiveMsgBtnClick,
         loadingMore,
         noMore,
-        myAccount,
         onResend,
         onMessageAction,
         onReeditClick,
@@ -58,12 +55,14 @@ const ChatP2pMessageList = observer(
         renderMessageInnerContent,
       },
       ref
-    ) => {
+    ) {
       const _prefix = `${prefix}-message-list`
 
       const { t } = useTranslation()
 
       const { store, localOptions } = useStateContext()
+
+      const { relation } = store.uiStore.getRelation(receiverId)
 
       const renderMsgs = storeUtils.getFilterMsgs(msgs)
 
@@ -76,29 +75,28 @@ const ChatP2pMessageList = observer(
             {renderMsgs.map((msg) => {
               const msgItem = renderP2pCustomMessage?.({
                 msg,
-                replyMsg: replyMsgsMap[msg.idClient],
-                member,
+                replyMsg: replyMsgsMap[msg.messageClientId],
+                receiverId,
                 onResend,
                 onReeditClick,
                 onMessageAction,
               }) ?? (
                 <MessageListItem
-                  key={msg.idClient}
+                  key={msg.messageClientId}
                   prefix={prefix}
                   commonPrefix={commonPrefix}
                   msg={msg}
                   msgOperMenu={msgOperMenu}
-                  replyMsg={replyMsgsMap[msg.idClient]}
+                  replyMsg={replyMsgsMap[msg.messageClientId]}
                   normalStatusRenderer={
                     localOptions.p2pMsgReceiptVisible ? (
                       <ReadPercent
-                        unread={msg.time <= msgReceiptTime ? 0 : 1}
-                        read={msg.time <= msgReceiptTime ? 1 : 0}
+                        unread={msg.createTime <= msgReceiptTime ? 0 : 1}
+                        read={msg.createTime <= msgReceiptTime ? 1 : 0}
                         prefix={commonPrefix}
                       />
                     ) : null
                   }
-                  myAccount={myAccount}
                   onResend={onResend}
                   onMessageAction={onMessageAction}
                   onReeditClick={onReeditClick}
@@ -108,8 +106,9 @@ const ChatP2pMessageList = observer(
                   renderMessageOuterContent={renderMessageOuterContent}
                 />
               )
+
               return (
-                <div id={msg.idClient} key={msg.idClient}>
+                <div id={msg.messageClientId} key={msg.messageClientId}>
                   {msgItem}
                 </div>
               )
@@ -124,13 +123,13 @@ const ChatP2pMessageList = observer(
               <ArrowDownOutlined />
             </div>
           ) : null}
-          {store.uiStore.getRelation(member.account) === 'stranger' ? (
+          {relation === 'stranger' ? (
             <Alert
               className={`${_prefix}-stranger-noti`}
               banner
               closable
               message={`${store.uiStore.getAppellation({
-                account: member.account,
+                account: receiverId,
               })} ${t('strangerNotiText')}`}
             />
           ) : null}

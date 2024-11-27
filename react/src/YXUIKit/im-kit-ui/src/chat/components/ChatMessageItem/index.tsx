@@ -2,11 +2,11 @@ import React, { Fragment, useRef } from 'react'
 import { Dropdown, Menu, Tooltip } from 'antd'
 import {
   LoadingOutlined,
-  CheckCircleOutlined,
   ExclamationCircleFilled,
+  RollbackOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons'
 import classNames from 'classnames'
-import moment from 'moment'
 import {
   ParseSession,
   ComplexAvatarContainer,
@@ -15,13 +15,24 @@ import {
   CommonIcon,
   useStateContext,
 } from '../../../common'
-import { RollbackOutlined, DeleteOutlined } from '@ant-design/icons'
-import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
 import { observer } from 'mobx-react'
 import { MsgOperMenuItem } from '../../Container'
-import { mergeActions } from '../../../utils'
+import { formatDate, getAIErrorMap, mergeActions } from '../../../utils'
+import {
+  V2NIMMessageForUI,
+  YxTopMessage,
+} from '@xkit-yx/im-store-v2/dist/types/types'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
-export type MenuItemKey = 'recall' | 'delete' | 'reply' | 'forward' | string
+export type MenuItemKey =
+  | 'recall'
+  | 'delete'
+  | 'reply'
+  | 'collection'
+  | 'forward'
+  | 'top'
+  | 'unTop'
+  | string
 export type AvatarMenuItem = 'mention'
 
 export interface MenuItem {
@@ -36,19 +47,25 @@ export interface MenuItem {
 }
 
 export interface MessageItemProps {
-  myAccount: string
-  msg: IMMessage
-  replyMsg?: IMMessage
+  msg: V2NIMMessageForUI
+  topMessage?: YxTopMessage
+  replyMsg?: V2NIMMessageForUI
   normalStatusRenderer?: React.ReactNode
   msgOperMenu?: MsgOperMenuItem[]
-  onResend: (msg: IMMessage) => void
-  onReeditClick: (msg: IMMessage) => void
-  onMessageAction: (key: MenuItemKey, msg: IMMessage) => void
-  onMessageAvatarAction?: (key: AvatarMenuItem, msg: IMMessage) => void
-  renderMessageAvatar?: (msg: IMMessage) => JSX.Element | null | undefined
-  renderMessageName?: (msg: IMMessage) => JSX.Element | null | undefined
-  renderMessageOuterContent?: (msg: IMMessage) => JSX.Element | null | undefined
-  renderMessageInnerContent?: (msg: IMMessage) => JSX.Element | null | undefined
+  onReeditClick: (msg: V2NIMMessageForUI) => void
+  onResend: (msg: V2NIMMessageForUI) => void
+  onMessageAction: (key: MenuItemKey, msg: V2NIMMessageForUI) => void
+  onMessageAvatarAction?: (key: AvatarMenuItem, msg: V2NIMMessageForUI) => void
+  renderMessageAvatar?: (
+    msg: V2NIMMessageForUI
+  ) => JSX.Element | null | undefined
+  renderMessageName?: (msg: V2NIMMessageForUI) => JSX.Element | null | undefined
+  renderMessageOuterContent?: (
+    msg: V2NIMMessageForUI
+  ) => JSX.Element | null | undefined
+  renderMessageInnerContent?: (
+    msg: V2NIMMessageForUI
+  ) => JSX.Element | null | undefined
   prefix?: string
   commonPrefix?: string
 }
@@ -57,13 +74,13 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
   ({
     msg,
     replyMsg,
-    myAccount,
+    topMessage,
     normalStatusRenderer,
     msgOperMenu,
-    onResend,
     onMessageAction,
     onMessageAvatarAction,
     onReeditClick,
+    onResend,
     renderMessageAvatar,
     renderMessageName,
     renderMessageOuterContent,
@@ -77,81 +94,79 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
     const _prefix = `${prefix}-message-list-item`
 
     const {
-      from,
-      // fromNick,
-      body,
-      attach,
-      idClient,
-      status,
-      time,
-      type,
-      scene,
-      to,
+      senderId,
+      receiverId,
+      messageClientId,
+      sendingState,
+      uploadProgress,
+      createTime,
+      messageType,
+      conversationType,
+      isSelf,
+      recallType = '',
+      canRecall = false,
+      errorCode,
+      messageStatus,
     } = msg
 
     const messageActionDropdownContainerRef = useRef<HTMLDivElement>(null)
     const messageAvatarActionDropdownContainerRef = useRef<HTMLDivElement>(null)
 
-    const isSelf = from === myAccount
+    const aiErrorMap = getAIErrorMap(t)
 
     const nick = store.uiStore.getAppellation({
-      account: from,
-      teamId: scene === 'team' ? to : undefined,
+      account: senderId,
+      teamId:
+        conversationType ===
+        V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
+          ? receiverId
+          : undefined,
     })
 
     const nickWithoutAlias = store.uiStore.getAppellation({
-      account: from,
-      teamId: scene === 'team' ? to : undefined,
+      account: senderId,
+      teamId:
+        conversationType ===
+        V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
+          ? receiverId
+          : undefined,
       ignoreAlias: true,
     })
 
-    // 内存中插入的 msg 属性，具体内容参考 msg store
-    const {
-      type: attachType = '',
-      canRecall = false,
-      canEdit = false,
-      oldBody = '',
-    } = attach || { type: '', canRecall: false, canEdit: false, oldBody: '' }
-
-    const renderSendStatus = () => {
-      if (status === 'sending') {
-        return <LoadingOutlined className={`${_prefix}-status-icon`} />
-      }
-      if (status === 'read') {
-        return <CheckCircleOutlined className={`${_prefix}-status-icon`} />
-      }
-      if (status === 'sendFailed') {
-        return (
-          <Tooltip title={t('sendMsgFailedText')}>
-            <ExclamationCircleFilled
-              className={`${_prefix}-status-icon-fail`}
-              onClick={() => onResend(msg)}
-            />
-          </Tooltip>
-        )
-      }
-      if (status === 'refused') {
-        return (
-          <Tooltip title={t('sendBlackFailedText')}>
-            <ExclamationCircleFilled
-              className={`${_prefix}-status-icon-fail`}
-              onClick={() => onResend(msg)}
-            />
-          </Tooltip>
-        )
-      }
-      return normalStatusRenderer || null
+    const handleResendMsg = () => {
+      onResend(msg)
     }
 
-    const renderMsgDate = () => {
-      const date = moment(time)
-      const isCurrentDay = date.isSame(moment(), 'day')
-      const isCurrentYear = date.isSame(moment(), 'year')
-      return isCurrentDay
-        ? date.format('HH:mm:ss')
-        : isCurrentYear
-        ? date.format('MM-DD HH:mm:ss')
-        : date.format('YYYY-MM-DD HH:mm:ss')
+    const renderSendStatus = () => {
+      if (
+        sendingState ===
+        V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_SENDING
+      ) {
+        return <LoadingOutlined className={`${_prefix}-status-icon`} />
+      }
+
+      if (
+        sendingState ===
+        V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_FAILED
+      ) {
+        const title =
+          errorCode === 102426
+            ? t('sendBlackFailedText')
+            : errorCode === 104404
+            ? t('sendNotFriendFailedText')
+            : t('sendMsgFailedText')
+
+        return (
+          <Tooltip title={title}>
+            <ExclamationCircleFilled
+              className={`${_prefix}-status-icon-fail`}
+              onClick={handleResendMsg}
+            />
+          </Tooltip>
+        )
+      }
+
+      return normalStatusRenderer || null
     }
 
     const renderMenuItems = () => {
@@ -162,7 +177,12 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
         //   icon: <CopyOutlined />,
         // },
         {
-          show: ['sending', 'sendFailed', 'refused', 'delete'].includes(status)
+          show: [
+            V2NIMConst.V2NIMMessageSendingState
+              .V2NIM_MESSAGE_SENDING_STATE_SENDING,
+            V2NIMConst.V2NIMMessageSendingState
+              .V2NIM_MESSAGE_SENDING_STATE_FAILED,
+          ].includes(sendingState)
             ? 0
             : 1,
           label: t('replyText'),
@@ -170,20 +190,80 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
           icon: <CommonIcon type="icon-huifu" />,
         },
         {
-          show: 1,
+          show: uploadProgress === void 0 ? 1 : 0,
           label: t('deleteText'),
           key: 'delete',
           icon: <DeleteOutlined />,
         },
         {
           show:
-            ['sending', 'sendFailed', 'refused', 'delete'].includes(status) ||
-            type === 'audio'
+            [
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_SENDING,
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_FAILED,
+            ].includes(sendingState) ||
+            messageType === V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_AUDIO
               ? 0
               : 1,
           label: t('forwardText'),
           key: 'forward',
           icon: <CommonIcon type="icon-zhuanfa" />,
+        },
+        {
+          show:
+            [
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_SENDING,
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_FAILED,
+            ].includes(sendingState) ||
+            messageType === V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL
+              ? 0
+              : 1,
+          label: t('collection'),
+          key: 'collection',
+          icon: <CommonIcon type="icon-shoucang" />,
+        },
+        {
+          show:
+            conversationType ===
+              V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P ||
+            [
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_SENDING,
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_FAILED,
+            ].includes(sendingState) ||
+            messageType ===
+              V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL ||
+            (topMessage?.idClient === messageClientId &&
+              topMessage.operation === 0)
+              ? 0
+              : 1,
+          label: t('topText'),
+          key: 'top',
+          icon: <CommonIcon type="icon-xiaoxizhiding" />,
+        },
+        {
+          show:
+            conversationType ===
+              V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P ||
+            [
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_SENDING,
+              V2NIMConst.V2NIMMessageSendingState
+                .V2NIM_MESSAGE_SENDING_STATE_FAILED,
+            ].includes(sendingState) ||
+            messageType === V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL
+              ? 0
+              : topMessage?.idClient === messageClientId &&
+                topMessage.operation === 0
+              ? 1
+              : 0,
+          label: t('unTopText'),
+          key: 'unTop',
+          icon: <CommonIcon type="icon-quxiaozhiding" />,
         },
         {
           show: canRecall ? 1 : 0,
@@ -195,6 +275,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       const menuItems = msgOperMenu
         ? mergeActions(defaultMenuItems, msgOperMenu, 'key')
         : defaultMenuItems
+
       return menuItems.filter((item) => item.show)
     }
 
@@ -208,31 +289,20 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       ]
     }
 
-    const renderSpecialMsg = () => {
-      return (
-        <div key={idClient} className={`${_prefix}-recall`}>
-          {attachType === 'reCallMsg' ? (
-            <>
-              {`${t('you')}${t('recallMessageText')}`}
-              {canEdit ? (
-                <span
-                  className={`${_prefix}-reedit`}
-                  onClick={() => onReeditClick(msg)}
-                >
-                  {t('reeditText')}
-                </span>
-              ) : null}
-            </>
-          ) : (
-            `${isSelf ? t('you') : nick} ${t('recallMessageText')}`
-          )}
-        </div>
-      )
-    }
-
-    return attachType === 'reCallMsg' || attachType === 'beReCallMsg' ? (
-      renderSpecialMsg()
-    ) : type === 'notification' ? (
+    return messageType ===
+      V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TIPS &&
+      Object.keys(aiErrorMap)
+        .map((item) => Number(item))
+        .includes(messageStatus.errorCode) ? (
+      <ParseSession msg={msg} prefix={commonPrefix} />
+    ) : recallType === 'reCallMsg' || recallType === 'beReCallMsg' ? (
+      <ParseSession
+        msg={msg}
+        prefix={commonPrefix}
+        onReeditClick={onReeditClick}
+      />
+    ) : messageType ===
+      V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_NOTIFICATION ? (
       <ParseSession replyMsg={replyMsg} msg={msg} prefix={commonPrefix} />
     ) : (
       <div
@@ -246,7 +316,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
               <MyAvatarContainer prefix={commonPrefix} canClick={false} />
             ) : (
               <Dropdown
-                key={idClient}
+                key={messageClientId}
                 trigger={['contextMenu']}
                 overlay={
                   onMessageAvatarAction ? (
@@ -270,7 +340,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
                 >
                   <ComplexAvatarContainer
                     prefix={commonPrefix}
-                    account={from}
+                    account={senderId}
                   />
                 </div>
               </Dropdown>
@@ -279,7 +349,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
         )}
 
         <Dropdown
-          key={idClient}
+          key={messageClientId}
           trigger={['contextMenu']}
           overlay={
             <Menu
@@ -309,6 +379,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
                       replyMsg={replyMsg}
                       msg={msg}
                       prefix={commonPrefix}
+                      showThreadReply={true}
                     />
                   )}
                 </div>
@@ -319,7 +390,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
                 [`${_prefix}-date-self`]: isSelf,
               })}
             >
-              {renderMsgDate()}
+              {formatDate(createTime)}
             </div>
           </div>
         </Dropdown>

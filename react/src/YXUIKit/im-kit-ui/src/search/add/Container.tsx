@@ -1,11 +1,15 @@
 import React, { useState } from 'react'
-import { useStateContext, useEventTracking } from '../../common'
+import {
+  useStateContext,
+  useEventTracking,
+  CreateTeamModal,
+} from '../../common'
 import AddPanel from './components/AddPanel'
 import AddFriendModal from './components/AddFriendModal'
 import JoinTeamModal from './components/JoinTeamModal'
-import CreateModal from './components/CreateModal'
 import packageJson from '../../../package.json'
 import { observer } from 'mobx-react'
+import sdkPkg from 'nim-web-sdk-ng/package.json'
 
 export type PanelScene = 'addFriend' | 'joinTeam' | 'createTeam'
 
@@ -28,13 +32,13 @@ export interface AddContainerProps {
 
 export const AddContainer: React.FC<AddContainerProps> = observer(
   ({ onClickChat, prefix = 'search', commonPrefix = 'common' }) => {
-    const { nim, initOptions } = useStateContext()
+    const { nim } = useStateContext()
 
     useEventTracking({
-      appkey: initOptions.appkey,
+      appkey: nim.options.appkey,
       version: packageJson.version,
       component: 'SearchUIKit',
-      imVersion: nim.version,
+      imVersion: sdkPkg.version,
     })
 
     const [addFriendModalVisible, setAddFriendModalVisible] = useState(false)
@@ -51,6 +55,7 @@ export const AddContainer: React.FC<AddContainerProps> = observer(
           break
         case 'joinTeam':
           setJoinTeamModalVisible(visible)
+          break
         default:
           break
       }
@@ -88,14 +93,13 @@ export const AddContainer: React.FC<AddContainerProps> = observer(
           prefix={prefix}
           commonPrefix={commonPrefix}
         />
-        <CreateModal
+        <CreateTeamModal
           visible={createModalVisible}
           onCancel={() => {
             setCreateModalVisible(false)
           }}
           onChat={handleChat.bind(null, 'createTeam')}
-          prefix={prefix}
-          commonPrefix={commonPrefix}
+          prefix={commonPrefix}
         />
       </div>
     )

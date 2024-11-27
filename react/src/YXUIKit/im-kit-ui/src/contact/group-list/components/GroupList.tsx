@@ -1,13 +1,14 @@
-import React, { FC } from 'react'
+import React, { FC, useCallback } from 'react'
 import { GroupItem } from './GroupItem'
-import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
 import { useTranslation } from '../../../common'
 import { Spin, Empty } from 'antd'
+import { AutoSizer, List } from 'react-virtualized'
 
 export interface GroupListProps {
-  list: Team[]
+  list: V2NIMTeam[]
   loading?: boolean
-  onItemClick?: (team: Team) => void
+  onItemClick?: (team: V2NIMTeam) => void
   renderGroupListHeader?: () => JSX.Element
   renderGroupListEmpty?: () => JSX.Element
   prefix?: string
@@ -25,6 +26,24 @@ export const GroupList: FC<GroupListProps> = ({
 
   const { t } = useTranslation()
 
+  const rowRenderer = useCallback(
+    ({ index, key, style }) => {
+      const item = list[index]
+
+      return (
+        <div style={style} key={key}>
+          <GroupItem
+            key={item.teamId}
+            prefix={prefix}
+            onItemClick={onItemClick}
+            {...item}
+          />
+        </div>
+      )
+    },
+    [list, onItemClick, prefix]
+  )
+
   return (
     <div className={`${_prefix}-wrapper`}>
       <div className={`${_prefix}-title`}>
@@ -40,14 +59,18 @@ export const GroupList: FC<GroupListProps> = ({
             <Empty style={{ marginTop: 10 }} />
           )
         ) : (
-          list.map((item) => (
-            <GroupItem
-              key={item.teamId}
-              prefix={prefix}
-              onItemClick={onItemClick}
-              {...item}
-            />
-          ))
+          <AutoSizer>
+            {({ height, width }) => (
+              <List
+                height={height}
+                overscanRowCount={10}
+                rowCount={list.length}
+                rowHeight={70}
+                rowRenderer={rowRenderer}
+                width={width}
+              />
+            )}
+          </AutoSizer>
         )}
       </div>
     </div>

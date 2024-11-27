@@ -14,7 +14,6 @@ export interface ChatSettingDrawerProps {
 const ChatSettingDrawer: React.FC<ChatSettingDrawerProps> = ({
   visible,
   onClose,
-  drawerContainer,
   title,
   children,
   prefix = 'chat',

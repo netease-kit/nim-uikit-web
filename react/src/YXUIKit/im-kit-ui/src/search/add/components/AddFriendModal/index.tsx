@@ -3,11 +3,12 @@ import {
   SearchInput,
   useTranslation,
   useStateContext,
+  CrudeAvatar,
 } from '../../../../common'
 import React, { useState } from 'react'
-import { CrudeAvatar } from '../../../../common'
-import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
+import { V2NIMUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMUserService'
 import { observer } from 'mobx-react'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 export interface AddFriendModalProps {
   visible: boolean
@@ -33,7 +34,7 @@ const AddFriendModal: React.FC<AddFriendModalProps> = observer(
 
     const [searchValue, setSearchValue] = useState('')
     const [searchRes, setSearchRes] = useState<
-      (UserNameCard & { alias?: string }) | undefined
+      (V2NIMUser & { alias?: string }) | undefined
     >(undefined)
     const [searchResEmpty, setSearchResEmpty] = useState(false)
     const [searching, setSearching] = useState(false)
@@ -49,11 +50,13 @@ const AddFriendModal: React.FC<AddFriendModalProps> = observer(
       try {
         setSearching(true)
         const user = await store.userStore.getUserActive(searchValue)
+
         if (!user) {
           setSearchResEmpty(true)
         } else {
           setSearchRes(user)
         }
+
         setSearching(false)
       } catch (error) {
         setSearchResEmpty(true)
@@ -66,13 +69,26 @@ const AddFriendModal: React.FC<AddFriendModalProps> = observer(
         if (searchRes) {
           setAdding(true)
           if (localOptions?.addFriendNeedVerify) {
-            await store.friendStore.applyFriendActive(searchRes.account)
+            await store.friendStore.addFriendActive(searchRes.accountId, {
+              addMode:
+                V2NIMConst.V2NIMFriendAddMode.V2NIM_FRIEND_MODE_TYPE_APPLY,
+              postscript: '',
+            })
             message.success(t('applyFriendSuccessText'))
           } else {
-            await store.friendStore.addFriendActive(searchRes.account)
+            await store.friendStore.addFriendActive(searchRes.accountId, {
+              addMode: V2NIMConst.V2NIMFriendAddMode.V2NIM_FRIEND_MODE_TYPE_ADD,
+              postscript: '',
+            })
             message.success(t('addFriendSuccessText'))
           }
+
+          // 发送申请或添加好友成功后解除黑名单
+          await store.relationStore.removeUserFromBlockListActive(
+            searchRes.accountId
+          )
         }
+
         setAdding(false)
       } catch (error) {
         setAdding(false)
@@ -81,8 +97,11 @@ const AddFriendModal: React.FC<AddFriendModalProps> = observer(
 
     const handleChat = async () => {
       if (searchRes) {
-        await store.sessionStore.insertSessionActive('p2p', searchRes.account)
-        onChat(searchRes.account)
+        await store.conversationStore.insertConversationActive(
+          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
+          searchRes.accountId
+        )
+        onChat(searchRes.accountId)
         resetState()
       }
     }
@@ -132,18 +151,19 @@ const AddFriendModal: React.FC<AddFriendModalProps> = observer(
           <div className={`${_prefix}-content`}>
             <CrudeAvatar
               avatar={searchRes.avatar}
-              nick={searchRes.nick}
-              account={searchRes.account}
+              nick={searchRes.name}
+              account={searchRes.accountId}
             />
             <div className={`${_prefix}-info`}>
               <div className={`${_prefix}-info-name`}>
-                {searchRes.nick || searchRes.account}
+                {searchRes.name || searchRes.accountId}
               </div>
               <div className={`${_prefix}-info-account`}>
-                {searchRes.account}
+                {searchRes.accountId}
               </div>
             </div>
-            {store.uiStore.getRelation(searchRes.account) !== 'stranger' ? (
+            {store.uiStore.getRelation(searchRes.accountId).relation !==
+            'stranger' ? (
               <Button type="primary" onClick={handleChat}>
                 {t('chatButtonText')}
               </Button>

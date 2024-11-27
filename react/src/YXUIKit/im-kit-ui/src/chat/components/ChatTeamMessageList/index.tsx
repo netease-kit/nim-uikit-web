@@ -1,24 +1,23 @@
 import React, { forwardRef } from 'react'
-import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
-import { TeamMember } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
 import MessageListItem, { MessageItemProps } from '../ChatMessageItem'
 import { Alert, Spin } from 'antd'
 import { ArrowDownOutlined } from '@ant-design/icons'
 import { ReadPercent, useStateContext, useTranslation } from '../../../common'
-import { storeUtils } from '@xkit-yx/im-store'
+import { storeUtils } from '@xkit-yx/im-store-v2'
 import { MsgOperMenuItem } from '../../Container'
+import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
 
-export interface RenderTeamCustomMessageOptions
-  extends Omit<MessageItemProps, 'myAccount'> {
-  members: TeamMember[]
+export interface RenderTeamCustomMessageOptions extends MessageItemProps {
+  members: V2NIMTeamMember[]
 }
 
 export interface ChatTeamMessageListProps
   extends Omit<MessageItemProps, 'msg' | 'alias'> {
-  msgs: IMMessage[]
+  msgs: V2NIMMessageForUI[]
   msgOperMenu?: MsgOperMenuItem[]
-  replyMsgsMap: Record<string, IMMessage>
-  members: TeamMember[]
+  replyMsgsMap: Record<string, V2NIMMessageForUI>
+  members: V2NIMTeamMember[]
   renderTeamCustomMessage?: (
     options: RenderTeamCustomMessageOptions
   ) => JSX.Element | null | undefined
@@ -34,110 +33,110 @@ export interface ChatTeamMessageListProps
 const ChatTeamMessageList = forwardRef<
   HTMLDivElement,
   ChatTeamMessageListProps
->(
-  (
-    {
-      prefix = 'chat',
-      commonPrefix = 'common',
-      msgs,
-      msgOperMenu,
-      replyMsgsMap,
-      members,
-      receiveMsgBtnVisible = false,
-      strangerNotiVisible = false,
-      strangerNotiText = '',
-      onReceiveMsgBtnClick,
-      loadingMore,
-      noMore,
-      myAccount,
-      onResend,
-      onMessageAction,
-      onMessageAvatarAction,
-      onReeditClick,
-      onScroll,
-      renderTeamCustomMessage,
-      renderMessageAvatar,
-      renderMessageName,
-      renderMessageInnerContent,
-      renderMessageOuterContent,
-    },
-    ref
-  ) => {
-    const _prefix = `${prefix}-message-list`
+>(function ChatTeamMessageListContent(
+  {
+    prefix = 'chat',
+    commonPrefix = 'common',
+    msgs,
+    topMessage,
+    msgOperMenu,
+    replyMsgsMap,
+    members,
+    receiveMsgBtnVisible = false,
+    strangerNotiVisible = false,
+    strangerNotiText = '',
+    onReceiveMsgBtnClick,
+    loadingMore,
+    noMore,
+    onResend,
+    onMessageAction,
+    onMessageAvatarAction,
+    onReeditClick,
+    onScroll,
+    renderTeamCustomMessage,
+    renderMessageAvatar,
+    renderMessageName,
+    renderMessageInnerContent,
+    renderMessageOuterContent,
+  },
+  ref
+) {
+  const _prefix = `${prefix}-message-list`
 
-    const { t } = useTranslation()
+  const { t } = useTranslation()
 
-    const { localOptions } = useStateContext()
+  const { localOptions } = useStateContext()
 
-    const renderMsgs = storeUtils.getFilterMsgs(msgs)
+  const renderMsgs = storeUtils.getFilterMsgs(msgs)
 
-    return (
-      <div className={_prefix} ref={ref} onScroll={onScroll}>
-        <div className={`${_prefix}-tip`}>
-          {noMore ? t('noMoreText') : loadingMore ? <Spin /> : null}
-        </div>
-        <div className={`${_prefix}-content`}>
-          {renderMsgs.map((msg) => {
-            const msgItem = renderTeamCustomMessage?.({
-              msg,
-              replyMsg: replyMsgsMap[msg.idClient],
-              members,
-              onResend,
-              onReeditClick,
-              onMessageAction,
-            }) ?? (
-              <MessageListItem
-                key={msg.idClient}
-                prefix={prefix}
-                commonPrefix={commonPrefix}
-                msg={msg}
-                msgOperMenu={msgOperMenu}
-                replyMsg={replyMsgsMap[msg.idClient]}
-                normalStatusRenderer={
-                  localOptions.teamMsgReceiptVisible ? (
-                    <ReadPercent
-                      unread={msg.attach?.yxUnread ?? members.length - 1}
-                      read={msg.attach?.yxRead ?? 0}
-                      hoverable
-                      prefix={commonPrefix}
-                    />
-                  ) : null
-                }
-                myAccount={myAccount}
-                onResend={onResend}
-                onMessageAction={onMessageAction}
-                onMessageAvatarAction={onMessageAvatarAction}
-                onReeditClick={onReeditClick}
-                renderMessageAvatar={renderMessageAvatar}
-                renderMessageName={renderMessageName}
-                renderMessageInnerContent={renderMessageInnerContent}
-                renderMessageOuterContent={renderMessageOuterContent}
-              />
-            )
-            return (
-              <div id={msg.idClient} key={msg.idClient}>
-                {msgItem}
-              </div>
-            )
-          })}
-        </div>
-        {receiveMsgBtnVisible ? (
-          <div className={`${_prefix}-tobottom`} onClick={onReceiveMsgBtnClick}>
-            <span>{t('receiveText')}</span>
-            <ArrowDownOutlined />
-          </div>
-        ) : null}
-        {strangerNotiVisible ? (
-          <Alert
-            className={`${_prefix}-stranger-noti`}
-            banner
-            closable
-            message={strangerNotiText}
-          />
-        ) : null}
+  return (
+    <div className={_prefix} ref={ref} onScroll={onScroll}>
+      <div className={`${_prefix}-tip`}>
+        {noMore ? t('noMoreText') : loadingMore ? <Spin /> : null}
       </div>
-    )
-  }
-)
+      <div className={`${_prefix}-content`}>
+        {renderMsgs.map((msg) => {
+          const msgItem = renderTeamCustomMessage?.({
+            msg,
+            replyMsg: replyMsgsMap[msg.messageClientId],
+            topMessage,
+            members,
+            onResend,
+            onReeditClick,
+            onMessageAction,
+          }) ?? (
+            <MessageListItem
+              key={msg.messageClientId}
+              topMessage={topMessage}
+              prefix={prefix}
+              commonPrefix={commonPrefix}
+              msg={msg}
+              msgOperMenu={msgOperMenu}
+              replyMsg={replyMsgsMap[msg.messageClientId]}
+              normalStatusRenderer={
+                localOptions.teamMsgReceiptVisible ? (
+                  <ReadPercent
+                    unread={msg.yxUnread ?? members.length - 1}
+                    read={msg.yxRead ?? 0}
+                    hoverable
+                    prefix={commonPrefix}
+                  />
+                ) : null
+              }
+              onResend={onResend}
+              onMessageAction={onMessageAction}
+              onMessageAvatarAction={onMessageAvatarAction}
+              onReeditClick={onReeditClick}
+              renderMessageAvatar={renderMessageAvatar}
+              renderMessageName={renderMessageName}
+              renderMessageInnerContent={renderMessageInnerContent}
+              renderMessageOuterContent={renderMessageOuterContent}
+            />
+          )
+
+          return (
+            <div id={msg.messageClientId} key={msg.messageClientId}>
+              {msgItem}
+            </div>
+          )
+        })}
+      </div>
+      {receiveMsgBtnVisible ? (
+        <div className={`${_prefix}-tobottom`} onClick={onReceiveMsgBtnClick}>
+          <span>{t('receiveText')}</span>
+          <ArrowDownOutlined />
+        </div>
+      ) : null}
+      {strangerNotiVisible ? (
+        <Alert
+          className={`${_prefix}-stranger-noti`}
+          banner
+          closable
+          message={strangerNotiText}
+        />
+      ) : null}
+    </div>
+  )
+})
 
 export default ChatTeamMessageList

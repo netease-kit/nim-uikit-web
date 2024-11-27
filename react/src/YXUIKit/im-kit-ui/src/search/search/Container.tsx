@@ -1,13 +1,15 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useTranslation, useEventTracking, useStateContext } from '../../common'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import { SearchOutlined } from '@ant-design/icons'
-import SearchModal from './components/SearchModal'
-import { SectionListItem } from './components/SearchModal'
-import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+import SearchModal, { SectionListItem } from './components/SearchModal'
 import packageJson from '../../../package.json'
-import { TMsgScene } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import { V2NIMConversationType } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
+import { V2NIMFriend } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMFriendService'
+import { V2NIMUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMUserService'
 import { observer } from 'mobx-react'
+import sdkPkg from 'nim-web-sdk-ng/package.json'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 export interface SearchContainerProps {
   /**
@@ -44,42 +46,66 @@ export const SearchContainer: React.FC<SearchContainerProps> = observer(
     renderEmpty,
     renderSearchResultEmpty,
   }) => {
-    const { nim, store, initOptions } = useStateContext()
+    const { nim, store } = useStateContext()
 
     const { t } = useTranslation()
 
     useEventTracking({
-      appkey: initOptions.appkey,
+      appkey: nim.options.appkey,
       version: packageJson.version,
       component: 'SearchUIKit',
-      imVersion: nim.version,
+      imVersion: sdkPkg.version,
     })
 
     const [visible, setVisible] = useState(false)
 
-    const handleChat = async (item: SectionListItem) => {
-      let scene: TMsgScene
-      let to = ''
-      if ((item as NimKitCoreTypes.IFriendInfo).account) {
-        scene = 'p2p'
-        to = (item as NimKitCoreTypes.IFriendInfo).account
-      } else if ((item as Team).teamId) {
-        scene = 'team'
-        to = (item as Team).teamId
-      } else {
-        throw Error('unknow scene')
-      }
+    const handleChat = useCallback(
+      async (item: SectionListItem) => {
+        let conversationType: V2NIMConversationType
+        let receiverId = ''
 
-      await store.sessionStore.insertSessionActive(scene, to)
-      setVisible(false)
-      onClickChat?.()
-    }
+        if ((item as V2NIMFriend & V2NIMUser).accountId) {
+          conversationType =
+            V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
+          receiverId = (item as V2NIMFriend & V2NIMUser).accountId
+        } else if ((item as V2NIMTeam).teamId) {
+          conversationType =
+            V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
+          receiverId = (item as V2NIMTeam).teamId
+        } else {
+          throw Error('unknow scene')
+        }
+
+        await store.conversationStore.insertConversationActive(
+          conversationType,
+          receiverId
+        )
+        setVisible(false)
+        onClickChat?.()
+      },
+      [onClickChat, store.conversationStore]
+    )
 
     const handleOpenModal = async () => {
       setVisible(true)
     }
 
     const _prefix = `${prefix}-search`
+
+    const friendsWithoutBlacklist = store.uiStore.friends
+      .filter((item) => !store.relationStore.blacklist.includes(item.accountId))
+      .map((item) => {
+        const user: V2NIMUser = store.userStore.users.get(item.accountId) || {
+          accountId: '',
+          name: '',
+          createTime: Date.now(),
+        }
+
+        return {
+          ...item,
+          ...user,
+        }
+      })
 
     return (
       <div className={`${_prefix}-wrapper`}>
@@ -91,7 +117,7 @@ export const SearchContainer: React.FC<SearchContainerProps> = observer(
         </div>
         <SearchModal
           visible={visible}
-          friends={store.uiStore.friendsWithoutBlacklist}
+          friends={friendsWithoutBlacklist}
           teams={store.uiStore.teamList}
           onCancel={() => setVisible(false)}
           prefix={prefix}

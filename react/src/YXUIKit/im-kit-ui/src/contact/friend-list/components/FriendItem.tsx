@@ -28,7 +28,9 @@ export const FriendItem: FC<FriendItemProps> = observer(
 
     const { t } = useTranslation()
 
-    const isOnline = store.eventStore.stateMap.get(account) === 'online'
+    // TODO sdk 暂不支持在线状态
+    // const isOnline = store.eventStore.stateMap.get(account) === 'online'
+    const isOnline = 'online'
 
     return (
       <div

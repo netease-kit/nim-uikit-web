@@ -5,6 +5,12 @@ import packageJson from '../../../package.json'
 import { observer } from 'mobx-react'
 import { message } from 'antd'
 import { logger } from '../../utils'
+import sdkPkg from 'nim-web-sdk-ng/package.json'
+import {
+  V2NIMFriendAddApplicationForUI,
+  V2NIMTeamJoinActionInfoForUI,
+} from '@xkit-yx/im-store-v2/dist/types/types'
+import { TMsgItem, TMsgItemType } from './components/MsgItem'
 
 export interface MsgListContainerProps {
   /**
@@ -22,27 +28,27 @@ export interface MsgListContainerProps {
   /**
    通过入群申请后的事件
    */
-  afterAcceptApplyTeam?: (options: { teamId: string; from: string }) => void
+  afterAcceptApplyTeam?: (actionInfo: V2NIMTeamJoinActionInfoForUI) => void
   /**
    拒绝入群申请后的事件
    */
-  afterRejectApplyTeam?: (options: { teamId: string; from: string }) => void
+  afterRejectApplyTeam?: (actionInfo: V2NIMTeamJoinActionInfoForUI) => void
   /**
    通过入群邀请后的事件
    */
-  afterAcceptTeamInvite?: (options: { teamId: string; from: string }) => void
+  afterAcceptTeamInvite?: (actionInfo: V2NIMTeamJoinActionInfoForUI) => void
   /**
    拒绝入群邀请后的事件
    */
-  afterRejectTeamInvite?: (options: { teamId: string; from: string }) => void
+  afterRejectTeamInvite?: (actionInfo: V2NIMTeamJoinActionInfoForUI) => void
   /**
    通过好友申请后的事件
    */
-  afterAcceptApplyFriend?: (account: string) => void
+  afterAcceptApplyFriend?: (application: V2NIMFriendAddApplicationForUI) => void
   /**
    拒绝好友申请后的事件
    */
-  afterRejectApplyFriend?: (account: string) => void
+  afterRejectApplyFriend?: (application: V2NIMFriendAddApplicationForUI) => void
   /**
    样式前缀
    */
@@ -67,31 +73,41 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
     prefix = 'contact',
     commonPrefix = 'common',
   }) => {
-    const { nim, store, initOptions } = useStateContext()
+    const { nim, store } = useStateContext()
 
     const { t } = useTranslation()
 
     useEventTracking({
-      appkey: initOptions.appkey,
+      appkey: nim.options.appkey,
       version: packageJson.version,
       component: 'ContactUIKit',
-      imVersion: nim.version,
+      imVersion: sdkPkg.version,
     })
+
+    const msgs: TMsgItem[] = [
+      ...store.sysMsgStore.friendApplyMsgs.map((item) => ({
+        ...item,
+        messageType: TMsgItemType.FRIEND,
+      })),
+      ...store.sysMsgStore.teamJoinActionMsgs.map((item) => ({
+        ...item,
+        messageType: TMsgItemType.TEAM,
+      })),
+    ].sort((a, b) => b.timestamp - a.timestamp)
 
     const [applyTeamLoaidng, setApplyTeamLoaidng] = useState(false)
     const [teamInviteLoading, setTeamInviteLoading] = useState(false)
     const [applyFriendLoading, setApplyFriendLoading] = useState(false)
 
-    const onAcceptApplyTeamClick = (options: {
-      teamId: string
-      from: string
-    }) => {
+    const onAcceptApplyTeamClick = (
+      actionInfo: V2NIMTeamJoinActionInfoForUI
+    ) => {
       setApplyTeamLoaidng(true)
       store.teamStore
-        .passTeamApplyActive(options)
+        .passTeamApplyActive(actionInfo)
         .then(() => {
           message.success(t('acceptedText'))
-          afterAcceptApplyTeam?.(options)
+          afterAcceptApplyTeam?.(actionInfo)
         })
         .catch((err) => {
           message.error(t('acceptFailedText'))
@@ -102,16 +118,15 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         })
     }
 
-    const onRejectApplyTeamClick = (options: {
-      teamId: string
-      from: string
-    }) => {
+    const onRejectApplyTeamClick = (
+      actionInfo: V2NIMTeamJoinActionInfoForUI
+    ) => {
       setApplyTeamLoaidng(true)
       store.teamStore
-        .rejectTeamApplyActive(options)
+        .rejectTeamApplyActive(actionInfo)
         .then(() => {
           message.success(t('rejectedText'))
-          afterRejectApplyTeam?.(options)
+          afterRejectApplyTeam?.(actionInfo)
         })
         .catch((err) => {
           message.error(t('rejectFailedText'))
@@ -122,16 +137,15 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         })
     }
 
-    const onAcceptTeamInviteClick = (options: {
-      teamId: string
-      from: string
-    }) => {
+    const onAcceptTeamInviteClick = (
+      actionInfo: V2NIMTeamJoinActionInfoForUI
+    ) => {
       setTeamInviteLoading(true)
       store.teamStore
-        .acceptTeamInviteActive(options)
+        .acceptTeamInviteActive(actionInfo)
         .then(() => {
           message.success(t('acceptedText'))
-          afterAcceptTeamInvite?.(options)
+          afterAcceptTeamInvite?.(actionInfo)
         })
         .catch((err) => {
           message.error(t('acceptFailedText'))
@@ -142,16 +156,15 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         })
     }
 
-    const onRejectTeamInviteClick = (options: {
-      teamId: string
-      from: string
-    }) => {
+    const onRejectTeamInviteClick = (
+      actionInfo: V2NIMTeamJoinActionInfoForUI
+    ) => {
       setTeamInviteLoading(true)
       store.teamStore
-        .rejectTeamInviteActive(options)
+        .rejectTeamInviteActive(actionInfo)
         .then(() => {
           message.success(t('rejectedText'))
-          afterRejectTeamInvite?.(options)
+          afterRejectTeamInvite?.(actionInfo)
         })
         .catch((err) => {
           message.error(t('rejectFailedText'))
@@ -162,12 +175,14 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         })
     }
 
-    const onAcceptApplyFriendClick = async (account: string) => {
+    const onAcceptApplyFriendClick = async (
+      application: V2NIMFriendAddApplicationForUI
+    ) => {
       try {
         setApplyFriendLoading(true)
-        await store.friendStore.passFriendApplyActive(account)
+        await store.friendStore.acceptAddApplicationActive(application)
         message.success(t('acceptedText'))
-        afterAcceptApplyFriend?.(account)
+        afterAcceptApplyFriend?.(application)
       } catch (error) {
         message.error(t('acceptFailedText'))
         logger.error('同意该申请失败: ', error)
@@ -176,13 +191,15 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
       }
     }
 
-    const onRejectApplyFriendClick = (account: string) => {
+    const onRejectApplyFriendClick = (
+      application: V2NIMFriendAddApplicationForUI
+    ) => {
       setApplyFriendLoading(true)
       store.friendStore
-        .rejectFriendApplyActive(account)
+        .rejectAddApplicationActive(application)
         .then(() => {
           message.success(t('rejectedText'))
-          afterRejectApplyFriend?.(account)
+          afterRejectApplyFriend?.(application)
         })
         .catch((err) => {
           message.error(t('rejectFailedText'))
@@ -195,7 +212,7 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
 
     return (
       <MsgList
-        msgs={store.uiStore.applyMsgList}
+        msgs={msgs}
         applyTeamLoaidng={applyTeamLoaidng}
         teamInviteLoading={teamInviteLoading}
         applyFriendLoading={applyFriendLoading}

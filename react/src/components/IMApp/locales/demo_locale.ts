@@ -27,6 +27,12 @@ export const demo_zh = {
   needMentionText: '是否需要@消息',
   teamManagerEnableText: '是否开启群管理员功能',
   deleteText: '删除',
+  collectionText: '收藏',
+  languageText: '语言',
+  zhText: '中文',
+  enText: 'English',
+  securityTipText:
+    '仅用于体验云信IM 产品功能，请勿轻信汇款、中奖等涉及钱款的信息，勿轻易拨打陌生电话，谨防上当受骗。',
 }
 
 export const demo_en = {
@@ -59,4 +65,9 @@ export const demo_en = {
   needMentionText: 'Whether or not an @ message is needed',
   teamManagerEnableText: 'Whether or not team manager is needed',
   deleteText: 'delete',
+  collectionText: 'collection',
+  zhText: '中文',
+  enText: 'English',
+  securityTipText:
+    'Only for testing the Netease IM product function, please do not believe in any information about money transfer, lottery winning and so on. Do not easily call strangers and be careful to get cheated.',
 }

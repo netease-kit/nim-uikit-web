@@ -13,10 +13,12 @@ export type { ProviderProps, ContextProps } from './contextManager/Provider'
 export { UserCard } from './components/UserCard'
 export { MyUserCard } from './components/MyUserCard'
 export { GroupAvatarSelect, urls } from './components/GroupAvatarSelect'
-export { FriendSelectContainer } from './components/FriendSelect/Container'
+export { FriendSelect } from './components/FriendSelect'
+export { CreateTeamModal } from './components/CreateTeamModal'
 export { Welcome } from './components/Welcome'
 export { ReadPercent } from './components/ReadPercent'
 export { SelectModal } from './components/SelectModal'
+export { RichText } from './components/RichText'
 export {
   ParseSession,
   getMsgContentTipByType,

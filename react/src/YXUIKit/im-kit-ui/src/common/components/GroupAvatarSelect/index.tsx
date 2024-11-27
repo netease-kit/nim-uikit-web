@@ -1,6 +1,7 @@
 import React, { FC, useMemo, useState, useEffect } from 'react'
 import { Tooltip, Button } from 'antd'
 import { CrudeAvatar, CrudeAvatarProps } from '../CrudeAvatar'
+
 export interface GroupAvatarSelectProps extends CrudeAvatarProps {
   onSelect: (url: string) => void
   prefix?: string

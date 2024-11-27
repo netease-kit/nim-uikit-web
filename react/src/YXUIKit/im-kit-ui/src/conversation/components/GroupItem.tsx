@@ -1,18 +1,22 @@
 import React, { FC, useMemo } from 'react'
 import { Menu } from 'antd'
-import { CrudeAvatar, CommonIcon, useTranslation } from '../../common'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
+import {
+  CrudeAvatar,
+  CommonIcon,
+  useTranslation,
+  useStateContext,
+} from '../../common'
 import { ConversationItem } from './ConversationItem'
+import { V2NIMConversationForUI } from '@xkit-yx/im-store-v2/dist/types/types'
 
-export interface GroupItemProps extends NimKitCoreTypes.TeamSession {
+export interface GroupItemProps extends V2NIMConversationForUI {
   isSelected: boolean
   onStickTopChange: (isTop: boolean) => void
   onDeleteClick: () => void
   onItemClick: () => void
-  beMentioned?: boolean
   avatarRenderer?: JSX.Element | null
-  sessionNameRenderer?: JSX.Element | null
-  sessionMsgRenderer?: JSX.Element | null
+  conversationNameRenderer?: JSX.Element | null
+  conversationMsgRenderer?: JSX.Element | null
   prefix?: string
   commonPrefix?: string
 }
@@ -20,31 +24,33 @@ export interface GroupItemProps extends NimKitCoreTypes.TeamSession {
 export const GroupItem: FC<GroupItemProps> = ({
   onStickTopChange,
   onDeleteClick,
-  teamId,
+  conversationId,
   name,
   avatar,
-  unread,
-  lastMsg,
+  unreadCount,
+  lastMessage,
   beMentioned,
-  stickTopInfo,
+  stickTop,
   updateTime,
   isSelected,
   onItemClick,
   avatarRenderer,
-  sessionNameRenderer,
-  sessionMsgRenderer,
+  conversationNameRenderer,
+  conversationMsgRenderer,
   prefix = 'conversation',
   commonPrefix = 'common',
 }) => {
+  const { nim } = useStateContext()
   const { t } = useTranslation()
+
+  const teamId =
+    nim.V2NIMConversationIdUtil.parseConversationTargetId(conversationId)
 
   const menuRenderer = useMemo(() => {
     const items = [
       {
-        label: stickTopInfo?.isStickOnTop
-          ? t('deleteStickTopText')
-          : t('addStickTopText'),
-        icon: stickTopInfo?.isStickOnTop ? (
+        label: stickTop ? t('deleteStickTopText') : t('addStickTopText'),
+        icon: stickTop ? (
           <CommonIcon type="icon-quxiaozhiding" />
         ) : (
           <CommonIcon type="icon-xiaoxizhiding" />
@@ -63,7 +69,7 @@ export const GroupItem: FC<GroupItemProps> = ({
       {
         label: t('deleteSessionText'),
         icon: <CommonIcon type="icon-shanchu" />,
-        key: 'deleteSession',
+        key: 'deleteConversation',
       },
     ] as any
 
@@ -73,9 +79,9 @@ export const GroupItem: FC<GroupItemProps> = ({
           domEvent.stopPropagation()
           switch (key) {
             case 'stickTop':
-              onStickTopChange(!stickTopInfo?.isStickOnTop)
+              onStickTopChange(!stickTop)
               break
-            case 'deleteSession':
+            case 'deleteConversation':
               onDeleteClick()
               break
             default:
@@ -85,30 +91,30 @@ export const GroupItem: FC<GroupItemProps> = ({
         items={items}
       ></Menu>
     )
-  }, [stickTopInfo?.isStickOnTop, onStickTopChange, onDeleteClick, t])
+  }, [stickTop, onStickTopChange, onDeleteClick, t])
 
   return (
     <ConversationItem
-      isTop={!!stickTopInfo?.isStickOnTop}
+      isTop={stickTop}
       isMute={false}
-      sessionName={name || teamId}
-      time={lastMsg?.time || updateTime}
-      lastMsg={lastMsg}
+      conversationName={name || teamId}
+      time={lastMessage?.messageRefer.createTime || updateTime}
+      lastMessage={lastMessage}
       beMentioned={beMentioned}
       isSelected={isSelected}
       onItemClick={onItemClick}
       prefix={prefix}
       commonPrefix={commonPrefix}
       menuRenderer={menuRenderer}
-      sessionMsgRenderer={sessionMsgRenderer}
-      sessionNameRenderer={sessionNameRenderer}
+      conversationMsgRenderer={conversationMsgRenderer}
+      conversationNameRenderer={conversationNameRenderer}
       avatarRenderer={
         avatarRenderer ?? (
           <CrudeAvatar
             nick={name}
             account={teamId}
             avatar={avatar}
-            count={isSelected ? 0 : unread}
+            count={isSelected ? 0 : unreadCount}
           />
         )
       }

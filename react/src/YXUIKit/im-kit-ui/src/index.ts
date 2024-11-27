@@ -4,6 +4,7 @@ import {
   Utils,
   CrudeAvatar,
   SearchInput,
+  SelectModal,
   CommonIcon,
   ComplexAvatarUI,
   ComplexAvatarContainer,
@@ -16,17 +17,17 @@ import {
   MyUserCard,
   GroupAvatarSelect,
   urls,
-  FriendSelectContainer,
+  FriendSelect,
+  CreateTeamModal,
   Welcome,
   ReadPercent,
+  RichText,
   ParseSession,
   useStateContext,
   useTranslation,
   useEventTracking,
   UseEventTrackingProps,
 } from './common'
-
-import { NimKitCoreTypes, NimKitCoreFactory } from '@xkit-yx/core-kit'
 
 import { ConversationContainer } from './conversation'
 import {
@@ -35,33 +36,42 @@ import {
   FriendListContainer,
   GroupListContainer,
   ContactInfoContainer,
+  AIListContainer,
+  MsgListContainer,
 } from './contact'
-import { ChatContainer, ChatMessageItem } from './chat'
+import { ChatContainer, ChatMessageItem, ChatCollectionList } from './chat'
 import { AddContainer, SearchContainer } from './search'
-import RootStore from '@xkit-yx/im-store'
-import { NIMInitializeOptions } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/NIMInterface'
+import RootStore from '@xkit-yx/im-store-v2'
+import V2NIM from 'nim-web-sdk-ng'
+import { LocalOptions } from '@xkit-yx/im-store-v2/dist/types/types'
 
 export class IMUIKit {
-  context: {
-    nim: NimKitCoreTypes.INimKitCore
+  get context(): {
+    nim: V2NIM
     store: RootStore
-    initOptions: NIMInitializeOptions
+    localOptions: LocalOptions
+  } | void {
     // @ts-ignore
-  } | void = window.__xkit_store__
+    return window.__xkit_store__
+  }
   constructor(private providerProps: Omit<ProviderProps, 'children'>) {}
 
   render<
     T extends
       | typeof ComplexAvatarContainer
       | typeof MyAvatarContainer
-      | typeof FriendSelectContainer
+      | typeof FriendSelect
+      | typeof CreateTeamModal
       | typeof ConversationContainer
       | typeof ContactListContainer
       | typeof BlackListContainer
+      | typeof AIListContainer
+      | typeof MsgListContainer
       | typeof FriendListContainer
       | typeof GroupListContainer
       | typeof ContactInfoContainer
       | typeof ChatContainer
+      | typeof ChatCollectionList
       | typeof AddContainer
       | typeof SearchContainer
   >(item: T, props: React.ComponentProps<T> | null, view: HTMLElement): void {
@@ -81,22 +91,18 @@ export class IMUIKit {
   }
 
   getStateContext(): {
-    nim: NimKitCoreTypes.INimKitCore
+    nim: V2NIM
     store: RootStore
-    initOptions: NIMInitializeOptions
+    localOptions: LocalOptions
   } | void {
     return this.context
   }
 
   destroy(): void {
     this.context?.store.destroy()
-    this.context?.nim.destroy()
 
-    const NIM = NimKitCoreFactory(this.providerProps.sdkVersion || 1)
     // @ts-ignore
     RootStore.ins = void 0
-    //@ts-ignore
-    NIM.ins = void 0
   }
 }
 
@@ -115,23 +121,27 @@ export {
   MyUserCard,
   GroupAvatarSelect,
   urls,
-  FriendSelectContainer,
+  FriendSelect,
+  CreateTeamModal,
   Welcome,
   ReadPercent,
   ParseSession,
+  RichText,
+  SelectModal,
   useStateContext,
   useTranslation,
   useEventTracking,
-  NimKitCoreTypes,
-  NimKitCoreFactory,
   ConversationContainer,
   ContactListContainer,
   BlackListContainer,
+  AIListContainer,
+  MsgListContainer,
   FriendListContainer,
   GroupListContainer,
   ContactInfoContainer,
   ChatContainer,
   ChatMessageItem,
+  ChatCollectionList,
   AddContainer,
   SearchContainer,
 }

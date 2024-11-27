@@ -1,12 +1,15 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useMemo } from 'react'
 import {
   ConversationList,
   ConversationCallbackProps,
 } from './components/ConversationList'
 import { useStateContext, useEventTracking } from '../common'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import packageJson from '../../package.json'
 import { observer } from 'mobx-react'
+import { V2NIMConversation } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
+import sdkPkg from 'nim-web-sdk-ng/package.json'
+import { V2NIMConst } from 'nim-web-sdk-ng'
+import { PinAIList } from './components/pinAIList'
 
 export interface ConversationContainerProps {
   /**
@@ -20,62 +23,62 @@ export interface ConversationContainerProps {
   /**
    会话点击事件
    */
-  onSessionItemClick?: (id: string) => void
+  onConversationItemClick?: (id: string) => void
   /**
    会话删除事件
    */
-  onSessionItemDeleteClick?: (id: string) => void
+  onConversationItemDeleteClick?: (id: string) => void
   /**
    会话置顶状态改变事件
    */
-  onSessionItemStickTopChange?: (id: string, isTop: boolean) => void
+  onConversationItemStickTopChange?: (id: string, isTop: boolean) => void
   /**
    会话免打扰状态改变事件
    */
-  onSessionItemMuteChange?: (id: string, mute: boolean) => void
+  onConversationItemMuteChange?: (id: string, mute: boolean) => void
   /**
    自定义渲染会话列表为空时内容
    */
-  renderSessionListEmpty?: () => JSX.Element | null | undefined
+  renderConversationListEmpty?: () => JSX.Element | null | undefined
   /**
    自定义渲染会话类型是单聊的内容
    */
-  renderCustomP2pSession?: (
+  renderCustomP2pConversation?: (
     options: {
-      session: NimKitCoreTypes.ISession
+      conversation: V2NIMConversation
     } & ConversationCallbackProps
   ) => JSX.Element | null | undefined
   /**
    自定义渲染会话类型是群聊的内容
    */
-  renderCustomTeamSession?: (
+  renderCustomTeamConversation?: (
     options: {
-      session: NimKitCoreTypes.ISession
-    } & Omit<ConversationCallbackProps, 'onSessionItemMuteChange'>
+      conversation: V2NIMConversation
+    } & Omit<ConversationCallbackProps, 'onConversationItemMuteChange'>
   ) => JSX.Element | null | undefined
   /**
-   自定义会话名称。如果 p2p 会话定义了 renderCustomP2pSession 或群组会话定义了 renderCustomTeamSession 则不生效。
+   自定义会话名称。如果 p2p 会话定义了 renderCustomP2pConversation 或群组会话定义了 renderCustomTeamConversation 则不生效。
    */
-  renderSessionName?: (options: {
-    session: NimKitCoreTypes.ISession
+  renderConversationName?: (options: {
+    conversation: V2NIMConversation
   }) => JSX.Element | null | undefined
   /**
-   自定义会话消息。如果 p2p 会话定义了 renderCustomP2pSession 或群组会话定义了 renderCustomTeamSession 则不生效。
+   自定义会话消息。如果 p2p 会话定义了 renderCustomP2pConversation 或群组会话定义了 renderCustomTeamConversation 则不生效。
    */
-  renderSessionMsg?: (options: {
-    session: NimKitCoreTypes.ISession
+  renderConversationMsg?: (options: {
+    conversation: V2NIMConversation
   }) => JSX.Element | null | undefined
   /**
-   自定义 p2p 会话头像。如果定义了 renderCustomP2pSession 则不生效。
+   自定义 p2p 会话头像。如果定义了 renderCustomP2pConversation 则不生效。
    */
-  renderP2pSessionAvatar?: (options: {
-    session: NimKitCoreTypes.ISession
+  renderP2pConversationAvatar?: (options: {
+    conversation: V2NIMConversation
   }) => JSX.Element | null | undefined
   /**
-   自定义群组会话头像。如果定义了 renderCustomTeamSession 则不生效。
+   自定义群组会话头像。如果定义了 renderCustomTeamConversation 则不生效。
    */
-  renderTeamSessionAvatar?: (options: {
-    session: NimKitCoreTypes.ISession
+  renderTeamConversationAvatar?: (options: {
+    conversation: V2NIMConversation
   }) => JSX.Element | null | undefined
 }
 
@@ -83,103 +86,102 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
   ({
     prefix = 'conversation',
     commonPrefix = 'common',
-    onSessionItemClick,
-    onSessionItemDeleteClick,
-    onSessionItemStickTopChange,
-    onSessionItemMuteChange,
-    renderSessionListEmpty,
-    renderCustomP2pSession,
-    renderCustomTeamSession,
-    renderP2pSessionAvatar,
-    renderTeamSessionAvatar,
-    renderSessionName,
-    renderSessionMsg,
+    onConversationItemClick,
+    onConversationItemDeleteClick,
+    onConversationItemStickTopChange,
+    onConversationItemMuteChange,
+    renderConversationListEmpty,
+    renderCustomP2pConversation,
+    renderCustomTeamConversation,
+    renderP2pConversationAvatar,
+    renderTeamConversationAvatar,
+    renderConversationName,
+    renderConversationMsg,
   }) => {
-    const { nim, store, initOptions, localOptions } = useStateContext()
-    const sessionId = store.uiStore.selectedSession
+    const _prefix = `${prefix}-wrapper`
+
+    const { nim, store, localOptions } = useStateContext()
 
     useEventTracking({
-      appkey: initOptions.appkey,
+      appkey: nim.options.appkey,
       version: packageJson.version,
       component: 'ConversationUIKit',
-      imVersion: nim.version,
+      imVersion: sdkPkg.version,
     })
 
-    // 处理 team 会话列表 @ 提醒
-    const [sessionList, setSessionList] = useState<NimKitCoreTypes.ISession[]>(
-      []
-    )
-
-    const handleSessionItemClick = async (
-      session: NimKitCoreTypes.ISession
+    const handleConversationItemClick = async (
+      conversation: V2NIMConversation
     ) => {
-      await store.uiStore.selectSession(session.id)
-      onSessionItemClick?.(session.id)
+      await store.uiStore.selectConversation(conversation.conversationId)
+      onConversationItemClick?.(conversation.conversationId)
     }
 
-    const handleSessionItemDeleteClick = async (
-      session: NimKitCoreTypes.ISession
+    const handleConversationItemDeleteClick = async (
+      conversation: V2NIMConversation
     ) => {
-      await store.sessionStore.deleteSessionActive(session.id)
-      onSessionItemDeleteClick?.(session.id)
+      await store.conversationStore.deleteConversationActive(
+        conversation.conversationId
+      )
+      onConversationItemDeleteClick?.(conversation.conversationId)
     }
 
-    const handleSessionItemStickTopChange = async (
-      session: NimKitCoreTypes.ISession,
+    const handleConversationItemStickTopChange = async (
+      conversation: V2NIMConversation,
       isTop: boolean
     ) => {
-      if (isTop) {
-        await store.sessionStore.addStickTopSessionActive(session.id)
-      } else {
-        await store.sessionStore.deleteStickTopSessionActive(session.id)
-      }
-      onSessionItemStickTopChange?.(session.id, isTop)
+      await store.conversationStore.stickTopConversationActive(
+        conversation.conversationId,
+        isTop
+      )
+      onConversationItemStickTopChange?.(conversation.conversationId, isTop)
     }
 
-    const handleSessionItemMuteChange = async (
-      session: NimKitCoreTypes.ISession,
+    const handleConversationItemMuteChange = async (
+      conversation: V2NIMConversation,
       mute: boolean
     ) => {
-      await store.relationStore.setMuteActive({
-        account: session.to,
-        isAdd: mute,
-      })
-      onSessionItemMuteChange?.(session.id, mute)
+      await store.relationStore.setP2PMessageMuteModeActive(
+        nim.V2NIMConversationIdUtil.parseConversationTargetId(
+          conversation.conversationId
+        ),
+        mute
+          ? V2NIMConst.V2NIMP2PMessageMuteMode.V2NIM_P2P_MESSAGE_MUTE_MODE_ON
+          : V2NIMConst.V2NIMP2PMessageMuteMode.V2NIM_P2P_MESSAGE_MUTE_MODE_OFF
+      )
+      onConversationItemMuteChange?.(conversation.conversationId, mute)
     }
 
-    useEffect(() => {
-      setSessionList([...store.uiStore.sessionList])
-    }, [store.uiStore.sessionList])
-
-    useEffect(() => {
-      // 订阅会话列表中 p2p 的在线离线状态
-      const accounts = store.uiStore.sessionList
-        .filter((item) => item.scene === 'p2p')
-        .map((item) => item.to)
-      store.eventStore.subscribeLoginStateActive(accounts).catch((err) => {
-        // 忽略报错
-      })
-    }, [store.uiStore.sessionList, store.eventStore])
+    const conversations = useMemo(() => {
+      return store.uiStore.conversations.sort(
+        (a, b) => b.sortOrder - a.sortOrder
+      )
+    }, [store.uiStore.conversations])
 
     return (
-      <ConversationList
-        sessions={sessionList}
-        // loading={loading}
-        selectedSession={store.uiStore.selectedSession}
-        onSessionItemClick={handleSessionItemClick}
-        onSessionItemDeleteClick={handleSessionItemDeleteClick}
-        onSessionItemStickTopChange={handleSessionItemStickTopChange}
-        onSessionItemMuteChange={handleSessionItemMuteChange}
-        renderCustomP2pSession={renderCustomP2pSession}
-        renderCustomTeamSession={renderCustomTeamSession}
-        renderSessionListEmpty={renderSessionListEmpty}
-        renderP2pSessionAvatar={renderP2pSessionAvatar}
-        renderTeamSessionAvatar={renderTeamSessionAvatar}
-        renderSessionName={renderSessionName}
-        renderSessionMsg={renderSessionMsg}
-        prefix={prefix}
-        commonPrefix={commonPrefix}
-      />
+      <div className={_prefix}>
+        {localOptions.aiVisible ? (
+          <PinAIList prefix={prefix} commonPrefix={commonPrefix} />
+        ) : null}
+        <ConversationList
+          conversations={conversations}
+          selectedConversation={store.uiStore.selectedConversation}
+          onConversationItemClick={handleConversationItemClick}
+          onConversationItemDeleteClick={handleConversationItemDeleteClick}
+          onConversationItemStickTopChange={
+            handleConversationItemStickTopChange
+          }
+          onConversationItemMuteChange={handleConversationItemMuteChange}
+          renderCustomP2pConversation={renderCustomP2pConversation}
+          renderCustomTeamConversation={renderCustomTeamConversation}
+          renderConversationListEmpty={renderConversationListEmpty}
+          renderP2pConversationAvatar={renderP2pConversationAvatar}
+          renderTeamConversationAvatar={renderTeamConversationAvatar}
+          renderConversationName={renderConversationName}
+          renderConversationMsg={renderConversationMsg}
+          prefix={prefix}
+          commonPrefix={commonPrefix}
+        />
+      </div>
     )
   }
 )

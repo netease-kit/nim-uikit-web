@@ -5,9 +5,10 @@ import {
 } from '../ComplexAvatar/ComplexAvatarUI'
 import { message } from 'antd'
 import { useStateContext } from '../../hooks/useStateContext'
-import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 import { useTranslation } from '../../hooks/useTranslation'
 import { observer } from 'mobx-react'
+import { V2NIMUserUpdateParams } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMUserService'
+import { Gender } from '../UserCard'
 
 export type MyAvatarContainerProps = Pick<
   ComplexAvatarProps,
@@ -16,7 +17,7 @@ export type MyAvatarContainerProps = Pick<
   canClick?: boolean
 
   onCancel?: () => void
-  afterSave?: (res: UserNameCard) => void
+  afterSave?: (res: V2NIMUserUpdateParams) => void
 
   prefix?: string
 }
@@ -40,22 +41,49 @@ export const MyAvatarContainer: FC<MyAvatarContainerProps> = observer(
 
     const userInfo = store.userStore.myUserInfo
 
-    const handleSave = (
-      params: Pick<
-        UserNameCard,
-        'email' | 'gender' | 'nick' | 'tel' | 'signature'
-      > & { avatarFile?: File }
-    ) => {
+    const handleSave = ({
+      avatarFile,
+      gender,
+      email,
+      nick,
+      tel,
+      signature,
+    }: {
+      avatarFile?: File
+      gender?: Gender
+      email?: string
+      nick?: string
+      tel?: string
+      signature?: string
+    }) => {
+      const params: V2NIMUserUpdateParams = {}
+
+      if (gender !== void 0) {
+        params.gender = gender
+      }
+
+      if (email !== void 0) {
+        params.email = email
+      }
+
+      if (nick !== void 0) {
+        params.name = nick
+      }
+
+      if (tel !== void 0) {
+        params.mobile = tel
+      }
+
+      if (signature !== void 0) {
+        params.sign = signature
+      }
+
       store.userStore
-        .saveMyUserInfoActive({
-          ...params,
-          file: params.avatarFile,
-          type: params.avatarFile ? 'image' : undefined,
-        })
-        .then((res) => {
+        .updateSelfUserProfileActive(params, avatarFile)
+        .then(() => {
           message.success(t('saveSuccessText'))
           setVisible(false)
-          afterSave?.(res)
+          afterSave?.(params)
         })
         .catch(() => {
           message.error(t('saveFailedText'))
@@ -75,6 +103,7 @@ export const MyAvatarContainer: FC<MyAvatarContainerProps> = observer(
       <ComplexAvatarUI
         relation="myself"
         visible={visible}
+        isInBlacklist={false}
         onCancel={handleCancel}
         onSave={handleSave}
         onAvatarClick={canClick ? handleOnAvatarClick : undefined}
@@ -83,6 +112,13 @@ export const MyAvatarContainer: FC<MyAvatarContainerProps> = observer(
         dot={dot}
         size={size}
         icon={icon}
+        account={userInfo.accountId}
+        gender={userInfo.gender as Gender}
+        nick={userInfo.name}
+        tel={userInfo.mobile}
+        signature={userInfo.sign}
+        birth={userInfo.birthday}
+        ext={userInfo.serverExtension}
         {...userInfo}
       />
     )

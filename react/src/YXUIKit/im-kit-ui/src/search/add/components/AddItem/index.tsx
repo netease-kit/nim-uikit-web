@@ -18,6 +18,7 @@ const AddItem: React.FC<AddItemProps> = ({
   prefix,
 }) => {
   const _prefix = `${prefix}-add-item`
+
   return (
     <div className={_prefix} onClick={() => onClick(scene)}>
       <CommonIcon className={`${_prefix}-icon`} type={icon} />
@@ -25,4 +26,5 @@ const AddItem: React.FC<AddItemProps> = ({
     </div>
   )
 }
+
 export default AddItem

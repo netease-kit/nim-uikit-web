@@ -1,12 +1,11 @@
-import React, { FC, useMemo } from 'react'
-import { Utils, useTranslation } from '../../../common'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
+import React, { FC, useCallback, useMemo } from 'react'
+import { Utils, useStateContext, useTranslation } from '../../../common'
 import { FriendItem } from './FriendItem'
 import { Spin, Empty } from 'antd'
-// import { List } from 'react-virtualized'
+import { AutoSizer, List } from 'react-virtualized'
 
 export interface FriendListProps {
-  list: NimKitCoreTypes.IFriendInfo[]
+  accounts: string[]
   loading?: boolean
   onItemClick?: (account: string) => void
   afterSendMsgClick?: () => void
@@ -17,7 +16,7 @@ export interface FriendListProps {
 }
 
 export const FriendList: FC<FriendListProps> = ({
-  list,
+  accounts,
   loading = false,
   onItemClick,
   afterSendMsgClick,
@@ -30,54 +29,65 @@ export const FriendList: FC<FriendListProps> = ({
 
   const { t } = useTranslation()
 
+  const { store } = useStateContext()
+
   const dataSource = useMemo(() => {
-    const group = Utils.groupByPy<NimKitCoreTypes.IFriendInfo>(
-      list,
+    const data = accounts.map((account) => ({
+      account,
+      appellation: store.uiStore.getAppellation({ account }),
+    }))
+
+    const group = Utils.groupByPy(
+      data,
       {
-        firstKey: 'alias',
-        secondKey: 'nick',
-        thirdKey: 'account',
+        firstKey: 'appellation',
       },
       false
     )
-    const res: (NimKitCoreTypes.IFriendInfo | string)[] = []
+
+    const res: ({ account: string; appellation: string } | string)[] = []
+
     group.forEach((item) => {
       if (!res.includes(item.key)) {
         res.push(item.key)
       }
+
       res.push(...item.data)
     })
-    return res
-  }, [list])
 
-  // const rowHeight = (index: number) => {
-  //   if (typeof dataSource[index] === 'string') {
-  //     return 57
-  //   }
-  //   return 46
-  // }
+    return res.filter((item) => typeof item !== 'string') as {
+      account: string
+      appellation: string
+    }[]
+  }, [accounts, store.uiStore])
 
-  // const rowRenderer = (data: any) => {
-  //   const item = dataSource[data.index]
-  //   // console.log('rowRenderer:', key, index, item)
-  //   if (typeof item === 'string') {
-  //     return (
-  //       <div className={`${_prefix}-subtitle`} key={item}>
-  //         {item}
-  //       </div>
-  //     )
-  //   }
-  //   return (
-  //     <FriendItem
-  //       key={item.account}
-  //       account={item.account}
-  //       onItemClick={onItemClick}
-  //       afterSendMsgClick={afterSendMsgClick}
-  //       prefix={prefix}
-  //       commonPrefix={commonPrefix}
-  //     />
-  //   )
-  // }
+  const rowRenderer = useCallback(
+    ({ index, key, style }) => {
+      const item = dataSource[index]
+
+      // if (typeof item === 'string') {
+      //     return (
+      //       <div className={`${_prefix}-subtitle`} key={item}>
+      //         {item}
+      //       </div>
+      //     )
+      //   }
+
+      return (
+        <div style={style} key={key}>
+          <FriendItem
+            key={item.account}
+            account={item.account}
+            onItemClick={onItemClick}
+            afterSendMsgClick={afterSendMsgClick}
+            prefix={prefix}
+            commonPrefix={commonPrefix}
+          />
+        </div>
+      )
+    },
+    [afterSendMsgClick, commonPrefix, dataSource, onItemClick, prefix]
+  )
 
   return (
     <div className={`${_prefix}-wrapper`}>
@@ -89,40 +99,25 @@ export const FriendList: FC<FriendListProps> = ({
       <div className={`${_prefix}-list`}>
         {loading ? (
           <Spin />
-        ) : !list.length ? (
+        ) : !accounts.length ? (
           renderFriendListEmpty ? (
             renderFriendListEmpty()
           ) : (
             <Empty style={{ marginTop: 10 }} />
           )
         ) : (
-          // <List
-          //   width={810}
-          //   height={469}
-          //   rowCount={dataSource.length}
-          //   rowHeight={rowHeight}
-          //   rowRenderer={rowRenderer}
-          //   containerStyle={{ position: 'static' }}
-          // ></List>
-          dataSource.map((item) => {
-            if (typeof item === 'string') {
-              return (
-                <div className={`${_prefix}-subtitle`} key={item}>
-                  {item}
-                </div>
-              )
-            }
-            return (
-              <FriendItem
-                key={item.account}
-                account={item.account}
-                onItemClick={onItemClick}
-                afterSendMsgClick={afterSendMsgClick}
-                prefix={prefix}
-                commonPrefix={commonPrefix}
+          <AutoSizer>
+            {({ height, width }) => (
+              <List
+                height={height}
+                overscanRowCount={10}
+                rowCount={dataSource.length}
+                rowHeight={46}
+                rowRenderer={rowRenderer}
+                width={width}
               />
-            )
-          })
+            )}
+          </AutoSizer>
         )}
       </div>
     </div>

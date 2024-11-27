@@ -7,20 +7,21 @@ import {
   useStateContext,
   ReadPercent,
 } from '../../common'
-import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import { ConversationItem } from './ConversationItem'
 import { CheckCircleOutlined } from '@ant-design/icons'
 import { observer } from 'mobx-react'
+import { V2NIMConversationForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
-export interface P2PItemProps extends NimKitCoreTypes.P2PSession {
+export interface P2PItemProps extends V2NIMConversationForUI {
   isSelected: boolean
   onStickTopChange: (isTop: boolean) => void
   onDeleteClick: () => void
   onMuteChange: (mute: boolean) => void
   onItemClick: () => void
   avatarRenderer?: JSX.Element | null
-  sessionNameRenderer?: JSX.Element | null
-  sessionMsgRenderer?: JSX.Element | null
+  conversationNameRenderer?: JSX.Element | null
+  conversationMsgRenderer?: JSX.Element | null
   msgReceiptTime?: number
 
   prefix?: string
@@ -33,31 +34,31 @@ export const P2PItem: FC<P2PItemProps> = observer(
     onDeleteClick,
     onMuteChange,
     onItemClick,
-    isMute,
-    stickTopInfo,
-    to,
-    unread,
-    lastMsg,
+    conversationId,
+    mute = false,
+    stickTop,
+    lastMessage,
+    unreadCount,
     updateTime,
     isSelected,
     avatarRenderer,
-    sessionMsgRenderer,
-    sessionNameRenderer,
+    conversationMsgRenderer,
+    conversationNameRenderer,
     prefix = 'conversation',
     commonPrefix = 'common',
     msgReceiptTime,
-    ...props
   }) => {
     const { t } = useTranslation()
-    const { store, localOptions } = useStateContext()
+    const { nim, store, localOptions } = useStateContext()
+
+    const to =
+      nim.V2NIMConversationIdUtil.parseConversationTargetId(conversationId)
 
     const menuRenderer = useMemo(() => {
       const items = [
         {
-          label: stickTopInfo?.isStickOnTop
-            ? t('deleteStickTopText')
-            : t('addStickTopText'),
-          icon: stickTopInfo?.isStickOnTop ? (
+          label: stickTop ? t('deleteStickTopText') : t('addStickTopText'),
+          icon: stickTop ? (
             <CommonIcon type="icon-quxiaozhiding" />
           ) : (
             <CommonIcon type="icon-xiaoxizhiding" />
@@ -65,18 +66,18 @@ export const P2PItem: FC<P2PItemProps> = observer(
           key: 'stickTop',
         },
         {
-          label: isMute ? t('unmuteSessionText') : t('muteSessionText'),
-          icon: isMute ? (
+          label: mute ? t('unmuteSessionText') : t('muteSessionText'),
+          icon: mute ? (
             <CommonIcon type="icon-quxiaoxiaoximiandarao" />
           ) : (
             <CommonIcon type="icon-xiaoximiandarao" />
           ),
-          key: 'muteSession',
+          key: 'muteConversation',
         },
         {
           label: t('deleteSessionText'),
           icon: <CommonIcon type="icon-shanchu" />,
-          key: 'deleteSession',
+          key: 'deleteConversation',
         },
       ] as any
 
@@ -86,12 +87,12 @@ export const P2PItem: FC<P2PItemProps> = observer(
             domEvent.stopPropagation()
             switch (key) {
               case 'stickTop':
-                onStickTopChange(!stickTopInfo?.isStickOnTop)
+                onStickTopChange(!stickTop)
                 break
-              case 'muteSession':
-                onMuteChange(!isMute)
+              case 'muteConversation':
+                onMuteChange(!mute)
                 break
-              case 'deleteSession':
+              case 'deleteConversation':
                 onDeleteClick()
                 break
               default:
@@ -101,22 +102,25 @@ export const P2PItem: FC<P2PItemProps> = observer(
           items={items}
         ></Menu>
       )
-    }, [
-      isMute,
-      stickTopInfo?.isStickOnTop,
-      onStickTopChange,
-      onDeleteClick,
-      onMuteChange,
-      t,
-    ])
+    }, [mute, stickTop, onStickTopChange, onDeleteClick, onMuteChange, t])
 
     const renderSessionMsgIsRead = () => {
       return localOptions.p2pMsgReceiptVisible &&
-        lastMsg?.flow === 'out' &&
-        lastMsg?.type !== 'g2' &&
-        lastMsg?.type !== 'notification' ? (
+        lastMessage?.messageRefer.senderId ===
+          store.userStore.myUserInfo.accountId &&
+        lastMessage?.messageType !==
+          V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL &&
+        lastMessage?.messageType !==
+          V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_NOTIFICATION &&
+        lastMessage?.sendingState ===
+          V2NIMConst.V2NIMMessageSendingState
+            .V2NIM_MESSAGE_SENDING_STATE_SUCCEEDED &&
+        lastMessage?.lastMessageState !==
+          V2NIMConst.V2NIMLastMessageState.V2NIM_MESSAGE_STATUS_REVOKE ? (
         <div className={`${prefix}-item-content-read-status`}>
-          {(msgReceiptTime ?? 0) - (lastMsg?.time ?? 0) > 0 ? (
+          {(msgReceiptTime ?? 0) -
+            (lastMessage?.messageRefer.createTime ?? 0) >=
+          0 ? (
             <CheckCircleOutlined
               className={`${prefix}-item-content-read-icon`}
             />
@@ -129,27 +133,27 @@ export const P2PItem: FC<P2PItemProps> = observer(
 
     return (
       <ConversationItem
-        isTop={!!stickTopInfo?.isStickOnTop}
-        isMute={isMute}
-        sessionName={store.uiStore.getAppellation({ account: to })}
-        time={lastMsg?.time || updateTime}
-        lastMsg={lastMsg}
+        isTop={stickTop}
+        isMute={mute}
+        conversationName={store.uiStore.getAppellation({ account: to })}
+        time={lastMessage?.messageRefer.createTime || updateTime}
+        lastMessage={lastMessage}
         isSelected={isSelected}
         onItemClick={onItemClick}
         menuRenderer={menuRenderer}
         prefix={prefix}
         commonPrefix={commonPrefix}
-        sessionMsgRenderer={sessionMsgRenderer}
-        sessionNameRenderer={sessionNameRenderer}
-        renderSessionMsgIsRead={renderSessionMsgIsRead}
+        conversationMsgRenderer={conversationMsgRenderer}
+        conversationNameRenderer={conversationNameRenderer}
+        renderConversationMsgIsRead={renderSessionMsgIsRead}
         avatarRenderer={
           avatarRenderer ?? (
             <ComplexAvatarContainer
               account={to}
               prefix={commonPrefix}
               canClick={false}
-              count={isSelected ? 0 : unread}
-              dot={isSelected ? false : isMute && unread > 0}
+              count={isSelected ? 0 : unreadCount}
+              dot={isSelected ? false : mute && unreadCount > 0}
             />
           )
         }

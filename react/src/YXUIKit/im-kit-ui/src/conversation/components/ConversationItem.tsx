@@ -7,21 +7,22 @@ import {
   getMsgContentTipByType,
   useTranslation,
 } from '../../common'
-import { IMMessage } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
+import { V2NIMLastMessage } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 export interface ConversationItemProps {
   isTop: boolean
   isMute: boolean
-  sessionName: string
+  conversationName: string
   menuRenderer: ReactElement
   avatarRenderer: ReactElement
   time: number
-  lastMsg: IMMessage | null | undefined
+  lastMessage?: V2NIMLastMessage
   isSelected: boolean
   onItemClick: () => void
-  renderSessionMsgIsRead?: () => void
-  sessionNameRenderer?: JSX.Element | null
-  sessionMsgRenderer?: JSX.Element | null
+  renderConversationMsgIsRead?: () => void
+  conversationNameRenderer?: JSX.Element | null
+  conversationMsgRenderer?: JSX.Element | null
   beMentioned?: boolean
   prefix?: string
   commonPrefix?: string
@@ -30,24 +31,28 @@ export interface ConversationItemProps {
 export const ConversationItem: FC<ConversationItemProps> = ({
   isTop,
   isMute,
-  sessionName,
+  conversationName,
   menuRenderer,
   avatarRenderer,
   time,
-  lastMsg,
+  lastMessage,
   beMentioned = false,
   isSelected = false,
   onItemClick,
-  sessionMsgRenderer,
-  sessionNameRenderer,
-  renderSessionMsgIsRead,
+  conversationMsgRenderer,
+  conversationNameRenderer,
+  renderConversationMsgIsRead,
   prefix = 'conversation',
-  commonPrefix = 'common',
 }) => {
   const date = useMemo(() => {
+    if (!time) {
+      return ''
+    }
+
     const _d = moment(time)
     const isCurrentDay = _d.isSame(moment(), 'day')
     const isCurrentYear = _d.isSame(moment(), 'year')
+
     return _d.format(
       isCurrentDay ? 'HH:mm' : isCurrentYear ? 'MM-DD' : 'YYYY-MM'
     )
@@ -55,19 +60,40 @@ export const ConversationItem: FC<ConversationItemProps> = ({
 
   const { t } = useTranslation()
   const msg = useMemo(() => {
-    const { type = '', body = '', status } = lastMsg || {}
+    const {
+      messageType,
+      text = '',
+      lastMessageState,
+      sendingState,
+    } = lastMessage || {}
 
-    if (!type) {
+    if (
+      lastMessageState ===
+      V2NIMConst.V2NIMLastMessageState.V2NIM_MESSAGE_STATUS_REVOKE
+    ) {
+      return t('recallMessageText')
+    }
+
+    if (messageType === void 0) {
       return ''
     }
-    if (status === 'sending') {
+
+    if (
+      sendingState ===
+      V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_SENDING
+    ) {
       return ''
     }
-    if (status === 'sendFailed' || status === 'refused') {
+
+    if (
+      sendingState ===
+      V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_FAILED
+    ) {
       return <ExclamationCircleFilled style={{ color: 'red' }} />
     }
-    return lastMsg ? getMsgContentTipByType(lastMsg, t) : ''
-  }, [lastMsg, t])
+
+    return lastMessage ? getMsgContentTipByType({ messageType, text }, t) : ''
+  }, [lastMessage, t])
 
   return (
     <Dropdown overlay={menuRenderer} trigger={['contextMenu']}>
@@ -80,7 +106,7 @@ export const ConversationItem: FC<ConversationItemProps> = ({
         {avatarRenderer}
         <div className={`${prefix}-item-content`}>
           <div className={`${prefix}-item-content-name`}>
-            {sessionNameRenderer ?? sessionName}
+            {conversationNameRenderer ?? conversationName}
           </div>
           <div className={`${prefix}-item-content-msg`}>
             {beMentioned && (
@@ -88,9 +114,9 @@ export const ConversationItem: FC<ConversationItemProps> = ({
                 {t('beMentioned')}
               </span>
             )}
-            {renderSessionMsgIsRead?.()}
+            {renderConversationMsgIsRead?.()}
             <div className={`${prefix}-item-content-msg-body`}>
-              {sessionMsgRenderer ?? msg}
+              {conversationMsgRenderer ?? msg}
             </div>
           </div>
         </div>

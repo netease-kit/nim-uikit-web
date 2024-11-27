@@ -5,9 +5,16 @@ import { FriendListContainer } from '../friend-list/Container'
 import { BlackListContainer } from '../black-list/Container'
 import { GroupListContainer } from '../group-list/Container'
 import { MsgListContainer } from '../msg-list/Container'
-import { Team } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInterface'
+import { AIListContainer } from '../ai-list/Container'
 
 import packageJson from '../../../package.json'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import sdkPgk from 'nim-web-sdk-ng/package.json'
+import {
+  V2NIMFriendAddApplicationForUI,
+  V2NIMTeamJoinActionInfoForUI,
+} from '@xkit-yx/im-store-v2/dist/types/types'
+import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMAIService'
 
 export interface ContactInfoContainerProps {
   /**
@@ -17,27 +24,27 @@ export interface ContactInfoContainerProps {
   /**
    通过入群申请后的事件
    */
-  afterAcceptApplyTeam?: (options: { teamId: string; from: string }) => void
+  afterAcceptApplyTeam?: (actionInfo: V2NIMTeamJoinActionInfoForUI) => void
   /**
     拒绝入群申请后的事件
     */
-  afterRejectApplyTeam?: (options: { teamId: string; from: string }) => void
+  afterRejectApplyTeam?: (actionInfo: V2NIMTeamJoinActionInfoForUI) => void
   /**
     通过入群邀请后的事件
     */
-  afterAcceptTeamInvite?: (options: { teamId: string; from: string }) => void
+  afterAcceptTeamInvite?: (actionInfo: V2NIMTeamJoinActionInfoForUI) => void
   /**
     拒绝入群邀请后的事件
     */
-  afterRejectTeamInvite?: (options: { teamId: string; from: string }) => void
+  afterRejectTeamInvite?: (actionInfo: V2NIMTeamJoinActionInfoForUI) => void
   /**
     通过好友申请后的事件
     */
-  afterAcceptApplyFriend?: (account: string) => void
+  afterAcceptApplyFriend?: (application: V2NIMFriendAddApplicationForUI) => void
   /**
     拒绝好友申请后的事件
     */
-  afterRejectApplyFriend?: (account: string) => void
+  afterRejectApplyFriend?: (application: V2NIMFriendAddApplicationForUI) => void
   /**
    好友点击事件
    */
@@ -47,9 +54,13 @@ export interface ContactInfoContainerProps {
    */
   onBlackItemClick?: (account: string) => void
   /**
+   * AI 数字人点击事件
+   */
+  onAIItemClick?: (aiUser: V2NIMAIUser) => void
+  /**
    群组点击事件
    */
-  onGroupItemClick?: (team: Team) => void
+  onGroupItemClick?: (team: V2NIMTeam) => void
   /**
     自定义渲染好友列表为空时内容
     */
@@ -66,6 +77,14 @@ export interface ContactInfoContainerProps {
     自定义渲染黑名单列表头部内容
     */
   renderBlackListHeader?: () => JSX.Element
+  /**
+    自定义渲染数字人列表为空时内容
+    */
+  renderAIListEmpty?: () => JSX.Element
+  /**
+    自定义渲染数字人列表头部内容
+    */
+  renderAIListHeader?: () => JSX.Element
   /**
     自定义渲染群组列表为空时内容
     */
@@ -100,10 +119,13 @@ export const ContactInfoContainer: React.FC<ContactInfoContainerProps> =
   observer(
     ({
       onBlackItemClick,
+      onAIItemClick,
       onFriendItemClick,
       onGroupItemClick,
       renderBlackListEmpty,
       renderBlackListHeader,
+      renderAIListEmpty,
+      renderAIListHeader,
       renderFriendListEmpty,
       renderFriendListHeader,
       renderGroupListEmpty,
@@ -121,13 +143,13 @@ export const ContactInfoContainer: React.FC<ContactInfoContainerProps> =
       prefix = 'contact',
       commonPrefix = 'common',
     }) => {
-      const { store, nim, initOptions } = useStateContext()
+      const { store, nim } = useStateContext()
 
       useEventTracking({
-        appkey: initOptions.appkey,
+        appkey: nim.options.appkey,
         version: packageJson.version,
         component: 'ContactUIKit',
-        imVersion: nim.version,
+        imVersion: sdkPgk.version,
       })
 
       return store.uiStore.selectedContactType === 'friendList' ? (
@@ -166,6 +188,15 @@ export const ContactInfoContainer: React.FC<ContactInfoContainerProps> =
           afterRejectTeamInvite={afterRejectTeamInvite}
           afterAcceptApplyFriend={afterAcceptApplyFriend}
           afterRejectApplyFriend={afterRejectApplyFriend}
+          prefix={prefix}
+          commonPrefix={commonPrefix}
+        />
+      ) : store.uiStore.selectedContactType === 'aiList' ? (
+        <AIListContainer
+          onItemClick={onAIItemClick}
+          renderAIListEmpty={renderAIListEmpty}
+          renderAIListHeader={renderAIListHeader}
+          afterSendMsgClick={afterSendMsgClick}
           prefix={prefix}
           commonPrefix={commonPrefix}
         />

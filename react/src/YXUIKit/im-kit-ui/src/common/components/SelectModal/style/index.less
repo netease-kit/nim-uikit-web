@@ -7,6 +7,8 @@
   border-radius: @yx-primary-border-radius;
   display: flex;
   flex-direction: row;
+  min-height: 400px;
+  max-height: 540px;
 
   .@{ant-prefix}-checkbox-wrapper {
     margin-right: 8px;
@@ -14,15 +16,17 @@
 
   &-left {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     padding: 12px;
     border-right: 1px solid @yx-border-color-10;
   }
 
   &-right {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     padding: 8px;
-    max-height: 388px;
-    overflow-y: auto;
   }
 
   &-l-title {
@@ -39,12 +43,12 @@
   }
 
   &-l-list {
-    height: 300px;
-    overflow-y: auto;
+    flex: 1;
+    // overflow-y: auto;
   }
 
   &-r-list {
-    max-height: 350px;
+    flex: 1;
     overflow-y: auto;
   }
 
@@ -60,6 +64,7 @@
   }
 
   &-item {
+    display: flex;
     padding: 8px 12px;
     width: 100%;
     align-items: center;

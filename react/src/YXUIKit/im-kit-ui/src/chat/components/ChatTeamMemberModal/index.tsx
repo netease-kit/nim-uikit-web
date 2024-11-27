@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { message } from 'antd'
 import {
   useTranslation,
@@ -8,6 +8,7 @@ import {
 } from '../../../common'
 import { observer } from 'mobx-react'
 import { SelectModalItemProps } from '../../../common/components/SelectModal'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 export interface ChatTeamMemberModalProps {
   visible: boolean
@@ -31,30 +32,47 @@ const ChatTeamMemberModal: React.FC<ChatTeamMemberModalProps> = observer(
 
     const teamMembers = store.teamMemberStore
       .getTeamMember(teamId)
-      .filter((item) => item.account !== store.userStore.myUserInfo.account)
+      .filter((item) => item.accountId !== store.userStore.myUserInfo.accountId)
 
-    const datasource = teamMembers.map((item) => ({
-      key: item.account,
-      label: store.uiStore.getAppellation({
-        account: item.account,
-        teamId: item.teamId,
-      }),
-    }))
+    const aiUsers = store.aiUserStore.getAIUserList()
+
+    const datasource = useMemo(
+      () =>
+        teamMembers
+          .filter((item) =>
+            aiUsers.every((ai) => ai.accountId !== item.accountId)
+          )
+          .map((item) => ({
+            key: item.accountId,
+            label: store.uiStore.getAppellation({
+              account: item.accountId,
+              teamId: item.teamId,
+            }),
+          })),
+      [aiUsers, store.uiStore, teamMembers]
+    )
 
     const teamManagerAccounts = teamMembers
-      .filter((item) => item.type === 'manager')
-      .map((item) => item.account)
-
-    const itemAvatarRender = (data: SelectModalItemProps) => {
-      return (
-        <ComplexAvatarContainer
-          account={data.key}
-          canClick={false}
-          prefix={commonPrefix}
-          size={32}
-        />
+      .filter(
+        (item) =>
+          item.memberRole ===
+          V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
       )
-    }
+      .map((item) => item.accountId)
+
+    const itemAvatarRender = useCallback(
+      (data: SelectModalItemProps) => {
+        return (
+          <ComplexAvatarContainer
+            account={data.key}
+            canClick={false}
+            prefix={commonPrefix}
+            size={32}
+          />
+        )
+      },
+      [commonPrefix]
+    )
 
     const handleOk = async (data: SelectModalItemProps[]) => {
       try {
@@ -64,26 +82,29 @@ const ChatTeamMemberModal: React.FC<ChatTeamMemberModalProps> = observer(
         const remove = teamManagerAccounts.filter((i) =>
           data.every((j) => j.key !== i)
         )
+
         add.length &&
-          (await store.teamStore.addTeamManagersActive({
+          (await store.teamStore.updateTeamMemberRoleActive({
             teamId,
             accounts: add,
+            role: V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER,
           }))
         remove.length &&
-          (await store.teamStore.removeTeamManagersActive({
+          (await store.teamStore.updateTeamMemberRoleActive({
             teamId,
             accounts: remove,
+            role: V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_NORMAL,
           }))
         message.success(t('updateTeamManagerSuccessText'))
         onCancel()
       } catch (error: any) {
         switch (error?.code) {
           // 操作的人不在群中
-          case 804:
+          case 191004:
             message.error(t('userNotInTeam'))
             break
           // 没权限
-          case 802:
+          case 109432:
             message.error(t('noPermission'))
             break
           default:
@@ -103,6 +124,8 @@ const ChatTeamMemberModal: React.FC<ChatTeamMemberModalProps> = observer(
         type="checkbox"
         max={localOptions.teamManagerLimit}
         leftTitle={t('teamMemberText')}
+        cancelText={t('cancelText')}
+        okText={t('okText')}
         onOk={handleOk}
         onCancel={onCancel}
         prefix={commonPrefix}

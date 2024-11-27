@@ -1,25 +1,27 @@
 import React, { ReactNode } from 'react'
 import P2pChatContainer from './containers/p2pChatContainer'
 import TeamChatContainer from './containers/teamChatContainer'
-import { useStateContext, useEventTracking, Welcome, Utils } from '../common'
-import {
-  IMMessage,
-  TMsgScene,
-} from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/MsgServiceInterface'
+import { useStateContext, useEventTracking, Welcome } from '../common'
 import { RenderP2pCustomMessageOptions } from './components/ChatP2pMessageList'
 import { RenderTeamCustomMessageOptions } from './components/ChatTeamMessageList'
 import { ChatMessageInputProps } from './components/ChatMessageInput'
-import { Session } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/SessionServiceInterface'
 import { observer } from 'mobx-react'
 
 import packageJson from '../../package.json'
 import { GroupItemProps } from './components/ChatTeamSetting/GroupItem'
-import { MenuItem, MenuItemKey } from './components/ChatMessageItem'
+import { MenuItem } from './components/ChatMessageItem'
 import { SettingActionItemProps } from './components/ChatActionBar'
+import {
+  V2NIMConversationType,
+  V2NIMConversation,
+} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
+import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import sdkPkg from 'nim-web-sdk-ng/package.json'
+import { V2NIMConst } from 'nim-web-sdk-ng'
 
 export interface ActionRenderProps extends ChatMessageInputProps {
-  scene: TMsgScene
-  to: string
+  conversationType: V2NIMConversationType
+  receiverId: string
 }
 
 export interface Action {
@@ -38,7 +40,7 @@ export interface Action {
 }
 
 export interface MsgOperMenuItem extends MenuItem {
-  onClick?: (msg: IMMessage) => void
+  onClick?: (msg: V2NIMMessageForUI) => void
 }
 
 export interface ChatSettingActionItem extends SettingActionItemProps {
@@ -47,9 +49,9 @@ export interface ChatSettingActionItem extends SettingActionItemProps {
 
 export interface ChatContainerProps {
   /**
-    自定义选中的会话 sessionId。一般不用传，内部会处理好选中逻辑
+    自定义选中的会话 conversationId。一般不用传，内部会处理好选中逻辑
     */
-  selectedSession?: string
+  selectedConversation?: string
   /**
     消息发送按钮组配置，不传使用默认的配置
     */
@@ -71,8 +73,8 @@ export interface ChatContainerProps {
     */
   onSendText?: (data: {
     value: string
-    scene: TMsgScene
-    to: string
+    conversationType: V2NIMConversationType
+    receiverId: string
   }) => Promise<void>
   /**
    转让群主后的回调
@@ -97,40 +99,50 @@ export interface ChatContainerProps {
   /**
    自定义渲染 header
    */
-  renderHeader?: (session: Session) => JSX.Element
+  renderHeader?: (conversation: V2NIMConversation) => JSX.Element
   /**
    自定义渲染 p2p 聊天输入框 placeholder
    */
-  renderP2pInputPlaceHolder?: (session: Session) => string
+  renderP2pInputPlaceHolder?: (conversation: V2NIMConversation) => string
   /**
    自定义渲染群组聊天输入框 placeholder
    */
   renderTeamInputPlaceHolder?: (params: {
-    session: Session
+    conversation: V2NIMConversation
     mute: boolean
   }) => string
   /**
    自定义渲染群组成员 item
    */
   renderTeamMemberItem?: (
-    params: GroupItemProps
+    params: GroupItemProps & {
+      renderKey: string
+      renderIndex: number
+      renderStyle: React.CSSProperties
+    }
   ) => JSX.Element | null | undefined
   /**
    自定义渲染消息头像
    */
-  renderMessageAvatar?: (msg: IMMessage) => JSX.Element | null | undefined
+  renderMessageAvatar?: (
+    msg: V2NIMMessageForUI
+  ) => JSX.Element | null | undefined
   /**
    自定义渲染消息昵称
    */
-  renderMessageName?: (msg: IMMessage) => JSX.Element | null | undefined
+  renderMessageName?: (msg: V2NIMMessageForUI) => JSX.Element | null | undefined
   /**
    自定义渲染消息内容，气泡样式也需要自定义
    */
-  renderMessageOuterContent?: (msg: IMMessage) => JSX.Element | null | undefined
+  renderMessageOuterContent?: (
+    msg: V2NIMMessageForUI
+  ) => JSX.Element | null | undefined
   /**
    自定义渲染消息内容，气泡样式不需要自定义
    */
-  renderMessageInnerContent?: (msg: IMMessage) => JSX.Element | null | undefined
+  renderMessageInnerContent?: (
+    msg: V2NIMMessageForUI
+  ) => JSX.Element | null | undefined
 
   /**
    样式前缀
@@ -144,7 +156,7 @@ export interface ChatContainerProps {
 
 export const ChatContainer: React.FC<ChatContainerProps> = observer(
   ({
-    selectedSession,
+    selectedConversation,
     actions,
     p2pSettingActions,
     teamSettingActions,
@@ -166,29 +178,35 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
     prefix = 'chat',
     commonPrefix = 'common',
   }) => {
-    const { store, nim, initOptions } = useStateContext()
+    const { store, nim } = useStateContext()
 
-    const finalSelectedSession =
-      selectedSession || store.uiStore.selectedSession || ''
+    const finalSelectedConversation =
+      selectedConversation || store.uiStore.selectedConversation || ''
 
-    const { scene, to } = Utils.parseSessionId(finalSelectedSession)
+    const receiverId = nim.V2NIMConversationIdUtil.parseConversationTargetId(
+      finalSelectedConversation
+    )
+    const conversationType = nim.V2NIMConversationIdUtil.parseConversationType(
+      finalSelectedConversation
+    )
 
     useEventTracking({
-      appkey: initOptions.appkey,
+      appkey: nim.options.appkey,
       version: packageJson.version,
       component: 'ChatUIKit',
-      imVersion: nim.version,
+      imVersion: sdkPkg.version,
     })
 
-    return finalSelectedSession ? (
-      scene === 'p2p' ? (
+    return finalSelectedConversation ? (
+      conversationType ===
+      V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P ? (
         <P2pChatContainer
           prefix={prefix}
           commonPrefix={commonPrefix}
-          scene={scene}
-          to={to}
           onSendText={onSendText}
           actions={actions}
+          conversationType={conversationType}
+          receiverId={receiverId}
           settingActions={p2pSettingActions}
           msgOperMenu={msgOperMenu}
           renderP2pCustomMessage={renderP2pCustomMessage}
@@ -199,12 +217,13 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           renderMessageInnerContent={renderMessageInnerContent}
           renderMessageOuterContent={renderMessageOuterContent}
         />
-      ) : scene === 'team' ? (
+      ) : conversationType ===
+        V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM ? (
         <TeamChatContainer
           prefix={prefix}
           commonPrefix={commonPrefix}
-          scene={scene}
-          to={to}
+          conversationType={conversationType}
+          receiverId={receiverId}
           onSendText={onSendText}
           actions={actions}
           settingActions={teamSettingActions}

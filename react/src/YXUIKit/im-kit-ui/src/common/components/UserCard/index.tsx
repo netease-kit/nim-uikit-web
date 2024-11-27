@@ -7,15 +7,29 @@ import {
   MoreOutlined,
 } from '@ant-design/icons'
 import { CrudeAvatar } from '../CrudeAvatar'
-import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
 import { useTranslation } from '../../hooks/useTranslation'
-import { Relation } from '@xkit-yx/im-store'
+import { Relation } from '@xkit-yx/im-store-v2'
 
-export interface UserCardProps
-  extends Omit<UserNameCard, 'createTime' | 'updateTime'> {
+export enum Gender {
+  unknown = 0,
+  male = 1,
+  female = 2,
+}
+
+export interface UserCardProps {
+  account: string
+  nick?: string
+  avatar?: string
+  signature?: string
+  gender?: Gender
+  email?: string
+  birth?: string
+  tel?: string
+  ext?: string
   alias?: string
   visible: boolean
   relation: Relation
+  isInBlacklist: boolean
   onChangeAlias?: (alias: string) => void
   onSendMsglick?: () => void
   onAddFriendClick?: () => void
@@ -29,6 +43,7 @@ export interface UserCardProps
 export const UserCard: FC<UserCardProps> = ({
   visible,
   relation,
+  isInBlacklist,
   onChangeAlias,
   onAddFriendClick,
   onDeleteFriendClick,
@@ -47,32 +62,36 @@ export const UserCard: FC<UserCardProps> = ({
 
   const genderOptions = useMemo(
     () => [
-      { label: t('man'), value: 'male' },
-      { label: t('woman'), value: 'female' },
-      { label: t('unknow'), value: 'unknown' },
+      { label: t('man'), value: Gender.male },
+      { label: t('woman'), value: Gender.female },
+      { label: t('unknow'), value: Gender.unknown },
     ],
     [t]
   )
 
   const controlsMenuRenderer = useMemo(() => {
-    const items = [
-      relation === 'friend'
-        ? {
-            key: 'block',
-            label: t('blackText'),
-            icon: <UsergroupAddOutlined />,
-          }
-        : {
-            key: 'removeBlock',
-            label: t('removeBlackText'),
-            icon: <UsergroupDeleteOutlined />,
-          },
-      {
-        key: 'deleteFriend',
-        label: t('deleteFriendText'),
-        icon: <DeleteOutlined />,
-      },
-    ] as any
+    const items = (
+      [
+        isInBlacklist
+          ? {
+              key: 'removeBlock',
+              label: t('removeBlackText'),
+              icon: <UsergroupDeleteOutlined />,
+            }
+          : {
+              key: 'block',
+              label: t('blackText'),
+              icon: <UsergroupAddOutlined />,
+            },
+        relation === 'friend'
+          ? {
+              key: 'deleteFriend',
+              label: t('deleteFriendText'),
+              icon: <DeleteOutlined />,
+            }
+          : null,
+      ] as any
+    ).filter((item) => !!item)
 
     return (
       <Menu
@@ -97,6 +116,7 @@ export const UserCard: FC<UserCardProps> = ({
   }, [
     t,
     relation,
+    isInBlacklist,
     onBlockFriendClick,
     onRemoveBlockFriendClick,
     onDeleteFriendClick,
@@ -124,7 +144,7 @@ export const UserCard: FC<UserCardProps> = ({
           <span className={`${_prefix}-header-nick`}>
             {props.alias || props.nick || props.account}
           </span>
-          {relation !== 'stranger' ? (
+          {relation !== 'ai' ? (
             <Dropdown overlay={controlsMenuRenderer}>
               <Button
                 className={`${_prefix}-header-controls`}
@@ -135,7 +155,7 @@ export const UserCard: FC<UserCardProps> = ({
           ) : null}
         </div>
         <div className={`${_prefix}-content`}>
-          {['friend', 'blacklist'].includes(relation) ? (
+          {relation === 'friend' ? (
             <div className={`${_prefix}-content-form-item`}>
               <label>{t('aliasText')}</label>
               <Input
@@ -153,30 +173,38 @@ export const UserCard: FC<UserCardProps> = ({
               {props.account}
             </span>
           </div>
-          <div className={`${_prefix}-content-form-item`}>
-            <label>{t('genderText')}</label>
-            <span className={`${_prefix}-content-form-item-text`}>
-              {
-                (
-                  genderOptions.find((item) => item.value === props.gender) || {
-                    label: t('unknow'),
-                  }
-                ).label
-              }
-            </span>
-          </div>
-          <div className={`${_prefix}-content-form-item`}>
-            <label>{t('phoneText')}</label>
-            <span className={`${_prefix}-content-form-item-text`}>
-              {props.tel || ''}
-            </span>
-          </div>
-          <div className={`${_prefix}-content-form-item`}>
-            <label>{t('emailText')}</label>
-            <span className={`${_prefix}-content-form-item-text`}>
-              {props.email || ''}
-            </span>
-          </div>
+          {relation !== 'ai' ? (
+            <div className={`${_prefix}-content-form-item`}>
+              <label>{t('genderText')}</label>
+              <span className={`${_prefix}-content-form-item-text`}>
+                {
+                  (
+                    genderOptions.find(
+                      (item) => item.value === props.gender
+                    ) || {
+                      label: t('unknow'),
+                    }
+                  ).label
+                }
+              </span>
+            </div>
+          ) : null}
+          {relation !== 'ai' ? (
+            <div className={`${_prefix}-content-form-item`}>
+              <label>{t('phoneText')}</label>
+              <span className={`${_prefix}-content-form-item-text`}>
+                {props.tel || ''}
+              </span>
+            </div>
+          ) : null}
+          {relation !== 'ai' ? (
+            <div className={`${_prefix}-content-form-item`}>
+              <label>{t('emailText')}</label>
+              <span className={`${_prefix}-content-form-item-text`}>
+                {props.email || ''}
+              </span>
+            </div>
+          ) : null}
           <div className={`${_prefix}-content-form-item`}>
             <label>{t('signText')}</label>
             <span className={`${_prefix}-content-form-item-text`}>

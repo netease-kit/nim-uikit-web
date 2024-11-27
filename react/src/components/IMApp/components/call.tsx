@@ -1,6 +1,7 @@
-import React, { FC, useState } from 'react'
+import React, { FC } from 'react'
 import '../index.less'
 import { callTypeMap, t } from '../util'
+
 interface IProps {
   handleCall: (callType: string) => void
 }
