@@ -22,8 +22,8 @@ import {
   V2NIMMessageLocationAttachment,
   V2NIMMessageVideoAttachment,
   V2NIMMessageNotificationAttachment,
-} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMMessageService'
-import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+} from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
 import { useTranslation, useStateContext } from '../../index'
 import { observer } from 'mobx-react'
 import { getBlobImg } from '../../../urlToBlob'
@@ -31,8 +31,8 @@ import {
   V2NIMMessageForUI,
   YxServerExt,
 } from '@xkit-yx/im-store-v2/dist/types/types'
-import { V2NIMConst } from 'nim-web-sdk-ng'
-import { V2NIMError } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/types'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
+import { V2NIMError } from 'nim-web-sdk-ng/dist/esm/nim/src/types'
 
 // 对话框中要展示的文件icon标识
 const fileIconMap = {
@@ -608,14 +608,21 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         // 申请加入群聊成功
         case V2NIMConst.V2NIMMessageNotificationType
           .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_APPLY_PASS: {
-          getUserInfo(msg.senderId)
+          const accounts: string[] = attachment?.targetIds || []
+          const nicks = accounts
+            .map((item) => {
+              getUserInfo(item)
+              return store.uiStore.getAppellation({
+                account: item,
+                teamId,
+              })
+            })
+            .filter((item) => !!item)
+            .join('、')
+
           return (
             <div className={`${_prefix}-noti`}>
-              {store.uiStore.getAppellation({
-                account: msg.senderId,
-                teamId,
-              })}{' '}
-              {t('joinTeamText')}
+              {nicks} {t('joinTeamText')}
             </div>
           )
         }
@@ -808,7 +815,10 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
-    const renderAudio = (msg: V2NIMMessageForUI) => {
+    const renderAudio = (
+      msg: V2NIMMessageForUI,
+      shouldRenderTextOfVoice = true
+    ) => {
       const attachment = msg.attachment as V2NIMMessageAudioAttachment
       const duration = Math.floor(attachment?.duration / 1000) || 0
 
@@ -817,7 +827,11 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       return (
         <div
           className={`${_prefix}-audio-container`}
-          style={{ width: containerWidth }}
+          style={
+            shouldRenderTextOfVoice && msg.textOfVoice
+              ? {}
+              : { width: containerWidth }
+          }
           ref={audioContainerRef}
         >
           <div
@@ -861,6 +875,9 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
               <CommonIcon type={audioIconType} />
             </span>
           </div>
+          {shouldRenderTextOfVoice && msg.textOfVoice && (
+            <div className={`${_prefix}-audio-text`}>{msg.textOfVoice}</div>
+          )}
         </div>
       )
     }
@@ -1019,7 +1036,8 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           return renderNotification(msg)
         case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_AUDIO:
           getUserInfo(msg.senderId)
-          return renderAudio(msg)
+          // 回复的语音消息应测试要求不要渲染转文字内容
+          return renderAudio(msg, !isReplyMsg)
         case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL:
           return `[${t('callMsgText')}，${notSupportMessageText}]`
         case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_LOCATION:
@@ -1043,6 +1061,10 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         default:
           return `[${notSupportMessageText}]`
       }
+    }
+
+    const renderAudioToText = () => {
+      return <div></div>
     }
 
     return (

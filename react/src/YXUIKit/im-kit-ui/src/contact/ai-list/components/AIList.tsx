@@ -2,7 +2,7 @@ import React, { FC } from 'react'
 import { AIItem } from './AIItem'
 import { useTranslation } from '../../../common'
 import { Spin, Empty } from 'antd'
-import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMAIService'
+import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMAIService'
 
 export interface AIListProps {
   list: V2NIMAIUser[]

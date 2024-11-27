@@ -7,7 +7,7 @@ import {
   useTranslation,
   useStateContext,
 } from '../../'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 import { observer } from 'mobx-react'
 
 const emptyArr = []
@@ -117,7 +117,7 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = observer(
         visible={visible}
         onCancel={onCancel}
         destroyOnClose={true}
-        width={530}
+        width={630}
         footer={footer}
       >
         <div className={`${_prefix}-group-name`}>

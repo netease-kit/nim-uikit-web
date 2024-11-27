@@ -1,7 +1,10 @@
 import { logDebug } from '@xkit-yx/utils'
 import moment from 'moment'
 import packageJson from '../package.json'
-import { V2NIMMessage } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMMessageService'
+import {
+  V2NIMMessage,
+  V2NIMMessageFileAttachment,
+} from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
 
 export { logDebug }
 
@@ -370,9 +373,12 @@ export const hasQueryParams = (url: string): boolean => {
 }
 
 export const getDownloadUrl = (msg: V2NIMMessage) => {
-  return hasQueryParams(msg.attachment.url)
-    ? `${msg.attachment.url}&download=${msg.messageClientId}${msg.attachment.ext}`
-    : `${msg.attachment.url}?download=${msg.messageClientId}${msg.attachment.ext}`
+  // todo 这个定义难过
+  const attachment = msg.attachment as V2NIMMessageFileAttachment
+
+  return hasQueryParams(attachment.url)
+    ? `${attachment.url}&download=${msg.messageClientId}${attachment.ext}`
+    : `${attachment.url}?download=${msg.messageClientId}${attachment.ext}`
 }
 
 export const getAIErrorMap = (t): { [key: number]: string } => {
@@ -394,4 +400,38 @@ export const getAIErrorMap = (t): { [key: number]: string } => {
     414: t('aiParameterError'),
     107336: t('tipAIMessageText'),
   }
+}
+
+// 当用户或者群聊没有头像时，用于根据account生成头像背景色
+export const getAvatarBackgroundColor = (account): string => {
+  const colorMap: { [key: number]: string } = {
+    0: '#60CFA7',
+    1: '#53C3F3',
+    2: '#537FF4',
+    3: '#854FE2',
+    4: '#BE65D9',
+    5: '#E9749D',
+    6: '#F9B751',
+  }
+  // 将account转换为数字，取余数作为头像颜色索引
+  const stringToNumber = (inputString) => {
+    let hash = 0
+
+    if (inputString.length === 0) {
+      return hash
+    }
+
+    for (let i = 0; i < inputString.length; i++) {
+      const char = inputString.charCodeAt(i)
+
+      hash = (hash << 5) - hash + char // 简单的加权算法
+      hash = hash & hash // 将 hash 转换为 32 位整数
+    }
+
+    return Math.abs(hash) // 返回绝对值，确保为正数
+  }
+
+  const bgColorIndex = (stringToNumber(account) || 0) % 7
+
+  return colorMap[bgColorIndex]
 }

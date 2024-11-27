@@ -5,7 +5,7 @@ import { ArrowDownOutlined } from '@ant-design/icons'
 import { ReadPercent, useStateContext, useTranslation } from '../../../common'
 import { storeUtils } from '@xkit-yx/im-store-v2'
 import { MsgOperMenuItem } from '../../Container'
-import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
 import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
 
 export interface RenderTeamCustomMessageOptions extends MessageItemProps {
@@ -100,6 +100,7 @@ const ChatTeamMessageList = forwardRef<
                     read={msg.yxRead ?? 0}
                     hoverable
                     prefix={commonPrefix}
+                    size={16}
                   />
                 ) : null
               }

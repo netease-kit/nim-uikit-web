@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { GroupItem, GroupItemProps } from './GroupItem'
-import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
 import { Input } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
 import { useStateContext, useTranslation } from '../../../common'

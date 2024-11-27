@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import { ComplexAvatarContainer, useStateContext } from '../../../common'
 import { observer } from 'mobx-react'
-import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMAIService'
+import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMAIService'
 
 export interface AIItemProps {
   aiUser: V2NIMAIUser

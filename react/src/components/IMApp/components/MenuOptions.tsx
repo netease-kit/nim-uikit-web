@@ -2,10 +2,10 @@ import React, { FC } from 'react'
 import classNames from 'classnames'
 import { Modal } from 'antd'
 import { t } from '../util'
+
 interface IProps {
   onLogout?: () => void
   locale: 'zh' | 'en'
-  changeLanguage?: (value: 'zh' | 'en') => void
   openSettingModal: () => void
   resetMenuUI: () => void
   menuVisible: boolean
@@ -16,7 +16,6 @@ interface IProps {
 const Menu: FC<IProps> = ({
   onLogout,
   locale,
-  changeLanguage,
   openSettingModal,
   resetMenuUI,
   menuVisible,
@@ -32,6 +31,7 @@ const Menu: FC<IProps> = ({
       },
     })
   }
+
   return menuVisible ? (
     <div
       className={classNames('menu-wrapper', 'show-menu')}
@@ -70,8 +70,8 @@ const Menu: FC<IProps> = ({
             active: locale === 'zh',
           })}
           onClick={() => {
-            changeLanguage?.('zh')
-            resetMenuUI()
+            sessionStorage.setItem('languageType', 'zh')
+            window.location.reload()
           }}
         >
           中文
@@ -81,8 +81,8 @@ const Menu: FC<IProps> = ({
             active: locale === 'en',
           })}
           onClick={() => {
-            changeLanguage?.('en')
-            resetMenuUI()
+            sessionStorage.setItem('languageType', 'en')
+            window.location.reload()
           }}
         >
           English

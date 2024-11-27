@@ -8,13 +8,13 @@ import {
 import {
   V2NIMCollection,
   V2NIMMessage,
-} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMMessageService'
+} from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
 import { Dropdown, Menu } from 'antd'
 import { DeleteOutlined } from '@ant-design/icons'
 import { formatDate, mergeActions } from '../../../utils'
 import { MenuItem } from '../ChatMessageItem'
 import { CollectionMenuItem } from '.'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 export interface CollectionItemProps {
   collection: V2NIMCollection
@@ -68,7 +68,7 @@ const CollectionItem: React.FC<CollectionItemProps> = ({
     const defaultMenus: MenuItem[] = [
       {
         show:
-          msg.messageType ===
+          msg?.messageType ===
           V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_AUDIO
             ? 0
             : 1,
@@ -89,7 +89,7 @@ const CollectionItem: React.FC<CollectionItemProps> = ({
       : defaultMenus
 
     return finalMenus.filter((item) => item.show)
-  }, [menus, t, msg.messageType])
+  }, [menus, t, msg?.messageType])
 
   const handleMenuClick = ({ key }: { key: string }) => {
     onMenuClick({
@@ -108,7 +108,7 @@ const CollectionItem: React.FC<CollectionItemProps> = ({
         overlayClassName={`${_prefix}-dropdown`}
       >
         <div className={`${_prefix}-wrap`}>
-          <ParseSession msg={msg} prefix={commonPrefix} />
+          {msg && <ParseSession msg={msg} prefix={commonPrefix} />}
           <div className={`${_prefix}-info`}>
             <span>{collectionData.senderName}</span>
             <span>

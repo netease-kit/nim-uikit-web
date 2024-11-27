@@ -34,17 +34,17 @@ import { getImgDataUrl, getVideoFirstFrameDataUrl, logger } from '../../utils'
 import {
   V2NIMConversationType,
   V2NIMConversation,
-} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
-import { V2NIMMessage } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMMessageService'
+} from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversationService'
+import { V2NIMMessage } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
 import {
   V2NIMMessageForUI,
   YxReplyMsg,
   YxServerExt,
 } from '@xkit-yx/im-store-v2/dist/types/types'
-import { V2NIMConst } from 'nim-web-sdk-ng'
-import { V2NIMError } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/types'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
+import { V2NIMError } from 'nim-web-sdk-ng/dist/esm/nim/src/types'
 import { ChatAISearch } from '../components/ChatAISearch'
-import { V2NIMFriend } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMFriendService'
+import { V2NIMFriend } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMFriendService'
 import { ChatAITranslate } from '../components/ChatAITranslate'
 import { MentionedMember } from '../components/ChatMessageInput/ChatMentionMemberList'
 
@@ -74,9 +74,15 @@ export interface P2pChatContainerProps {
   renderMessageInnerContent?: (
     msg: V2NIMMessageForUI
   ) => JSX.Element | null | undefined
-
+  msgRecallTime?: number
   prefix?: string
   commonPrefix?: string
+  /**
+    是否展示陌生人提示
+  */
+  strangerTipVisible?: boolean
+  scrollIntoMode?: 'nearest'
+  maxUploadFileSize: number
 }
 
 const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
@@ -94,9 +100,12 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     renderMessageName,
     renderMessageInnerContent,
     renderMessageOuterContent,
-
+    maxUploadFileSize,
+    msgRecallTime = 2 * 60 * 1000,
     prefix = 'chat',
     commonPrefix = 'common',
+    strangerTipVisible = true,
+    scrollIntoMode,
   }) => {
     const { store, nim, localOptions } = useStateContext()
 
@@ -251,7 +260,14 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             if (_msg) {
               await getHistory(_msg.createTime, _msg.messageServerId)
               // 滚动到加载的那条消息
-              document.getElementById(_msg.messageClientId)?.scrollIntoView()
+              document.getElementById(_msg.messageClientId)?.scrollIntoView(
+                scrollIntoMode == 'nearest'
+                  ? {
+                      block: 'nearest', // 滚动到目标元素的最近可见位置
+                      inline: 'nearest', // 避免水平方向的滚动
+                    }
+                  : true
+              )
             }
           }
         }
@@ -534,7 +550,18 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             await store.msgStore.deleteMsgActive([msg])
             break
           case 'recall':
-            await store.msgStore.reCallMsgActive(msg)
+            try {
+              const diffTime = Date.now() - msg.createTime
+
+              if (diffTime > msgRecallTime) {
+                message.error(t('msgRecallTimeErrorText'))
+              } else {
+                await store.msgStore.reCallMsgActive(msg)
+              }
+            } catch (error) {
+              logger.error('reCallMsg error', (error as V2NIMError).toString())
+            }
+
             break
           case 'reply':
             {
@@ -578,6 +605,14 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             break
           case 'forward':
             setForwardMessage(msg)
+            break
+          case 'voiceToText':
+            try {
+              await store.msgStore.voiceToTextActive(msg)
+            } catch (err) {
+              message.error(t('voiceToTextFailedText'))
+            }
+
             break
           default:
             break
@@ -908,6 +943,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             loadingMore={loadingMore}
             receiveMsgBtnVisible={receiveMsgBtnVisible}
             msgReceiptTime={conversation?.msgReceiptTime}
+            strangerTipVisible={strangerTipVisible}
             onReceiveMsgBtnClick={scrollToBottom}
             onMessageAction={onMessageAction}
             onReeditClick={onReeditClick}
@@ -938,6 +974,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
                 : `${t('sendToText')} ${userNickOrAccount}${t('sendUsageText')}`
             }
             translateOpen={translateOpen}
+            maxUploadFileSize={maxUploadFileSize}
             onTranslate={setTranslateOpen}
             replyMsg={replyMsg}
             mentionMembers={mentionMembers}

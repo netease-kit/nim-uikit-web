@@ -2,9 +2,9 @@ import React, { useState, useMemo, useCallback } from 'react'
 import { Modal } from 'antd'
 import { SearchInput, CrudeAvatar, useTranslation } from '../../../../common'
 import { CrudeAvatarProps } from '../../../../common/components/CrudeAvatar'
-import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
-import { V2NIMFriend } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMFriendService'
-import { V2NIMUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMUserService'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
+import { V2NIMFriend } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMFriendService'
+import { V2NIMUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService'
 import { AutoSizer, List } from 'react-virtualized'
 
 export interface SearchItemProps extends CrudeAvatarProps {

@@ -8,13 +8,13 @@ import { MsgListContainer } from '../msg-list/Container'
 import { AIListContainer } from '../ai-list/Container'
 
 import packageJson from '../../../package.json'
-import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
 import sdkPgk from 'nim-web-sdk-ng/package.json'
 import {
   V2NIMFriendAddApplicationForUI,
   V2NIMTeamJoinActionInfoForUI,
 } from '@xkit-yx/im-store-v2/dist/types/types'
-import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMAIService'
+import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMAIService'
 
 export interface ContactInfoContainerProps {
   /**

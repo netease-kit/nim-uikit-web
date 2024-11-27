@@ -7,8 +7,8 @@ import {
   SelectModal,
 } from '../../../common'
 import { SelectModalItemProps } from '../../../common/components/SelectModal'
-import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 import { observer } from 'mobx-react'
 
 interface GroupActionModalProps {
@@ -107,6 +107,7 @@ const GroupTransferModal: React.FC<GroupActionModalProps> = observer(
         type="radio"
         min={1}
         okText={t('okText')}
+        cancelText={t('cancelText')}
         onOk={handleOk}
         onCancel={handleCancel}
         prefix={commonPrefix}

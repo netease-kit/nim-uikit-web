@@ -9,28 +9,13 @@ import {
 } from '../../../common'
 import { SelectModalItemProps } from '../../../common/components/SelectModal'
 import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 import { groupByPy, logger } from '../../../utils'
 import { observer } from 'mobx-react'
 
 const localStorageKey = '__yx_im_recent_forward__'
 const localStorageMax = 5
 const selectedMax = 9
-
-const getUniqueLatestItems = (items: ChatRecentForwardItem[]) => {
-  const map = new Map<string, ChatRecentForwardItem>()
-
-  items.forEach((item) => {
-    const exist = map.get(item.key)
-
-    if (!exist || exist.time < item.time) {
-      map.set(item.key, item)
-    }
-  })
-  return [...map.values()]
-    .sort((a, b) => b.time - a.time)
-    .slice(0, localStorageMax)
-}
 
 export type TabKey = 'conversation' | 'friend' | 'team'
 
@@ -48,7 +33,7 @@ export interface ChatForwardModalProps {
   commonPrefix?: string
 }
 
-const ChatForwardModal: React.FC<ChatForwardModalProps> = observer(
+const ChatMessageForwardModal: React.FC<ChatForwardModalProps> = observer(
   ({
     msg,
     visible,
@@ -66,11 +51,8 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = observer(
 
     const myAccount = store.userStore.myUserInfo.accountId
 
+    // 用于获取最近转发列表
     const finalStoreKey = `${localStorageKey}-${myAccount}`
-
-    useEffect(() => {
-      resetState()
-    }, [visible])
 
     const _prefix = `${prefix}-forward-modal`
 
@@ -142,7 +124,7 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = observer(
         hide: tab !== 'conversation',
       })) as SelectModalItemProps[]
 
-    const datasource = [...conversations, ...friends, ...teams]
+    const dataSource = [...conversations, ...friends, ...teams]
 
     const recentForward = useMemo(() => {
       let res: ChatRecentForwardItem[] = []
@@ -277,6 +259,21 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = observer(
       )
     }, [t, tab, _prefix])
 
+    const getUniqueLatestItems = (items: ChatRecentForwardItem[]) => {
+      const map = new Map<string, ChatRecentForwardItem>()
+
+      items.forEach((item) => {
+        const exist = map.get(item.key)
+
+        if (!exist || exist.time < item.time) {
+          map.set(item.key, item)
+        }
+      })
+      return [...map.values()]
+        .sort((a, b) => b.time - a.time)
+        .slice(0, localStorageMax)
+    }
+
     const handleCommentChange = (e: any) => {
       setComment(e.target.value)
     }
@@ -325,12 +322,16 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = observer(
       setSelected(selected.filter((item) => item !== value.key))
     }
 
+    useEffect(() => {
+      resetState()
+    }, [visible])
+
     return (
       <SelectModal
         title={t('forwardText')}
         visible={visible}
         tabRenderer={tabRenderer}
-        datasource={datasource}
+        datasource={dataSource}
         defaultValue={selected}
         itemAvatarRender={itemAvatarRender}
         recentRenderer={recentRenderer}
@@ -338,6 +339,7 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = observer(
         max={selectedMax}
         min={1}
         okText={t('sendBtnText')}
+        cancelText={t('cancelText')}
         showLeftTitle={false}
         rightTitle={t('sendToText')}
         bottomRenderer={
@@ -359,4 +361,4 @@ const ChatForwardModal: React.FC<ChatForwardModalProps> = observer(
   }
 )
 
-export default ChatForwardModal
+export default ChatMessageForwardModal

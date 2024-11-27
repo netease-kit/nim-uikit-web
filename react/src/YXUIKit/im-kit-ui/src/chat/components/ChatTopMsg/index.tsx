@@ -3,16 +3,16 @@ import {
   V2NIMMessage,
   V2NIMMessageDeletedNotification,
   V2NIMMessageRevokeNotification,
-} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMMessageService'
+} from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
 import {
   CommonIcon,
   ParseSession,
   useStateContext,
   useTranslation,
 } from '../../../common'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 import { logger } from '../../../utils'
-import { V2NIMError } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/types'
+import { V2NIMError } from 'nim-web-sdk-ng/dist/esm/nim/src/types'
 import { Button } from 'antd'
 import { observer } from 'mobx-react'
 import { YxTopMessage } from '@xkit-yx/im-store-v2/dist/types/types'

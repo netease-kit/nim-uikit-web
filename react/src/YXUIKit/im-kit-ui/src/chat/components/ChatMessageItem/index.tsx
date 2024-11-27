@@ -5,6 +5,7 @@ import {
   ExclamationCircleFilled,
   RollbackOutlined,
   DeleteOutlined,
+  SwapOutlined,
 } from '@ant-design/icons'
 import classNames from 'classnames'
 import {
@@ -22,7 +23,7 @@ import {
   V2NIMMessageForUI,
   YxTopMessage,
 } from '@xkit-yx/im-store-v2/dist/types/types'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 export type MenuItemKey =
   | 'recall'
@@ -32,6 +33,7 @@ export type MenuItemKey =
   | 'forward'
   | 'top'
   | 'unTop'
+  | 'voiceToText'
   | string
 export type AvatarMenuItem = 'mention'
 
@@ -48,9 +50,12 @@ export interface MenuItem {
 
 export interface MessageItemProps {
   msg: V2NIMMessageForUI
+  /** 置顶消息 */
   topMessage?: YxTopMessage
+  /** 回复消息 */
   replyMsg?: V2NIMMessageForUI
   normalStatusRenderer?: React.ReactNode
+  /** 消息右键操作菜单 */
   msgOperMenu?: MsgOperMenuItem[]
   onReeditClick: (msg: V2NIMMessageForUI) => void
   onResend: (msg: V2NIMMessageForUI) => void
@@ -104,9 +109,9 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       conversationType,
       isSelf,
       recallType = '',
-      canRecall = false,
       errorCode,
       messageStatus,
+      textOfVoice,
     } = msg
 
     const messageActionDropdownContainerRef = useRef<HTMLDivElement>(null)
@@ -114,6 +119,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
 
     const aiErrorMap = getAIErrorMap(t)
 
+    // 优先级按照 备注 > 群昵称 > 好友昵称 > 消息上的昵称 > 好友账号
     const nick = store.uiStore.getAppellation({
       account: senderId,
       teamId:
@@ -133,11 +139,13 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       ignoreAlias: true,
     })
 
+    // 重发消息
     const handleResendMsg = () => {
       onResend(msg)
     }
 
-    const renderSendStatus = () => {
+    // 消息发送状态
+    const renderSendMsgStatus = () => {
       if (
         sendingState ===
         V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_SENDING
@@ -169,13 +177,9 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       return normalStatusRenderer || null
     }
 
+    // 右键菜单列表
     const renderMenuItems = () => {
       const defaultMenuItems: MenuItem[] = [
-        // {
-        //   label: '复制',
-        //   key: 'copy',
-        //   icon: <CopyOutlined />,
-        // },
         {
           show: [
             V2NIMConst.V2NIMMessageSendingState
@@ -190,7 +194,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
           icon: <CommonIcon type="icon-huifu" />,
         },
         {
-          show: uploadProgress === void 0 ? 1 : 0,
+          show: 1,
           label: t('deleteText'),
           key: 'delete',
           icon: <DeleteOutlined />,
@@ -266,10 +270,31 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
           icon: <CommonIcon type="icon-quxiaozhiding" />,
         },
         {
-          show: canRecall ? 1 : 0,
+          show: msg.isSelf
+            ? [
+                V2NIMConst.V2NIMMessageSendingState
+                  .V2NIM_MESSAGE_SENDING_STATE_SENDING,
+                V2NIMConst.V2NIMMessageSendingState
+                  .V2NIM_MESSAGE_SENDING_STATE_FAILED,
+              ].includes(sendingState)
+              ? 0
+              : 1
+            : 0,
           label: t('recallText'),
           key: 'recall',
           icon: <RollbackOutlined />,
+        },
+        {
+          // 是语音消息则可以有转文字的功能.
+          // 也因为 web 端无法发送语音消息, 故而也不用做其他的判断
+          show:
+            !textOfVoice &&
+            messageType === V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_AUDIO
+              ? 1
+              : 0,
+          label: t('voiceToText'),
+          key: 'voiceToText',
+          icon: <SwapOutlined />,
         },
       ]
       const menuItems = msgOperMenu
@@ -370,11 +395,14 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
             )}
             <div className={`${_prefix}-content`}>
               {isSelf && (
-                <div className={`${_prefix}-status`}>{renderSendStatus()}</div>
+                <div className={`${_prefix}-status`}>
+                  {renderSendMsgStatus()}
+                </div>
               )}
               {renderMessageOuterContent?.(msg) ?? (
                 <div className={`${_prefix}-body`}>
                   {renderMessageInnerContent?.(msg) ?? (
+                    // 消息体的主要渲染逻辑都在这个ParseSession里
                     <ParseSession
                       replyMsg={replyMsg}
                       msg={msg}

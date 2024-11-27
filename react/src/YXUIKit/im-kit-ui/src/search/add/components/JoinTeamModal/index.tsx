@@ -6,9 +6,9 @@ import {
   CrudeAvatar,
 } from '../../../../common'
 import React, { useState } from 'react'
-import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
 import { observer } from 'mobx-react'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 export interface JoinTeamModalProps {
   visible: boolean

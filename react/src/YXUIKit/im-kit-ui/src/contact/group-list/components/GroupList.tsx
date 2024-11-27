@@ -1,6 +1,6 @@
 import React, { FC, useCallback } from 'react'
 import { GroupItem } from './GroupItem'
-import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
 import { useTranslation } from '../../../common'
 import { Spin, Empty } from 'antd'
 import { AutoSizer, List } from 'react-virtualized'

@@ -4,7 +4,7 @@ import { useEventTracking, useStateContext } from '../../common'
 import packageJson from '../../../package.json'
 import { observer } from 'mobx-react'
 import sdkPkg from 'nim-web-sdk-ng/package.json'
-import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMAIService'
+import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMAIService'
 
 export interface AIListContainerProps {
   /**

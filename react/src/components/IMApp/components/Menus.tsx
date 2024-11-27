@@ -1,18 +1,13 @@
 import React, { FC, useState } from 'react'
 import MenuOptions from './MenuOptions'
 import '../index.less'
+
 interface IProps {
   onLogout?: () => void
   locale: 'zh' | 'en'
-  changeLanguage?: (value: 'zh' | 'en') => void
   openSettingModal: () => void
 }
-const MenuIcon: FC<IProps> = ({
-  onLogout,
-  locale,
-  changeLanguage,
-  openSettingModal,
-}) => {
+const MenuIcon: FC<IProps> = ({ onLogout, locale, openSettingModal }) => {
   const [menuVisible, setMenuVisible] = useState<boolean>(false)
   const [subMenuVisible, setSubMenuVisible] = useState<boolean>(false)
   const resetMenuUI = () => {
@@ -34,7 +29,6 @@ const MenuIcon: FC<IProps> = ({
       <MenuOptions
         onLogout={onLogout}
         locale={locale}
-        changeLanguage={changeLanguage}
         openSettingModal={openSettingModal}
         resetMenuUI={resetMenuUI}
         menuVisible={menuVisible}

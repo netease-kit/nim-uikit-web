@@ -12,6 +12,8 @@ const LocaleConfig = {
   cancelText: '取消',
   deleteText: '删除',
   recallText: '撤回',
+  voiceToText: '语音转文字',
+  voiceToTextFailedText: '转文字失败',
   forwardText: '转发',
   forwardSuccessText: '转发成功',
   forwardFailedText: '转发失败',
@@ -186,6 +188,7 @@ const LocaleConfig = {
   collectionSuccess: '已收藏',
   collectionFailed: '收藏失败',
   getCollectionFailed: '查询收藏列表失败',
+  msgRecallTimeErrorText: '已超过时间无法撤回',
   removeCollectionSuccess: '删除收藏成功',
   removeCollectionFailed: '删除收藏失败',
   confirmRemoveCollection: '确认删除收藏？',
@@ -195,6 +198,7 @@ const LocaleConfig = {
   enterTeamText: '进入了群组',
   leaveTeamText: '离开了群组',
   teamMuteText: '群禁言',
+  teamDoNotDisturbText: '群免打扰',
   muteAllTeamSuccessText: '开启全员禁言成功',
   unmuteAllTeamSuccessText: '结束全员禁言成功',
   muteAllTeamFailedText: '开启全员禁言失败',
@@ -300,7 +304,7 @@ const LocaleConfig = {
   aiSendingText: '大模型请求响应中',
   searchTipText: 'Enter 搜索',
 
-  // emoji 不能随便填，要用固定 key，，参考 demo
+  // emoji 不能随便填，要用固定 key，参考 demo
   Laugh: '[大笑]',
   Happy: '[开心]',
   Sexy: '[色]',

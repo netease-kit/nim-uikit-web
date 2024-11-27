@@ -7,8 +7,8 @@ import {
   getMsgContentTipByType,
   useTranslation,
 } from '../../common'
-import { V2NIMLastMessage } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMLastMessage } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversationService'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 export interface ConversationItemProps {
   isTop: boolean

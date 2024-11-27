@@ -8,16 +8,21 @@ import {
 import {
   V2NIMTeam,
   V2NIMTeamMember,
-  V2NIMUpdatedTeamInfo,
-} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
+  V2NIMUpdateTeamInfoParams,
+} from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
 import ChatTeamMemberModal from '../ChatTeamMemberModal'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 import { YxServerExt } from '@xkit-yx/im-store-v2/dist/types/types'
 
 export interface GroupPowerProps {
-  onUpdateTeamInfo: (team: V2NIMUpdatedTeamInfo) => void
+  onUpdateTeamInfo: (team: V2NIMUpdateTeamInfoParams) => void
   onTeamMuteChange: (mute: boolean) => void
+  // 群免打扰变更设置
+  // 注意, 现有逻辑取名不准确, 使得设置禁言叫 mute, 设置免打扰也叫 mute
+  // 为了避免歧义, 在这里回调函数起名叫 disturb 代表和免打扰有关
+  onTeamDisturbChange: (disturb: boolean) => void
   team: V2NIMTeam
+  teamDoNotDisturbMode: number
   managers: V2NIMTeamMember[]
   isGroupOwner: boolean
   afterSendMsgClick?: () => void

@@ -141,24 +141,46 @@ export const FriendSelect: FC<FriendSelectUIProps> = observer(
       ) : null
     }
 
-    const rowRenderer = useCallback(
+    const friendSelectedRowRenderer = useCallback(
       ({ index, key, style }) => {
-        const item = dataSource.groupByPyData[index]
+        const friend = selectedList[index]
 
         return (
           <div style={style} key={key}>
             <FriendSelectItem
-              key={item.account}
-              isSelected={selectedAccounts.includes(item.account)}
+              key={`select_${friend.account}`}
+              canSelect={false}
+              prefix={prefix}
+              account={friend.account}
+              appellation={store.uiStore.getAppellation({
+                account: friend.account,
+              })}
+            />
+          </div>
+        )
+      },
+      [prefix, selectedList, selectedAccounts]
+    )
+
+    const friendRowRenderer = useCallback(
+      ({ index, key, style }) => {
+        const friend = dataSource.groupByPyData[index]
+
+        return (
+          <div style={style} key={key}>
+            <FriendSelectItem
+              key={friend.account}
+              isSelected={selectedAccounts.includes(friend.account)}
               onSelect={handleSelect}
               canSelect={true}
               disabled={
-                disabledAccounts.includes(item.account) ||
-                (selectedAccounts.length >= max &&
-                  !selectedAccounts.includes(item.account))
+                disabledAccounts.includes(friend.account)
+                // ||
+                // (selectedAccounts.length >= max &&
+                //   !selectedAccounts.includes(friend.account))
               }
               prefix={prefix}
-              {...item}
+              {...friend}
             />
           </div>
         )
@@ -189,7 +211,7 @@ export const FriendSelect: FC<FriendSelectUIProps> = observer(
                       overscanRowCount={10}
                       rowCount={dataSource.groupByPyData.length}
                       rowHeight={48}
-                      rowRenderer={rowRenderer}
+                      rowRenderer={friendRowRenderer}
                       width={width}
                     />
                   )}
@@ -207,17 +229,18 @@ export const FriendSelect: FC<FriendSelectUIProps> = observer(
                 ) : null}
               </div>
               <div className={`${_prefix}-selected-content`}>
-                {selectedList.map((item) => (
-                  <FriendSelectItem
-                    key={`select_${item.account}`}
-                    canSelect={false}
-                    prefix={prefix}
-                    account={item.account}
-                    appellation={store.uiStore.getAppellation({
-                      account: item.account,
-                    })}
-                  />
-                ))}
+                <AutoSizer>
+                  {({ height, width }) => (
+                    <List
+                      height={height}
+                      overscanRowCount={10}
+                      rowCount={selectedList.length}
+                      rowHeight={48}
+                      rowRenderer={friendSelectedRowRenderer}
+                      width={width}
+                    />
+                  )}
+                </AutoSizer>
               </div>
             </div>
           </>

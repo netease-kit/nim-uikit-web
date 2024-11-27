@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   CommonIcon,
   ComplexAvatarContainer,
@@ -8,8 +8,9 @@ import {
 import classNames from 'classnames'
 import { observer } from 'mobx-react'
 import { storeConstants } from '@xkit-yx/im-store-v2'
-import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
-import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMAIService'
+import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
+import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMAIService'
+import { AutoSizer, List } from 'react-virtualized'
 
 export type MentionedMember = { account: string; appellation: string }
 
@@ -26,7 +27,7 @@ export const ChatAtMemberList: React.FC<ChatMentionMemberList> = observer(
     allowAtAll = true,
     prefix = 'chat',
     commonPrefix = 'common',
-    mentionMembers,
+    mentionMembers = [],
     onSelect,
   }) => {
     const _prefix = `${prefix}-at-member`
@@ -83,6 +84,48 @@ export const ChatAtMemberList: React.FC<ChatMentionMemberList> = observer(
       }
     }, [activeIndex, mentionMembers, onSelect, t, store.uiStore])
 
+    const rowRenderer = useCallback(
+      ({ index, key, style }) => {
+        const member = mentionMembers[index]
+
+        return (
+          <div style={style} key={key}>
+            <div
+              className={classNames(`${_prefix}-item`, {
+                [`${_prefix}-item-active`]: index === activeIndex,
+              })}
+              key={member.accountId}
+              onClick={() => {
+                onSelect?.({
+                  account: member.accountId,
+                  appellation: store.uiStore.getAppellation({
+                    account: member.accountId,
+                    teamId: (member as V2NIMTeamMember).teamId,
+                    ignoreAlias: true,
+                  }),
+                })
+              }}
+              onMouseEnter={() => setActiveIndex(index)}
+            >
+              <ComplexAvatarContainer
+                prefix={commonPrefix}
+                canClick={false}
+                size={28}
+                account={member.accountId}
+              />
+              <span className={`${_prefix}-label`}>
+                {store.uiStore.getAppellation({
+                  account: member.accountId,
+                  teamId: (member as V2NIMTeamMember).teamId,
+                })}
+              </span>
+            </div>
+          </div>
+        )
+      },
+      [mentionMembers, prefix, commonPrefix]
+    )
+
     return (
       <div className={`${_prefix}-wrap`}>
         {allowAtAll && (
@@ -104,38 +147,18 @@ export const ChatAtMemberList: React.FC<ChatMentionMemberList> = observer(
             <span className={`${_prefix}-label`}>{t('teamAll')}</span>
           </div>
         )}
-        {mentionMembers?.map((member, index) => (
-          <div
-            className={classNames(`${_prefix}-item`, {
-              [`${_prefix}-item-active`]: index === activeIndex,
-            })}
-            key={member.accountId}
-            onClick={() => {
-              onSelect?.({
-                account: member.accountId,
-                appellation: store.uiStore.getAppellation({
-                  account: member.accountId,
-                  teamId: (member as V2NIMTeamMember).teamId,
-                  ignoreAlias: true,
-                }),
-              })
-            }}
-            onMouseEnter={() => setActiveIndex(index)}
-          >
-            <ComplexAvatarContainer
-              prefix={commonPrefix}
-              canClick={false}
-              size={28}
-              account={member.accountId}
+        <AutoSizer>
+          {({ height, width }) => (
+            <List
+              height={height}
+              overscanRowCount={10}
+              rowCount={mentionMembers.length}
+              rowHeight={40}
+              rowRenderer={rowRenderer}
+              width={width}
             />
-            <span className={`${_prefix}-label`}>
-              {store.uiStore.getAppellation({
-                account: member.accountId,
-                teamId: (member as V2NIMTeamMember).teamId,
-              })}
-            </span>
-          </div>
-        ))}
+          )}
+        </AutoSizer>
       </div>
     )
   }

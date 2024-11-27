@@ -6,9 +6,10 @@ import {
 import { useStateContext, useEventTracking } from '../common'
 import packageJson from '../../package.json'
 import { observer } from 'mobx-react'
-import { V2NIMConversation } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
+import { V2NIMConversation } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversationService'
+// todo v10.6.0 可以静态方法里取
 import sdkPkg from 'nim-web-sdk-ng/package.json'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 import { PinAIList } from './components/pinAIList'
 
 export interface ConversationContainerProps {
@@ -112,7 +113,26 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
     const handleConversationItemClick = async (
       conversation: V2NIMConversation
     ) => {
+      // 处理@消息相关
+      if (
+        conversation.type ===
+          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM ||
+        conversation.type ===
+          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_SUPER_TEAM
+      ) {
+        await store.conversationStore.updateConversation([
+          {
+            ...conversation,
+            beMentioned: false,
+          },
+        ])
+        await store.conversationStore.markConversationReadActive(
+          conversation.conversationId
+        )
+      }
+
       await store.uiStore.selectConversation(conversation.conversationId)
+
       onConversationItemClick?.(conversation.conversationId)
     }
 
@@ -140,15 +160,53 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
       conversation: V2NIMConversation,
       mute: boolean
     ) => {
-      await store.relationStore.setP2PMessageMuteModeActive(
+      const conversationType =
+        nim.V2NIMConversationIdUtil.parseConversationType(
+          conversation.conversationId
+        )
+      const conversationTarget =
         nim.V2NIMConversationIdUtil.parseConversationTargetId(
           conversation.conversationId
-        ),
-        mute
-          ? V2NIMConst.V2NIMP2PMessageMuteMode.V2NIM_P2P_MESSAGE_MUTE_MODE_ON
-          : V2NIMConst.V2NIMP2PMessageMuteMode.V2NIM_P2P_MESSAGE_MUTE_MODE_OFF
-      )
+        )
+
+      if (
+        conversationType ===
+        V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
+      ) {
+        await store.relationStore.setP2PMessageMuteModeActive(
+          conversationTarget,
+          mute
+            ? V2NIMConst.V2NIMP2PMessageMuteMode.V2NIM_P2P_MESSAGE_MUTE_MODE_ON
+            : V2NIMConst.V2NIMP2PMessageMuteMode.V2NIM_P2P_MESSAGE_MUTE_MODE_OFF
+        )
+      } else {
+        await store.teamStore.setTeamMessageMuteModeActive(
+          conversationTarget,
+          conversationType ===
+            V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
+            ? V2NIMConst.V2NIMTeamType.V2NIM_TEAM_TYPE_ADVANCED
+            : V2NIMConst.V2NIMTeamType.V2NIM_TEAM_TYPE_SUPER,
+          mute
+            ? V2NIMConst.V2NIMTeamMessageMuteMode
+                .V2NIM_TEAM_MESSAGE_MUTE_MODE_ON
+            : V2NIMConst.V2NIMTeamMessageMuteMode
+                .V2NIM_TEAM_MESSAGE_MUTE_MODE_OFF
+        )
+      }
+
+      // V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
+      //   ? onP2pConversationItemMuteChange?.(conversation.conversationId, mute)
+      //   : onTeamConversationItemMuteChange?.(conversation.conversationId, mute)
       onConversationItemMuteChange?.(conversation.conversationId, mute)
+    }
+
+    const handleLoadMoreConversations = () => {
+      const offset =
+        store.uiStore.conversations[store.uiStore.conversations.length - 1]
+          ?.sortOrder
+      const limit = store.localOptions.conversationLimit
+
+      store.conversationStore.getConversationListActive(offset, limit)
     }
 
     const conversations = useMemo(() => {
@@ -180,6 +238,7 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
           renderConversationMsg={renderConversationMsg}
           prefix={prefix}
           commonPrefix={commonPrefix}
+          handleLoadMoreConversations={handleLoadMoreConversations}
         />
       </div>
     )

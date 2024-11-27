@@ -3,13 +3,14 @@ import { useTranslation, useEventTracking, useStateContext } from '../../common'
 import { SearchOutlined } from '@ant-design/icons'
 import SearchModal, { SectionListItem } from './components/SearchModal'
 import packageJson from '../../../package.json'
-import { V2NIMTeam } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
-import { V2NIMConversationType } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMConversationService'
-import { V2NIMFriend } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMFriendService'
-import { V2NIMUser } from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMUserService'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
+import { V2NIMConversationType } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversationService'
+import { V2NIMFriend } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMFriendService'
+import { V2NIMUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService'
 import { observer } from 'mobx-react'
+// todo, v10.6.0 有静态方法可以获取版本号
 import sdkPkg from 'nim-web-sdk-ng/package.json'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 export interface SearchContainerProps {
   /**

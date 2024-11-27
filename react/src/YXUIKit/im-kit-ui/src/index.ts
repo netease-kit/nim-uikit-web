@@ -42,12 +42,12 @@ import {
 import { ChatContainer, ChatMessageItem, ChatCollectionList } from './chat'
 import { AddContainer, SearchContainer } from './search'
 import RootStore from '@xkit-yx/im-store-v2'
-import V2NIM from 'nim-web-sdk-ng'
+import { NIM } from 'nim-web-sdk-ng/dist/esm/nim'
 import { LocalOptions } from '@xkit-yx/im-store-v2/dist/types/types'
 
 export class IMUIKit {
   get context(): {
-    nim: V2NIM
+    nim: NIM
     store: RootStore
     localOptions: LocalOptions
   } | void {
@@ -91,7 +91,7 @@ export class IMUIKit {
   }
 
   getStateContext(): {
-    nim: V2NIM
+    nim: NIM
     store: RootStore
     localOptions: LocalOptions
   } | void {

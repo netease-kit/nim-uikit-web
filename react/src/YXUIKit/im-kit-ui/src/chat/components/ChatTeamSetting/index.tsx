@@ -1,5 +1,5 @@
 import React, { FC, useState, useEffect, useMemo } from 'react'
-import { Modal, Button, Input } from 'antd'
+import { Modal, Button, Input, Switch } from 'antd'
 import {
   ExclamationCircleOutlined,
   RightOutlined,
@@ -19,10 +19,10 @@ import { GroupItemProps } from './GroupItem'
 import {
   V2NIMTeam,
   V2NIMTeamMember,
-  V2NIMUpdatedTeamInfo,
+  V2NIMUpdateTeamInfoParams,
   V2NIMUpdateSelfMemberInfoParams,
-} from 'nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/V2NIMTeamService'
-import { V2NIMConst } from 'nim-web-sdk-ng'
+} from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 export interface HistoryStack {
   path: GroupSettingType
@@ -32,6 +32,7 @@ export interface HistoryStack {
 export interface ChatTeamSettingProps {
   members: V2NIMTeamMember[]
   team: V2NIMTeam
+  teamDoNotDisturbMode: number
   myAccount: string
   isGroupOwner: boolean
   isGroupManager: boolean
@@ -42,9 +43,10 @@ export interface ChatTeamSettingProps {
   onAddMembersClick: () => void
   onTransferTeamClick: () => void
   onRemoveTeamMemberClick: (member: V2NIMTeamMember) => void
-  onUpdateTeamInfo: (team: V2NIMUpdatedTeamInfo) => void
+  onUpdateTeamInfo: (team: V2NIMUpdateTeamInfoParams) => void
   onUpdateMyMemberInfo: (params: V2NIMUpdateSelfMemberInfoParams) => void
   onTeamMuteChange: (mute: boolean) => void
+  onTeamDisturbChange: (disturb: boolean) => void
   afterSendMsgClick?: () => void
   setNavHistoryStack: (stack: HistoryStack[]) => void
   renderTeamMemberItem?: (
@@ -64,6 +66,7 @@ const { confirm } = Modal
 const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
   members,
   team,
+  teamDoNotDisturbMode,
   myAccount,
   isGroupOwner,
   isGroupManager,
@@ -76,6 +79,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
   onUpdateTeamInfo,
   onUpdateMyMemberInfo,
   onTeamMuteChange,
+  onTeamDisturbChange,
   afterSendMsgClick,
   setNavHistoryStack,
   renderTeamMemberItem,
@@ -215,7 +219,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
               <div>
                 <b>{t('teamMemberText')}</b>
                 <span className={`${_prefix}-members-num`}>
-                  ({members.length} ){t('personUnit')}
+                  ({members.length}) {t('personUnit')}
                 </span>
               </div>
               {/* {groupList.length > 6 && <RightOutlined size={10} />} */}
@@ -251,6 +255,17 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
               onChange={handleChangeNickInTeam}
               onBlur={handleUpdateMyMemberInfo}
               placeholder={t('editNickInTeamText')}
+            />
+          </div>
+          <div className={`${_prefix}-disturb ${_prefix}-item`}>
+            <b>{t('teamDoNotDisturbText')}</b>
+            <Switch
+              checked={
+                teamDoNotDisturbMode !==
+                V2NIMConst.V2NIMTeamMessageMuteMode
+                  .V2NIM_TEAM_MESSAGE_MUTE_MODE_OFF
+              }
+              onChange={onTeamDisturbChange}
             />
           </div>
           {team.teamType !== V2NIMConst.V2NIMTeamType.V2NIM_TEAM_TYPE_INVALID &&
@@ -290,7 +305,9 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
             <GroupPower
               onUpdateTeamInfo={onUpdateTeamInfo}
               onTeamMuteChange={onTeamMuteChange}
+              onTeamDisturbChange={onTeamDisturbChange}
               team={team}
+              teamDoNotDisturbMode={teamDoNotDisturbMode}
               managers={teamManagers}
               afterSendMsgClick={afterSendMsgClick}
               isGroupOwner={isGroupOwner}
