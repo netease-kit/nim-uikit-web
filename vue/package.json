@@ -11,10 +11,11 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "dependencies": {
-    "@xkit-yx/im-kit-ui": "^9.8.0",
+    "@xkit-yx/im-kit-ui": "^9.8.6",
     "react": "^16.8.0",
     "react-dom": "^16.8.0",
-    "vue": "^3.2.45"
+    "vue": "^3.2.45",
+    "yunxin-log-debug": "^1.1.6"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.4",
