@@ -3,8 +3,8 @@
   "author": "netease",
   "scripts": {
     "dev": "NODE_OPTIONS=--openssl-legacy-provider && umi dev",
-    "build": "NODE_OPTIONS=--openssl-legacy-provider && umi dev",
-    "start": "umi dev"
+    "build": "umi build",
+    "start": "NODE_OPTIONS=--openssl-legacy-provider && umi dev"
   },
   "dependencies": {
     "@xkit-yx/call-kit": "^3.0.0",
