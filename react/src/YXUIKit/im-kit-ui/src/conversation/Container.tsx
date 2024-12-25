@@ -105,11 +105,6 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
       imVersion: nim.version,
     })
 
-    // 处理 team 会话列表 @ 提醒
-    // const [sessionList, setSessionList] = useState<NimKitCoreTypes.ISession[]>(
-    //   []
-    // )
-
     const handleSessionItemClick = async (
       session: NimKitCoreTypes.ISession
     ) => {

@@ -74,6 +74,7 @@ export interface TeamChatContainerProps {
 
   prefix?: string
   commonPrefix?: string
+  scrollIntoMode?: 'nearest'
 }
 
 const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
@@ -83,6 +84,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     settingActions,
     actions,
     msgOperMenu,
+    scrollIntoMode,
     onSendText: onSendTextFromProps,
     afterTransferTeam,
     renderTeamCustomMessage,
@@ -140,6 +142,13 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     const myUser = store.userStore.myUserInfo
 
     const teamNameOrTeamId = team?.name || team?.teamId || ''
+
+    const placeholder = useMemo(() => {
+      if (teamNameOrTeamId.length > 16) {
+        return teamNameOrTeamId.slice(0, 16) + '...'
+      }
+      return teamNameOrTeamId
+    }, [teamNameOrTeamId])
 
     const isGroupOwner = myUser?.account === team.owner
 
@@ -321,7 +330,14 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             if (_msg) {
               await getHistory(_msg.time, _msg.idServer)
               // 滚动到加载的那条消息
-              document.getElementById(_msg.idClient)?.scrollIntoView()
+              document.getElementById(_msg.idClient)?.scrollIntoView(
+                scrollIntoMode == 'nearest'
+                  ? {
+                      block: 'nearest', // 滚动到目标元素的最近可见位置
+                      inline: 'nearest', // 避免水平方向的滚动
+                    }
+                  : true
+              )
             }
           }
         }
@@ -927,7 +943,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         })
         if (reqMsgs.length > 0) {
           store.msgStore.getMsgByIdServerActive({ reqMsgs }).then((res) => {
-            res.forEach((item, index) => {
+            res?.forEach((item, index) => {
               replyMsgsMap[idClients[index]] = item
             })
             setReplyMsgsMap({ ...replyMsgsMap })
@@ -1145,7 +1161,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
                   })
                 : teamMute
                 ? t('teamMutePlaceholder')
-                : `${t('sendToText')} ${teamNameOrTeamId}${t('sendUsageText')}`
+                : `${t('sendToText')} ${placeholder}${t('sendUsageText')}`
             }
             replyMsg={replyMsg}
             mentionMembers={mentionMembers}

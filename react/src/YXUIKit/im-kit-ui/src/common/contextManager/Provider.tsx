@@ -59,7 +59,9 @@ const defaultLocalOptions: Required<LocalOptions> = {
   allowTransferTeamOwner: false,
   teamManagerVisible: false,
   teamManagerLimit: 10,
+  teamCreatedSelect: true,
   sendMsgBefore: async (options: any) => options,
+  iconfontUrl: [],
 }
 
 export const Provider: FC<ProviderProps> = memo(

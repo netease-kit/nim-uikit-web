@@ -122,15 +122,19 @@ const ChatMessageInput = observer(
             <Button size="small" disabled={mute}>
               <Popover
                 trigger="click"
-                visible={emojiVisible}
+                open={emojiVisible}
                 overlayClassName={`${_prefix}-emoji-box`}
                 content={emojiContent}
-                onVisibleChange={setEmojiVisible}
+                onOpenChange={(flag) => {
+                  setEmojiVisible(flag)
+                }}
               >
-                <CommonIcon
-                  className={`${_prefix}-icon-emoji`}
-                  type="icon-biaoqing"
-                />
+                <div>
+                  <CommonIcon
+                    className={`${_prefix}-icon-emoji`}
+                    type="icon-biaoqing"
+                  />
+                </div>
               </Popover>
             </Button>
           )
@@ -192,10 +196,12 @@ const ChatMessageInput = observer(
                   />
                 }
               >
-                <CommonIcon
-                  className={`${_prefix}-icon-image`}
-                  type="icon-tupian"
-                />
+                <div>
+                  <CommonIcon
+                    className={`${_prefix}-icon-image`}
+                    type="icon-tupian"
+                  />
+                </div>
               </Dropdown>
             </Button>
           )
@@ -625,7 +631,7 @@ const ChatMessageInput = observer(
                 allowAtAll={allowAtAll}
                 prefix={prefix}
                 commonPrefix={commonPrefix}
-                mentionMembers={filterAtMembers}
+                mentionMembers={filterAtMembers || []}
                 onSelect={onAtMemberSelectHandler}
               />
             }
@@ -662,7 +668,7 @@ const ChatMessageInput = observer(
               onPressEnter={onPressEnterHandler}
               onKeyDown={onKeyDownHandler}
               onClick={onClickHandler}
-              autoSize={{ maxRows: 2 }}
+              autoSize={{ maxRows: 3 }}
             />
             <div className={`${_prefix}-icon-box`}>
               {finalActions.map((item) =>

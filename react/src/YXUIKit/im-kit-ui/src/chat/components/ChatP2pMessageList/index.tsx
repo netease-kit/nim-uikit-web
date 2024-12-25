@@ -27,6 +27,7 @@ export interface ChatP2pMessageListProps
   receiveMsgBtnVisible?: boolean
   msgOperMenu?: MsgOperMenuItem[]
   msgReceiptTime?: number
+  strangerTipVisible?: boolean
   onReceiveMsgBtnClick?: () => void
   onScroll?: (e: React.UIEvent<HTMLDivElement, UIEvent>) => void
 }
@@ -43,6 +44,7 @@ const ChatP2pMessageList = observer(
         receiveMsgBtnVisible = false,
         msgReceiptTime = 0,
         msgOperMenu,
+        strangerTipVisible,
         onReceiveMsgBtnClick,
         loadingMore,
         noMore,
@@ -130,7 +132,8 @@ const ChatP2pMessageList = observer(
               <ArrowDownOutlined />
             </div>
           ) : null}
-          {store.uiStore.getRelation(member.account).relation === 'stranger' ? (
+          {store.uiStore.getRelation(member.account).relation === 'stranger' &&
+          strangerTipVisible ? (
             <Alert
               className={`${_prefix}-stranger-noti`}
               banner

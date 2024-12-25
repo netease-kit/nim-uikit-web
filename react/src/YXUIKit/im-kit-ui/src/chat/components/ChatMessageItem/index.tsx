@@ -23,18 +23,6 @@ import { mergeActions } from '../../../utils'
 
 export type MenuItemKey = 'recall' | 'delete' | 'reply' | 'forward' | string
 export type AvatarMenuItem = 'mention'
-
-export interface MenuItem {
-  // 是否显示
-  show?: 1 | 0
-  // 名称
-  label?: string
-  // 唯一 key
-  key: MenuItemKey
-  // 图标
-  icon?: React.ReactNode
-}
-
 export interface MessageItemProps {
   myAccount: string
   msg: IMMessage
@@ -53,6 +41,16 @@ export interface MessageItemProps {
   renderMessageInnerContent?: (msg: IMMessage) => JSX.Element | null | undefined
   prefix?: string
   commonPrefix?: string
+}
+export interface MenuItem {
+  // 是否显示
+  show?: 1 | 0
+  // 名称
+  label?: string
+  // 唯一 key
+  key: MenuItemKey
+  // 图标
+  icon?: React.ReactNode
 }
 
 export const ChatMessageItem: React.FC<MessageItemProps> = observer(
@@ -118,9 +116,9 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       type: attachType = '',
       canRecall = false,
       canEdit = false,
-      oldBody = '',
     } = attach || { type: '', canRecall: false, canEdit: false, oldBody: '' }
 
+    // 消息重发
     const handleResendMsg = () => {
       // 如果是上传过程中失败的图片和视频消息，则重新发送
       if (uploadFileInfo && ['image', 'video'].includes(msg.type)) {
@@ -169,6 +167,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       return normalStatusRenderer || null
     }
 
+    // 消息时间
     const renderMsgDate = () => {
       const date = moment(time)
       const isCurrentDay = date.isSame(moment(), 'day')
@@ -180,13 +179,9 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
         : date.format('YYYY-MM-DD HH:mm:ss')
     }
 
+    // 消息右键菜单
     const renderMenuItems = () => {
       const defaultMenuItems: MenuItem[] = [
-        // {
-        //   label: '复制',
-        //   key: 'copy',
-        //   icon: <CopyOutlined />,
-        // },
         {
           show: ['sending', 'sendFailed', 'refused', 'delete'].includes(status)
             ? 0
