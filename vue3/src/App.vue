@@ -20,13 +20,14 @@ export default {
     const initOptions = {
       appkey: '', // 请填写你的appkey
       account: '', // 请填写你的account
-      token: '', // 请填写你的token
+      token: '',
     };
     const localOptions = {
       // 添加好友模式，默认需要验证
       addFriendNeedVerify: true,
       // 群组被邀请模式，默认不需要验证
       teamAgreeMode:
+        //@ts-ignore
         V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_NO_AUTH,
       // 单聊消息是否显示已读未读 默认 false
       p2pMsgReceiptVisible: true,
