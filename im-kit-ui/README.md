@@ -4,9 +4,9 @@
 
 ## 运行
 
-执行 npm install 安装依赖
-在 nim-uikit-web/im-kit-ui/src/example/index.stories.tsx 路径下填写您的 appkey 和 account、token
-执行 npm run storybook 启动开发环境
+执行 npm install 安装依赖 <br>
+在 nim-uikit-web/im-kit-ui/src/example/index.stories.tsx 路径下填写您的 appkey 和 account、token <br>
+执行 npm run storybook 启动开发环境 <br>
 
 ## 打包
 
