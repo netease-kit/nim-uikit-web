@@ -2,9 +2,9 @@
   "private": true,
   "author": "netease",
   "scripts": {
-    "dev": "NODE_OPTIONS=--openssl-legacy-provider  umi dev",
-    "build": "umi build",
-    "start": "NODE_OPTIONS=--openssl-legacy-provider  umi dev"
+    "dev": "umi dev",
+    "start": "NODE_OPTIONS=--openssl-legacy-provider umi dev",
+    "build": "umi build"
   },
   "dependencies": {
     "@xkit-yx/call-kit": "^3.0.0",

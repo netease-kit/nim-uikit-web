@@ -16,7 +16,8 @@ const initOptions: IMAppProps = {
 
 ```
 npm install
-npm run dev
+node 18版本以上运行 npm run start
+node 18版本以下运行 npm run dev
 ```
 
 ### IM UI Kit 介绍
