@@ -2,8 +2,8 @@
 
 本仓库放置了云信 UIKit 的源码和相应的示例代码，可以帮助您快速集成 UIKit 以及深入了解 UIKit。
 
-- [React 用户点击这里](./react/)
-- [Vue 用户点击这里](./vue/)
+- [React 用户点击这里](./react-demo/)
+- [Vue 用户点击这里](./vue3-demo/)
 
 ## 运行效果
 

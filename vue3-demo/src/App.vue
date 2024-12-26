@@ -2,12 +2,12 @@
   <IMApp v-if="uikitInit" />
 </template>
 <script lang="ts">
-import IMApp from './components/IMApp/index.vue';
-import { IMUIKit } from '@xkit-yx/im-kit-ui';
-import V2NIM, { V2NIMConst } from 'nim-web-sdk-ng';
-import { app } from './main';
+import IMApp from "./components/IMApp/index.vue";
+import { IMUIKit } from "@xkit-yx/im-kit-ui";
+import V2NIM, { V2NIMConst } from "nim-web-sdk-ng";
+import { app } from "./main";
 export default {
-  name: 'App',
+  name: "App",
   components: {
     IMApp,
   },
@@ -18,9 +18,9 @@ export default {
   },
   mounted() {
     const initOptions = {
-      appkey: '', // 请填写你的appkey
-      account: '', // 请填写你的account
-      token: '',
+      appkey: "", // 请填写你的appkey
+      account: "", // 请填写你的account
+      token: "",
     };
     const localOptions = {
       // 添加好友模式，默认需要验证
@@ -46,8 +46,8 @@ export default {
       appkey: initOptions.appkey,
       account: initOptions.account,
       token: initOptions.token,
-      debugLevel: 'debug',
-      apiVersion: 'v2',
+      debugLevel: "debug",
+      apiVersion: "v2",
     });
 
     // IM 连接

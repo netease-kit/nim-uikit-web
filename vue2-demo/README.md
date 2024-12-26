@@ -1,24 +1,30 @@
-# vue2_demo_imuikit
+# 云信 IM UI Kit for Vue
 
-## Project setup
+### 配置项目
+
+```typescript
+// 请到下面路径的文件配置
+// scr/App.vue
+const initOptions = {
+  appkey: "", // 请填写你的appkey
+  account: "", // 请填写你的account
+  token: "", // 请填写你的token
+};
+```
+
+### 项目运行
+
 ```
 npm install
-```
-
-### Compiles and hot-reloads for development
-```
 npm run serve
 ```
 
-### Compiles and minifies for production
-```
-npm run build
-```
+### IM UI Kit 介绍
 
-### Lints and fixes files
 ```
-npm run lint
+xxx（组件名称）
+├── src
+│   └── components
+│       └── IMApp // IM UI Kit使用示例
+│   └── APP.vue // 项目入口
 ```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
