@@ -14,6 +14,7 @@ import { observer } from 'mobx-react'
 
 export interface P2PItemProps extends NimKitCoreTypes.P2PSession {
   isSelected: boolean
+  id: string
   onStickTopChange: (isTop: boolean) => void
   onDeleteClick: () => void
   onMuteChange: (mute: boolean) => void
@@ -36,6 +37,7 @@ export const P2PItem: FC<P2PItemProps> = observer(
     isMute,
     stickTopInfo,
     to,
+    id,
     unread,
     lastMsg,
     updateTime,
@@ -116,7 +118,7 @@ export const P2PItem: FC<P2PItemProps> = observer(
         lastMsg?.type !== 'g2' &&
         lastMsg?.type !== 'notification' ? (
         <div className={`${prefix}-item-content-read-status`}>
-          {(msgReceiptTime ?? 0) - (lastMsg?.time ?? 0) > 0 ? (
+          {(msgReceiptTime ?? 0) - (lastMsg?.time ?? 0) >= 0 ? (
             <CheckCircleOutlined
               className={`${prefix}-item-content-read-icon`}
             />
@@ -131,6 +133,7 @@ export const P2PItem: FC<P2PItemProps> = observer(
       <ConversationItem
         isTop={!!stickTopInfo?.isStickOnTop}
         isMute={isMute}
+        id={id}
         sessionName={store.uiStore.getAppellation({ account: to })}
         time={lastMsg?.time || updateTime}
         lastMsg={lastMsg}

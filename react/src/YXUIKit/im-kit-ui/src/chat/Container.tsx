@@ -140,6 +140,15 @@ export interface ChatContainerProps {
      公共样式前缀
      */
   commonPrefix?: string
+  /**
+    是否展示陌生人提示
+  */
+  strangerTipVisible?: boolean
+
+  /**
+    上拉加载消息滚动模式，组件在上拉加载消息时，默认会自动滚动到最新的消息，当组件位于可滚动的页面中时，可能会造成滚动异常，设置nearest即可
+  */
+  scrollIntoMode?: 'nearest'
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = observer(
@@ -149,6 +158,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
     p2pSettingActions,
     teamSettingActions,
     msgOperMenu,
+    scrollIntoMode,
+    strangerTipVisible = true,
     onSendText,
     afterTransferTeam,
     renderEmpty,
@@ -189,8 +200,10 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           to={to}
           onSendText={onSendText}
           actions={actions}
+          scrollIntoMode={scrollIntoMode}
           settingActions={p2pSettingActions}
           msgOperMenu={msgOperMenu}
+          strangerTipVisible={strangerTipVisible}
           renderP2pCustomMessage={renderP2pCustomMessage}
           renderHeader={renderHeader}
           renderP2pInputPlaceHolder={renderP2pInputPlaceHolder}
@@ -206,6 +219,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           scene={scene}
           to={to}
           onSendText={onSendText}
+          scrollIntoMode={scrollIntoMode}
           actions={actions}
           settingActions={teamSettingActions}
           msgOperMenu={msgOperMenu}

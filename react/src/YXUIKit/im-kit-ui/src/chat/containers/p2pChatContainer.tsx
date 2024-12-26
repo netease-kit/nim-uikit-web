@@ -61,6 +61,8 @@ export interface P2pChatContainerProps {
 
   prefix?: string
   commonPrefix?: string
+  scrollIntoMode?: 'nearest'
+  strangerTipVisible?: boolean
 }
 
 const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
@@ -70,6 +72,8 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     settingActions,
     actions,
     msgOperMenu,
+    scrollIntoMode,
+    strangerTipVisible = true,
     onSendText: onSendTextFromProps,
     renderP2pCustomMessage,
     renderHeader,
@@ -102,6 +106,13 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     const userNickOrAccount = store.uiStore.getAppellation({
       account: user.account,
     })
+
+    const placeholder = useMemo(() => {
+      if (userNickOrAccount.length > 15) {
+        return userNickOrAccount.slice(0, 15) + '...'
+      }
+      return userNickOrAccount
+    }, [userNickOrAccount])
 
     const isOnline = store.eventStore.stateMap.get(to) === 'online'
 
@@ -192,7 +203,14 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             if (_msg) {
               await getHistory(_msg.time, _msg.idServer)
               // 滚动到加载的那条消息
-              document.getElementById(_msg.idClient)?.scrollIntoView()
+              document.getElementById(_msg.idClient)?.scrollIntoView(
+                scrollIntoMode == 'nearest'
+                  ? {
+                      block: 'nearest', // 滚动到目标元素的最近可见位置
+                      inline: 'nearest', // 避免水平方向的滚动
+                    }
+                  : true
+              )
             }
           }
         }
@@ -557,14 +575,18 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           }
         })
         if (reqMsgs.length > 0) {
-          store.msgStore.getMsgByIdServerActive({ reqMsgs }).then((res) => {
-            res.forEach((item) => {
-              if (item.idServer) {
-                replyMsgsMap[idClients[item.idServer]] = item
-              }
+          try {
+            store.msgStore.getMsgByIdServerActive({ reqMsgs }).then((res) => {
+              res?.forEach((item) => {
+                if (item.idServer) {
+                  replyMsgsMap[idClients[item.idServer]] = item
+                }
+              })
+              setReplyMsgsMap({ ...replyMsgsMap })
             })
-            setReplyMsgsMap({ ...replyMsgsMap })
-          })
+          } catch (error) {
+            console.log('getMsgByIdServerActive', error)
+          }
         } else {
           setReplyMsgsMap({ ...replyMsgsMap })
         }
@@ -633,6 +655,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             member={user}
             noMore={noMore}
             loadingMore={loadingMore}
+            strangerTipVisible={strangerTipVisible}
             myAccount={myUser?.account || ''}
             receiveMsgBtnVisible={receiveMsgBtnVisible}
             msgReceiptTime={session?.msgReceiptTime}
@@ -656,7 +679,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             placeholder={
               renderP2pInputPlaceHolder
                 ? renderP2pInputPlaceHolder(session)
-                : `${t('sendToText')} ${userNickOrAccount}${t('sendUsageText')}`
+                : `${t('sendToText')} ${placeholder}${t('sendUsageText')}`
             }
             replyMsg={replyMsg}
             scene={scene}

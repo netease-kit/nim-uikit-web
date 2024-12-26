@@ -9,18 +9,46 @@
       <div :class="$style.content">
         <div :class="$style.left">
           <div :class="$style['avatar-icon']" ref="avatar" />
-          <div :class="{ [$style['chat-icon']]: true, [$style.active]: model === 'chat' }"
-            @click="() => model = 'chat'">
-            <i :class="{ [$style['iconfont']]: true, 'iconfont': true, 'icon-message_fill_light': true }" />
+          <div
+            :class="{
+              [$style['chat-icon']]: true,
+              [$style.active]: model === 'chat',
+            }"
+            @click="() => (model = 'chat')"
+          >
+            <i
+              :class="{
+                [$style['iconfont']]: true,
+                iconfont: true,
+                'icon-message_fill_light': true,
+              }"
+            />
             <div :class="$style['icon-label']">会话</div>
           </div>
-          <div :class="{ [$style['contact-icon']]: true, [$style.active]: model === 'contact' }"
-            @click="() => model = 'contact'">
-            <i :class="{ [$style['iconfont']]: true, 'iconfont': true, 'icon-tongxunlu1': true }" />
+          <div
+            :class="{
+              [$style['contact-icon']]: true,
+              [$style.active]: model === 'contact',
+            }"
+            @click="() => (model = 'contact')"
+          >
+            <i
+              :class="{
+                [$style['iconfont']]: true,
+                iconfont: true,
+                'icon-tongxunlu1': true,
+              }"
+            />
             <div :class="$style['icon-label']">通讯录</div>
           </div>
           <div :class="$style['logout-icon']">
-            <i :class="{ [$style['iconfont']]: true, 'iconfont': true, 'icon-logout': true }" />
+            <i
+              :class="{
+                [$style['iconfont']]: true,
+                iconfont: true,
+                'icon-logout': true,
+              }"
+            />
             <div :class="$style['icon-label']">退出</div>
           </div>
         </div>
@@ -45,16 +73,16 @@ import {
   ContactListContainer, // 通讯录——通讯录导航组件
   ContactInfoContainer, // 通讯录——通讯录详情组件，包含好友列表、群组列表以及黑名单列表
   MyAvatarContainer, // 用户资料组件
-} from "@xkit-yx/im-kit-ui";
-import "@xkit-yx/im-kit-ui/es/style/css";
-import "./iconfont.css";
+} from '@xkit-yx/im-kit-ui';
+import '@xkit-yx/im-kit-ui/es/style/css';
+import './iconfont.css';
 
 export default {
-  name: "IMApp",
+  name: 'IMApp',
 
   data: function () {
     return {
-      model: "chat",
+      model: 'chat',
     };
   },
   mounted() {
@@ -62,19 +90,19 @@ export default {
       SearchContainer,
       {
         onClickChat: () => {
-          this.model = "chat";
+          this.model = 'chat';
         },
       },
-      this.$refs.search
+      this.$refs.search,
     );
     this.$uikit.render(
       AddContainer,
       {
         onClickChat: () => {
-          this.model = "chat";
+          this.model = 'chat';
         },
       },
-      this.$refs.add
+      this.$refs.add,
     );
     this.$uikit.render(MyAvatarContainer, null, this.$refs.avatar);
     this.$uikit.render(ConversationContainer, null, this.$refs.conversation);
@@ -86,27 +114,27 @@ export default {
         // renderHeader: () => compile(`<div className="my-header">123</div>`),
         // renderEmpty: () => compile("<div>This is empty</div>"),
       },
-      this.$refs.chat
+      this.$refs.chat,
     );
     this.$uikit.render(ContactListContainer, null, this.$refs.contactList);
     this.$uikit.render(
       ContactInfoContainer,
       {
         afterSendMsgClick: () => {
-          this.model = "chat";
+          this.model = 'chat';
         },
         onGroupItemClick: () => {
-          this.model = "chat";
+          this.model = 'chat';
         },
       },
-      this.$refs.contactInfo
+      this.$refs.contactInfo,
     );
   },
 };
 </script>
 
 <style module>
-body{
+body {
   background: #d8dee5;
 }
 .container {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   CommonIcon,
   ComplexAvatarContainer,
@@ -9,6 +9,7 @@ import { TeamMember } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/TeamServiceInter
 import classNames from 'classnames'
 import { observer } from 'mobx-react'
 import { storeConstants } from '@xkit-yx/im-store'
+import { AutoSizer, List } from 'react-virtualized'
 
 export type MentionedMember = { account: string; appellation: string }
 
@@ -16,7 +17,7 @@ export interface ChatMentionMemberList {
   allowAtAll?: boolean
   prefix?: string
   commonPrefix?: string
-  mentionMembers?: TeamMember[]
+  mentionMembers: TeamMember[]
   onSelect?: (member: MentionedMember) => void
 }
 
@@ -78,6 +79,50 @@ export const ChatAtMemberList: React.FC<ChatMentionMemberList> = observer(
       }
     }, [activeIndex, mentionMembers, onSelect, t, store.uiStore])
 
+    const rowRenderer = useCallback(
+      ({ index, key, style }) => {
+        const member = mentionMembers[index]
+
+        return (
+          <div style={style} key={key}>
+            <div
+              className={classNames(`${_prefix}-item`, {
+                [`${_prefix}-item-active`]: index === activeIndex,
+              })}
+              key={member.account}
+              onClick={() => {
+                onSelect?.({
+                  account: member.account,
+                  appellation: store.uiStore.getAppellation({
+                    account: member.account,
+                    teamId: member.teamId,
+                    ignoreAlias: true,
+                  }),
+                })
+              }}
+              onMouseEnter={() => {
+                setActiveIndex(index)
+              }}
+            >
+              <ComplexAvatarContainer
+                prefix={commonPrefix}
+                canClick={false}
+                size={28}
+                account={member.account}
+              />
+              <span className={`${_prefix}-label`}>
+                {store.uiStore.getAppellation({
+                  account: member.account,
+                  teamId: member.teamId,
+                })}
+              </span>
+            </div>
+          </div>
+        )
+      },
+      [mentionMembers, prefix, commonPrefix, activeIndex]
+    )
+
     return (
       <div className={`${_prefix}-wrap`}>
         {allowAtAll && (
@@ -99,38 +144,18 @@ export const ChatAtMemberList: React.FC<ChatMentionMemberList> = observer(
             <span className={`${_prefix}-label`}>{t('teamAll')}</span>
           </div>
         )}
-        {mentionMembers?.map((member, index) => (
-          <div
-            className={classNames(`${_prefix}-item`, {
-              [`${_prefix}-item-active`]: index === activeIndex,
-            })}
-            key={member.account}
-            onClick={() => {
-              onSelect?.({
-                account: member.account,
-                appellation: store.uiStore.getAppellation({
-                  account: member.account,
-                  teamId: member.teamId,
-                  ignoreAlias: true,
-                }),
-              })
-            }}
-            onMouseEnter={() => setActiveIndex(index)}
-          >
-            <ComplexAvatarContainer
-              prefix={commonPrefix}
-              canClick={false}
-              size={28}
-              account={member.account}
+        <AutoSizer>
+          {({ height, width }) => (
+            <List
+              height={height}
+              overscanRowCount={10}
+              rowCount={mentionMembers.length}
+              rowHeight={40}
+              rowRenderer={rowRenderer}
+              width={width}
             />
-            <span className={`${_prefix}-label`}>
-              {store.uiStore.getAppellation({
-                account: member.account,
-                teamId: member.teamId,
-              })}
-            </span>
-          </div>
-        ))}
+          )}
+        </AutoSizer>
       </div>
     )
   }

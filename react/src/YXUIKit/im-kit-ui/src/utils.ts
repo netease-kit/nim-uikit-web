@@ -205,6 +205,40 @@ export const parseSessionId = (
   }
 }
 
+// 当用户或者群聊没有头像时，用于根据account生成头像背景色
+export const getAvatarBackgroundColor = (account): string => {
+  const colorMap: { [key: number]: string } = {
+    0: '#60CFA7',
+    1: '#53C3F3',
+    2: '#537FF4',
+    3: '#854FE2',
+    4: '#BE65D9',
+    5: '#E9749D',
+    6: '#F9B751',
+  }
+  // 将account转换为数字，取余数作为头像颜色索引
+  const stringToNumber = (inputString) => {
+    let hash = 0
+
+    if (inputString.length === 0) {
+      return hash
+    }
+
+    for (let i = 0; i < inputString.length; i++) {
+      const char = inputString.charCodeAt(i)
+
+      hash = (hash << 5) - hash + char // 简单的加权算法
+      hash = hash & hash // 将 hash 转换为 32 位整数
+    }
+
+    return Math.abs(hash) // 返回绝对值，确保为正数
+  }
+
+  const bgColorIndex = (stringToNumber(account) || 0) % 7
+
+  return colorMap[bgColorIndex]
+}
+
 interface IKeyMap {
   [key: string]: string
 }
@@ -247,7 +281,7 @@ export const handleEmojiTranslate = (t) => {
     [t('ill')]: 'icon-a-34',
     [t('Mad')]: 'icon-a-35',
     [t('Ghost')]: 'icon-a-36',
-    [t('Angry')]: 'icon-a-37',
+    [t('huff')]: 'icon-a-37',
     [t('Angry')]: 'icon-a-38',
     [t('Unhappy')]: 'icon-a-39',
     [t('Frown')]: 'icon-a-40',
@@ -275,7 +309,7 @@ export const handleEmojiTranslate = (t) => {
     [t('NoWords')]: 'icon-a-62',
     [t('Monkey')]: 'icon-a-63',
     [t('Bomb')]: 'icon-a-64',
-    [t('Sleep')]: 'icon-a-65',
+    [t('Sleeping')]: 'icon-a-65',
     [t('Cloud')]: 'icon-a-66',
     [t('Rocket')]: 'icon-a-67',
     [t('Ambulance')]: 'icon-a-68',

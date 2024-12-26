@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
 import { Avatar, Badge } from 'antd'
 import { UserNameCard } from 'nim-web-sdk-ng/dist/NIM_BROWSER_SDK/UserServiceInterface'
-import { Storage } from '@xkit-yx/utils'
+import { getAvatarBackgroundColor } from '../../../utils'
 
 export interface CrudeAvatarProps
   extends Pick<UserNameCard, 'account' | 'avatar' | 'nick'> {
@@ -28,24 +28,33 @@ export const CrudeAvatar: FC<CrudeAvatarProps> = ({
     return (nick || account || '').slice(-2)
   }, [nick, account])
 
+  // useEffect(() => {
+  //   const colorMap: { [key: number]: string } = {
+  //     0: '#60CFA7',
+  //     1: '#53C3F3',
+  //     2: '#537FF4',
+  //     3: '#854FE2',
+  //     4: '#BE65D9',
+  //     5: '#E9749D',
+  //     6: '#F9B751',
+  //   }
+  //   const store = new Storage('localStorage', '__xkit__')
+  //   const key = `avatarColor-${account}`
+  //   let bgColor = store.get(key)
+  //   if (!bgColor) {
+  //     bgColor = colorMap[Math.floor(Math.random() * 7)]
+  //     store.set(key, bgColor)
+  //   }
+  //   setBgColor(bgColor)
+  // }, [account])
   useEffect(() => {
-    const colorMap: { [key: number]: string } = {
-      0: '#60CFA7',
-      1: '#53C3F3',
-      2: '#537FF4',
-      3: '#854FE2',
-      4: '#BE65D9',
-      5: '#E9749D',
-      6: '#F9B751',
+    try {
+      const bgColor = getAvatarBackgroundColor(account)
+
+      setBgColor(bgColor)
+    } catch (error) {
+      console.log('CrudeAvatar avatarColor: ', error)
     }
-    const store = new Storage('localStorage', '__xkit__')
-    const key = `avatarColor-${account}`
-    let bgColor = store.get(key)
-    if (!bgColor) {
-      bgColor = colorMap[Math.floor(Math.random() * 7)]
-      store.set(key, bgColor)
-    }
-    setBgColor(bgColor)
   }, [account])
 
   useEffect(() => {

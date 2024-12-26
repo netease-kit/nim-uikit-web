@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import { NimKitCoreTypes } from '@xkit-yx/core-kit'
 import { P2PItem } from './P2PItem'
 import { GroupItem } from './GroupItem'
 import { Spin, Empty } from 'antd'
+import { AutoSizer, List } from 'react-virtualized'
 
 export type ConversationCallbackProps = {
   onSessionItemClick: (session: NimKitCoreTypes.ISession) => void
@@ -66,15 +67,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   prefix = 'conversation',
   commonPrefix = 'common',
 }) => {
-  return (
-    <div className={`${prefix}-list-wrapper`}>
-      {loading ? (
-        <Spin />
-      ) : !sessions.length ? (
-        renderSessionListEmpty?.() ?? <Empty style={{ marginTop: 10 }} />
-      ) : (
-        sessions.map((item) => {
-          return item.scene === 'p2p'
+  const conversationRowRenderer = useCallback(
+    ({ index, key, style }) => {
+      const item = sessions[index]
+      return (
+        <div key={key} style={style}>
+          {item.scene === 'p2p'
             ? renderCustomP2pSession?.({
                 session: item as NimKitCoreTypes.P2PSession,
                 onSessionItemClick,
@@ -85,6 +83,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                 <P2PItem
                   {...(item as NimKitCoreTypes.P2PSession)}
                   key={item.id}
+                  id={item.id}
                   prefix={prefix}
                   commonPrefix={commonPrefix}
                   isSelected={selectedSession === item.id}
@@ -114,6 +113,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                 <GroupItem
                   {...(item as NimKitCoreTypes.TeamSession)}
                   key={item.id}
+                  id={item.id}
                   prefix={prefix}
                   commonPrefix={commonPrefix}
                   isSelected={selectedSession === item.id}
@@ -130,8 +130,48 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                   sessionMsgRenderer={renderSessionMsg?.({ session: item })}
                   avatarRenderer={renderTeamSessionAvatar?.({ session: item })}
                 />
-              )
-        })
+              )}
+        </div>
+      )
+    },
+    [
+      prefix,
+      commonPrefix,
+      sessions,
+      selectedSession,
+      renderCustomP2pSession,
+      renderCustomTeamSession,
+      renderSessionName,
+      renderSessionMsg,
+      renderP2pSessionAvatar,
+      renderTeamSessionAvatar,
+      onSessionItemClick,
+      onSessionItemDeleteClick,
+      onSessionItemStickTopChange,
+      onSessionItemMuteChange,
+      onSessionItemMuteChange,
+    ]
+  )
+
+  return (
+    <div className={`${prefix}-list-wrapper`}>
+      {loading ? (
+        <Spin />
+      ) : !sessions.length ? (
+        renderSessionListEmpty?.() ?? <Empty style={{ marginTop: 10 }} />
+      ) : (
+        <AutoSizer>
+          {({ height, width }) => (
+            <List
+              height={height}
+              overscanRowCount={10}
+              rowCount={sessions.length}
+              rowHeight={60}
+              rowRenderer={conversationRowRenderer}
+              width={width}
+            />
+          )}
+        </AutoSizer>
       )}
     </div>
   )

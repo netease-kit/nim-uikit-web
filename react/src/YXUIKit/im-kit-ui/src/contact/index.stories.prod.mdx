@@ -1,0 +1,61 @@
+import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs'
+import { ContactListContainer, ContactInfoContainer } from './index'
+
+<Meta title="IM UI Kit/通讯录组件" />
+
+# 通讯录组件
+
+通讯录组件负责显示当前用户的好友、黑名单以及群组关系
+
+通讯录组件由 2 个子组件组成：
+
+- `ContactList` 关系导航组件
+- `ContactInfo` 关系详情组件，内部包含了好友列表、群组列表以及黑名单列表
+
+其中，可以点击用户头像查看用户资料卡片，并进行相关的操作。目前用户资料卡片支持以下几种操作：
+
+- 拉黑好友
+- 解除拉黑好友
+- 删除好友
+- 发送消息
+
+下面对每个子组件的参数做详细说明。
+
+## 参数说明
+
+### ContactList 关系导航组件
+
+<ArgsTable of={ContactListContainer} />
+
+### ContactInfo 关系详情组件
+
+<ArgsTable of={ContactInfoContainer} />
+
+## 代码示例
+
+```tsx
+import React from 'react'
+import { ContactListContainer, ContactInfoContainer } from '@xkit-yx/im-kit-ui'
+
+import '@xkit-yx/im-kit-ui/es/style'
+
+const Page1 = () => {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        width: 1000,
+        height: 400,
+        alignItems: 'center',
+      }}
+    >
+      <div style={{ width: 300, height: '100%' }}>
+        <ContactListContainer />
+      </div>
+      <div style={{ flex: 1, height: '100%', overflowY: 'auto' }}>
+        <ContactInfoContainer />
+      </div>
+    </div>
+  )
+}
+```

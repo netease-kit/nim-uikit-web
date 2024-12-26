@@ -18,11 +18,13 @@ export interface ConversationItemProps {
   time: number
   lastMsg: IMMessage | null | undefined
   isSelected: boolean
+  id: string
   onItemClick: () => void
   renderSessionMsgIsRead?: () => void
   sessionNameRenderer?: JSX.Element | null
   sessionMsgRenderer?: JSX.Element | null
   beMentioned?: boolean
+  aitMsgs?: string[]
   prefix?: string
   commonPrefix?: string
 }
@@ -33,9 +35,11 @@ export const ConversationItem: FC<ConversationItemProps> = ({
   sessionName,
   menuRenderer,
   avatarRenderer,
+  id,
   time,
   lastMsg,
   beMentioned = false,
+  aitMsgs = [],
   isSelected = false,
   onItemClick,
   sessionMsgRenderer,
@@ -72,6 +76,10 @@ export const ConversationItem: FC<ConversationItemProps> = ({
     return lastMsg ? getMsgContentTipByType(lastMsg, t) : ''
   }, [lastMsg, t])
 
+  const isMentioned = useMemo(() => {
+    return aitMsgs.length > 0
+  }, [aitMsgs])
+
   return (
     <Dropdown overlay={menuRenderer} trigger={['contextMenu']}>
       <div
@@ -79,6 +87,7 @@ export const ConversationItem: FC<ConversationItemProps> = ({
           isSelected ? `${prefix}-item-select` : ''
         } ${isTop ? `${prefix}-item-top` : ''}`}
         onClick={onItemClick}
+        id={id}
       >
         {avatarRenderer}
         <div className={`${prefix}-item-content`}>
@@ -86,7 +95,7 @@ export const ConversationItem: FC<ConversationItemProps> = ({
             {sessionNameRenderer ?? sessionName}
           </div>
           <div className={`${prefix}-item-content-msg`}>
-            {beMentioned && (
+            {isMentioned && (
               <span className={`${prefix}-item-content-mention`}>
                 {t('beMentioned')}
               </span>

@@ -674,11 +674,23 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
 export const getMsgContentTipByType = (
   msg: Pick<IMMessage, 'type' | 'body'>,
   t
-): string => {
+): string | React.ReactNode => {
   const { type, body } = msg
   switch (type) {
     case 'text':
-      return body || `[${t('textMsgText')}]`
+      const { EMOJI_ICON_MAP_CONFIG, INPUT_EMOJI_SYMBOL_REG } =
+        handleEmojiTranslate(t)
+
+      return reactStringReplace(body, INPUT_EMOJI_SYMBOL_REG, (match, i) => {
+        return (
+          <CommonIcon
+            key={match + i}
+            style={{ fontSize: '18px' }}
+            type={EMOJI_ICON_MAP_CONFIG[match]}
+          />
+        )
+      })
+    //return body || `[  ${t('textMsgText')}]`
     case 'custom':
       return body || `[${t('customMsgText')}]`
     case 'audio':
