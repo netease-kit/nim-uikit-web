@@ -1,0 +1,189 @@
+@import '~antd/lib/style/themes/variable.less';
+@import '../../../style/theme.less';
+
+@prefix-cls: ~'@{chat-prefix}-message-input';
+
+.@{prefix-cls} {
+  padding: 16px;
+}
+
+.@{prefix-cls}-wrap {
+  position: relative;
+  background: @yx-primary-color;
+  border: 1px solid @yx-border-color-4;
+  border-radius: @yx-primary-border-radius;
+  .@{prefix-cls}-reply-wrap {
+    position: relative;
+    padding: 12px 15px 0;
+    .@{prefix-cls}-reply-container {
+      height: 30px;
+      background: @yx-background-color-6;
+      border-radius: @yx-primary-border-radius;
+      color: @yx-text-color-2;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-size: 12px;
+      .@{prefix-cls}-reply-content {
+        border-left: 1px solid @yx-border-color-4;
+        margin-left: 8px;
+        padding-left: 5px;
+        overflow: hidden; //超出的文本隐藏
+        text-overflow: ellipsis; //溢出用省略号显示
+        white-space: nowrap; //溢出不换行
+        flex: 1;
+      }
+    }
+  }
+  .@{prefix-cls}-content {
+    display: flex;
+    position: relative;
+  }
+
+  .@{prefix-cls}-popup-container {
+    position: absolute;
+    top: 15px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    .@{ant-prefix}-popover-inner-content {
+      width: 100%;
+    }
+  }
+
+  .@{prefix-cls}-at-popover {
+    right: 0 !important;
+    left: 0 !important;
+    .@{ant-prefix}-popover-inner {
+      border-radius: 4px;
+    }
+    .@{ant-prefix}-popover-inner-content {
+      padding: 0;
+    }
+  }
+
+  // .@{prefix-cls}-msg-tip {
+  //   position: absolute;
+  //   top: -100%;
+  //   right: 0;
+  //   border: 1px solid @yx-text-color-3;
+  //   border-radius: @yx-border-radius-14;
+  //   padding: 6px 10px;
+  //   background: @yx-primary-color;
+  //   cursor: pointer;
+  //   &-icon {
+  //     margin-right: 4px;
+  //   }
+  // }
+
+  .@{prefix-cls}-textarea {
+    resize: 'none';
+    line-height: '22px';
+    padding: 12px;
+    border: none;
+    outline: none;
+  }
+
+  .@{prefix-cls}-textarea::-webkit-input-placeholder {
+    display: block;
+    content: 'line@ A line#';
+    /*  A 表示换行 test */
+  }
+
+  .@{prefix-cls}-icon-box {
+    padding: 6px 0 2px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    .@{ant-prefix}-btn {
+      padding: 0;
+      padding: 0;
+      border: none;
+      height: auto;
+      margin-right: 12px;
+      background: none;
+    }
+
+    .@{prefix-cls}-loading-spin {
+      font-size: @yx-font-size-17;
+    }
+
+    .@{prefix-cls}-icon-emoji,
+    .@{prefix-cls}-icon-image,
+    .@{prefix-cls}-icon-translate,
+    .@{prefix-cls}-icon-file {
+      cursor: pointer;
+      color: @yx-icon-color-1;
+    }
+
+    .@{prefix-cls}-icon-translate-active,
+    .@{prefix-cls}-icon-translate {
+      font-size: @yx-font-size-20;
+    }
+
+    .@{prefix-cls}-icon-translate-active {
+      color: @yx-primary-button-color;
+    }
+
+    .@{prefix-cls}-icon-upload {
+      line-height: 0px;
+
+      .@{ant-prefix}-upload {
+        line-height: 0px;
+      }
+    }
+
+    .@{prefix-cls}-icon-emoji {
+      font-size: @yx-font-size-20;
+    }
+
+    .@{prefix-cls}-icon-image {
+      font-size: @yx-font-size-20;
+    }
+
+    .@{prefix-cls}-icon-file {
+      font-size: @yx-font-size-18;
+    }
+    .@{prefix-cls}-icon-msg {
+      font-size: @yx-font-size-20;
+      color: @yx-icon-color-5;
+    }
+
+    .@{prefix-cls}-icon-msg-select {
+      font-size: @yx-font-size-20;
+      color: @yx-icon-color-3;
+    }
+
+    .@{prefix-cls}-icon-msg-select:hover {
+      font-size: @yx-font-size-20;
+      color: @yx-icon-color-4;
+    }
+  }
+}
+
+.@{prefix-cls}-emoji-box {
+  overflow: hidden;
+
+  .@{ant-prefix}-popover-inner-content {
+    width: 414px;
+    max-height: 327px;
+    padding: 16px 14px;
+  }
+
+  .@{prefix-cls}-emoji-item {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    margin: 7px 10px;
+    cursor: pointer;
+
+    .@{prefix-cls}-emoji-item-icon {
+      font-size: @yx-font-size-23;
+    }
+  }
+
+  .@{prefix-cls}-emoji-item:hover {
+    background: @yx-background-color-5;
+  }
+}

@@ -1,0 +1,76 @@
+@import '~antd/lib/style/themes/variable.less';
+@import './theme.less';
+
+@percent-prefix-cls: ~'@{percent-prefix}-wrap';
+
+.@{percent-prefix-cls} {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &-icon {
+    color: @yx-avatar-color-3!important;
+  }
+
+  &-svg {
+    transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+    &-bg {
+      fill: @yx-primary-color;
+      stroke: @yx-avatar-color-3;
+    }
+
+    &-content {
+      stroke: @yx-avatar-color-3;
+    }
+  }
+  &-read-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  &-read-icon {
+    font-size: @yx-font-size-16;
+    color: @yx-text-color-4 !important;
+    position: relative;
+  }
+
+  &-unread-icon {
+    border-radius: 50%;
+    position: relative;
+    background-color: @yx-text-color-4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  &-unread-icon-inner {
+    border-radius: 50%;
+    background-color: @yx-primary-color-outline;
+  }
+  &-sector {
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid @yx-text-color-4;
+    background-color: @yx-primary-color-outline;
+    border-radius: 50%;
+
+    .cover-1,
+    .cover-2 {
+      position: absolute;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      background-color: @yx-primary-color-outline;
+    }
+
+    .cover-1 {
+      background-color: @yx-text-color-4;
+      transform-origin: right;
+    }
+
+    .cover-3 {
+      right: 0;
+      background-color: @yx-text-color-4;
+    }
+  }
+}

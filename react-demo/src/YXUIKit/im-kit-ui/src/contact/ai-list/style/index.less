@@ -1,0 +1,49 @@
+@import './theme.less';
+
+@ai-list-prefix-cls: ~'@{ai-list-prefix}-wrapper';
+@ai-title-prefix-cls: ~'@{ai-list-prefix}-title';
+@ai-content-prefix-cls: ~'@{ai-list-prefix}-content';
+@ai-item-prefix-cls: ~'@{ai-list-prefix}-item';
+
+.@{ai-list-prefix-cls} {
+  background-color: @yx-background-color-1;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.@{ai-title-prefix-cls} {
+  color: @yx-primary-text-color;
+  font-size: @yx-font-size-16;
+  font-weight: 500;
+  border-bottom: 1px solid @yx-border-color-7;
+  padding: 22px 16px;
+}
+
+.@{ai-content-prefix-cls} {
+  padding: 0 16px;
+}
+
+.@{ai-item-prefix-cls} {
+  cursor: pointer;
+  padding: 16px 0px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+  width: 100%;
+  border-radius: 4px;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid @yx-border-color-7;
+  }
+
+  &:hover {
+    background-color: @yx-background-color-4;
+  }
+
+  &-label {
+    margin-left: 12px;
+    font-size: @yx-primary-font-size;
+    color: @yx-primary-text-color;
+  }
+}

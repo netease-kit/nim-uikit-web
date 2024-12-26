@@ -1,0 +1,35 @@
+@import '../../../style/theme.less';
+@import '~antd/lib/style/themes/variable.less';
+
+@prefix-cls: ~'@{chat-prefix}-ai-translate';
+
+.@{prefix-cls} {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 9px 12px;
+  background-color: @yx-background-color-4;
+  border-top: 1px solid @yx-border-color-8;
+  border-radius: 4px 4px 0 0;
+  font-size: @yx-primary-font-size;
+  color: @yx-primary-text-color;
+
+  &-content {
+    flex: 1;
+    word-wrap: break-word;
+    max-height: 46px;
+    overflow-y: auto;
+    margin: 0 5px;
+  }
+
+  &-tip {
+    color: @yx-text-color-3;
+  }
+
+  &-btn {
+    color: @yx-primary-button-color;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+}

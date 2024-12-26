@@ -1,0 +1,125 @@
+@import '~antd/lib/style/themes/variable.less';
+@import '../../../style/theme.less';
+
+@prefix-cls: ~'@{chat-prefix}-group-setting';
+
+.@{prefix-cls}-wrap {
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  .@{prefix-cls}-item {
+    padding: 16px 16px;
+    border-bottom: 1px solid @yx-border-color-3;
+  }
+
+  .@{prefix-cls}-members-list {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+
+    .@{ant-prefix}-badge {
+      margin-left: 12px;
+    }
+  }
+
+  .@{prefix-cls}-add-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px dashed @yx-border-color-6;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .@{prefix-cls}-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+
+    &-info {
+      width: calc(100% - 14px);
+      display: flex;
+      align-items: center;
+    }
+
+    .@{prefix-cls}-label {
+      padding-left: 12px;
+      font-weight: 400;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+  }
+
+  .@{prefix-cls}-members {
+    .@{prefix-cls}-members-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      cursor: pointer;
+    }
+
+    .@{prefix-cls}-members-num {
+      padding-left: 6px;
+      color: @yx-text-color-1;
+    }
+  }
+
+  .@{prefix-cls}-power {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+
+  .@{prefix-cls}-disturb {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+
+  .@{prefix-cls}-group-operation {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    .@{prefix-cls}-group-operation-item{
+      flex: 1;
+      display: inline-block;
+      margin: 0 30px;
+      border-radius: @yx-primary-border-radius;
+    }
+    .@{prefix-cls}-group-operation-dismiss{
+      color: @yx-button-color-1;
+      background: @yx-button-color-3;
+    }
+  }
+  .@{prefix-cls}-exit-btn {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: @yx-button-color-1;
+    background: @yx-button-color-3;
+    border-radius: @yx-primary-border-radius;
+  }
+
+  .@{prefix-cls}-nickinteam {
+    margin-top: 16px;
+    background-color: @yx-background-color-6;
+    border-color: @yx-background-color-6;
+    .@{ant-prefix}-input {
+      background-color: @yx-background-color-6;
+    }
+  }
+}

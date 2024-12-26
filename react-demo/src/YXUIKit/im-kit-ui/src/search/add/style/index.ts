@@ -1,0 +1,15 @@
+import 'antd/lib/modal/style'
+import 'antd/lib/popover/style'
+import 'antd/lib/button/style'
+import 'antd/lib/message/style'
+import 'antd/lib/input/style'
+
+import '../../../common/components/FriendSelect/style'
+import '../../../common/components/SearchInput/style'
+import '../../../common/components/CreateTeamModal/style'
+import '../../../common/components/CrudeAvatar/style'
+
+import './addItem.less'
+import './addList.less'
+import './addModal.less'
+import './addPanel.less'

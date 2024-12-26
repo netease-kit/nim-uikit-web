@@ -1,0 +1,33 @@
+@import '../../../style/theme.less';
+
+@prefix-cls: ~'@{chat-prefix}-person-setting';
+
+.@{prefix-cls}-wrap {
+  padding: 8px 0;
+
+  .@{prefix-cls}-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    cursor: pointer;
+
+    &-label {
+      padding-left: 12px;
+    }
+  }
+
+  .@{prefix-cls}-item:hover {
+    background-color: @yx-background-color-1;
+  }
+
+  .@{prefix-cls}-add-btn {
+    height: 36px;
+    width: 36px;
+    color: @yx-icon-color-2;
+  }
+
+  .@{prefix-cls}-add-icon {
+    font-size: @yx-primary-font-size;
+    color: @yx-icon-color-2;
+  }
+}

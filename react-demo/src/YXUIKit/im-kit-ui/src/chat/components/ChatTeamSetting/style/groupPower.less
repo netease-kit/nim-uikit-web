@@ -1,0 +1,77 @@
+@import '~antd/lib/style/themes/variable.less';
+@import '../../../style/theme.less';
+
+@prefix-cls: ~'@{chat-prefix}-group-power';
+
+.@{prefix-cls}-wrap {
+  padding: 6px 16px 0;
+
+  label {
+    color: @yx-primary-text-color;
+    font-weight: 500;
+    font-size: @yx-primary-font-size;
+  }
+}
+
+.@{prefix-cls}-manager {
+  padding: 20px 0;
+  border-bottom: 1px solid @yx-border-color-3;
+  &-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &-avatars {
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+
+    :not(:last-child) {
+      margin-right: 12px;
+    }
+
+    & > div {
+      margin-top: 10px;
+      &.@{prefix-cls}-manager-avatars-empty {
+        margin: 0 auto;
+      }
+    }
+  }
+
+  &-btn {
+    font-size: @yx-font-size-12!important;
+    color: @yx-text-color-4!important;
+  }
+}
+
+.@{prefix-cls}-who {
+  padding-bottom: 20px;
+  border-bottom: 1px solid @yx-border-color-3;
+
+  &-item {
+    margin-top: 20px;
+  }
+
+  &-select {
+    display: block !important;
+    margin-top: 10px !important;
+
+    .@{ant-prefix}-select-selector {
+      border-color: @yx-primary-color!important;
+      background-color: @yx-background-color-6!important;
+    }
+  }
+}
+
+.@{prefix-cls}-action {
+  padding-bottom: 20px;
+  border-bottom: 1px solid @yx-border-color-3;
+
+  &-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+  }
+}
