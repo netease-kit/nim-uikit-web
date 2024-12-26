@@ -1,0 +1,52 @@
+@import '../../../style/theme.less';
+@import '~antd/lib/style/themes/variable.less';
+
+@prefix-cls: ~'@{chat-prefix}-ai-search';
+
+.@{prefix-cls} {
+  &-content {
+    display: flex;
+    flex-direction: column;
+    color: @yx-primary-text-color;
+    font-size: @yx-primary-font-size;
+    height: 100%;
+  }
+
+  .@{ant-prefix}-drawer-header-title {
+    flex-flow: row-reverse;
+  }
+
+  &-title {
+    display: flex;
+    align-items: center;
+  }
+
+  &-textarea {
+    resize: 'none';
+    line-height: '22px';
+    padding: 12px;
+
+    &.@{ant-prefix}-input {
+      min-height: 48px;
+    }
+  }
+
+  &-tip {
+    color: @yx-text-color-2;
+    font-size: @yx-font-size-12;
+    text-align: right;
+    margin-top: 5px;
+  }
+
+  &-list {
+    overflow-y: auto;
+    padding: 0 16px;
+  }
+
+  &-item {
+    padding: 16px 0;
+    &:not(:last-child) {
+      border-bottom: 1px solid @yx-border-color-3;
+    }
+  }
+}

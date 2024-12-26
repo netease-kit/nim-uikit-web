@@ -1,0 +1,29 @@
+@import '../../../style/theme.less';
+
+@prefix-cls: ~'@{chat-prefix}-action';
+
+.@{prefix-cls}-wrap {
+  width: 52px;
+  border-left: 1px solid @yx-border-color-3;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+
+  .@{prefix-cls}-setting {
+    width: 30px;
+    height: 30px;
+    border-radius: @yx-primary-border-radius;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 18px 11px 0;
+  }
+
+  .@{prefix-cls}-setting-active {
+    background: @yx-background-color-5;
+
+    .@{prefix-cls}-icon {
+      color: @yx-text-color-4;
+    }
+  }
+}

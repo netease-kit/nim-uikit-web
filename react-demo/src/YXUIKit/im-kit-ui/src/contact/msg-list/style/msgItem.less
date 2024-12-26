@@ -1,0 +1,49 @@
+@import './theme.less';
+
+@msg-item-prefix-cls: ~'@{msg-list-prefix}-item';
+
+.@{msg-item-prefix-cls} {
+  padding: 12px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border-radius: @yx-primary-border-radius;
+
+  &:not(:first-child) {
+    border-top: 1px solid @yx-border-color-7;
+  }
+
+  &-flex {
+    display: flex;
+    align-items: center;
+  }
+
+  &-state {
+    color: @yx-text-color-3;
+    display: flex;
+    align-items: center;
+  }
+
+  &-state-icon {
+    font-size: 16px;
+    margin-right: 6px;
+    color: @yx-text-color-6;
+  }
+
+  &-name {
+    margin-left: 12px;
+    font-size: @yx-primary-font-size;
+    color: @yx-primary-text-color;
+  }
+
+  &-label {
+    margin-left: 12px;
+    font-size: @yx-primary-font-size;
+    color: @yx-primary-text-color;
+  }
+
+  &-reject-btn {
+    margin-right: 16px;
+  }
+}

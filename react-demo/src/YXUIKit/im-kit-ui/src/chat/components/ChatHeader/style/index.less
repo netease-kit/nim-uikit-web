@@ -1,0 +1,32 @@
+@import '../../../style/theme.less';
+
+@prefix-cls: ~'@{chat-prefix}-header';
+
+.@{prefix-cls}-wrap {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  font-size: @yx-font-size-16;
+  border-bottom: 1px solid @yx-border-color-7;
+  padding-left: 16px;
+
+  .@{prefix-cls}-avatar {
+    margin-right: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: @yx-border-radius-18;
+  }
+
+  .@{prefix-cls}-title {
+    margin-right: 5px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 70%;
+  }
+
+  .@{prefix-cls}-sub-title {
+    color: @yx-text-color-2;
+  }
+}

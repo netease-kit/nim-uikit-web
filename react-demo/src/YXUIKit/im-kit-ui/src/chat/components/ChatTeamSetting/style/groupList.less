@@ -1,0 +1,28 @@
+@import '~antd/lib/style/themes/variable.less';
+@import '../../../style/theme.less';
+
+@prefix-cls: ~'@{chat-prefix}-group-list';
+
+.@{prefix-cls}-wrap {
+  width: 100%;
+  height: 100%;
+  padding: 0 10px;
+}
+
+.@{prefix-cls}-list {
+  width: 100%;
+  height: calc(100% - 57px);
+  overflow-y: auto;
+}
+
+.@{prefix-cls}-input {
+  margin: 15px 0 10px 0;
+   background-color: @yx-background-color-6!important;
+  border-color: @yx-background-color-6!important;
+  .@{ant-prefix}-input {
+    background-color: @yx-background-color-6;
+  }
+}
+.@{prefix-cls}-no-result{
+  color: @yx-text-color-7;
+}

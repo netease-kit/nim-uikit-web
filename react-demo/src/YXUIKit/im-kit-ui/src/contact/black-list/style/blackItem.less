@@ -1,0 +1,27 @@
+@import './theme.less';
+
+@black-item-prefix-cls: ~'@{black-list-prefix}-item';
+
+.@{black-item-prefix-cls} {
+  cursor: pointer;
+  padding: 16px 0px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+  width: 100%;
+  border-radius: 4px;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid @yx-border-color-7;
+  }
+
+  &:hover {
+    background-color: @yx-background-color-4;
+  }
+
+  &-label {
+    margin-left: 12px;
+    font-size: @yx-primary-font-size;
+    color: @yx-primary-text-color;
+  }
+}

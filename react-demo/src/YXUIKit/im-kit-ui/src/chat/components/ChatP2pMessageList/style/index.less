@@ -1,0 +1,53 @@
+@import '~antd/lib/style/themes/variable.less';
+@import '../../../style/theme.less';
+
+@prefix-cls: ~'@{chat-prefix}-message-list';
+
+.@{prefix-cls} {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+
+  &-tip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: @yx-text-color-2;
+  }
+
+  &-content {
+    width: 100%;
+  }
+
+  &-tobottom {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px 10px;
+    bottom: 100px;
+    left: calc((100% - 150px) / 2);
+    color: @yx-primary-text-color;
+    font-size: @yx-primary-font-size;
+    background-color: @yx-primary-color;
+    border-radius: @yx-border-radius-18;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+    span {
+      margin-right: 5px;
+    }
+
+    &:hover {
+      background-color: @yx-background-color-3;
+      color: @yx-primary-color;
+    }
+  }
+
+  &-stranger-noti.@{ant-prefix}-alert {
+    position: absolute;
+    width: 100%;
+    top: 60px;
+    left: 0;
+  }
+}

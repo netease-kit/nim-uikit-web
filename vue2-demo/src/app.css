@@ -1,0 +1,29 @@
+.conversation-item-content-name {
+  text-align: left !important;
+}
+
+.common-parse-session-text-wrapper {
+  color: black !important;
+  text-align: left !important;
+}
+
+.conversation-item-content-name {
+  color: black !important;
+}
+.common-parse-session-reply-nick {
+  text-align: left !important;
+}
+
+.chat-setting-draw-wrap {
+  .ant-drawer-title > span {
+    display: block;
+    width: 290px;
+    text-align: left;
+  }
+  .chat-group-setting-item {
+    text-align: left !important;
+  }
+  .chat-group-power-who-item {
+    text-align: left !important;
+  }
+}

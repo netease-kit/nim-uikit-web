@@ -1,0 +1,24 @@
+@import './theme.less';
+
+@contact-item-prefix-cls: ~'@{contact-list-prefix}-item';
+
+.@{contact-item-prefix-cls} {
+  cursor: pointer;
+  padding: 11px 16px;
+  display: flex;
+  align-items: center;
+  background-color: @yx-primary-color;
+  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+  width: 100%;
+
+  &:hover,
+  &-select {
+    background-color: @yx-primary-color-active;
+  }
+
+  &-label {
+    margin-left: 12px;
+    font-size: @yx-primary-font-size;
+    white-space: nowrap;
+  }
+}

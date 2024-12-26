@@ -1,0 +1,107 @@
+@import '../../../style/theme.less';
+@import '~antd/lib/style/themes/variable.less';
+
+@prefix-cls: ~'@{chat-prefix}-message-list-item';
+
+.@{prefix-cls}-wrap {
+  display: flex;
+  padding: 8px;
+
+  .@{ant-prefix}-dropdown-menu-title-content {
+    white-space: nowrap;
+  }
+  .@{prefix-cls}-avatar-wrap {
+    position: relative;
+  }
+  .@{prefix-cls}-status {
+    padding-right: 8px;
+  }
+
+  .@{prefix-cls}-avatar {
+    margin-right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: @yx-border-radius-16;
+  }
+
+  .@{prefix-cls}-content-box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    .@{prefix-cls}-list {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    .@{prefix-cls}-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .@{prefix-cls}-nick {
+      color: @yx-text-color-1;
+    }
+
+    .@{prefix-cls}-body {
+      word-break: break-all;
+      word-wrap: break-word;
+      white-space: break-spaces;
+      line-height: 22px;
+      // padding: 12px 16px;
+      overflow: hidden;
+      max-width: 442px;
+      min-width: 50px;
+      border-radius: 0 @yx-border-radius-12 @yx-border-radius-12
+        @yx-border-radius-12;
+      background: @yx-primary-dialog-others-box-color;
+
+      .@{prefix-cls}-emoji-icon {
+        font-size: @yx-font-size-20;
+      }
+    }
+  }
+
+  .@{prefix-cls}-status-icon,
+  .@{prefix-cls}-status-fail-icon {
+    font-size: @yx-font-size-16;
+  }
+
+  .@{prefix-cls}-status-icon-fail {
+    color: @yx-primary-reminder-color;
+  }
+
+  .@{prefix-cls}-date {
+    padding-top: 4px;
+    font-size: @yx-font-size-12;
+    color: @yx-text-color-2;
+    text-align: left;
+  }
+
+  .@{prefix-cls}-date-self {
+    text-align: right;
+  }
+}
+
+.@{prefix-cls}-self {
+  flex-direction: row-reverse;
+
+  .@{prefix-cls}-content-box {
+    align-items: flex-end;
+
+    .@{prefix-cls}-body {
+      background: @yx-primary-dialog-myself-box-color;
+      border-radius: @yx-border-radius-12 0px @yx-border-radius-12
+        @yx-border-radius-12;
+    }
+  }
+
+  .@{prefix-cls}-avatar {
+    margin-left: 12px;
+    margin-right: 0;
+  }
+}

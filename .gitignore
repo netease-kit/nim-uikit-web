@@ -28,14 +28,17 @@ coverage
 *.sw?
 
 
-react/node_modules
-react/.env.local
-react/.umirc.local.ts
-react/config/config.local.ts
-react/src/.umi
-react/src/.umi-production
-react/src/.umi-test
-react/dist
+react-demo/node_modules
+react-demo/.env.local
+react-demo/.umirc.local.ts
+react-demo/config/config.local.ts
+react-demo/src/.umi
+react-demo/src/.umi-production
+react-demo/src/.umi-test
+react-demo/dist
+
+im-kit-ui/lib
+im-kit-ui/es
 
 package-lock.json
 yarn.lock
