@@ -23,7 +23,7 @@ export default {
     const initOptions = {
       appkey: "", // 请填写你的appkey
       account: "", // 请填写你的account
-      token: "",
+      token: "", // 请填写你的token
     };
     const localOptions = {
       // 添加好友模式，默认需要验证
@@ -78,5 +78,11 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 </style>

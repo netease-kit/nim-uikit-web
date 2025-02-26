@@ -68,8 +68,9 @@ const GroupList: FC<GroupListProps> = observer(
     }, [members, groupSearchText, store.uiStore])
 
     const rowRenderer = useCallback(
-      ({ index, key, style }) => {
+      ({ index, style }) => {
         const item = showMembers[index]
+        const key = item.accountId
         const itemProps: GroupItemProps & {
           renderKey: string
           renderIndex: number

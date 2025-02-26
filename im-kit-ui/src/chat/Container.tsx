@@ -19,6 +19,7 @@ import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
 import sdkPkg from 'nim-web-sdk-ng/package.json'
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 import { MAX_UPLOAD_FILE_SIZE } from '../constant'
+import { V2NIMLocalConversation } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMLocalConversationService'
 
 export interface ActionRenderProps extends ChatMessageInputProps {
   conversationType: V2NIMConversationType
@@ -100,16 +101,20 @@ export interface ChatContainerProps {
   /**
    自定义渲染 header
    */
-  renderHeader?: (conversation: V2NIMConversation) => JSX.Element
+  renderHeader?: (
+    conversation: V2NIMConversation | V2NIMLocalConversation
+  ) => JSX.Element
   /**
    自定义渲染 p2p 聊天输入框 placeholder
    */
-  renderP2pInputPlaceHolder?: (conversation: V2NIMConversation) => string
+  renderP2pInputPlaceHolder?: (
+    conversation: V2NIMConversation | V2NIMLocalConversation
+  ) => string
   /**
    自定义渲染群组聊天输入框 placeholder
    */
   renderTeamInputPlaceHolder?: (params: {
-    conversation: V2NIMConversation
+    conversation: V2NIMConversation | V2NIMLocalConversation
     mute: boolean
   }) => string
   /**

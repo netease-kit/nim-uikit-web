@@ -27,8 +27,9 @@ export const GroupList: FC<GroupListProps> = ({
   const { t } = useTranslation()
 
   const rowRenderer = useCallback(
-    ({ index, key, style }) => {
+    ({ index, style }) => {
       const item = list[index]
+      const key = item.teamId
 
       return (
         <div style={style} key={key}>

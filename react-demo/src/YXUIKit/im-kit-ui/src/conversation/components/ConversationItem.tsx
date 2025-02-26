@@ -17,7 +17,7 @@ export interface ConversationItemProps {
   menuRenderer: ReactElement
   avatarRenderer: ReactElement
   time: number
-  lastMessage?: V2NIMLastMessage
+  lastMessage?: V2NIMLastMessage | null
   isSelected: boolean
   conversationId: string
   onItemClick: () => void

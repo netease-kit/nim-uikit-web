@@ -20,10 +20,31 @@
               :class="{
                 [$style['iconfont']]: true,
                 iconfont: true,
-                'icon-message_fill_light': true,
+                'icon-im': true,
               }"
             />
             <div :class="$style['icon-label']">会话</div>
+          </div>
+          <div
+            :class="{
+              [$style['contact-icon']]: true,
+              [$style.active]: model === 'collect',
+            }"
+            @click="
+              () => {
+                model = 'collect';
+                renderCollection();
+              }
+            "
+          >
+            <i
+              :class="{
+                [$style['iconfont']]: true,
+                iconfont: true,
+                'icon-daohang-shoucang': true,
+              }"
+            />
+            <div :class="$style['icon-label']">收藏</div>
           </div>
           <div
             :class="{
@@ -36,20 +57,10 @@
               :class="{
                 [$style['iconfont']]: true,
                 iconfont: true,
-                'icon-tongxunlu1': true,
+                'icon-tongxunlu-weixuanzhong': true,
               }"
             />
             <div :class="$style['icon-label']">通讯录</div>
-          </div>
-          <div :class="$style['logout-icon']">
-            <i
-              :class="{
-                [$style['iconfont']]: true,
-                iconfont: true,
-                'icon-logout': true,
-              }"
-            />
-            <div :class="$style['icon-label']">退出</div>
           </div>
         </div>
         <div :class="$style.right" v-show="model === 'chat'">
@@ -59,6 +70,9 @@
         <div :class="$style.right" v-show="model === 'contact'">
           <div :class="$style['right-list']" ref="contactList" />
           <div :class="$style['right-content']" ref="contactInfo" />
+        </div>
+        <div :class="$style.collect" v-if="model === 'collect'">
+          <div :class="$style.collectRight" ref="collect"></div>
         </div>
       </div>
     </div>
@@ -73,6 +87,7 @@ import {
   ContactListContainer, // 通讯录——通讯录导航组件
   ContactInfoContainer, // 通讯录——通讯录详情组件，包含好友列表、群组列表以及黑名单列表
   MyAvatarContainer, // 用户资料组件
+  ChatCollectionList, // 收藏组件
 } from "@xkit-yx/im-kit-ui";
 import "@xkit-yx/im-kit-ui/es/style/css";
 import "./iconfont.css";
@@ -83,6 +98,13 @@ export default {
     return {
       model: "chat",
     };
+  },
+  methods: {
+    renderCollection() {
+      setTimeout(() => {
+        window.$uikit.render(ChatCollectionList, null, this.$refs.collect);
+      }, 0);
+    },
   },
   mounted() {
     window.$uikit.render(
@@ -191,11 +213,13 @@ body {
 
 .left {
   width: 60px;
+  min-width: 60px;
   border-right: 1px solid #e8e8e8;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
+  box-sizing: border-box;
 }
 
 .avatar-icon {
@@ -253,5 +277,13 @@ body {
 
 .right-content {
   flex: 1;
+}
+.collect {
+  width: 100%;
+  height: 100%;
+}
+.collectRight {
+  width: 100%;
+  height: 100%;
 }
 </style>

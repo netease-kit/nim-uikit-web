@@ -97,10 +97,18 @@ const AddFriendModal: React.FC<AddFriendModalProps> = observer(
 
     const handleChat = async () => {
       if (searchRes) {
-        await store.conversationStore.insertConversationActive(
-          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
-          searchRes.accountId
-        )
+        if (store.localOptions.enableLocalConversation) {
+          await store.localConversationStore?.insertConversationActive(
+            V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
+            searchRes.accountId
+          )
+        } else {
+          await store.conversationStore?.insertConversationActive(
+            V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
+            searchRes.accountId
+          )
+        }
+
         onChat(searchRes.accountId)
         resetState()
       }

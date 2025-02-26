@@ -44,10 +44,18 @@ export const GroupListContainer: FC<GroupListContainerProps> = observer(
 
     const handleItemClick = useCallback(
       async (team: V2NIMTeam) => {
-        await store.conversationStore.insertConversationActive(
-          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
-          team.teamId
-        )
+        if (store.localOptions.enableLocalConversation) {
+          await store.localConversationStore?.insertConversationActive(
+            V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
+            team.teamId
+          )
+        } else {
+          await store.conversationStore?.insertConversationActive(
+            V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
+            team.teamId
+          )
+        }
+
         onItemClick?.(team)
       },
       [onItemClick, store.conversationStore]

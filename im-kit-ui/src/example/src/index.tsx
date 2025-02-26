@@ -17,10 +17,7 @@ import { LocalOptions } from "@xkit-yx/im-store-v2/dist/types/types";
 import V2NIM from "nim-web-sdk-ng";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { V2NIMAIUser } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMAIService";
-import {
-  NIMInitializeOptions,
-  NIMOtherOptions,
-} from "nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/NIMInterface";
+import { NIMOtherOptions } from "nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK/NIMInterface";
 
 import IMApp from "./IMApp";
 
@@ -28,14 +25,13 @@ interface IMContainerProps {
   appkey: string; //传入您的App Key
   account: string; // 传入您的云信IM账号
   token: string; // 传入您的Token
-  initOptions?: NIMInitializeOptions;
   otherOptions?: NIMOtherOptions;
   onLogout?: () => void;
   changeLanguage?: (value: "zh" | "en") => void;
 }
 
 const IMAppContainer: React.FC<IMContainerProps> = (props) => {
-  const { appkey, account, token, initOptions, otherOptions, onLogout } = props;
+  const { appkey, account, token, otherOptions, onLogout } = props;
   // 国际化语言类型
   const [curLanguage, setCurLanguage] = useState<"zh" | "en">("zh");
   // 添加好友是否需要验证
@@ -148,7 +144,6 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
         appkey,
         debugLevel: "debug",
         apiVersion: "v2",
-        ...initOptions,
       },
       otherOptions
     );
@@ -157,13 +152,12 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
         appkey,
         debugLevel: "debug",
         apiVersion: "v2",
-        ...initOptions,
       },
       otherOptions
     );
 
     return nim;
-  }, [appkey, initOptions, otherOptions]);
+  }, [appkey, otherOptions]);
 
   useEffect(() => {
     if (

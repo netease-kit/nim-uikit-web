@@ -1,6 +1,5 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
 import { Avatar, Badge } from 'antd'
-import { Storage } from '@xkit-yx/utils'
 import { urls } from '../GroupAvatarSelect'
 import { getAvatarBackgroundColor } from '../../../utils'
 
@@ -114,13 +113,13 @@ export const CrudeAvatar: FC<CrudeAvatarProps> = ({
         <div
           style={{
             ...avatarStyle,
-            width: size,
-            height: size,
+            width: size + 'px',
+            height: size + 'px',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: `${size / 2}px`,
+            fontSize: `${size / 2.5}px`,
             color: '#fff',
           }}
         >

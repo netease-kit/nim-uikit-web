@@ -77,10 +77,18 @@ export const SearchContainer: React.FC<SearchContainerProps> = observer(
           throw Error('unknow scene')
         }
 
-        await store.conversationStore.insertConversationActive(
-          conversationType,
-          receiverId
-        )
+        if (store.localOptions.enableLocalConversation) {
+          await store.localConversationStore?.insertConversationActive(
+            conversationType,
+            receiverId
+          )
+        } else {
+          await store.conversationStore?.insertConversationActive(
+            conversationType,
+            receiverId
+          )
+        }
+
         setVisible(false)
         onClickChat?.()
       },

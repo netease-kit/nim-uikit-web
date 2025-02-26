@@ -1,5 +1,5 @@
 import React, { FC } from 'react'
-import { UserOutlined, TeamOutlined, RobotOutlined } from '@ant-design/icons'
+import { UserOutlined, TeamOutlined } from '@ant-design/icons'
 import { ContactItemProps, ContactItem } from './ContactItem'
 import { CommonIcon, useStateContext, useTranslation } from '../../../common'
 import { ContactType } from '@xkit-yx/im-store-v2'

@@ -9,7 +9,10 @@ import {
 } from '../../common'
 import { ConversationItem } from './ConversationItem'
 import { observer } from 'mobx-react'
-import { V2NIMConversationForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import {
+  V2NIMConversationForUI,
+  V2NIMLocalConversationForUI,
+} from '@xkit-yx/im-store-v2/dist/types/types'
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 export interface P2PItemProps extends V2NIMConversationForUI {
@@ -22,12 +25,25 @@ export interface P2PItemProps extends V2NIMConversationForUI {
   conversationNameRenderer?: JSX.Element | null
   conversationMsgRenderer?: JSX.Element | null
   msgReceiptTime?: number
-
   prefix?: string
   commonPrefix?: string
 }
 
-export const P2PItem: FC<P2PItemProps> = observer(
+export interface P2PItemPropsForLocal extends V2NIMLocalConversationForUI {
+  isSelected: boolean
+  onStickTopChange: (isTop: boolean) => void
+  onDeleteClick: () => void
+  onMuteChange: (mute: boolean) => void
+  onItemClick: () => void
+  avatarRenderer?: JSX.Element | null
+  conversationNameRenderer?: JSX.Element | null
+  conversationMsgRenderer?: JSX.Element | null
+  msgReceiptTime?: number
+  prefix?: string
+  commonPrefix?: string
+}
+
+export const P2PItem: FC<P2PItemProps | P2PItemPropsForLocal> = observer(
   ({
     onStickTopChange,
     onDeleteClick,
@@ -134,6 +150,7 @@ export const P2PItem: FC<P2PItemProps> = observer(
         isMute={mute}
         conversationName={store.uiStore.getAppellation({ account: to })}
         time={lastMessage?.messageRefer.createTime || updateTime}
+        // @ts-ignore 'V2NIMLastMessage | null | undefined' is not assignable to type 'V2NIMLastMessage | undefined'.
         lastMessage={lastMessage}
         isSelected={isSelected}
         onItemClick={onItemClick}
