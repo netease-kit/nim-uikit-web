@@ -70,10 +70,18 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = observer(
 
     const handleChat = async () => {
       if (teamId) {
-        await store.conversationStore.insertConversationActive(
-          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
-          teamId
-        )
+        if (store.localOptions.enableLocalConversation) {
+          await store.localConversationStore?.insertConversationActive(
+            V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
+            teamId
+          )
+        } else {
+          await store.conversationStore?.insertConversationActive(
+            V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
+            teamId
+          )
+        }
+
         onChat(teamId)
       }
     }

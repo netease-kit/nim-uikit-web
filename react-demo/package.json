@@ -2,14 +2,15 @@
   "private": true,
   "author": "netease",
   "scripts": {
-    "dev": "NODE_OPTIONS=--openssl-legacy-provider  umi dev",
-    "build": "umi build",
-    "start": "NODE_OPTIONS=--openssl-legacy-provider  umi dev"
+    "dev": "umi dev",
+    "start": "NODE_OPTIONS=--openssl-legacy-provider umi dev",
+    "build": "umi build"
   },
   "dependencies": {
     "@xkit-yx/call-kit": "^3.0.0",
     "@xkit-yx/call-kit-react-ui": "^0.6.0",
-    "@xkit-yx/im-kit-ui": "^10.6.0",
+    "nim-web-sdk-ng": "10.8.0",
+    "@xkit-yx/im-kit-ui": "^10.7.0",
     "react-dom": "^16.8.0",
     "umi": "^3.5.40"
   },

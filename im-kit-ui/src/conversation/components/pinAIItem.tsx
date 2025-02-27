@@ -26,16 +26,29 @@ export const PinAIItem: FC<PinAIItemProps> = observer(
     const { t } = useTranslation()
 
     const handleItemClick = () => {
-      store.conversationStore
-        .insertConversationActive(
-          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
-          aiUser.accountId,
-          true
-        )
-        .catch((err) => {
-          message.error(t('aiConversationSelectFailed'))
-          logger.error(err)
-        })
+      if (store.localOptions.enableLocalConversation) {
+        store.localConversationStore
+          ?.insertConversationActive(
+            V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
+            aiUser.accountId,
+            true
+          )
+          .catch((err) => {
+            message.error(t('aiConversationSelectFailed'))
+            logger.error(err)
+          })
+      } else {
+        store.conversationStore
+          ?.insertConversationActive(
+            V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
+            aiUser.accountId,
+            true
+          )
+          .catch((err) => {
+            message.error(t('aiConversationSelectFailed'))
+            logger.error(err)
+          })
+      }
     }
 
     return (

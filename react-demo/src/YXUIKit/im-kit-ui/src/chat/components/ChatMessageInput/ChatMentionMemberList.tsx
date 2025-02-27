@@ -85,8 +85,9 @@ export const ChatAtMemberList: React.FC<ChatMentionMemberList> = observer(
     }, [activeIndex, mentionMembers, onSelect, t, store.uiStore])
 
     const rowRenderer = useCallback(
-      ({ index, key, style }) => {
+      ({ index, style }) => {
         const member = mentionMembers[index]
+        const key = member.accountId
 
         return (
           <div style={style} key={key}>

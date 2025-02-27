@@ -7,7 +7,10 @@ import {
   useStateContext,
 } from '../../common'
 import { ConversationItem } from './ConversationItem'
-import { V2NIMConversationForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import {
+  V2NIMConversationForUI,
+  V2NIMLocalConversationForUI,
+} from '@xkit-yx/im-store-v2/dist/types/types'
 
 export interface GroupItemProps extends V2NIMConversationForUI {
   isSelected: boolean
@@ -23,7 +26,21 @@ export interface GroupItemProps extends V2NIMConversationForUI {
   commonPrefix?: string
 }
 
-export const GroupItem: FC<GroupItemProps> = ({
+export interface GroupItemPropsForLocal extends V2NIMLocalConversationForUI {
+  isSelected: boolean
+  aitMsgs?: string[]
+  onStickTopChange: (isTop: boolean) => void
+  onDeleteClick: () => void
+  onMuteChange: (mute: boolean) => void
+  onItemClick: () => void
+  avatarRenderer?: JSX.Element | null
+  conversationNameRenderer?: JSX.Element | null
+  conversationMsgRenderer?: JSX.Element | null
+  prefix?: string
+  commonPrefix?: string
+}
+
+export const GroupItem: FC<GroupItemProps | GroupItemPropsForLocal> = ({
   onStickTopChange,
   onDeleteClick,
   onMuteChange,

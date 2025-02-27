@@ -62,9 +62,9 @@ export const FriendList: FC<FriendListProps> = ({
   }, [accounts, store.uiStore])
 
   const rowRenderer = useCallback(
-    ({ index, key, style }) => {
+    ({ index, style }) => {
       const item = dataSource[index]
-
+      const key = item.account
       // if (typeof item === 'string') {
       //     return (
       //       <div className={`${_prefix}-subtitle`} key={item}>

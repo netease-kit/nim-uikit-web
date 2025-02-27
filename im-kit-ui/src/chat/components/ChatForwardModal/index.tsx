@@ -73,7 +73,10 @@ const ChatMessageForwardModal: React.FC<ChatForwardModalProps> = observer(
     )
       .map((item) => item.data)
       .flat()
-    const conversations = [...store.conversationStore.conversations.values()]
+    const _conversation = store.localOptions.enableLocalConversation
+      ? [...store.uiStore.localConversations.values()]
+      : [...store.uiStore.conversations.values()]
+    const conversations = _conversation
       .sort((a, b) => b.sortOrder - a.sortOrder)
       .map((item) => {
         if (

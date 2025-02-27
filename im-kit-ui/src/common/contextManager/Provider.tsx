@@ -59,6 +59,8 @@ const defaultLocalOptions: Required<LocalOptions> = {
   sendMsgBefore: async (options: any) => options,
   aiUserAgentProvider: {},
   conversationLimit: 100,
+  enableLocalConversation: true,
+
   debug: 'debug',
   iconfontUrl: [],
 }

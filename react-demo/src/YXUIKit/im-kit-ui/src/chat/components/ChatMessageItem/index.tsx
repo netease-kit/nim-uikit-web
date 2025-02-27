@@ -5,7 +5,6 @@ import {
   ExclamationCircleFilled,
   RollbackOutlined,
   DeleteOutlined,
-  SwapOutlined,
 } from '@ant-design/icons'
 import classNames from 'classnames'
 import {
@@ -103,7 +102,6 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       receiverId,
       messageClientId,
       sendingState,
-      uploadProgress,
       createTime,
       messageType,
       conversationType,

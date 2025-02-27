@@ -142,8 +142,9 @@ export const FriendSelect: FC<FriendSelectUIProps> = observer(
     }
 
     const friendSelectedRowRenderer = useCallback(
-      ({ index, key, style }) => {
+      ({ index, style }) => {
         const friend = selectedList[index]
+        const key = friend.account
 
         return (
           <div style={style} key={key}>
@@ -163,8 +164,9 @@ export const FriendSelect: FC<FriendSelectUIProps> = observer(
     )
 
     const friendRowRenderer = useCallback(
-      ({ index, key, style }) => {
+      ({ index, style }) => {
         const friend = dataSource.groupByPyData[index]
+        const key = friend.account
 
         return (
           <div style={style} key={key}>

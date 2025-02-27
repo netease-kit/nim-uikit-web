@@ -11,6 +11,7 @@ import { V2NIMConversation } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversa
 import sdkPkg from 'nim-web-sdk-ng/package.json'
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 import { PinAIList } from './components/pinAIList'
+import { V2NIMLocalConversation } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMLocalConversationService'
 
 export interface ConversationContainerProps {
   /**
@@ -46,7 +47,7 @@ export interface ConversationContainerProps {
    */
   renderCustomP2pConversation?: (
     options: {
-      conversation: V2NIMConversation
+      conversation: V2NIMConversation | V2NIMLocalConversation
     } & ConversationCallbackProps
   ) => JSX.Element | null | undefined
   /**
@@ -54,32 +55,32 @@ export interface ConversationContainerProps {
    */
   renderCustomTeamConversation?: (
     options: {
-      conversation: V2NIMConversation
+      conversation: V2NIMConversation | V2NIMLocalConversation
     } & Omit<ConversationCallbackProps, 'onConversationItemMuteChange'>
   ) => JSX.Element | null | undefined
   /**
    自定义会话名称。如果 p2p 会话定义了 renderCustomP2pConversation 或群组会话定义了 renderCustomTeamConversation 则不生效。
    */
   renderConversationName?: (options: {
-    conversation: V2NIMConversation
+    conversation: V2NIMConversation | V2NIMLocalConversation
   }) => JSX.Element | null | undefined
   /**
    自定义会话消息。如果 p2p 会话定义了 renderCustomP2pConversation 或群组会话定义了 renderCustomTeamConversation 则不生效。
    */
   renderConversationMsg?: (options: {
-    conversation: V2NIMConversation
+    conversation: V2NIMConversation | V2NIMLocalConversation
   }) => JSX.Element | null | undefined
   /**
    自定义 p2p 会话头像。如果定义了 renderCustomP2pConversation 则不生效。
    */
   renderP2pConversationAvatar?: (options: {
-    conversation: V2NIMConversation
+    conversation: V2NIMConversation | V2NIMLocalConversation
   }) => JSX.Element | null | undefined
   /**
    自定义群组会话头像。如果定义了 renderCustomTeamConversation 则不生效。
    */
   renderTeamConversationAvatar?: (options: {
-    conversation: V2NIMConversation
+    conversation: V2NIMConversation | V2NIMLocalConversation
   }) => JSX.Element | null | undefined
 }
 
@@ -111,7 +112,7 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
     })
 
     const handleConversationItemClick = async (
-      conversation: V2NIMConversation
+      conversation: V2NIMConversation | V2NIMLocalConversation
     ) => {
       // 处理@消息相关
       if (
@@ -120,9 +121,15 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
         conversation.type ===
           V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_SUPER_TEAM
       ) {
-        await store.conversationStore.markConversationReadActive(
-          conversation.conversationId
-        )
+        if (store.localOptions.enableLocalConversation) {
+          await store.localConversationStore?.markConversationReadActive(
+            conversation.conversationId
+          )
+        } else {
+          await store.conversationStore?.markConversationReadActive(
+            conversation.conversationId
+          )
+        }
       }
 
       await store.uiStore.selectConversation(conversation.conversationId)
@@ -131,27 +138,42 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
     }
 
     const handleConversationItemDeleteClick = async (
-      conversation: V2NIMConversation
+      conversation: V2NIMConversation | V2NIMLocalConversation
     ) => {
-      await store.conversationStore.deleteConversationActive(
-        conversation.conversationId
-      )
+      if (store.localOptions.enableLocalConversation) {
+        await store.localConversationStore?.deleteConversationActive(
+          conversation.conversationId
+        )
+      } else {
+        await store.conversationStore?.deleteConversationActive(
+          conversation.conversationId
+        )
+      }
+
       onConversationItemDeleteClick?.(conversation.conversationId)
     }
 
     const handleConversationItemStickTopChange = async (
-      conversation: V2NIMConversation,
+      conversation: V2NIMConversation | V2NIMLocalConversation,
       isTop: boolean
     ) => {
-      await store.conversationStore.stickTopConversationActive(
-        conversation.conversationId,
-        isTop
-      )
+      if (store.localOptions.enableLocalConversation) {
+        await store.localConversationStore?.stickTopConversationActive(
+          conversation.conversationId,
+          isTop
+        )
+      } else {
+        await store.conversationStore?.stickTopConversationActive(
+          conversation.conversationId,
+          isTop
+        )
+      }
+
       onConversationItemStickTopChange?.(conversation.conversationId, isTop)
     }
 
     const handleConversationItemMuteChange = async (
-      conversation: V2NIMConversation,
+      conversation: V2NIMConversation | V2NIMLocalConversation,
       mute: boolean
     ) => {
       const conversationType =
@@ -195,19 +217,39 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
     }
 
     const handleLoadMoreConversations = () => {
-      const offset =
-        store.uiStore.conversations[store.uiStore.conversations.length - 1]
-          ?.sortOrder
       const limit = store.localOptions.conversationLimit
 
-      store.conversationStore.getConversationListActive(offset, limit)
+      if (store.localOptions.enableLocalConversation) {
+        const offset =
+          store.uiStore.localConversations[
+            store.uiStore.localConversations.length - 1
+          ]?.sortOrder
+
+        store.localConversationStore?.getConversationListActive(offset, limit)
+      } else {
+        const offset =
+          store.uiStore.conversations[store.uiStore.conversations.length - 1]
+            ?.sortOrder
+
+        store.conversationStore?.getConversationListActive(offset, limit)
+      }
     }
 
     const conversations = useMemo(() => {
-      return store.uiStore.conversations.sort(
-        (a, b) => b.sortOrder - a.sortOrder
-      )
-    }, [store.uiStore.conversations])
+      if (localOptions.enableLocalConversation) {
+        return store.uiStore.localConversations.sort(
+          (a, b) => b.sortOrder - a.sortOrder
+        )
+      } else {
+        return store.uiStore.conversations.sort(
+          (a, b) => b.sortOrder - a.sortOrder
+        )
+      }
+    }, [
+      store.uiStore.conversations,
+      store.uiStore.localConversations,
+      localOptions.enableLocalConversation,
+    ])
 
     return (
       <div className={_prefix}>

@@ -17,9 +17,7 @@ export interface RichTextProps {
 export const RichText: FC<RichTextProps> = ({
   ref,
   className = '',
-  placeholder,
   children,
-  disabled,
   onInput,
   onKeyDown,
   onPressEnter,

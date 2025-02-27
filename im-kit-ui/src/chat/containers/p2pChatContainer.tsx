@@ -52,6 +52,7 @@ import { ChatAISearch } from '../components/ChatAISearch'
 import { V2NIMFriend } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMFriendService'
 import { ChatAITranslate } from '../components/ChatAITranslate'
 import { MentionedMember } from '../components/ChatMessageInput/ChatMentionMemberList'
+import { V2NIMLocalConversation } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMLocalConversationService'
 
 export interface P2pChatContainerProps {
   conversationType: V2NIMConversationType
@@ -67,8 +68,12 @@ export interface P2pChatContainerProps {
   renderP2pCustomMessage?: (
     options: RenderP2pCustomMessageOptions
   ) => JSX.Element | null | undefined
-  renderHeader?: (conversation: V2NIMConversation) => JSX.Element
-  renderP2pInputPlaceHolder?: (conversation: V2NIMConversation) => string
+  renderHeader?: (
+    conversation: V2NIMConversation | V2NIMLocalConversation
+  ) => JSX.Element
+  renderP2pInputPlaceHolder?: (
+    conversation: V2NIMConversation | V2NIMLocalConversation
+  ) => string
   renderMessageAvatar?: (
     msg: V2NIMMessageForUI
   ) => JSX.Element | null | undefined
@@ -119,8 +124,9 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     const conversationId =
       nim.V2NIMConversationIdUtil.p2pConversationId(receiverId)
 
-    const conversation =
-      store.conversationStore.conversations.get(conversationId)
+    const conversation = store.localOptions.enableLocalConversation
+      ? store.localConversationStore?.conversations.get(conversationId)
+      : store.conversationStore?.conversations.get(conversationId)
 
     const msgs = store.msgStore.getMsg(conversationId)
 

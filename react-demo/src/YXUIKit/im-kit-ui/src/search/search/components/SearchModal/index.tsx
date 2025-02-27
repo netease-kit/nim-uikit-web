@@ -153,8 +153,11 @@ const SearchModal: React.FC<SearchModalProps> = ({
   }
 
   const rowRenderer = useCallback(
-    ({ index, key, style }) => {
+    ({ index, style }) => {
       const item = searchedSections[index]
+      const key =
+        (item as V2NIMFriend & V2NIMUser).accountId ||
+        (item as V2NIMTeam).teamId
 
       if (typeof item === 'string') {
         return (
@@ -169,10 +172,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
       return (
         <div style={style} key={key}>
           <SearchItem
-            key={
-              (item as V2NIMFriend & V2NIMUser).accountId ||
-              (item as V2NIMTeam).teamId
-            }
+            key={key}
             onClick={() => handleItemClick(item)}
             prefix={prefix}
             account={

@@ -4,11 +4,13 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
+    "dev": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@xkit-yx/im-kit-ui": "^10.6.0",
+    "@xkit-yx/im-kit-ui": "^10.7.0",
+    "nim-web-sdk-ng": "10.8.0",
     "core-js": "^3.8.3",
     "jsx-web-compiler": "^1.0.2",
     "react": "^16.8.0",

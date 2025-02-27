@@ -172,8 +172,9 @@ export const SelectModal: React.FC<SelectModalProps> = ({
   }
 
   const radioRowRenderer = useCallback(
-    ({ index, key, style }) => {
+    ({ index, style }) => {
       const item = visibleDatasource[index]
+      const key = item.key
 
       return (
         <div style={style} key={key}>
@@ -194,8 +195,9 @@ export const SelectModal: React.FC<SelectModalProps> = ({
   )
 
   const checkboxRowRenderer = useCallback(
-    ({ index, key, style }) => {
+    ({ index, style }) => {
       const item = visibleDatasource[index]
+      const key = item.key
 
       return (
         <div style={style} key={key}>
