@@ -9,8 +9,8 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@xkit-yx/im-kit-ui": "^10.7.0",
-    "nim-web-sdk-ng": "10.8.0",
+    "nim-web-sdk-ng": "10.8.10",
+    "@xkit-yx/im-kit-ui": "^10.7.1",
     "core-js": "^3.8.3",
     "jsx-web-compiler": "^1.0.2",
     "react": "^16.8.0",
