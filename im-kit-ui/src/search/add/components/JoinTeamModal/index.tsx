@@ -90,13 +90,13 @@ const JoinTeamModal: React.FC<JoinTeamModalProps> = observer(
 
     const handleChat = async () => {
       if (searchRes) {
-        if (store.localOptions.enableLocalConversation) {
-          await store.localConversationStore?.insertConversationActive(
+        if (store.sdkOptions?.enableV2CloudConversation) {
+          await store.conversationStore?.insertConversationActive(
             V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
             searchRes.teamId
           )
         } else {
-          await store.conversationStore?.insertConversationActive(
+          await store.localConversationStore?.insertConversationActive(
             V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
             searchRes.teamId
           )

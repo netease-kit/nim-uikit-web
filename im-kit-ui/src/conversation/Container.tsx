@@ -121,12 +121,12 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
         conversation.type ===
           V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_SUPER_TEAM
       ) {
-        if (store.localOptions.enableLocalConversation) {
-          await store.localConversationStore?.markConversationReadActive(
+        if (store.sdkOptions?.enableV2CloudConversation) {
+          await store.conversationStore?.markConversationReadActive(
             conversation.conversationId
           )
         } else {
-          await store.conversationStore?.markConversationReadActive(
+          await store.localConversationStore?.markConversationReadActive(
             conversation.conversationId
           )
         }
@@ -140,12 +140,12 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
     const handleConversationItemDeleteClick = async (
       conversation: V2NIMConversation | V2NIMLocalConversation
     ) => {
-      if (store.localOptions.enableLocalConversation) {
-        await store.localConversationStore?.deleteConversationActive(
+      if (store.sdkOptions?.enableV2CloudConversation) {
+        await store.conversationStore?.deleteConversationActive(
           conversation.conversationId
         )
       } else {
-        await store.conversationStore?.deleteConversationActive(
+        await store.localConversationStore?.deleteConversationActive(
           conversation.conversationId
         )
       }
@@ -157,13 +157,13 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
       conversation: V2NIMConversation | V2NIMLocalConversation,
       isTop: boolean
     ) => {
-      if (store.localOptions.enableLocalConversation) {
-        await store.localConversationStore?.stickTopConversationActive(
+      if (store.sdkOptions?.enableV2CloudConversation) {
+        await store.conversationStore?.stickTopConversationActive(
           conversation.conversationId,
           isTop
         )
       } else {
-        await store.conversationStore?.stickTopConversationActive(
+        await store.localConversationStore?.stickTopConversationActive(
           conversation.conversationId,
           isTop
         )
@@ -219,36 +219,36 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
     const handleLoadMoreConversations = () => {
       const limit = store.localOptions.conversationLimit
 
-      if (store.localOptions.enableLocalConversation) {
+      if (store.sdkOptions?.enableV2CloudConversation) {
+        const offset =
+          store.uiStore.conversations[store.uiStore.conversations.length - 1]
+            ?.sortOrder
+
+        store.conversationStore?.getConversationListActive(offset, limit)
+      } else {
         const offset =
           store.uiStore.localConversations[
             store.uiStore.localConversations.length - 1
           ]?.sortOrder
 
         store.localConversationStore?.getConversationListActive(offset, limit)
-      } else {
-        const offset =
-          store.uiStore.conversations[store.uiStore.conversations.length - 1]
-            ?.sortOrder
-
-        store.conversationStore?.getConversationListActive(offset, limit)
       }
     }
 
     const conversations = useMemo(() => {
-      if (localOptions.enableLocalConversation) {
-        return store.uiStore.localConversations.sort(
+      if (store.sdkOptions?.enableV2CloudConversation) {
+        return store.uiStore.conversations.sort(
           (a, b) => b.sortOrder - a.sortOrder
         )
       } else {
-        return store.uiStore.conversations.sort(
+        return store.uiStore.localConversations.sort(
           (a, b) => b.sortOrder - a.sortOrder
         )
       }
     }, [
       store.uiStore.conversations,
       store.uiStore.localConversations,
-      localOptions.enableLocalConversation,
+      store.sdkOptions?.enableV2CloudConversation,
     ])
 
     return (

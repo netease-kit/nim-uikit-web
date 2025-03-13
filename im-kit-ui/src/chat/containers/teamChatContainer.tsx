@@ -137,9 +137,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     const conversationId =
       nim.V2NIMConversationIdUtil.teamConversationId(receiverId)
 
-    const conversation = store.localOptions.enableLocalConversation
-      ? store.localConversationStore?.conversations.get(conversationId)
-      : store.conversationStore?.conversations.get(conversationId)
+    const conversation = store.sdkOptions?.enableV2CloudConversation
+      ? store.conversationStore?.conversations.get(conversationId)
+      : store.localConversationStore?.conversations.get(conversationId)
 
     // 群免打扰变更设置
     // 注意, 现有逻辑取名不准确, 使得设置禁言叫 mute, 设置免打扰也叫 mute
@@ -1158,12 +1158,12 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
                 visibilityObserver.unobserve(params.target)
               })
             // 会话列表@消息判断需要，标记当前会话最后已读时间
-            if (store.localOptions.enableLocalConversation) {
-              store.localConversationStore?.markConversationReadActive(
+            if (store.sdkOptions?.enableV2CloudConversation) {
+              store.conversationStore?.markConversationReadActive(
                 msg.conversationId
               )
             } else {
-              store.conversationStore?.markConversationReadActive(
+              store.localConversationStore?.markConversationReadActive(
                 msg.conversationId
               )
             }
