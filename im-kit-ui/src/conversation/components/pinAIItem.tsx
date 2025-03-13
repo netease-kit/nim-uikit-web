@@ -26,8 +26,8 @@ export const PinAIItem: FC<PinAIItemProps> = observer(
     const { t } = useTranslation()
 
     const handleItemClick = () => {
-      if (store.localOptions.enableLocalConversation) {
-        store.localConversationStore
+      if (store.sdkOptions?.enableV2CloudConversation) {
+        store.conversationStore
           ?.insertConversationActive(
             V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
             aiUser.accountId,
@@ -38,7 +38,7 @@ export const PinAIItem: FC<PinAIItemProps> = observer(
             logger.error(err)
           })
       } else {
-        store.conversationStore
+        store.localConversationStore
           ?.insertConversationActive(
             V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
             aiUser.accountId,

@@ -142,13 +142,13 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
 
     const handleOnSendMsgClick = async () => {
       setVisible(false)
-      if (store.localOptions.enableLocalConversation) {
-        await store.localConversationStore?.insertConversationActive(
+      if (store.sdkOptions?.enableV2CloudConversation) {
+        await store.conversationStore?.insertConversationActive(
           V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
           account
         )
       } else {
-        await store.conversationStore?.insertConversationActive(
+        await store.localConversationStore?.insertConversationActive(
           V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
           account
         )

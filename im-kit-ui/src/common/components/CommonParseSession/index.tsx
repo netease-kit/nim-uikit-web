@@ -362,6 +362,8 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
             title={finalText}
             trigger={'click'}
             placement="bottom"
+            color="#ffffff"
+            className={`${_prefix}-top-text-tooltip`}
             getPopupContainer={() => textRef.current || document.body}
           >
             <div ref={textRef} className={`${_prefix}-text-wrapper`}>

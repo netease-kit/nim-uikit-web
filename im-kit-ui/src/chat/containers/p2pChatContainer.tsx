@@ -124,9 +124,9 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     const conversationId =
       nim.V2NIMConversationIdUtil.p2pConversationId(receiverId)
 
-    const conversation = store.localOptions.enableLocalConversation
-      ? store.localConversationStore?.conversations.get(conversationId)
-      : store.conversationStore?.conversations.get(conversationId)
+    const conversation = store.sdkOptions?.enableV2CloudConversation
+      ? store.conversationStore?.conversations.get(conversationId)
+      : store.localConversationStore?.conversations.get(conversationId)
 
     const msgs = store.msgStore.getMsg(conversationId)
 

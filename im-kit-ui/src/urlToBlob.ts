@@ -1,10 +1,15 @@
 export const blobImgMap: { [key: string]: string } = {}
 
 export const urlToBlob = async (url: string): Promise<string> => {
-  const res = await fetch(url)
-  const blob = await res.blob()
+  try {
+    const res = await fetch(url)
+    const blob = await res.blob()
 
-  return URL.createObjectURL(blob)
+    return URL.createObjectURL(blob)
+  } catch (error) {
+    console.error(error)
+    return ''
+  }
 }
 
 export const getBlobImg = async (url: string): Promise<string> => {

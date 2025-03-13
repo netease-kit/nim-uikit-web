@@ -20,7 +20,7 @@ export default {
     const initOptions = {
       appkey: "", // 请填写你的appkey
       account: "", // 请填写你的account
-      token: "",
+      token: "", // 请填写你的token
     };
     const localOptions = {
       // 添加好友模式，默认需要验证
@@ -46,6 +46,8 @@ export default {
       appkey: initOptions.appkey,
       account: initOptions.account,
       token: initOptions.token,
+      // 是否开启云端会话，默认不开启
+      enableV2CloudConversation: false,
       debugLevel: "debug",
       apiVersion: "v2",
     });

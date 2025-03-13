@@ -77,13 +77,13 @@ export const SearchContainer: React.FC<SearchContainerProps> = observer(
           throw Error('unknow scene')
         }
 
-        if (store.localOptions.enableLocalConversation) {
-          await store.localConversationStore?.insertConversationActive(
+        if (store.sdkOptions?.enableV2CloudConversation) {
+          await store.conversationStore?.insertConversationActive(
             conversationType,
             receiverId
           )
         } else {
-          await store.conversationStore?.insertConversationActive(
+          await store.localConversationStore?.insertConversationActive(
             conversationType,
             receiverId
           )

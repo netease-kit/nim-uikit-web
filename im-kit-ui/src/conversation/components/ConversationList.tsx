@@ -100,6 +100,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   const conversationRowRenderer = useCallback(
     ({ index, style }) => {
       const item = conversations[index]
+      const key = item?.conversationId
 
       return (
         <div key={item.conversationId} style={style}>
