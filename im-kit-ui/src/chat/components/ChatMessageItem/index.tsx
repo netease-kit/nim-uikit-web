@@ -23,6 +23,8 @@ import {
   YxTopMessage,
 } from '@xkit-yx/im-store-v2/dist/types/types'
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
+import { V2NIMMessage } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
+import { V2NIMUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService'
 
 export type MenuItemKey =
   | 'recall'
@@ -56,8 +58,12 @@ export interface MessageItemProps {
   normalStatusRenderer?: React.ReactNode
   /** 消息右键操作菜单 */
   msgOperMenu?: MsgOperMenuItem[]
+  myAccountId?: string
+  stopAIStreamMessage?: (msg: V2NIMMessage) => void
+  regenAIMessage?: (msg: V2NIMMessage) => void
   onReeditClick: (msg: V2NIMMessageForUI) => void
   onResend: (msg: V2NIMMessageForUI) => void
+  onMessageItemAvatarClick?: (user: V2NIMUser) => void
   onMessageAction: (key: MenuItemKey, msg: V2NIMMessageForUI) => void
   onMessageAvatarAction?: (key: AvatarMenuItem, msg: V2NIMMessageForUI) => void
   renderMessageAvatar?: (
@@ -81,6 +87,10 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
     topMessage,
     normalStatusRenderer,
     msgOperMenu,
+    myAccountId,
+    onMessageItemAvatarClick,
+    stopAIStreamMessage,
+    regenAIMessage,
     onMessageAction,
     onMessageAvatarAction,
     onReeditClick,
@@ -112,14 +122,29 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       textOfVoice,
     } = msg
 
+    const isAiResponseMessage =
+      msg?.aiConfig?.aiStatus ===
+      V2NIMConst.V2NIMMessageAIStatus.V2NIM_MESSAGE_AI_STATUS_RESPONSE
+
+    /**renderSenderId 用于渲染头像和昵称，当这条消息是ai发的消息，会存在如下情况
+     * 1.如果是单聊，此时有ai的回复消息，那么sdk返回的消息的senderId为提问者的accountId，但此时UI上需要展示为ai的昵称和头像，将renderSenderId改为ai的accountId
+     * 2.如果是群聊，此时有ai的回复消息且ai数字人不在群里，那么sdk返回的消息的senderId为ai的accountId，但此时UI上需要展示为ai的昵称和头像，将renderSenderId改为ai的accountId
+     **/
+
+    const renderSenderId = isAiResponseMessage
+      ? msg?.aiConfig?.accountId
+      : senderId
+
     const messageActionDropdownContainerRef = useRef<HTMLDivElement>(null)
     const messageAvatarActionDropdownContainerRef = useRef<HTMLDivElement>(null)
+
+    const { localOptions } = useStateContext()
 
     const aiErrorMap = getAIErrorMap(t)
 
     // 优先级按照 备注 > 群昵称 > 好友昵称 > 消息上的昵称 > 好友账号
     const nick = store.uiStore.getAppellation({
-      account: senderId,
+      account: renderSenderId as string,
       teamId:
         conversationType ===
         V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
@@ -128,7 +153,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
     })
 
     const nickWithoutAlias = store.uiStore.getAppellation({
-      account: senderId,
+      account: renderSenderId as string,
       teamId:
         conversationType ===
         V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
@@ -362,8 +387,9 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
                   ref={messageAvatarActionDropdownContainerRef}
                 >
                   <ComplexAvatarContainer
+                    onMessageItemAvatarClick={onMessageItemAvatarClick}
                     prefix={commonPrefix}
-                    account={senderId}
+                    account={renderSenderId as string}
                   />
                 </div>
               </Dropdown>
@@ -373,7 +399,15 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
 
         <Dropdown
           key={messageClientId}
-          trigger={['contextMenu']}
+          trigger={
+            // 当消息是 AI 消息且正在流式输出时，禁用右键菜单
+            localOptions?.aiStream &&
+            msg.aiConfig?.aiStatus === 2 &&
+            (msg?.aiConfig?.aiStreamStatus === 1 ||
+              msg?.aiConfig?.aiStreamStatus === -1)
+              ? []
+              : ['contextMenu']
+          }
           overlay={
             <Menu
               onClick={({ key }) => onMessageAction(key as MenuItemKey, msg)}
@@ -397,6 +431,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
                   {renderSendMsgStatus()}
                 </div>
               )}
+
               {renderMessageOuterContent?.(msg) ?? (
                 <div className={`${_prefix}-body`}>
                   {renderMessageInnerContent?.(msg) ?? (
@@ -410,6 +445,39 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
                   )}
                 </div>
               )}
+              {myAccountId === msg?.threadReply?.senderId &&
+                msg.aiConfig?.aiStatus ===
+                  V2NIMConst.V2NIMMessageAIStatus
+                    .V2NIM_MESSAGE_AI_STATUS_RESPONSE && (
+                  <div className={`${_prefix}-ai-stream-icon`}>
+                    {(msg?.aiConfig?.aiStreamStatus ==
+                      V2NIMConst.V2NIMMessageAIStreamStatus
+                        .NIM_MESSAGE_AI_STREAM_STATUS_STREAMING ||
+                      msg?.aiConfig?.aiStreamStatus ==
+                        V2NIMConst.V2NIMMessageAIStreamStatus
+                          .NIM_MESSAGE_AI_STREAM_STATUS_PLACEHOLDER) && (
+                      <div onClick={() => stopAIStreamMessage?.(msg)}>
+                        <CommonIcon
+                          style={{ color: '#656A72' }}
+                          type="icon-tingzhi"
+                        />
+                      </div>
+                    )}
+                    {(msg?.aiConfig?.aiStreamStatus >
+                      V2NIMConst.V2NIMMessageAIStreamStatus
+                        .NIM_MESSAGE_AI_STREAM_STATUS_PLACEHOLDER ||
+                      msg?.aiConfig.aiStreamStatus ==
+                        V2NIMConst.V2NIMMessageAIStreamStatus
+                          .NIM_MESSAGE_AI_STREAM_STATUS_NONE) && (
+                      <div onClick={() => regenAIMessage?.(msg)}>
+                        <CommonIcon
+                          style={{ color: '#656A72' }}
+                          type="icon-zhongxinshengcheng"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
             </div>
             <div
               className={classNames(`${_prefix}-date`, {

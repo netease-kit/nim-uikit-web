@@ -303,6 +303,10 @@ const LocaleConfig = {
   aiTranslateEmptyText: '请输入需要翻译的内容',
   aiSendingText: '大模型请求响应中',
   searchTipText: 'Enter 搜索',
+  aiErrorText: '服务器繁忙，请稍后再试',
+  aiStopFailedText: '停止输出失败',
+  regenAIMsgFailedText: '重新生成失败',
+  aiStreamCancelText: '请求已取消',
 
   // emoji 不能随便填，要用固定 key，参考 demo
   Laugh: '[大笑]',

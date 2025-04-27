@@ -6,6 +6,8 @@
   flex: 1;
   overflow-y: auto;
   padding: 16px;
+  overflow-anchor: none; /* 防止浏览器自动调整滚动位置 */
+  overflow-y: auto;
 
   &-tip {
     display: flex;
@@ -16,6 +18,8 @@
 
   &-content {
     width: 100%;
+    overflow-anchor: none; /* 防止浏览器自动调整滚动位置 */
+    overflow-y: auto;
   }
 
   &-tobottom {

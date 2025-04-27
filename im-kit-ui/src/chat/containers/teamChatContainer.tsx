@@ -52,12 +52,17 @@ import {
   YxServerExt,
 } from '@xkit-yx/im-store-v2/dist/types/types'
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
-import { V2NIMMessageNotificationAttachment } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
+import {
+  V2NIMMessage,
+  V2NIMMessageNotificationAttachment,
+} from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
 import { V2NIMError } from 'nim-web-sdk-ng/dist/esm/nim/src/types'
 import ChatTopMessage from '../components/ChatTopMsg'
 import { ChatAISearch } from '../components/ChatAISearch'
 import { ChatAITranslate } from '../components/ChatAITranslate'
 import { V2NIMLocalConversation } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMLocalConversationService'
+import { V2NIMAIUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMAIService'
+import { V2NIMUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService'
 
 export interface TeamChatContainerProps {
   conversationType: V2NIMConversationType
@@ -70,6 +75,7 @@ export interface TeamChatContainerProps {
     conversationType: V2NIMConversationType
     receiverId: string
   }) => Promise<void>
+  onMessageItemAvatarClick?: (user: V2NIMUser) => void
   afterTransferTeam?: (teamId: string) => Promise<void>
   renderTeamCustomMessage?: (
     options: RenderTeamCustomMessageOptions
@@ -116,6 +122,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     maxUploadFileSize,
     onSendText: onSendTextFromProps,
     afterTransferTeam,
+    onMessageItemAvatarClick,
     renderTeamCustomMessage,
     renderHeader,
     renderTeamInputPlaceHolder,
@@ -405,7 +412,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     }, [])
 
     const onAISendHandler = useCallback(() => {
-      message.success(t('aiSendingText'))
+      if (!localOptions?.aiStream) {
+        message.success(t('aiSendingText'))
+      }
     }, [t])
 
     const onMsgListScrollHandler = useCallback(
@@ -816,9 +825,20 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
 
           case 'reply':
             {
-              const member = mentionMembers.find(
-                (item) => item.accountId === msg.senderId
-              )
+              const isAiResponseMessage =
+                msg?.aiConfig?.aiStatus ===
+                V2NIMConst.V2NIMMessageAIStatus.V2NIM_MESSAGE_AI_STATUS_RESPONSE
+
+              /**renderSenderId 用于渲染头像和昵称，当这条消息是ai发的消息，会存在如下情况
+               * 1.如果是单聊，此时有ai的回复消息，那么sdk返回的消息的senderId为提问者的accountId，但此时UI上需要展示为ai的昵称和头像，将renderSenderId改为ai的accountId
+               * 2.如果是群聊，此时有ai的回复消息且ai数字人不在群里，那么sdk返回的消息的senderId为ai的accountId，但此时UI上需要展示为ai的昵称和头像，将renderSenderId改为ai的accountId
+               **/
+              const renderSenderId = isAiResponseMessage
+                ? msg?.aiConfig?.accountId
+                : msg.senderId
+
+              const member: V2NIMTeamMember | V2NIMAIUser | undefined =
+                mentionMembers.find((item) => item.accountId === renderSenderId)
 
               member &&
                 chatMessageInputRef.current?.onAtMemberSelectHandler({
@@ -897,9 +917,20 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         switch (key) {
           case 'mention':
             {
-              const member = mentionMembers.find(
-                (item) => item.accountId === msg.senderId
-              )
+              const isAiResponseMessage =
+                msg?.aiConfig?.aiStatus ===
+                V2NIMConst.V2NIMMessageAIStatus.V2NIM_MESSAGE_AI_STATUS_RESPONSE
+
+              /**renderSenderId 用于渲染头像和昵称，当这条消息是ai发的消息，会存在如下情况
+               * 1.如果是单聊，此时有ai的回复消息，那么sdk返回的消息的senderId为提问者的accountId，但此时UI上需要展示为ai的昵称和头像，将renderSenderId改为ai的accountId
+               * 2.如果是群聊，此时有ai的回复消息且ai数字人不在群里，那么sdk返回的消息的senderId为ai的accountId，但此时UI上需要展示为ai的昵称和头像，将renderSenderId改为ai的accountId
+               **/
+              const renderSenderId = isAiResponseMessage
+                ? msg?.aiConfig?.accountId
+                : msg.senderId
+
+              const member: V2NIMTeamMember | V2NIMAIUser | undefined =
+                mentionMembers.find((item) => item.accountId === renderSenderId)
 
               member &&
                 chatMessageInputRef.current?.onAtMemberSelectHandler({
@@ -1124,6 +1155,38 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       setGroupTransferModalVisible(false)
     }
 
+    const stopAIStreamMessage = (msg: V2NIMMessage) => {
+      store.msgStore
+        .stopAIStreamMessageActive(msg, {
+          operationType: 0,
+        })
+        .catch(() => {
+          message.error(t('aiStopFailedText'))
+        })
+    }
+
+    const regenAIMessage = (msg: V2NIMMessage) => {
+      if (
+        msg?.aiConfig?.aiStreamStatus ===
+        V2NIMConst.V2NIMMessageAIStreamStatus.NIM_MESSAGE_AI_STREAM_STATUS_NONE
+      ) {
+        message.success(t('aiSendingText'))
+      }
+
+      store.msgStore
+        .regenAIMessageActive(msg, {
+          operationType:
+            V2NIMConst.V2NIMMessageAIRegenOpType.V2NIM_MESSAGE_AI_REGEN_OP_NEW,
+        })
+        .catch((error) => {
+          if (error.code === 107404) {
+            message.error(t('recallReplyMessageText'))
+          } else {
+            message.error(t('regenAIMsgFailedText'))
+          }
+        })
+    }
+
     useEffect(() => {
       const notMyMsgs = msgs
         .filter((item) => item.senderId !== myUser.accountId)
@@ -1213,7 +1276,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     // 切换会话时需要重新初始化
     useEffect(() => {
       resetState()
-      scrollToBottom()
+      // 这里给一个timeout，让微任务、回复消息、撤回消息计算等完成之后，在执行滚动到底部
+      const timer = setTimeout(scrollToBottom, 0)
+
       store.teamStore.getTeamActive(receiverId).catch((err) => {
         logger.warn('获取群组失败：', err.toString())
       })
@@ -1229,6 +1294,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         .catch((err) => {
           logger.warn('获取群组成员失败：', err.toString())
         })
+      return () => {
+        clearTimeout(timer)
+      }
     }, [
       team.memberLimit,
       store.teamStore,
@@ -1377,16 +1445,33 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           messageListContainerDomRef.current &&
           msg[0].conversationId === conversationId
         ) {
-          // 当收到消息时，如果已经往上滚动了，是不需要滚动到最底部的
-          if (
-            messageListContainerDomRef.current.scrollTop <
-            messageListContainerDomRef.current.scrollHeight -
-              messageListContainerDomRef.current.clientHeight -
-              200
-          ) {
-            setReceiveMsgBtnVisible(true)
-          } else {
+          const container = messageListContainerDomRef.current
+          // 计算距离底部的距离
+          const distanceToBottom =
+            container.scrollHeight -
+            container.scrollTop -
+            container.clientHeight
+
+          /**
+           * 收到ai的新消息时
+           * scrollHeight 表示整个内容的高度，而 scrollTop 表示已滚动的距离。当新消息到达时， scrollHeight 会增加，但 scrollTop 并不会自动调整
+           * 但问题在于，当新消息到达时：
+              1. scrollHeight 会增加
+              2. scrollTop 保持不变
+              3. clientHeight 是固定的可视区域高度
+              所以这个差值会一直变大，导致判断失效。
+           */
+
+          const isAiMessage = msg[0]?.aiConfig?.aiStatus === 2
+
+          /** ai 消息距离底部小于 300px，则认为是在底部，因为ai消息带上被回复的内容一般高度较大 */
+          const diffDistanceConst = isAiMessage ? 300 : 200
+
+          // 如果距离底部小于 300px，则认为是在底部
+          if (distanceToBottom < diffDistanceConst) {
             scrollToBottom()
+          } else {
+            setReceiveMsgBtnVisible(true)
           }
         }
       }
@@ -1395,6 +1480,36 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
 
       return () => {
         nim.V2NIMMessageService.off('onReceiveMessages', onMsg)
+      }
+    }, [nim, conversationId, scrollToBottom])
+
+    useLayoutEffect(() => {
+      const onReceiveMessagesModified = (msg: V2NIMMessage[]) => {
+        if (
+          messageListContainerDomRef.current &&
+          msg[0].conversationId === conversationId
+        ) {
+          if (
+            messageListContainerDomRef.current.scrollTop >=
+            messageListContainerDomRef.current.scrollHeight -
+              messageListContainerDomRef.current.clientHeight -
+              250
+          ) {
+            scrollToBottom()
+          }
+        }
+      }
+
+      nim.V2NIMMessageService.on(
+        'onReceiveMessagesModified',
+        onReceiveMessagesModified
+      )
+
+      return () => {
+        nim.V2NIMMessageService.off(
+          'onReceiveMessagesModified',
+          onReceiveMessagesModified
+        )
       }
     }, [nim, conversationId, scrollToBottom])
 
@@ -1565,8 +1680,12 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             noMore={noMore}
             loadingMore={loadingMore}
             receiveMsgBtnVisible={receiveMsgBtnVisible}
+            stopAIStreamMessage={stopAIStreamMessage}
+            myAccountId={myUser.accountId}
+            regenAIMessage={regenAIMessage}
             onReceiveMsgBtnClick={scrollToBottom}
             onResend={onResend}
+            onMessageItemAvatarClick={onMessageItemAvatarClick}
             onMessageAction={onMessageAction}
             onMessageAvatarAction={onMessageAvatarAction}
             onReeditClick={onReeditClick}

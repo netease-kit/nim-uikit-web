@@ -8,7 +8,7 @@ export type ComplexAvatarProps = Omit<UserCardProps, 'relation' | 'onCancel'> &
   CrudeAvatarProps & {
     relation: UserCardProps['relation'] | 'myself'
     onChangeAlias?: (alias: string) => void
-    onAvatarClick?: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
+    onAvatarClick?: (e) => void
     onCancel?: () => void
     onSave?: MyUserCardProps['onSave']
   }
@@ -41,7 +41,11 @@ export const ComplexAvatarUI: FC<ComplexAvatarProps> = ({
         }
       }}
     >
-      <div onClick={onAvatarClick}>
+      <div
+        onClick={() => {
+          onAvatarClick?.(props)
+        }}
+      >
         <CrudeAvatar {...props} />
       </div>
       {relation === 'myself' ? (

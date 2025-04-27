@@ -20,6 +20,7 @@ import sdkPkg from 'nim-web-sdk-ng/package.json'
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 import { MAX_UPLOAD_FILE_SIZE } from '../constant'
 import { V2NIMLocalConversation } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMLocalConversationService'
+import { V2NIMUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService'
 
 export interface ActionRenderProps extends ChatMessageInputProps {
   conversationType: V2NIMConversationType
@@ -78,6 +79,12 @@ export interface ChatContainerProps {
     conversationType: V2NIMConversationType
     receiverId: string
   }) => Promise<void>
+
+  /**
+    聊天列表头像点击事件
+    */
+  onMessageItemAvatarClick?: (user: V2NIMUser) => void
+
   /**
    转让群主后的回调
    */
@@ -185,6 +192,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
     msgOperMenu,
     maxUploadFileSize = MAX_UPLOAD_FILE_SIZE,
     onSendText,
+    onMessageItemAvatarClick,
     afterTransferTeam,
     renderEmpty,
     renderP2pCustomMessage,
@@ -237,6 +245,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           msgRecallTime={msgRecallTime}
           settingActions={p2pSettingActions}
           msgOperMenu={msgOperMenu}
+          onMessageItemAvatarClick={onMessageItemAvatarClick}
           renderP2pCustomMessage={renderP2pCustomMessage}
           renderHeader={renderHeader}
           renderP2pInputPlaceHolder={renderP2pInputPlaceHolder}
@@ -260,6 +269,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           msgRecallTime={msgRecallTime}
           settingActions={teamSettingActions}
           msgOperMenu={msgOperMenu}
+          onMessageItemAvatarClick={onMessageItemAvatarClick}
           afterTransferTeam={afterTransferTeam}
           renderTeamCustomMessage={renderTeamCustomMessage}
           renderHeader={renderHeader}

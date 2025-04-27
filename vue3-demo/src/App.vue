@@ -4,7 +4,9 @@
 <script lang="ts">
 import IMApp from "./components/IMApp/index.vue";
 import { IMUIKit } from "@xkit-yx/im-kit-ui";
-import V2NIM, { V2NIMConst } from "nim-web-sdk-ng";
+import V2NIM from "nim-web-sdk-ng";
+import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
+
 import { app } from "./main";
 export default {
   name: "App",
@@ -39,6 +41,8 @@ export default {
       loginStateVisible: true,
       // 是否允许转让群主
       allowTransferTeamOwner: true,
+      // 是否需要显示群管理员相关主动功能，默认 false
+      teamManagerVisible: true,
     };
 
     // 初始化 IM SDK 实例
@@ -59,6 +63,7 @@ export default {
 
     // 初始化 UIKit 实例
     app.config.globalProperties.$uikit = new IMUIKit({
+      //@ts-ignore
       nim,
       singleton: true,
       localOptions,

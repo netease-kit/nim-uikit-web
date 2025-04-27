@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Dropdown, Image, Popover, Progress, Tooltip, message } from 'antd'
 import reactStringReplace from 'react-string-replace'
 import CommonIcon from '../CommonIcon'
+import remarkGfm from 'remark-gfm'
+import 'highlight.js/styles/github.css'
 import {
   getFileType,
   parseFileSize,
@@ -35,7 +37,15 @@ import {
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 import { V2NIMError } from 'nim-web-sdk-ng/dist/esm/nim/src/types'
 import { AI_SEARCH_MENU_KEY, fileIconMap } from '../../../constant'
+import Markdown from 'react-markdown'
+import { LoadingOutlined } from '@ant-design/icons'
+import rehypeHighlight from 'rehype-highlight'
+import rehypeRaw from 'rehype-raw'
 
+import 'highlight.js/styles/github-dark.css' // 选择高亮主题
+
+// 在文件顶部引入
+// import { useTypewriterEffect } from '../../hooks/useTypewriterEffect'
 export interface IParseSessionProps {
   prefix?: string
   msg: V2NIMMessageForUI
@@ -139,6 +149,8 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     const [replyImgUrl, setReplyImgUrl] = useState('')
     const [threadReply, setThreadReply] = useState<V2NIMMessage | 'noFind'>()
     const [aiSearchText, setAiSearchText] = useState('')
+
+    const aiSearchDropdownContainerRef = useRef<HTMLDivElement>(null)
 
     const myAccount = store.userStore.myUserInfo.accountId
 
@@ -253,6 +265,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
 
               message.error(errorText)
             },
+            aiStream: localOptions.aiStream as boolean,
           })
         } catch (error) {
           logger.error('AI 划词搜失败', (error as V2NIMError).toString())
@@ -295,7 +308,104 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       handler()
     }
 
+    const renderAiSteamMsg = (msg: V2NIMMessageForUI) => {
+      const aiStreamStatus = msg?.aiConfig?.aiStreamStatus
+
+      switch (aiStreamStatus) {
+        case V2NIMConst.V2NIMMessageAIStreamStatus
+          .NIM_MESSAGE_AI_STREAM_STATUS_PLACEHOLDER:
+          return <LoadingOutlined style={{ color: '#666666' }} />
+
+        case V2NIMConst.V2NIMMessageAIStreamStatus
+          .NIM_MESSAGE_AI_STREAM_STATUS_EXCEPTION:
+          return <div>{t('aiErrorText')}</div>
+
+        default:
+          return (
+            <Markdown
+              // 支持表格
+              //@ts-ignore
+              remarkPlugins={[remarkGfm]}
+              //@ts-ignore
+              rehypePlugins={[rehypeHighlight, rehypeRaw]}
+            >
+              {msg.text || ''}
+            </Markdown>
+          )
+      }
+    }
+
     const renderCustomText = (msg: V2NIMMessageForUI, isReplyMsg: boolean) => {
+      const isAiMessage =
+        msg.aiConfig?.aiStatus ===
+        V2NIMConst.V2NIMMessageAIStatus.V2NIM_MESSAGE_AI_STATUS_RESPONSE
+
+      if (isAiMessage) {
+        // needTextTooltip 用于置顶消息的展示
+        if (needTextTooltop) {
+          return (
+            <Tooltip
+              overlayClassName={`${_prefix}-ai-text-tool-tip-wrapper`}
+              title={
+                <div ref={textRef} className={`${_prefix}-text-wrapper`}>
+                  <div
+                    className={`${_prefix}-text-wrapper ${_prefix}-ai-text ${_prefix}-ai-text-tool-tip`}
+                  >
+                    {renderAiSteamMsg(msg)}
+                  </div>
+                </div>
+              }
+              trigger={'click'}
+              placement="bottom"
+              color="#ffffff"
+              className={`${_prefix}-top-text-tooltip`}
+              getPopupContainer={() => textRef.current || document.body}
+            >
+              <div ref={textRef} className={`${_prefix}-text-wrapper`}>
+                <div className={`${_prefix}-text-wrapper ${_prefix}-ai-text`}>
+                  {renderAiSteamMsg(msg)}
+                </div>
+              </div>
+            </Tooltip>
+          )
+        }
+
+        return (
+          <Dropdown
+            open={
+              !store.aiUserStore.isAISearching() &&
+              localOptions.aiVisible &&
+              !!aiSearchUser &&
+              store &&
+              !isReplyMsg
+                ? !!aiSearchText
+                : false
+            }
+            menu={{
+              items: [
+                {
+                  label: t('aiSearchText'),
+                  key: AI_SEARCH_MENU_KEY,
+                  icon: <CommonIcon type="icon-a-123" size={16} />,
+                },
+              ],
+              onClick: handleMenuClick,
+            }}
+            getPopupContainer={(triggerNode) =>
+              aiSearchDropdownContainerRef.current || triggerNode
+            }
+          >
+            <div
+              onMouseUp={handleOnMouseUp}
+              className={`${_prefix}-text-wrapper ${_prefix}-ai-text`}
+              ref={aiSearchDropdownContainerRef}
+            >
+              {renderAiSteamMsg(msg)}
+            </div>
+          </Dropdown>
+        )
+      }
+
       const { text, messageClientId, serverExtension } = msg
 
       let finalText = reactStringReplace(
@@ -356,6 +466,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         }
       }
 
+      // 置顶消息时使用，点击展开消息
       if (needTextTooltop) {
         return (
           <Tooltip
@@ -376,7 +487,11 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       return (
         <Dropdown
           open={
-            localOptions.aiVisible && !!aiSearchUser && store && !isReplyMsg
+            !store.aiUserStore.isAISearching() &&
+            localOptions.aiVisible &&
+            !!aiSearchUser &&
+            store &&
+            !isReplyMsg
               ? !!aiSearchText
               : false
           }
@@ -390,6 +505,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
             ],
             onClick: handleMenuClick,
           }}
+          getPopupContainer={(triggerNode) => textRef.current || triggerNode}
         >
           <div
             ref={textRef}
@@ -471,8 +587,9 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
             rootClassName={`${_prefix}-image`}
             loading="lazy"
             src={
-              (isReplyMsg ? replyImgUrl : imgUrl) ||
-              'https://yx-web-nosdn.netease.im/common/33d3e1fa8de771277ea4466564ef37aa/emptyImg.png'
+              isReplyMsg ? replyImgUrl : imgUrl
+              // ||
+              // 'https://yx-web-nosdn.netease.im/common/33d3e1fa8de771277ea4466564ef37aa/emptyImg.png'
             }
           />
         </div>
@@ -1009,6 +1126,14 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
+    const renderNotSupportMessage = () => {
+      return (
+        <div className={`${_prefix}-text-wrapper`}>
+          {`[${notSupportMessageText}]`}
+        </div>
+      )
+    }
+
     // 渲染回复消息
     const renderReplyMsg = () => {
       if (showThreadReply && threadReply) {
@@ -1037,8 +1162,16 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         )
       }
 
+      const isAiResponseMessage =
+        reply?.aiConfig?.aiStatus ===
+        V2NIMConst.V2NIMMessageAIStatus.V2NIM_MESSAGE_AI_STATUS_RESPONSE
+
+      const renderSenderId = isAiResponseMessage
+        ? reply?.aiConfig?.accountId
+        : reply.senderId
+
       const nick = store.uiStore.getAppellation({
-        account: reply.senderId,
+        account: renderSenderId as string,
         teamId,
         ignoreAlias: true,
       })
@@ -1066,7 +1199,6 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TEXT:
           getUserInfo(msg.senderId)
           return renderCustomText(msg, isReplyMsg)
-        // case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CUSTOM:
         case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_IMAGE:
           getUserInfo(msg.senderId)
           return renderImage(msg, isReplyMsg)
@@ -1100,7 +1232,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           getUserInfo(msg.senderId)
           return renderVideo(msg)
         default:
-          return `[${notSupportMessageText}]`
+          return renderNotSupportMessage()
       }
     }
 

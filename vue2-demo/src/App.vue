@@ -30,6 +30,7 @@ export default {
       addFriendNeedVerify: true,
       // 群组被邀请模式，默认不需要验证
       teamAgreeMode:
+        //@ts-ignore
         V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_NO_AUTH,
       // 单聊消息是否显示已读未读 默认 false
       p2pMsgReceiptVisible: true,
@@ -41,6 +42,8 @@ export default {
       loginStateVisible: true,
       // 是否允许转让群主
       allowTransferTeamOwner: true,
+      // 是否需要显示群管理员相关主动功能，默认 false
+      teamManagerVisible: true,
     };
 
     // 初始化 IM SDK 实例

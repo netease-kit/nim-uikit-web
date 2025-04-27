@@ -53,6 +53,7 @@ import { V2NIMFriend } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMFriendService'
 import { ChatAITranslate } from '../components/ChatAITranslate'
 import { MentionedMember } from '../components/ChatMessageInput/ChatMentionMemberList'
 import { V2NIMLocalConversation } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMLocalConversationService'
+import { V2NIMUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService'
 
 export interface P2pChatContainerProps {
   conversationType: V2NIMConversationType
@@ -65,6 +66,7 @@ export interface P2pChatContainerProps {
     conversationType: V2NIMConversationType
     receiverId: string
   }) => Promise<void>
+  onMessageItemAvatarClick?: (user: V2NIMUser) => void
   renderP2pCustomMessage?: (
     options: RenderP2pCustomMessageOptions
   ) => JSX.Element | null | undefined
@@ -103,6 +105,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     actions,
     msgOperMenu,
     onSendText: onSendTextFromProps,
+    onMessageItemAvatarClick,
     renderP2pCustomMessage,
     renderHeader,
     renderP2pInputPlaceHolder,
@@ -247,7 +250,9 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     }, [])
 
     const onAISendHandler = useCallback(() => {
-      message.success(t('aiSendingText'))
+      if (!localOptions?.aiStream) {
+        message.success(t('aiSendingText'))
+      }
     }, [t])
 
     const onMsgListScrollHandler = useCallback(
@@ -419,6 +424,34 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       [store.msgStore, conversationId, scrollToBottom, onAISendHandler]
     )
 
+    const stopAIStreamMessage = (msg: V2NIMMessage) => {
+      store.msgStore
+        .stopAIStreamMessageActive(msg, {
+          operationType: 0,
+        })
+        .catch(() => {
+          message.error(t('aiStopFailedText'))
+        })
+    }
+
+    const regenAIMessage = (msg: V2NIMMessage) => {
+      if (
+        msg?.aiConfig?.aiStreamStatus ==
+        V2NIMConst.V2NIMMessageAIStreamStatus.NIM_MESSAGE_AI_STREAM_STATUS_NONE
+      ) {
+        message.success(t('aiSendingText'))
+      }
+
+      store.msgStore
+        .regenAIMessageActive(msg, {
+          operationType:
+            V2NIMConst.V2NIMMessageAIRegenOpType.V2NIM_MESSAGE_AI_REGEN_OP_NEW,
+        })
+        .catch(() => {
+          message.error(t('regenAIMsgFailedText'))
+        })
+    }
+
     const onSendText = useCallback(
       async (value: string, ext?: YxServerExt) => {
         if (locale !== 'zh') {
@@ -510,10 +543,10 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             },
             onAISend: onAISendHandler,
           })
-        } catch (error) {
-          // message.error(t('sendMsgFailedText'))
-        } finally {
           scrollToBottom()
+        } catch (error) {
+          scrollToBottom()
+          // message.error(t('sendMsgFailedText'))
         }
       },
       [
@@ -667,6 +700,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         welcomeMsg.sendingState =
           V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_SUCCEEDED
         welcomeMsg.isSelf = false
+        //@ts-ignore
         welcomeMsg.aiConfig = {
           accountId: receiverId,
           aiStatus: 2,
@@ -769,7 +803,12 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     // 切换会话时需要重新初始化
     useEffect(() => {
       resetState()
-      scrollToBottom()
+      // 这里给一个timeout，让微任务、回复消息、撤回消息计算等完成之后，在执行滚动到底部
+      const timer = setTimeout(scrollToBottom, 0)
+
+      return () => {
+        clearTimeout(timer)
+      }
     }, [receiverId, resetState, scrollToBottom])
 
     // 切换会话时，如果内存中除了撤回消息的其他消息小于10条（差不多一屏幕），需要拉取历史消息
@@ -905,16 +944,33 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           messageListContainerDomRef.current &&
           msg[0].conversationId === conversationId
         ) {
-          // 当收到消息时，如果已经往上滚动了，是不需要滚动到最底部的
-          if (
-            messageListContainerDomRef.current.scrollTop <
-            messageListContainerDomRef.current.scrollHeight -
-              messageListContainerDomRef.current.clientHeight -
-              200
-          ) {
-            setReceiveMsgBtnVisible(true)
-          } else {
+          const container = messageListContainerDomRef.current
+          // 计算距离底部的距离
+          const distanceToBottom =
+            container.scrollHeight -
+            container.scrollTop -
+            container.clientHeight
+
+          /**
+           * 收到ai的新消息时
+           * scrollHeight 表示整个内容的高度，而 scrollTop 表示已滚动的距离。当新消息到达时， scrollHeight 会增加，但 scrollTop 并不会自动调整
+           * 但问题在于，当新消息到达时：
+              1. scrollHeight 会增加
+              2. scrollTop 保持不变
+              3. clientHeight 是固定的可视区域高度
+              所以这个差值会一直变大，导致判断失效。
+           */
+
+          const isAiMessage = msg[0]?.aiConfig?.aiStatus === 2
+
+          /** ai 消息距离底部小于 300px，则认为是在底部，因为ai消息带上被回复的内容一般高度较大 */
+          const diffDistanceConst = isAiMessage ? 300 : 200
+
+          // 如果距离底部小于 300px，则认为是在底部
+          if (distanceToBottom < diffDistanceConst) {
             scrollToBottom()
+          } else {
+            setReceiveMsgBtnVisible(true)
           }
         }
       }
@@ -925,6 +981,60 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         nim.V2NIMMessageService.off('onReceiveMessages', onMsg)
       }
     }, [nim, conversationId, scrollToBottom])
+
+    useLayoutEffect(() => {
+      const onReceiveMessagesModified = (msg: V2NIMMessage[]) => {
+        if (
+          messageListContainerDomRef.current &&
+          msg[0].conversationId === conversationId
+        ) {
+          if (
+            messageListContainerDomRef.current.scrollTop >=
+            messageListContainerDomRef.current.scrollHeight -
+              messageListContainerDomRef.current.clientHeight -
+              250
+          ) {
+            scrollToBottom()
+          }
+        }
+      }
+
+      nim.V2NIMMessageService.on(
+        'onReceiveMessagesModified',
+        onReceiveMessagesModified
+      )
+
+      return () => {
+        nim.V2NIMMessageService.off(
+          'onReceiveMessagesModified',
+          onReceiveMessagesModified
+        )
+      }
+    }, [nim, conversationId, scrollToBottom])
+
+    // useLayoutEffect(() => {
+    //   const onReceiveMessagesModified = (msg: V2NIMMessage[]) => {
+    //     if (
+    //       messageListContainerDomRef.current &&
+    //       msg[0].conversationId === conversationId &&
+    //       isAtBottomRef.current
+    //     ) {
+    //       scrollToBottom()
+    //     }
+    //   }
+
+    //   nim.V2NIMMessageService.on(
+    //     'onReceiveMessagesModified',
+    //     onReceiveMessagesModified
+    //   )
+
+    //   return () => {
+    //     nim.V2NIMMessageService.off(
+    //       'onReceiveMessagesModified',
+    //       onReceiveMessagesModified
+    //     )
+    //   }
+    // }, [nim, conversationId, scrollToBottom])
 
     return conversation ? (
       <div className={`${prefix}-wrap`}>
@@ -967,11 +1077,15 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             receiveMsgBtnVisible={receiveMsgBtnVisible}
             msgReceiptTime={conversation?.msgReceiptTime}
             strangerTipVisible={strangerTipVisible}
+            myAccountId={myUser.accountId}
+            onMessageItemAvatarClick={onMessageItemAvatarClick}
             onReceiveMsgBtnClick={scrollToBottom}
             onMessageAction={onMessageAction}
             onReeditClick={onReeditClick}
             onResend={onResend}
             onScroll={onMsgListScrollHandler}
+            stopAIStreamMessage={stopAIStreamMessage}
+            regenAIMessage={regenAIMessage}
             renderP2pCustomMessage={renderP2pCustomMessage}
             renderMessageAvatar={renderMessageAvatar}
             renderMessageName={renderMessageName}

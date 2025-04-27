@@ -31,8 +31,8 @@ const CommonIcon: React.FC<CommonIconProps> = ({
 
   const Icon = createFromIconfontCN({
     scriptUrl: [
-      'https://yx-web-nosdn.netease.im/sdk-release/yunxun-imweb-iconfont.js',
-      'https://at.alicdn.com/t/c/font_3429868_xs51pwj8lzp.js',
+      'https://yx-web-nosdn.netease.im/sdk-release/IMUIKit-iconfont.js',
+      'https://at.alicdn.com/t/c/font_3429868_eoxga1ufb7e.js',
       ...iconfontUrl,
     ],
   })
