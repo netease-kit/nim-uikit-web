@@ -17,6 +17,8 @@
     color: @yx-primary-text-color;
     font-size: 12px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-height: 46px;
+    overflow: hidden;
   }
 
   &-content {
@@ -24,6 +26,13 @@
     justify-content: space-between;
     align-items: center;
     max-width: 90%;
+    max-height: 46px;
+
+    .common-parse-session-ai-text {
+      white-space: break-spaces !important;
+      max-height: 22px;
+      line-height: 22px;
+    }
 
     .@{parse-session-cls} {
       &-upload-img {

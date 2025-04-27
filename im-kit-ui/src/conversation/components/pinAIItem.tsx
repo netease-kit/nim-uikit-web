@@ -26,6 +26,8 @@ export const PinAIItem: FC<PinAIItemProps> = observer(
     const { t } = useTranslation()
 
     const handleItemClick = () => {
+      console.log('handleItemClick===========', aiUser)
+
       if (store.sdkOptions?.enableV2CloudConversation) {
         store.conversationStore
           ?.insertConversationActive(
@@ -56,7 +58,7 @@ export const PinAIItem: FC<PinAIItemProps> = observer(
         <ComplexAvatarContainer
           account={aiUser.accountId}
           prefix={commonPrefix}
-          canClick={false}
+          onMessageItemAvatarClick={() => handleItemClick()}
         />
         <span className={`${_prefix}-name`}>
           {store.uiStore.getAppellation({

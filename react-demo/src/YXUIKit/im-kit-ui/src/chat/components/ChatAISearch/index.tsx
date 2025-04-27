@@ -5,6 +5,7 @@ import { useStateContext, useTranslation } from '../../../common'
 import { LoadingOutlined } from '@ant-design/icons'
 import { V2NIMAIModelRoleType } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMAIService'
 import { getAIErrorMap } from '../../../utils'
+import Markdown from 'react-markdown'
 
 export interface ChatAISearchProps {
   prefix?: string
@@ -20,6 +21,8 @@ export const ChatAISearch: FC<ChatAISearchProps> = observer(
     const aiErrorMap = getAIErrorMap(t)
 
     const [inputValue, setInputValue] = useState('')
+
+    const { localOptions } = useStateContext()
 
     const title = store.aiUserStore.aiProxying ? (
       <div className={`${_prefix}-title`}>
@@ -64,6 +67,7 @@ export const ChatAISearch: FC<ChatAISearchProps> = observer(
 
                 message.error(errorText)
               },
+              aiStream: localOptions.aiStream as boolean,
             })
             .catch(() => {
               //
@@ -108,7 +112,7 @@ export const ChatAISearch: FC<ChatAISearchProps> = observer(
               .reverse()
               .map((item, index) => (
                 <div key={`${item}_${index}`} className={`${_prefix}-item`}>
-                  {item}
+                  <Markdown>{item}</Markdown>
                 </div>
               ))}
           </div>

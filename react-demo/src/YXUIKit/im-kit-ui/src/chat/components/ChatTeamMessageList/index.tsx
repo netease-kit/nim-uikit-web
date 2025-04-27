@@ -7,6 +7,8 @@ import { storeUtils } from '@xkit-yx/im-store-v2'
 import { MsgOperMenuItem } from '../../Container'
 import { V2NIMTeamMember } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
 import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import { V2NIMMessage } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
+import { V2NIMUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService'
 
 export interface RenderTeamCustomMessageOptions extends MessageItemProps {
   members: V2NIMTeamMember[]
@@ -18,6 +20,7 @@ export interface ChatTeamMessageListProps
   msgOperMenu?: MsgOperMenuItem[]
   replyMsgsMap: Record<string, V2NIMMessageForUI>
   members: V2NIMTeamMember[]
+  onMessageItemAvatarClick?: (user: V2NIMUser) => void
   renderTeamCustomMessage?: (
     options: RenderTeamCustomMessageOptions
   ) => JSX.Element | null | undefined
@@ -26,6 +29,9 @@ export interface ChatTeamMessageListProps
   receiveMsgBtnVisible?: boolean
   strangerNotiVisible?: boolean
   strangerNotiText?: string
+  myAccountId?: string
+  stopAIStreamMessage?: (msg: V2NIMMessage) => void
+  regenAIMessage?: (msg: V2NIMMessage) => void
   onReceiveMsgBtnClick?: () => void
   onScroll?: (e: React.UIEvent<HTMLDivElement, UIEvent>) => void
 }
@@ -40,6 +46,7 @@ const ChatTeamMessageList = forwardRef<
     msgs,
     topMessage,
     msgOperMenu,
+    myAccountId,
     replyMsgsMap,
     members,
     receiveMsgBtnVisible = false,
@@ -48,6 +55,9 @@ const ChatTeamMessageList = forwardRef<
     onReceiveMsgBtnClick,
     loadingMore,
     noMore,
+    stopAIStreamMessage,
+    regenAIMessage,
+    onMessageItemAvatarClick,
     onResend,
     onMessageAction,
     onMessageAvatarAction,
@@ -91,6 +101,7 @@ const ChatTeamMessageList = forwardRef<
               prefix={prefix}
               commonPrefix={commonPrefix}
               msg={msg}
+              myAccountId={myAccountId}
               msgOperMenu={msgOperMenu}
               replyMsg={replyMsgsMap[msg.messageClientId]}
               normalStatusRenderer={
@@ -104,6 +115,9 @@ const ChatTeamMessageList = forwardRef<
                   />
                 ) : null
               }
+              stopAIStreamMessage={stopAIStreamMessage}
+              regenAIMessage={regenAIMessage}
+              onMessageItemAvatarClick={onMessageItemAvatarClick}
               onResend={onResend}
               onMessageAction={onMessageAction}
               onMessageAvatarAction={onMessageAvatarAction}

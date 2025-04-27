@@ -48,7 +48,7 @@ const ChatAddMemebers: React.FC<ChatAddMemebersProps> = ({
   }
 
   const resetState = () => {
-    setSelectedAccounts(defaultAccounts)
+    setSelectedAccounts([])
   }
 
   const handleSelect = useCallback(
@@ -75,7 +75,7 @@ const ChatAddMemebers: React.FC<ChatAddMemebersProps> = ({
       onOk={handleOk}
       onCancel={handleCancel}
       visible={visible}
-      width={630}
+      width={700}
       cancelText={t('cancelText')}
       destroyOnClose={true}
       okText={t('addTeamMemberText')}

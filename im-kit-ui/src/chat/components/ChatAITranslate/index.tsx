@@ -25,7 +25,7 @@ export const ChatAITranslate: FC<ChatAITranslateProps> = observer(
   ({ inputValue, setInputValue, onClose, visible, prefix = 'chat' }) => {
     const _prefix = `${prefix}-ai-translate`
 
-    const { store } = useStateContext()
+    const { store, localOptions } = useStateContext()
     const { t } = useTranslation()
 
     const aiErrorMap = getAIErrorMap(t)
@@ -82,6 +82,7 @@ export const ChatAITranslate: FC<ChatAITranslateProps> = observer(
 
               message.error(errorText)
             },
+            aiStream: localOptions.aiStream as boolean,
           })
         } catch (error) {
           logger.error('AI 翻译失败', (error as V2NIMError).toString())

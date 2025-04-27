@@ -7,6 +7,8 @@ import { storeUtils } from '@xkit-yx/im-store-v2'
 import { MsgOperMenuItem } from '../../Container'
 import { observer } from 'mobx-react'
 import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import { V2NIMMessage } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
+import { V2NIMUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService'
 
 export interface RenderP2pCustomMessageOptions extends MessageItemProps {
   receiverId: string
@@ -25,7 +27,12 @@ export interface ChatP2pMessageListProps
   receiveMsgBtnVisible?: boolean
   msgOperMenu?: MsgOperMenuItem[]
   msgReceiptTime?: number
+  myAccountId?: string
+  onMessageItemAvatarClick?: (user: V2NIMUser) => void
+
   onReceiveMsgBtnClick?: () => void
+  stopAIStreamMessage?: (msg: V2NIMMessage) => void
+  regenAIMessage?: (msg: V2NIMMessage) => void
   onScroll?: (e: React.UIEvent<HTMLDivElement, UIEvent>) => void
   /**
     是否展示陌生人提示
@@ -45,10 +52,14 @@ const ChatP2pMessageList = observer(
         receiveMsgBtnVisible = false,
         msgReceiptTime = 0,
         msgOperMenu,
+        myAccountId,
+        onMessageItemAvatarClick,
         onReceiveMsgBtnClick,
         loadingMore,
         noMore,
         strangerTipVisible = true,
+        stopAIStreamMessage,
+        regenAIMessage,
         onResend,
         onMessageAction,
         onReeditClick,
@@ -90,6 +101,7 @@ const ChatP2pMessageList = observer(
                   key={msg.messageClientId}
                   prefix={prefix}
                   commonPrefix={commonPrefix}
+                  myAccountId={myAccountId}
                   msg={msg}
                   msgOperMenu={msgOperMenu}
                   replyMsg={replyMsgsMap[msg.messageClientId]}
@@ -103,9 +115,12 @@ const ChatP2pMessageList = observer(
                       />
                     ) : null
                   }
+                  onMessageItemAvatarClick={onMessageItemAvatarClick}
                   onResend={onResend}
                   onMessageAction={onMessageAction}
                   onReeditClick={onReeditClick}
+                  stopAIStreamMessage={stopAIStreamMessage}
+                  regenAIMessage={regenAIMessage}
                   renderMessageAvatar={renderMessageAvatar}
                   renderMessageName={renderMessageName}
                   renderMessageInnerContent={renderMessageInnerContent}

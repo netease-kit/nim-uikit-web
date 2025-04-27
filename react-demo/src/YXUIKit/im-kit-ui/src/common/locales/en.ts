@@ -308,6 +308,10 @@ const LocaleConfig = {
   aiTranslateEmptyText: 'Please enter the content to translate',
   aiSendingText: 'Large model request in response',
   searchTipText: 'Press Enter to search',
+  aiErrorText: 'The server is busy. Please try again later.',
+  aiStopFailedText: 'Stop failed',
+  regenAIMsgFailedText: 'Regeneration failed',
+  aiStreamCancelText: 'Request cancelled',
 
   // emoji 不能随便填，要用固定 key
   Laugh: '[Laugh]',

@@ -608,8 +608,21 @@ const ChatMessageInput = observer(
     // 键盘上方的回复消息
     const replyMsgContent = () => {
       if (replyMsg) {
+        const isAiResponseMessage =
+          replyMsg?.aiConfig?.aiStatus ===
+          V2NIMConst.V2NIMMessageAIStatus.V2NIM_MESSAGE_AI_STATUS_RESPONSE
+
+        /**renderSenderId 用于渲染头像和昵称，当这条消息是ai发的消息，会存在如下情况
+         * 1.如果是单聊，此时有ai的回复消息，那么sdk返回的消息的senderId为提问者的accountId，但此时UI上需要展示为ai的昵称和头像，将renderSenderId改为ai的accountId
+         * 2.如果是群聊，此时有ai的回复消息且ai数字人不在群里，那么sdk返回的消息的senderId为ai的accountId，但此时UI上需要展示为ai的昵称和头像，将renderSenderId改为ai的accountId
+         **/
+
+        const renderSenderId = isAiResponseMessage
+          ? replyMsg?.aiConfig?.accountId
+          : replyMsg.senderId
+
         const nick = store.uiStore.getAppellation({
-          account: replyMsg.senderId,
+          account: renderSenderId as string,
           teamId:
             replyMsg.conversationType ===
             V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM

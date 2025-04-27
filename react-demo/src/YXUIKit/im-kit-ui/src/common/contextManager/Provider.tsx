@@ -62,6 +62,7 @@ const defaultLocalOptions: Required<LocalOptions> = {
 
   debug: 'debug',
   iconfontUrl: [],
+  aiStream: true,
 }
 
 export const Provider: FC<ProviderProps> = memo(function Main({

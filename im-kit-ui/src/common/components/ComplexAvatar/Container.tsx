@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect } from 'react'
+import React, { FC, useState, useEffect, useCallback } from 'react'
 import { ComplexAvatarUI, ComplexAvatarProps } from './ComplexAvatarUI'
 import { message, Modal } from 'antd'
 import { useStateContext } from '../../hooks/useStateContext'
@@ -6,6 +6,7 @@ import { useTranslation } from '../../hooks/useTranslation'
 import { observer } from 'mobx-react'
 import { Gender } from '../UserCard'
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
+import { V2NIMUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService'
 
 export type ComplexAvatarContainerProps = Pick<
   ComplexAvatarProps,
@@ -13,6 +14,7 @@ export type ComplexAvatarContainerProps = Pick<
 > & {
   canClick?: boolean
 
+  onMessageItemAvatarClick?: (user: V2NIMUser) => void
   onCancel?: () => void
   afterAddFriend?: (account: string) => void
   afterDeleteFriend?: (account: string) => void
@@ -32,6 +34,7 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
     dot,
     size,
     icon,
+    onMessageItemAvatarClick,
     onCancel,
     afterAddFriend,
     afterDeleteFriend,
@@ -174,6 +177,18 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
       }
     }
 
+    const onAvatarClick = useCallback(
+      (userInfo) => {
+        if (!canClick) return
+        if (onMessageItemAvatarClick) {
+          onMessageItemAvatarClick(userInfo)
+        } else {
+          handleOnAvatarClick()
+        }
+      },
+      [onMessageItemAvatarClick, userInfo, canClick]
+    )
+
     return (
       <ComplexAvatarUI
         relation={relation}
@@ -186,7 +201,7 @@ export const ComplexAvatarContainer: FC<ComplexAvatarContainerProps> = observer(
         onBlockFriendClick={handleOnBlockFriendClick}
         onRemoveBlockFriendClick={handleOnRemoveBlockFriendClick}
         onSendMsglick={handleOnSendMsgClick}
-        onAvatarClick={canClick ? handleOnAvatarClick : undefined}
+        onAvatarClick={onAvatarClick}
         prefix={prefix}
         count={count}
         dot={dot}
