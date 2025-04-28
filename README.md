@@ -1,3 +1,12 @@
+<div align="vertical-center">
+  <a href="https://deepwiki.com/netease-kit/nim-uikit-web/1-overview">
+    <img src="https://devin.ai/assets/deepwiki-badge.png" alt="Ask the Deepwiki" height="20"/>
+  </a>
+  <p>单击跳转查看 <a href="https://deepwiki.com/netease-kit/nim-uikit-web/1-overview">DeepWiki</a> 源码解读。</p>
+</div>
+
+
+-------------------------------
 # 云信 IM UI Kit
 
 本仓库放置了云信 UIKit 的源码和相应的示例代码，可以帮助您快速集成 UIKit 以及深入了解 UIKit。
