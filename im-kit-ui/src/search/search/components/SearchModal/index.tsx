@@ -1,6 +1,11 @@
 import React, { useState, useMemo, useCallback } from 'react'
 import { Modal } from 'antd'
-import { SearchInput, CrudeAvatar, useTranslation } from '../../../../common'
+import {
+  SearchInput,
+  CrudeAvatar,
+  useTranslation,
+  useStateContext,
+} from '../../../../common'
 import { CrudeAvatarProps } from '../../../../common/components/CrudeAvatar'
 import { V2NIMTeam } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
 import { V2NIMFriend } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMFriendService'
@@ -33,7 +38,7 @@ const SearchItem: React.FC<SearchItemProps> = ({
 export type SectionListItem = (V2NIMFriend & V2NIMUser) | V2NIMTeam
 
 export type Section = {
-  id: 'friends' | 'groups'
+  id: 'friends' | 'groups' | 'discussions'
   list: SectionListItem[]
 }
 
@@ -41,6 +46,7 @@ export interface SearchModalProps {
   visible: boolean
   friends: (V2NIMFriend & V2NIMUser)[]
   teams: V2NIMTeam[]
+  discussions: V2NIMTeam[]
   onCancel: () => void
   onResultItemClick: (item: SectionListItem) => void
   renderEmpty?: () => JSX.Element
@@ -54,6 +60,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
   visible,
   friends,
   teams,
+  discussions,
   onCancel,
   onResultItemClick,
   renderEmpty,
@@ -65,6 +72,8 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
   const { t } = useTranslation()
 
+  const { localOptions } = useStateContext()
+
   const [searchText, setSearchText] = useState('')
 
   const sections: Section[] = useMemo(() => {
@@ -74,62 +83,94 @@ const SearchModal: React.FC<SearchModalProps> = ({
         list: friends,
       },
       {
+        id: 'discussions' as Section['id'],
+        list: discussions,
+      },
+      {
         id: 'groups' as Section['id'],
         list: teams,
       },
-    ].filter((item) => !!item.list.length)
-  }, [friends, teams])
-
-  const searchedSections: (SectionListItem | 'friends' | 'groups')[] =
-    useMemo(() => {
-      const finalSections = sections
-        .map((item) => {
-          if (item.id === 'friends') {
-            return {
-              ...item,
-              list: item.list.filter((item) => {
-                return (
-                  (item as V2NIMFriend & V2NIMUser).alias ||
-                  (item as V2NIMFriend & V2NIMUser).name ||
-                  (item as V2NIMFriend & V2NIMUser).accountId
-                ).includes(searchText)
-              }),
-            }
-          }
-
-          if (item.id === 'groups') {
-            return {
-              ...item,
-              list: item.list.filter((item) => {
-                return (
-                  (item as V2NIMTeam).name || (item as V2NIMTeam).teamId
-                ).includes(searchText)
-              }),
-            }
-          }
-
-          return { ...item }
-        })
-        .filter((item) => !!item.list.length)
-
-      const res: (SectionListItem | 'friends' | 'groups')[] = []
-
-      finalSections.forEach((item) => {
-        if (item.id === 'friends') {
-          res.push('friends')
-          item.list.forEach((item) => {
-            res.push(item)
-          })
-        } else if (item.id === 'groups') {
-          res.push('groups')
-          item.list.forEach((item) => {
-            res.push(item)
-          })
+    ]
+      .filter((item) => {
+        if (!localOptions.enableTeam) {
+          return item.id == 'friends'
         }
-      })
 
-      return res
-    }, [sections, searchText])
+        return true
+      })
+      .filter((item) => !!item.list.length)
+  }, [friends, teams, discussions, localOptions.enableTeam])
+
+  const searchedSections: (
+    | SectionListItem
+    | 'friends'
+    | 'groups'
+    | 'discussions'
+  )[] = useMemo(() => {
+    const finalSections = sections
+      .map((item) => {
+        if (item.id === 'friends') {
+          return {
+            ...item,
+            list: item.list.filter((item) => {
+              return (
+                (item as V2NIMFriend & V2NIMUser).alias ||
+                (item as V2NIMFriend & V2NIMUser).name ||
+                (item as V2NIMFriend & V2NIMUser).accountId
+              ).includes(searchText)
+            }),
+          }
+        }
+
+        if (item.id === 'discussions') {
+          return {
+            ...item,
+            list: item.list.filter((item) => {
+              return (
+                (item as V2NIMTeam).name || (item as V2NIMTeam).teamId
+              ).includes(searchText)
+            }),
+          }
+        }
+
+        if (item.id === 'groups') {
+          return {
+            ...item,
+            list: item.list.filter((item) => {
+              return (
+                (item as V2NIMTeam).name || (item as V2NIMTeam).teamId
+              ).includes(searchText)
+            }),
+          }
+        }
+
+        return { ...item }
+      })
+      .filter((item) => !!item.list.length)
+
+    const res: (SectionListItem | 'friends' | 'groups' | 'discussions')[] = []
+
+    finalSections.forEach((item) => {
+      if (item.id === 'friends') {
+        res.push('friends')
+        item.list.forEach((item) => {
+          res.push(item)
+        })
+      } else if (item.id === 'discussions') {
+        res.push('discussions')
+        item.list.forEach((item) => {
+          res.push(item)
+        })
+      } else if (item.id === 'groups') {
+        res.push('groups')
+        item.list.forEach((item) => {
+          res.push(item)
+        })
+      }
+    })
+
+    return res
+  }, [sections, searchText])
 
   const handleSearchChange = (value: string) => {
     setSearchText(value)
@@ -159,11 +200,17 @@ const SearchModal: React.FC<SearchModalProps> = ({
         (item as V2NIMFriend & V2NIMUser).accountId ||
         (item as V2NIMTeam).teamId
 
+      const titleMap = {
+        friends: t('searchFriendTitle'),
+        groups: t('searchTeamTitle'),
+        discussions: t('searchDiscussionTitle'),
+      }
+
       if (typeof item === 'string') {
         return (
           <div style={style} key={key}>
             <div className={`${_prefix}-content-section-title`}>
-              {t(item === 'friends' ? 'searchFriendTitle' : 'searchTeamTitle')}
+              {titleMap[item as 'friends' | 'groups' | 'discussions']}
             </div>
           </div>
         )

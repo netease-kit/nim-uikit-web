@@ -111,6 +111,7 @@ export const CrudeAvatar: FC<CrudeAvatarProps> = ({
         </Avatar>
       ) : (
         <div
+          className="avatar-text"
           style={{
             ...avatarStyle,
             width: size + 'px',

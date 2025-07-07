@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useEffect } from 'react'
 import { FriendList } from './components/FriendList'
 import { useEventTracking, useStateContext } from '../../common'
 import packageJson from '../../../package.json'
@@ -41,7 +41,7 @@ export const FriendListContainer: FC<FriendListContainerProps> = observer(
     prefix = 'contact',
     commonPrefix = 'common',
   }) => {
-    const { nim, store } = useStateContext()
+    const { nim, store, localOptions } = useStateContext()
 
     useEventTracking({
       appkey: nim.options.appkey,
@@ -53,6 +53,30 @@ export const FriendListContainer: FC<FriendListContainerProps> = observer(
     const friendsWithoutBlacklist = store.uiStore.friends
       .filter((item) => !store.relationStore.blacklist.includes(item.accountId))
       .map((item) => item.accountId)
+
+    useEffect(() => {
+      if (localOptions.loginStateVisible) {
+        // 将 friendsWithoutBlacklist 拆分成多个长度不超过 100 的子数组
+        const chunkSize = 100
+
+        const length =
+          friendsWithoutBlacklist.length >= 3000
+            ? 3000
+            : friendsWithoutBlacklist.length
+
+        for (let i = 0; i < length; i += chunkSize) {
+          const chunk = friendsWithoutBlacklist.slice(i, i + chunkSize)
+
+          if (chunk.length > 0) {
+            store.subscriptionStore.subscribeUserStatusActive(chunk)
+          }
+        }
+      }
+    }, [
+      store.subscriptionStore,
+      friendsWithoutBlacklist,
+      localOptions.loginStateVisible,
+    ])
 
     return (
       <FriendList

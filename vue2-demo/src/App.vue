@@ -29,6 +29,9 @@ export default {
       // 添加好友模式，默认需要验证
       addFriendNeedVerify: true,
       // 群组被邀请模式，默认不需要验证
+      //@ts-ignore
+      teamJoinMode: V2NIMConst.V2NIMTeamJoinMode.V2NIM_TEAM_JOIN_MODE_FREE,
+      // 群组被邀请模式，默认不需要验证
       teamAgreeMode:
         //@ts-ignore
         V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_NO_AUTH,
@@ -82,7 +85,6 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
 }
 
 html {

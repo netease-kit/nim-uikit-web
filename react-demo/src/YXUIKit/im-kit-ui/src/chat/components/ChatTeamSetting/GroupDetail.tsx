@@ -1,10 +1,11 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useMemo, useState } from 'react'
 import { Form, Input, Button } from 'antd'
 import { GroupAvatarSelect, useTranslation, CrudeAvatar } from '../../../common'
 import {
   V2NIMTeam,
   V2NIMUpdateTeamInfoParams,
 } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
+import { isDiscussionFunc } from '../../../utils'
 
 export interface GroupDetailmProps {
   team: V2NIMTeam
@@ -53,14 +54,28 @@ const GroupDetail: FC<GroupDetailmProps> = ({
         delete obj[key]
       }
     })
+    // 讨论组不允许修改简介
+    if (isDiscussion) {
+      delete obj.intro
+    }
+
     onUpdateTeamInfo(obj)
   }
+
+  // 是否是讨论组
+  const isDiscussion = useMemo(() => {
+    return isDiscussionFunc(team.serverExtension)
+  }, [team.serverExtension])
 
   return (
     <Form className={`${_prefix}-wrap`} layout="vertical">
       <Form.Item
         className={`${_prefix}-avatar-box`}
-        label={<b>{t('teamAvatarText')}</b>}
+        label={
+          <b>
+            {isDiscussion ? t('discussionAvatarText') : t('teamAvatarText')}
+          </b>
+        }
         name="avatar"
       >
         {hasPower ? (
@@ -75,14 +90,18 @@ const GroupDetail: FC<GroupDetailmProps> = ({
           <CrudeAvatar account={team.teamId} nick={team.name} avatar={avatar} />
         )}
       </Form.Item>
-      <Form.Item label={<b>{t('teamIdText')}</b>}>
+      <Form.Item
+        label={<b>{isDiscussion ? t('discussionIdText') : t('teamIdText')}</b>}
+      >
         <Input
           disabled
           className={`${_prefix}-form-input`}
           value={team.teamId}
         />
       </Form.Item>
-      <Form.Item label={<b>{t('teamTitle')}</b>}>
+      <Form.Item
+        label={<b>{isDiscussion ? t('discussionTitle') : t('teamTitle')}</b>}
+      >
         <Input
           disabled={!hasPower}
           className={`${_prefix}-form-input`}
@@ -95,20 +114,22 @@ const GroupDetail: FC<GroupDetailmProps> = ({
           placeholder={t('teamTitlePlaceholder')}
         />
       </Form.Item>
-      <Form.Item label={<b>{t('teamSignText')}</b>}>
-        <Input.TextArea
-          disabled={!hasPower}
-          className={`${_prefix}-form-input`}
-          maxLength={100}
-          showCount
-          rows={4}
-          value={intro}
-          onChange={(e) => {
-            setIntro(e.target.value)
-          }}
-          placeholder={t('teamSignPlaceholder')}
-        />
-      </Form.Item>
+      {!isDiscussion && (
+        <Form.Item label={<b>{t('teamSignText')}</b>}>
+          <Input.TextArea
+            disabled={!hasPower}
+            className={`${_prefix}-form-input`}
+            maxLength={100}
+            showCount
+            rows={4}
+            value={intro}
+            onChange={(e) => {
+              setIntro(e.target.value)
+            }}
+            placeholder={t('teamSignPlaceholder')}
+          />
+        </Form.Item>
+      )}
       <Button
         className={`${_prefix}-save-btn`}
         type="primary"

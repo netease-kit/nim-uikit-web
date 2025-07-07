@@ -1,10 +1,11 @@
-import React, { FC } from 'react'
+import React, { FC, useState, useEffect } from 'react'
 import {
   ComplexAvatarContainer,
   useStateContext,
   useTranslation,
 } from '../../../common'
 import { observer } from 'mobx-react'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 export interface FriendItemProps {
   account: string
@@ -28,9 +29,24 @@ export const FriendItem: FC<FriendItemProps> = observer(
 
     const { t } = useTranslation()
 
-    // TODO sdk 暂不支持在线状态
-    // const isOnline = store.eventStore.stateMap.get(account) === 'online'
-    const isOnline = 'online'
+    const [isOnline, setIsOnline] = useState<boolean>(false)
+
+    useEffect(() => {
+      if (
+        store.subscriptionStore.stateMap.get(account) &&
+        localOptions.loginStateVisible
+      ) {
+        setIsOnline(
+          store.subscriptionStore.stateMap.get(account)?.statusType ===
+            V2NIMConst.V2NIMUserStatusType.V2NIM_USER_STATUS_TYPE_LOGIN
+        )
+      }
+    }, [
+      store.subscriptionStore.stateMap,
+      store.subscriptionStore.stateMap.get(account),
+      account,
+      localOptions.loginStateVisible,
+    ])
 
     return (
       <div
@@ -40,11 +56,13 @@ export const FriendItem: FC<FriendItemProps> = observer(
           onItemClick?.(account)
         }}
       >
-        <ComplexAvatarContainer
-          account={account}
-          prefix={commonPrefix}
-          afterSendMsgClick={afterSendMsgClick}
-        />
+        <div>
+          <ComplexAvatarContainer
+            account={account}
+            prefix={commonPrefix}
+            afterSendMsgClick={afterSendMsgClick}
+          />
+        </div>
         <span className={`${_prefix}-label`}>
           {store.uiStore.getAppellation({ account })}
         </span>

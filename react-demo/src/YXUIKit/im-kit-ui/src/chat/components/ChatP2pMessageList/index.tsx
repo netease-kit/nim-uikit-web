@@ -111,7 +111,7 @@ const ChatP2pMessageList = observer(
                         unread={msg.createTime <= msgReceiptTime ? 0 : 1}
                         read={msg.createTime <= msgReceiptTime ? 1 : 0}
                         prefix={commonPrefix}
-                        size={16}
+                        size={14}
                       />
                     ) : null
                   }

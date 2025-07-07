@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { useTranslation, useEventTracking, useStateContext } from '../../common'
 import { SearchOutlined } from '@ant-design/icons'
 import SearchModal, { SectionListItem } from './components/SearchModal'
@@ -11,6 +11,7 @@ import { observer } from 'mobx-react'
 // todo, v10.6.0 有静态方法可以获取版本号
 import sdkPkg from 'nim-web-sdk-ng/package.json'
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
+import { isDiscussionFunc } from '../../utils'
 
 export interface SearchContainerProps {
   /**
@@ -116,6 +117,35 @@ export const SearchContainer: React.FC<SearchContainerProps> = observer(
         }
       })
 
+    const teams = useMemo(() => {
+      return store.uiStore.teamList.filter((item) => {
+        if (item?.serverExtension) {
+          try {
+            return (
+              JSON.parse(item?.serverExtension || '{}')?.im_ui_kit_group !==
+              true
+            )
+          } catch (e) {
+            return true
+          }
+        } else {
+          return true
+        }
+      })
+    }, [store.uiStore.teamList])
+
+    const discussions = useMemo(() => {
+      return store.uiStore.teamList.filter((item) => {
+        if (item?.serverExtension) {
+          try {
+            return isDiscussionFunc(item.serverExtension)
+          } catch (e) {
+            return true
+          }
+        }
+      })
+    }, [store.uiStore.teamList])
+
     return (
       <div className={`${_prefix}-wrapper`}>
         <div className={`${_prefix}-wrapper-button`} onClick={handleOpenModal}>
@@ -127,7 +157,8 @@ export const SearchContainer: React.FC<SearchContainerProps> = observer(
         <SearchModal
           visible={visible}
           friends={friendsWithoutBlacklist}
-          teams={store.uiStore.teamList}
+          teams={teams}
+          discussions={discussions}
           onCancel={() => setVisible(false)}
           prefix={prefix}
           onResultItemClick={handleChat}

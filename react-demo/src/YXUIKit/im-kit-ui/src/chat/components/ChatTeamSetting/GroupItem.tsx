@@ -13,6 +13,7 @@ import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 export interface GroupItemProps {
   myMemberInfo: V2NIMTeamMember
   member: V2NIMTeamMember
+  isDiscussion?: boolean
   onRemoveTeamMemberClick: (member: V2NIMTeamMember) => void
   afterSendMsgClick?: () => void
 
@@ -26,6 +27,7 @@ export const GroupItem: FC<GroupItemProps> = observer(
   ({
     myMemberInfo,
     member,
+    isDiscussion,
     onRemoveTeamMemberClick,
     afterSendMsgClick,
 
@@ -128,7 +130,7 @@ export const GroupItem: FC<GroupItemProps> = observer(
           </span>
         </div>
 
-        {renderButton()}
+        {!isDiscussion && renderButton()}
       </div>
     )
   }

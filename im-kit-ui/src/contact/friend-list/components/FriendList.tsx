@@ -3,6 +3,7 @@ import { Utils, useStateContext, useTranslation } from '../../../common'
 import { FriendItem } from './FriendItem'
 import { Spin, Empty } from 'antd'
 import { AutoSizer, List } from 'react-virtualized'
+import { throttle } from '../../../utils'
 
 export interface FriendListProps {
   accounts: string[]
@@ -29,7 +30,7 @@ export const FriendList: FC<FriendListProps> = ({
 
   const { t } = useTranslation()
 
-  const { store } = useStateContext()
+  const { store, localOptions } = useStateContext()
 
   const dataSource = useMemo(() => {
     const data = accounts.map((account) => ({
@@ -55,7 +56,7 @@ export const FriendList: FC<FriendListProps> = ({
       res.push(...item.data)
     })
 
-    return res.filter((item) => typeof item !== 'string') as {
+    return res as {
       account: string
       appellation: string
     }[]
@@ -65,13 +66,14 @@ export const FriendList: FC<FriendListProps> = ({
     ({ index, style }) => {
       const item = dataSource[index]
       const key = item.account
-      // if (typeof item === 'string') {
-      //     return (
-      //       <div className={`${_prefix}-subtitle`} key={item}>
-      //         {item}
-      //       </div>
-      //     )
-      //   }
+
+      if (typeof item === 'string') {
+        return (
+          <div style={style} className={`${_prefix}-subtitle`} key={item}>
+            {item}
+          </div>
+        )
+      }
 
       return (
         <div style={style} key={key}>
@@ -86,8 +88,25 @@ export const FriendList: FC<FriendListProps> = ({
         </div>
       )
     },
-    [afterSendMsgClick, commonPrefix, dataSource, onItemClick, prefix]
+    [afterSendMsgClick, commonPrefix, dataSource, onItemClick, prefix, _prefix]
   )
+
+  const handleScroll = throttle((props) => {
+    const rowHeight = 56
+    const scrollTop = props.scrollTop
+    const visibleRowsIndex = Math.floor(scrollTop / rowHeight)
+
+    if (localOptions.loginStateVisible) {
+      const accounts = dataSource
+        .slice(visibleRowsIndex, visibleRowsIndex + 30)
+        .map((item) => {
+          return item.account
+        })
+        .filter((item) => item !== undefined)
+
+      store.subscriptionStore.subscribeUserStatusActive(accounts)
+    }
+  }, 300)
 
   return (
     <div className={`${_prefix}-wrapper`}>
@@ -115,6 +134,7 @@ export const FriendList: FC<FriendListProps> = ({
                 rowHeight={46}
                 rowRenderer={rowRenderer}
                 width={width}
+                onScroll={handleScroll}
               />
             )}
           </AutoSizer>

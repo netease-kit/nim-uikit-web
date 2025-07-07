@@ -50,6 +50,7 @@ export interface ChatMessageInputProps {
   inputValue?: string
   translateOpen: boolean
   maxUploadFileSize: number
+  enableSendVideo?: boolean
   setInputValue: (value: string) => void
   onTranslate: (open: boolean) => void
   onSendText: (value: string, ext?: YxServerExt) => void
@@ -79,6 +80,7 @@ const ChatMessageInput = observer(
       receiverId,
       mute = false,
       allowAtAll = true,
+      enableSendVideo = true,
       inputValue = '',
       translateOpen,
       replyMsg,
@@ -140,7 +142,7 @@ const ChatMessageInput = observer(
         action: 'sendImg',
         visible: true,
         render: () => {
-          return (
+          return enableSendVideo ? (
             <Button size="small" disabled={mute}>
               <Dropdown
                 placement="top"
@@ -204,6 +206,23 @@ const ChatMessageInput = observer(
                   />
                 </div>
               </Dropdown>
+            </Button>
+          ) : (
+            <Button size="small" disabled={mute}>
+              <Upload
+                beforeUpload={onBeforeUploadImgHandler}
+                showUploadList={false}
+                accept=".jpg,.png,.jpeg,.gif"
+                // action={onUploadImgHandler}
+                className={`${_prefix}-icon-upload`}
+              >
+                <div>
+                  <CommonIcon
+                    className={`${_prefix}-icon-image`}
+                    type="icon-tupian"
+                  />
+                </div>
+              </Upload>
             </Button>
           )
         },
@@ -635,7 +654,14 @@ const ChatMessageInput = observer(
         ]
 
         content.push(replyMsg ? getMsgContentTipByType(replyMsg, t) : '')
-        return <div className={`${_prefix}-reply-content`}>{content}</div>
+
+        return (
+          <div className={`${_prefix}-reply-content`}>
+            {content.map((item, index) => {
+              return <span key={index}>{item}</span>
+            })}
+          </div>
+        )
       }
     }
 

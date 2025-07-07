@@ -9,6 +9,7 @@ import {
 } from '../../'
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 import { observer } from 'mobx-react'
+import { V2NIMError } from 'nim-web-sdk-ng/dist/esm/nim/src/types'
 
 const emptyArr = []
 
@@ -63,7 +64,14 @@ export const CreateTeamModal: React.FC<CreateTeamModalProps> = observer(
         setCreating(false)
         onAfterCreate?.()
       } catch (error) {
-        message.error(t('createTeamFailedText'))
+        switch ((error as V2NIMError)?.code) {
+          case 108437:
+            message.error(t('createTeamMemberLimitText'))
+            break
+          default:
+            message.error(t('createTeamFailedText'))
+        }
+
         setCreating(false)
       }
     }

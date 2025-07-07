@@ -14,7 +14,7 @@ export const demo_zh = {
   settingText: '设置',
   logoutConfirmText: '确定退出登录吗?',
   voiceCallText: '语音通话',
-  vedioCallText: '视频通话',
+  videoCallText: '视频通话',
   callDurationText: '通话时长',
   callCancelText: '已取消',
   callRejectedText: '已拒绝',
@@ -33,6 +33,14 @@ export const demo_zh = {
   enText: 'English',
   securityTipText:
     '仅用于体验云信IM 产品功能，请勿轻信汇款、中奖等涉及钱款的信息，勿轻易拨打陌生电话，谨防上当受骗。',
+  enableV2CloudConversationText: '是否开启云端会话',
+  aiStreamText: '数字人流式输出',
+  teamJoinModeText: '(用户)申请入群的模式',
+  teamJoinModeFreeText: '自由加入，无须验证',
+  teamJoinModeNeedVerifyText: '需申请，群主或管理同意后加入',
+  teamAgreeModeText: '邀请入群时是否需要被邀请人的同意模式',
+  needBeInvitedText: '需要被邀请人同意',
+  notNeedBeInvitedText: '不需要被邀请人同意',
 }
 
 export const demo_en = {
@@ -50,7 +58,7 @@ export const demo_en = {
   settingText: 'setting',
   logoutConfirmText: 'Are you sure you log out?',
   voiceCallText: 'Voice Call',
-  vedioCallText: 'Vedio Call',
+  videoCallText: 'Video Call',
   callDurationText: 'call duration',
   callCancelText: 'canceled',
   callRejectedText: 'rejected',
@@ -69,5 +77,14 @@ export const demo_en = {
   zhText: '中文',
   enText: 'English',
   securityTipText:
-    'Only for testing the Netease IM product function, please do not believe in any information about money transfer, lottery winning and so on. Do not easily call strangers and be careful to get cheated.',
+    'Only for testing the Netease IM , please do not believe in money transfer, lottery winning and so on. Do not easily call strangers.',
+  enableV2CloudConversationText: 'Whether or not to enable cloud conversation',
+  aiStreamText: 'AI Stream',
+  teamJoinModeText: 'Team join mode',
+  teamJoinModeFreeText: 'Free join, no verification required',
+  teamJoinModeNeedVerifyText:
+    'Need to apply, join after the group owner or manager approves',
+  teamAgreeModeText: 'Team agree mode',
+  needBeInvitedText: 'Need to be invited by the invitee',
+  notNeedBeInvitedText: 'No need to be invited by the invitee',
 }

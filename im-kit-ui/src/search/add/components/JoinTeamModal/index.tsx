@@ -76,15 +76,28 @@ const JoinTeamModal: React.FC<JoinTeamModalProps> = observer(
           }
 
           setAdding(true)
-          await store.teamStore.applyTeamActive(searchRes.teamId)
-          // 目前没有申请加入群组，直接写死
-          message.success(t('joinTeamSuccessText'))
+
+          const team = await store.teamStore.applyTeamActive(searchRes.teamId)
+
+          const joinMode = team?.joinMode
+
+          const tip =
+            joinMode === V2NIMConst.V2NIMTeamJoinMode.V2NIM_TEAM_JOIN_MODE_APPLY
+              ? t('joinTeamWithVerifyText')
+              : t('joinTeamSuccessText')
+
+          message.success(tip)
         }
 
         setAdding(false)
       } catch (error) {
-        message.error(t('joinTeamFailedText'))
         setAdding(false)
+        //@ts-ignore
+        if (error?.code === 108404) {
+          return message.error(t('teamNotExitsText'))
+        }
+
+        message.error(t('joinTeamFailedText'))
       }
     }
 

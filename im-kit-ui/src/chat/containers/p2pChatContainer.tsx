@@ -95,6 +95,10 @@ export interface P2pChatContainerProps {
   strangerTipVisible?: boolean
   scrollIntoMode?: 'nearest'
   maxUploadFileSize: number
+  /**
+   * 是否允许发送视频
+   */
+  enableSendVideo?: boolean
 }
 
 const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
@@ -119,6 +123,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     commonPrefix = 'common',
     strangerTipVisible = true,
     scrollIntoMode,
+    enableSendVideo = true,
   }) => {
     const { store, nim, localOptions, locale } = useStateContext()
 
@@ -165,15 +170,32 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       return store.aiUserStore.getAIChatUser()
     }, [store.aiUserStore, relation, localOptions.aiVisible])
 
-    // TODO sdk 暂不支持用户在线状态
-    // const isOnline = store.eventStore.stateMap.get(receiverId) === 'online'
-    const isOnline = 'online'
+    const isAiUser = store.aiUserStore.isAIUser(receiverId)
 
     const createDefaultAccounts = useMemo(() => [receiverId], [receiverId])
 
     const messageListContainerDomRef = useRef<HTMLDivElement>(null)
     const settingDrawDomRef = useRef<HTMLDivElement>(null)
     const chatMessageInputRef = useRef<ChatMessageInputRef>(null)
+
+    const [isOnline, setIsOnline] = useState<boolean>(false)
+
+    useEffect(() => {
+      if (
+        store.subscriptionStore.stateMap.get(receiverId) &&
+        localOptions.loginStateVisible
+      ) {
+        setIsOnline(
+          store.subscriptionStore.stateMap.get(receiverId)?.statusType ===
+            V2NIMConst.V2NIMUserStatusType.V2NIM_USER_STATUS_TYPE_LOGIN
+        )
+      }
+    }, [
+      store.subscriptionStore.stateMap,
+      localOptions.loginStateVisible,
+      receiverId,
+      store.subscriptionStore.stateMap.get(receiverId),
+    ])
 
     const visibilityObserver = useMemo(() => {
       return new VisibilityObserver({
@@ -329,11 +351,33 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     const onReeditClick = useCallback(
       (msg: V2NIMMessageForUI) => {
         setInputValue(msg.oldText || '')
-        const replyMsg = replyMsgsMap[msg.messageClientId]
 
-        replyMsg && store.msgStore.replyMsgActive(replyMsg)
-        // 处理 @ 消息
+        // 为了解决 1.撤回回复消息A 2.再撤回普通文本消息B 3.重新编辑消息A 4.再重新编辑消息B后 输入框显示A的引用内容，发送后显示A的引用内容的问题
+
+        if (msg.conversationId) {
+          store.msgStore.removeReplyMsgActive(msg.conversationId)
+        }
+
         const { serverExtension } = msg
+
+        if (msg.threadReply) {
+          const completeMsg = store.msgStore.getMsg(
+            msg.threadReply.conversationId,
+            [msg.threadReply.messageClientId]
+          )[0]
+
+          store.msgStore.replyMsgActive(completeMsg)
+        } else if (serverExtension) {
+          const extObj: YxServerExt = JSON.parse(serverExtension)
+
+          if (extObj?.yxReplyMsg) {
+            const replyMsg = replyMsgsMap[msg.messageClientId]
+
+            replyMsg && store.msgStore.replyMsgActive(replyMsg)
+          }
+        }
+
+        // 处理 @ 消息
 
         if (serverExtension) {
           try {
@@ -493,6 +537,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         scrollToBottom,
         nim.V2NIMMessageCreator,
         onAISendHandler,
+        locale,
       ]
     )
 
@@ -682,6 +727,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         conversation?.name,
         nim.V2NIMMessageConverter,
         nim.V2NIMMessageService,
+        msgRecallTime,
         t,
       ]
     )
@@ -729,6 +775,12 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     const handleCreateModalClose = () => {
       setGroupCreateVisible(false)
     }
+
+    useEffect(() => {
+      if (localOptions.loginStateVisible) {
+        store.subscriptionStore.subscribeUserStatusActive([receiverId])
+      }
+    }, [receiverId, store.subscriptionStore, localOptions.loginStateVisible])
 
     useEffect(() => {
       const notMyMsgs = msgs
@@ -1051,12 +1103,13 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
                   : '')
               }
               subTitle={
-                !isOnline && localOptions.loginStateVisible
+                !isOnline && localOptions.loginStateVisible && !isAiUser
                   ? t('offlineText')
                   : undefined
               }
               avatar={
                 <ComplexAvatarContainer
+                  onMessageItemAvatarClick={onMessageItemAvatarClick}
                   account={receiverId}
                   canClick={receiverId !== myUser.accountId}
                   prefix={commonPrefix}
@@ -1110,6 +1163,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
                 ? renderP2pInputPlaceHolder(conversation)
                 : `${t('sendToText')} ${placeholder}${t('sendUsageText')}`
             }
+            enableSendVideo={enableSendVideo}
             translateOpen={translateOpen}
             maxUploadFileSize={maxUploadFileSize}
             onTranslate={setTranslateOpen}

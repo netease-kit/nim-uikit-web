@@ -1,7 +1,11 @@
-import React, { useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import { useTranslation } from '../../hooks/useTranslation'
-import { Popover } from 'antd'
+import { Empty, Popover } from 'antd'
 import { CheckCircleOutlined } from '@ant-design/icons'
+import { V2NIMMessage } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
+import { useStateContext } from '../../hooks/useStateContext'
+import { ComplexAvatarContainer } from '../ComplexAvatar'
+import { AutoSizer, List } from 'react-virtualized'
 
 export interface ReadPercentProps {
   unread: number
@@ -9,6 +13,7 @@ export interface ReadPercentProps {
   hoverable?: boolean
   size?: number
   prefix?: string
+  message?: V2NIMMessage
 }
 
 export const ReadPercent: React.FC<ReadPercentProps> = ({
@@ -17,19 +22,138 @@ export const ReadPercent: React.FC<ReadPercentProps> = ({
   size = 8,
   hoverable = false,
   prefix = 'common',
+  message,
 }) => {
   const _prefix = `${prefix}-percent`
   const { t } = useTranslation()
+  const [readAccountList, setReadAccountList] = React.useState<string[]>([])
+  const [unreadAccountList, setUnreadAccountList] = React.useState<string[]>([])
+  const { store } = useStateContext()
+  const [isPopoverVisible, setIsPopoverVisible] = React.useState(false)
+
+  useEffect(() => {
+    if (message && isPopoverVisible) {
+      store.msgStore.getTeamMessageReceiptDetailsActive(message).then((res) => {
+        setReadAccountList(res?.readAccountList)
+        setUnreadAccountList(res?.unreadAccountList)
+      })
+    }
+  }, [message, isPopoverVisible])
+
+  const unReadRowRenderer = useCallback(
+    ({ index, style }) => {
+      const item = unreadAccountList[index]
+      const { receiverId } = message!
+
+      return (
+        <div
+          key={item}
+          style={style}
+          className={`${_prefix}-wrap-detail-list-item`}
+        >
+          <ComplexAvatarContainer size={34} prefix={prefix} account={item} />
+          <div className={`${_prefix}-wrap-detail-list-item-nick`}>
+            {store.uiStore.getAppellation({
+              account: item,
+              teamId: receiverId,
+            })}
+          </div>
+        </div>
+      )
+    },
+    [unreadAccountList, _prefix, message, prefix]
+  )
+
+  const readRowRenderer = useCallback(
+    ({ index, style }) => {
+      const item = readAccountList[index]
+      const { receiverId } = message!
+
+      return (
+        <div
+          key={item}
+          style={style}
+          className={`${_prefix}-wrap-detail-list-item`}
+        >
+          <ComplexAvatarContainer size={34} prefix={prefix} account={item} />
+          <div className={`${_prefix}-wrap-detail-list-item-nick`}>
+            {store.uiStore.getAppellation({
+              account: item,
+              teamId: receiverId,
+            })}
+          </div>
+        </div>
+      )
+    },
+    [readAccountList, _prefix, message, prefix]
+  )
 
   const renderDetail = () => {
+    if (percent >= 360) {
+      return t('allReadText')
+    }
+
     return (
-      <span>
-        {percent >= 360
-          ? t('allReadText')
-          : `${t('unreadText')} ${unread} ${t('personUnit')} | ${t(
-              'readText'
-            )} ${read} ${t('personUnit')}`}
-      </span>
+      <div className={`${_prefix}-wrap-detail-list`}>
+        <div className={`${_prefix}-wrap-detail-list-column`}>
+          <div className={`${_prefix}-wrap-detail-list-title`}>
+            {t('unreadText') + unread + t('personUnit')}
+          </div>
+          {unreadAccountList.length ? (
+            <div className={`${_prefix}-wrap-detail-list-column-content`}>
+              <AutoSizer>
+                {({ height, width }) => (
+                  <List
+                    style={{ backfaceVisibility: 'hidden', zIndex: 1 }}
+                    height={height}
+                    overscanRowCount={10}
+                    rowCount={unreadAccountList.length}
+                    rowHeight={44}
+                    rowRenderer={unReadRowRenderer}
+                    width={width}
+                  />
+                )}
+              </AutoSizer>
+            </div>
+          ) : (
+            <Empty
+              style={{
+                width: '100px',
+              }}
+              description=""
+            />
+          )}
+        </div>
+        <div className={`${_prefix}-wrap-detail-list-column`}>
+          <div className={`${_prefix}-wrap-detail-list-title`}>
+            {t('readText') + read + t('personUnit')}
+          </div>
+          {readAccountList.length ? (
+            <div className={`${_prefix}-wrap-detail-list-column-content`}>
+              <AutoSizer>
+                {({ height, width }) => (
+                  <List
+                    style={{ backfaceVisibility: 'hidden', zIndex: 1 }}
+                    height={height}
+                    overscanRowCount={10}
+                    rowCount={readAccountList.length}
+                    rowHeight={44}
+                    rowRenderer={readRowRenderer}
+                    width={width}
+                  />
+                )}
+              </AutoSizer>
+            </div>
+          ) : (
+            <Empty
+              style={{
+                width: '100px',
+              }}
+              description=""
+            />
+          )}
+        </div>
+      </div>
     )
   }
 
@@ -122,9 +246,18 @@ export const ReadPercent: React.FC<ReadPercentProps> = ({
   return (
     <div className={`${_prefix}-wrap`}>
       {hoverable ? (
-        <Popover placement="top" content={renderDetail()}>
-          {renderReadPercent()}
-        </Popover>
+        <div
+          onMouseEnter={() => {
+            setIsPopoverVisible(true)
+          }}
+          onMouseLeave={() => {
+            setIsPopoverVisible(false)
+          }}
+        >
+          <Popover trigger="hover" placement="top" content={renderDetail()}>
+            {renderReadPercent()}
+          </Popover>
+        </div>
       ) : (
         renderReadPercent()
       )}

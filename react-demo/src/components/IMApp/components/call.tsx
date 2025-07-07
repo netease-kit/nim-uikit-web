@@ -1,29 +1,29 @@
-import React, { FC } from "react";
-import "../index.less";
-import { callTypeMap, t } from "../util";
+import React, { FC } from 'react'
+import '../index.less'
+import { callTypeMap, t } from '../util'
 
 interface IProps {
-  handleCall: (callType: string) => void;
+  handleCall: (callType: string) => void
 }
 const Call: FC<IProps> = ({ handleCall }) => {
   return (
     <div>
       <div
-        onClick={() => handleCall(callTypeMap["audio"])}
+        onClick={() => handleCall(callTypeMap['audio'])}
         className="calling-item"
       >
         <i className="calling-item-icon iconfont icon-yuyin8" />
-        <span>{t("voiceCallText")}</span>
+        <span>{t('voiceCallText')}</span>
       </div>
       <div
-        onClick={() => handleCall(callTypeMap["vedio"])}
+        onClick={() => handleCall(callTypeMap['video'])}
         className="calling-item"
       >
         <i className="calling-item-icon iconfont icon-shipin8" />
-        <span>{t("videoCallText")}</span>
+        <span>{t('videoCallText')}</span>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Call;
+export default Call

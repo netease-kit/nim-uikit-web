@@ -440,7 +440,6 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
                       replyMsg={replyMsg}
                       msg={msg}
                       prefix={commonPrefix}
-                      showThreadReply={true}
                     />
                   )}
                 </div>
@@ -468,7 +467,9 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
                         .NIM_MESSAGE_AI_STREAM_STATUS_PLACEHOLDER ||
                       msg?.aiConfig.aiStreamStatus ==
                         V2NIMConst.V2NIMMessageAIStreamStatus
-                          .NIM_MESSAGE_AI_STREAM_STATUS_NONE) && (
+                          .NIM_MESSAGE_AI_STREAM_STATUS_NONE ||
+                      // 非流失输出，也需要重新生成按钮
+                      !localOptions?.aiStream) && (
                       <div onClick={() => regenAIMessage?.(msg)}>
                         <CommonIcon
                           style={{ color: '#656A72' }}

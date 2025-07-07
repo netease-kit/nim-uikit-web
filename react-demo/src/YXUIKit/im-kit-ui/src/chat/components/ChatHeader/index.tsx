@@ -19,15 +19,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
   return (
     <div className={`${_prefix}-wrap`}>
-      <div className={`${_prefix}-avatar`}>
-        {/* 换回 CrudeAvatar */}
-        {/* <ComplexAvatarContainer
-          account={account}
-          canClick={false}
-          prefix={commonPrefix}
-        /> */}
-        {avatar}
-      </div>
+      <div className={`${_prefix}-avatar`}>{avatar}</div>
       <div className={`${_prefix}-title`}>{title}</div>
       {subTitle ? (
         <div className={`${_prefix}-sub-title`}>{subTitle}</div>

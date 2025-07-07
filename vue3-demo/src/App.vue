@@ -27,6 +27,9 @@ export default {
     const localOptions = {
       // 添加好友模式，默认需要验证
       addFriendNeedVerify: true,
+      // 群组加入模式，默认不需要验证
+      //@ts-ignore
+      teamJoinMode: V2NIMConst.V2NIMTeamJoinMode.V2NIM_TEAM_JOIN_MODE_FREE,
       // 群组被邀请模式，默认不需要验证
       teamAgreeMode:
         //@ts-ignore

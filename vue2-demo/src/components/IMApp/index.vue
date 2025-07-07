@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="$style.containerWrapper">
     <div :class="$style.container">
       <!-- IMUIKIT 相关内容 -->
       <div :class="$style.header">
@@ -175,6 +175,13 @@ export default {
 <style module>
 body {
   background: #d8dee5;
+}
+
+.containerWrapper {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-image: url("../../static/bg.png");
 }
 .container {
   width: 1070px;

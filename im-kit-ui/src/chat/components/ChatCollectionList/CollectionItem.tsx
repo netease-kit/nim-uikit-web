@@ -101,22 +101,46 @@ const CollectionItem: React.FC<CollectionItemProps> = ({
 
   return (
     renderItem?.({ msg, collection }) ?? (
-      <Dropdown
-        trigger={['contextMenu']}
-        overlay={<Menu onClick={handleMenuClick} items={menuItems} />}
-        getPopupContainer={(triggerNode) => triggerNode}
-        overlayClassName={`${_prefix}-dropdown`}
-      >
-        <div className={`${_prefix}-wrap`}>
-          {msg && <ParseSession msg={msg} prefix={commonPrefix} />}
-          <div className={`${_prefix}-info`}>
-            <span>{collectionData?.senderName}</span>
-            <span>
-              {formatDate(collection.updateTime || collection.createTime)}
-            </span>
+      <div className={`${_prefix}-wrap`}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div className={`${_prefix}-content`}>
+            <div className={`${_prefix}-content-top`}>
+              <div className={`${_prefix}-content-top-msg`}>
+                {msg && <ParseSession msg={msg} prefix={commonPrefix} />}
+              </div>
+              <div className={`${_prefix}-content-top-icon`}>
+                <Dropdown
+                  trigger={['click']}
+                  overlay={<Menu onClick={handleMenuClick} items={menuItems} />}
+                  getPopupContainer={(triggerNode) => triggerNode}
+                  overlayClassName={`${_prefix}-dropdown`}
+                >
+                  <div
+                    style={{
+                      fontSize: '18px',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    ...
+                  </div>
+                </Dropdown>
+              </div>
+            </div>
+            <div className={`${_prefix}-info`}>
+              <span>{collectionData?.senderName}</span>
+              <span>
+                {formatDate(collection.updateTime || collection.createTime)}
+              </span>
+            </div>
           </div>
         </div>
-      </Dropdown>
+      </div>
     )
   )
 }

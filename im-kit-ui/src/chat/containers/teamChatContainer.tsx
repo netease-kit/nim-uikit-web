@@ -35,6 +35,7 @@ import {
   getVideoFirstFrameDataUrl,
   logger,
   replaceEmoji,
+  isDiscussionFunc,
 } from '../../utils'
 import {
   V2NIMTeam,
@@ -110,6 +111,10 @@ export interface TeamChatContainerProps {
   commonPrefix?: string
   scrollIntoMode?: 'nearest'
   maxUploadFileSize: number
+  /**
+   * 是否允许发送视频
+   */
+  enableSendVideo?: boolean
 }
 
 const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
@@ -136,6 +141,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     prefix = 'chat',
     commonPrefix = 'common',
     scrollIntoMode,
+    enableSendVideo = true,
   }) => {
     const { store, nim, localOptions, locale } = useStateContext()
 
@@ -198,6 +204,12 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
 
       return teamNameOrTeamId
     }, [teamNameOrTeamId])
+
+    // 是否是讨论组
+    const isDiscussion = useMemo(() => {
+      return isDiscussionFunc(team.serverExtension)
+    }, [team.serverExtension])
+
     const isGroupOwner = myUser?.accountId === team.ownerAccountId
 
     const isGroupManager = teamMembers
@@ -491,11 +503,30 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
 
     const onReeditClick = useCallback(
       (msg: V2NIMMessageForUI) => {
-        const replyMsg = replyMsgsMap[msg.messageClientId]
-
-        replyMsg && store.msgStore.replyMsgActive(replyMsg)
-        // 处理 @ 消息
         const { serverExtension } = msg
+        // 为了解决 1.撤回回复消息A 2.再撤回普通文本消息B 3.重新编辑消息A 4.再重新编辑消息B后 输入框显示A的引用内容，发送后显示A的引用内容的问题
+
+        if (msg.conversationId) {
+          store.msgStore.removeReplyMsgActive(msg.conversationId)
+        }
+
+        if (msg.threadReply) {
+          const completeMsg = store.msgStore.getMsg(
+            msg.threadReply.conversationId,
+            [msg.threadReply.messageClientId]
+          )[0]
+
+          store.msgStore.replyMsgActive(completeMsg)
+        } else if (serverExtension) {
+          const extObj: YxServerExt = JSON.parse(serverExtension)
+
+          if (extObj?.yxReplyMsg) {
+            const replyMsg = replyMsgsMap[msg.messageClientId]
+
+            replyMsg && store.msgStore.replyMsgActive(replyMsg)
+          }
+        }
+        // 处理 @ 消息
 
         if (serverExtension) {
           try {
@@ -831,7 +862,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
 
               /**renderSenderId 用于渲染头像和昵称，当这条消息是ai发的消息，会存在如下情况
                * 1.如果是单聊，此时有ai的回复消息，那么sdk返回的消息的senderId为提问者的accountId，但此时UI上需要展示为ai的昵称和头像，将renderSenderId改为ai的accountId
-               * 2.如果是群聊，此时有ai的回复消息且ai数字人不在群里，那么sdk返回的消息的senderId为ai的accountId，但此时UI上需要展示为ai的昵称和头像，将renderSenderId改为ai的accountId
+               * 2.如果是群聊，此时有ai的回复消息且ai数字人不在群里，那么sdk返回的消息的senderId为提问者的accountId，但此时UI上需要展示为ai的昵称和头像，将renderSenderId改为ai的accountId
                **/
               const renderSenderId = isAiResponseMessage
                 ? msg?.aiConfig?.accountId
@@ -909,6 +940,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         nim.V2NIMMessageService,
         handleTopMessage,
         msgOperMenu,
+        msgRecallTime,
       ]
     )
 
@@ -951,6 +983,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       [mentionMembers, store.uiStore]
     )
 
+    // 解散群组
     const onDismissTeam = useCallback(async () => {
       try {
         await store.teamStore.dismissTeamActive(team.teamId)
@@ -968,14 +1001,49 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       }
     }, [store.teamStore, team.teamId, t])
 
+    // 离开群组
     const onLeaveTeam = useCallback(async () => {
       try {
         await store.teamStore.leaveTeamActive(team.teamId)
-        message.success(t('leaveTeamSuccessText'))
       } catch (error) {
         message.error(t('leaveTeamFailedText'))
       }
     }, [store.teamStore, team.teamId, t])
+
+    // 离开讨论组
+    // 如果此时群主退出讨论组，则群主转让给非数字人的第一个群成员，如果群只剩下群主和数字人，则直接解散讨论组
+    const onLeaveDiscussion = useCallback(async () => {
+      try {
+        if (isGroupOwner) {
+          const teamMembersWithoutAiUserAndMySelf = teamMembers
+            .filter((item) => !store.aiUserStore.aiUsers.has(item.accountId))
+            .filter((item) => item.accountId !== myUser?.accountId)
+
+          if (teamMembersWithoutAiUserAndMySelf.length === 0) {
+            await store.teamStore.dismissTeamActive(team.teamId)
+          } else {
+            await store.teamStore.transferTeamActive({
+              teamId: team.teamId,
+              account: teamMembersWithoutAiUserAndMySelf[0].accountId,
+              leave: true,
+              type: V2NIMConst.V2NIMTeamType.V2NIM_TEAM_TYPE_ADVANCED,
+            })
+          }
+        } else {
+          await store.teamStore.leaveTeamActive(team.teamId)
+        }
+      } catch (error) {
+        message.error(t('leaveDiscussionFailedText'))
+      }
+    }, [
+      store.teamStore,
+      team.teamId,
+      t,
+      teamMembers,
+      isGroupOwner,
+      store.aiUserStore.aiUsers,
+      myUser?.accountId,
+    ])
 
     const onTransferMemberClick = useCallback(() => {
       setGroupTransferModalVisible(true)
@@ -1006,7 +1074,13 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             teamId: team.teamId,
             accounts,
           })
-          message.success(t('addTeamMemberSuccessText'))
+          const tip =
+            team.agreeMode ===
+            V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_NO_AUTH
+              ? t('addTeamMemberSuccessText')
+              : t('addTeamMemberVerifyText')
+
+          message.success(tip)
           resetSettingState()
         } catch (error) {
           switch ((error as V2NIMError)?.code) {
@@ -1014,13 +1088,17 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             case 109306:
               message.error(t('noPermission'))
               break
+            case 108437:
+              message.error(t('createTeamMemberLimitText'))
+              break
+
             default:
               message.error(t('addTeamMemberFailedText'))
               break
           }
         }
       },
-      [store.teamMemberStore, team.teamId, t, resetSettingState]
+      [store.teamMemberStore, team.teamId, t, resetSettingState, team]
     )
 
     const onRemoveTeamMember = useCallback(
@@ -1531,14 +1609,27 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             case V2NIMConst.V2NIMMessageNotificationType
               .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_LEAVE: {
               if (msg.senderId === myUser.accountId) {
-                message.success(t('leaveTeamSuccessText'))
-              } else {
-                message.info(
-                  `${store.uiStore.getAppellation({
-                    account: msg.senderId,
-                    teamId: msg.receiverId,
-                  })}${t('leaveTeamText')}`
+                message.success(
+                  isDiscussion
+                    ? t('leaveDiscussionSuccessText')
+                    : t('leaveTeamSuccessText')
                 )
+              } else {
+                if (isDiscussion) {
+                  message.info(
+                    `${store.uiStore.getAppellation({
+                      account: msg.senderId,
+                      teamId: msg.receiverId,
+                    })}${t('leaveDiscussionText')}`
+                  )
+                } else {
+                  message.info(
+                    `${store.uiStore.getAppellation({
+                      account: msg.senderId,
+                      teamId: msg.receiverId,
+                    })}${t('leaveTeamText')}`
+                  )
+                }
               }
 
               break
@@ -1566,7 +1657,11 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             // 解散群聊
             case V2NIMConst.V2NIMMessageNotificationType
               .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_DISMISS:
-              message.warning(t('onDismissTeamText'))
+              message.warning(
+                isDiscussion
+                  ? t('onDismissDiscussionText')
+                  : t('onDismissTeamText')
+              )
               break
             // 有人主动加入群聊
             case V2NIMConst.V2NIMMessageNotificationType
@@ -1711,6 +1806,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             prefix={prefix}
             commonPrefix={commonPrefix}
             maxUploadFileSize={maxUploadFileSize}
+            enableSendVideo={enableSendVideo}
             placeholder={
               renderTeamInputPlaceHolder
                 ? renderTeamInputPlaceHolder({
@@ -1757,6 +1853,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
               setNavHistoryStack={setNavHistoryStack}
               afterSendMsgClick={resetSettingState}
               onAddMembersClick={onAddMembersClick}
+              onLeaveDiscussion={onLeaveDiscussion}
               onDismissTeam={onDismissTeam}
               onLeaveTeam={onLeaveTeam}
               onRemoveTeamMemberClick={onRemoveTeamMember}

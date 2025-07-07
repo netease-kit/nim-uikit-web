@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo, useState } from 'react'
-import { Divider, Spin, Tabs } from 'antd'
+import { Divider, Input, Spin, Tabs } from 'antd'
 import { FriendSelectItem } from './FriendSelectItem'
 import { groupByPy } from '../../../utils'
 import { useTranslation } from '../../hooks/useTranslation'
@@ -205,6 +205,9 @@ export const FriendSelect: FC<FriendSelectUIProps> = observer(
           <>
             <div className={`${_prefix}-left`}>
               {renderTab()}
+              {/* <div>
+                <Input></Input>
+              </div> */}
               <div className={`${_prefix}-list`}>
                 <AutoSizer>
                   {({ height, width }) => (

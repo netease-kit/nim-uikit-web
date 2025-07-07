@@ -66,6 +66,39 @@ const CollectionList: React.FC<CollectionListProps> = ({
   >(undefined)
   const [noMore, setNoMore] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+        } else {
+          setIsVisible(false)
+        }
+      })
+    })
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current)
+    }
+
+    return () => {
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    // 便于在vue中展示组件渲染，避免需要卸载组件才去调用getCollectionList
+    if (isVisible) {
+      getCollectionList({
+        limit: LIMIT,
+        collectionType: 0,
+      })
+    }
+  }, [isVisible])
 
   const getCollectionList = async (options: V2NIMCollectionOption) => {
     try {
@@ -86,13 +119,6 @@ const CollectionList: React.FC<CollectionListProps> = ({
       )
     }
   }
-
-  useEffect(() => {
-    getCollectionList({
-      limit: LIMIT,
-      collectionType: 0,
-    })
-  }, [])
 
   const onMenuClick = ({
     key,

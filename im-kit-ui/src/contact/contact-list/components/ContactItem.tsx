@@ -11,7 +11,7 @@ export interface ContactItemProps {
   backgroundColor: string
   onItemClick: (contactType: ContactType) => void
   prefix?: string
-  unread?: number
+  unread?: number | string
 }
 
 export const ContactItem: FC<ContactItemProps> = ({

@@ -1,4 +1,4 @@
-import React, { FC, useMemo } from 'react'
+import React, { FC, useEffect, useMemo } from 'react'
 import {
   ConversationList,
   ConversationCallbackProps,
@@ -249,6 +249,41 @@ export const ConversationContainer: FC<ConversationContainerProps> = observer(
       store.uiStore.conversations,
       store.uiStore.localConversations,
       store.sdkOptions?.enableV2CloudConversation,
+    ])
+
+    useEffect(() => {
+      if (localOptions.loginStateVisible) {
+        // 订阅会话列表中 单聊的在线离线状态
+        const accounts = conversations
+          .filter(
+            (item) =>
+              item.type ===
+              V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
+          )
+          .map((item) => {
+            return nim.V2NIMConversationIdUtil.parseConversationTargetId(
+              item.conversationId
+            )
+          })
+        // 将 accounts 拆分成多个长度不超过 100 的子数组
+        const chunkSize = 100
+
+        const length = accounts.length
+
+        for (let i = 0; i < length; i += chunkSize) {
+          const chunk = accounts.slice(i, i + chunkSize)
+
+          if (chunk.length > 0) {
+            store.subscriptionStore.subscribeUserStatusActive(chunk)
+          }
+        }
+      }
+    }, [
+      conversations.length,
+      store.subscriptionStore,
+      localOptions.loginStateVisible,
+      nim.V2NIMConversationIdUtil,
+      store.connectStore.connectStatus,
     ])
 
     return (

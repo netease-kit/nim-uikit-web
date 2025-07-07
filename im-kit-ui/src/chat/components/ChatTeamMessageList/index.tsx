@@ -111,7 +111,8 @@ const ChatTeamMessageList = forwardRef<
                     read={msg.yxRead ?? 0}
                     hoverable
                     prefix={commonPrefix}
-                    size={16}
+                    size={14}
+                    message={msg.isSelf ? msg : undefined}
                   />
                 ) : null
               }

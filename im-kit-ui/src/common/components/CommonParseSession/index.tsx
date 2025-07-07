@@ -2,8 +2,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Dropdown, Image, Popover, Progress, Tooltip, message } from 'antd'
 import reactStringReplace from 'react-string-replace'
 import CommonIcon from '../CommonIcon'
-import remarkGfm from 'remark-gfm'
-import 'highlight.js/styles/github.css'
 import {
   getFileType,
   parseFileSize,
@@ -39,13 +37,7 @@ import { V2NIMError } from 'nim-web-sdk-ng/dist/esm/nim/src/types'
 import { AI_SEARCH_MENU_KEY, fileIconMap } from '../../../constant'
 import Markdown from 'react-markdown'
 import { LoadingOutlined } from '@ant-design/icons'
-import rehypeHighlight from 'rehype-highlight'
-import rehypeRaw from 'rehype-raw'
 
-import 'highlight.js/styles/github-dark.css' // 选择高亮主题
-
-// 在文件顶部引入
-// import { useTypewriterEffect } from '../../hooks/useTypewriterEffect'
 export interface IParseSessionProps {
   prefix?: string
   msg: V2NIMMessageForUI
@@ -134,7 +126,6 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     msg,
     replyMsg,
     needTextTooltop = false,
-    showThreadReply = false,
     onReeditClick,
   }) => {
     const _prefix = `${prefix}-parse-session`
@@ -197,7 +188,23 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           setReplyImgUrl(blobUrl)
         })
       }
-    }, [replyMsg])
+
+      if (threadReply !== 'noFind') {
+        if (
+          threadReply &&
+          threadReply.messageType ===
+            V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_IMAGE &&
+          threadReply.attachment &&
+          (threadReply.attachment as V2NIMMessageImageAttachment).url
+        ) {
+          const url = getDownloadUrl(threadReply)
+
+          getBlobImg(url).then((blobUrl) => {
+            setReplyImgUrl(blobUrl)
+          })
+        }
+      }
+    }, [replyMsg, threadReply])
 
     useEffect(() => {
       if (msg.threadReply) {
@@ -321,17 +328,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           return <div>{t('aiErrorText')}</div>
 
         default:
-          return (
-            <Markdown
-              // 支持表格
-              //@ts-ignore
-              remarkPlugins={[remarkGfm]}
-              //@ts-ignore
-              rehypePlugins={[rehypeHighlight, rehypeRaw]}
-            >
-              {msg.text || ''}
-            </Markdown>
-          )
+          return <Markdown>{msg.text || ''}</Markdown>
       }
     }
 
@@ -477,7 +474,11 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
             className={`${_prefix}-top-text-tooltip`}
             getPopupContainer={() => textRef.current || document.body}
           >
-            <div ref={textRef} className={`${_prefix}-text-wrapper`}>
+            <div
+              style={{ display: 'flex' }}
+              ref={textRef}
+              className={`${_prefix}-text-wrapper`}
+            >
               {finalText}
             </div>
           </Tooltip>
@@ -568,7 +569,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       // 上传中或没有真实 url 时走这里
       if (
         (uploadProgress !== void 0 && uploadProgress < 100) ||
-        !attachment.url
+        !attachment?.url
       ) {
         return renderUploadMsg(msg)
       }
@@ -583,15 +584,20 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
             }
           }}
         >
-          <Image
-            rootClassName={`${_prefix}-image`}
-            loading="lazy"
-            src={
-              isReplyMsg ? replyImgUrl : imgUrl
-              // ||
-              // 'https://yx-web-nosdn.netease.im/common/33d3e1fa8de771277ea4466564ef37aa/emptyImg.png'
-            }
-          />
+          {replyImgUrl && (
+            <Image
+              rootClassName={`${_prefix}-image`}
+              loading="lazy"
+              src={replyImgUrl}
+            />
+          )}
+          {imgUrl && (
+            <Image
+              rootClassName={`${_prefix}-image`}
+              loading="lazy"
+              src={imgUrl}
+            />
+          )}
         </div>
       )
     }
@@ -651,6 +657,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_UPDATE_TINFO: {
           const team: V2NIMTeam = (attachment?.updatedTeamInfo ||
             {}) as V2NIMTeam
+
           const content: string[] = []
 
           if (team.avatar !== void 0) {
@@ -663,6 +670,26 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
 
           if (team.intro !== void 0) {
             content.push(t('updateTeamIntro'))
+          }
+
+          if (team.agreeMode !== void 0) {
+            const tip =
+              team.agreeMode ===
+              V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_AUTH
+                ? t('openAgreeModeText')
+                : t('closeAgreeModeText')
+
+            content.push(tip)
+          }
+
+          if (team.joinMode !== void 0) {
+            const tip =
+              team.joinMode ===
+              V2NIMConst.V2NIMTeamJoinMode.V2NIM_TEAM_JOIN_MODE_APPLY
+                ? t('openApplyModeText')
+                : t('closeApplyModeText')
+
+            content.push(tip)
           }
 
           if (team.inviteMode !== void 0) {
@@ -1058,6 +1085,31 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       }
 
       url = url.startsWith('blob:') ? url : getDownloadUrl(msg)
+      if (needTextTooltop) {
+        return (
+          <Tooltip
+            title={
+              <video
+                src={url}
+                id={`msg-video-${msg.messageClientId}`}
+                className={`${_prefix}-video`}
+                controls
+                onPlay={() => {
+                  // 播放视频，暂停其他视频和音频
+                  pauseOtherVideo(msg.messageClientId)
+                  pauseAllAudio()
+                }}
+                onError={() => {
+                  // 处理异常 例如：视频格式不支持播放等
+                }}
+              />
+            }
+          >
+            {'[' + t('videoMsgText') + ']'}
+          </Tooltip>
+        )
+      }
+
       return (
         <video
           src={url}
@@ -1135,8 +1187,27 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     }
 
     // 渲染回复消息
-    const renderReplyMsg = () => {
-      if (showThreadReply && threadReply) {
+    const renderReplyMsg = (msg?: V2NIMMessageForUI) => {
+      // 给数字人发送图片会返回这个错误码，此时直接不渲染，在renderContent 直接提示 格式不支持
+      // 群禁言，数字人会返回108306，此时不展示
+      if (
+        msg?.messageStatus?.errorCode === 107336 ||
+        msg?.messageStatus?.errorCode === 108306
+      ) {
+        return null
+      }
+
+      // 撤回回复消息，只需要展示 重新编辑 即可，不需要展示被回复的内容
+      if (msg?.isRecallMsg) {
+        return null
+      }
+
+      // needTextTooltop 代表是指定消息 不需要展示被回复的消息
+      if (needTextTooltop) {
+        return null
+      }
+
+      if (threadReply) {
         return finalRenderReplyMsg(threadReply)
       }
 
@@ -1202,6 +1273,9 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_IMAGE:
           getUserInfo(msg.senderId)
           return renderImage(msg, isReplyMsg)
+        case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_VIDEO:
+          getUserInfo(msg.senderId)
+          return renderVideo(msg)
         case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_FILE:
           getUserInfo(msg.senderId)
           return renderFile(msg)
@@ -1228,9 +1302,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           }
 
           return `[${t('tipMsgText')}，${notSupportMessageText}]`
-        case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_VIDEO:
-          getUserInfo(msg.senderId)
-          return renderVideo(msg)
+
         default:
           return renderNotSupportMessage()
       }
@@ -1238,7 +1310,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
 
     return (
       <>
-        {renderReplyMsg()}
+        {renderReplyMsg(msg)}
         {renderMsgContent(msg, false)}
       </>
     )

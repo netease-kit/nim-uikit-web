@@ -119,7 +119,7 @@ export const SelectModal: React.FC<SelectModalProps> = ({
     [datasource]
   )
 
-  const handleSearchTextChange = (e: any) => {
+  const handleSearchTextChange = (e) => {
     const value = e.target.value
 
     setSearchText(value)

@@ -181,6 +181,10 @@ export interface ChatContainerProps {
    * 最大上传文件大小，单位Mb，默认 100M
    */
   maxUploadFileSize?: number
+  /**
+   * 是否允许发送视频
+   */
+  enableSendVideo?: boolean
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = observer(
@@ -210,6 +214,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
     prefix = 'chat',
     commonPrefix = 'common',
     strangerTipVisible = true,
+    enableSendVideo = true,
     scrollIntoMode,
   }) => {
     const { store, nim } = useStateContext()
@@ -255,6 +260,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           renderMessageOuterContent={renderMessageOuterContent}
           strangerTipVisible={strangerTipVisible}
           scrollIntoMode={scrollIntoMode}
+          enableSendVideo={enableSendVideo}
         />
       ) : conversationType ===
         V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM ? (
@@ -280,6 +286,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           renderMessageInnerContent={renderMessageInnerContent}
           renderMessageOuterContent={renderMessageOuterContent}
           scrollIntoMode={scrollIntoMode}
+          enableSendVideo={enableSendVideo}
         />
       ) : null
     ) : renderEmpty ? (

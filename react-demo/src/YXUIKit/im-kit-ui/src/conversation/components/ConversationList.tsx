@@ -100,7 +100,6 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   const conversationRowRenderer = useCallback(
     ({ index, style }) => {
       const item = conversations[index]
-      const key = item?.conversationId
 
       return (
         <div key={item.conversationId} style={style}>
@@ -190,13 +189,11 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       onConversationItemMuteChange,
       renderCustomP2pConversation,
       renderCustomTeamConversation,
-      renderConversationListEmpty,
       renderP2pConversationAvatar,
       renderTeamConversationAvatar,
       renderConversationMsg,
       renderConversationName,
       prefix,
-      commonPrefix,
     ]
   )
 
