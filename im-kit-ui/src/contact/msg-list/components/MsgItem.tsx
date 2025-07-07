@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import {
   ComplexAvatarContainer,
   useTranslation,
@@ -12,6 +12,7 @@ import {
   V2NIMTeamJoinActionInfoForUI,
 } from '@xkit-yx/im-store-v2/dist/types/types'
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
+import { V2NIMTeam } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
 
 export enum TMsgItemType {
   FRIEND = 'friend',
@@ -49,10 +50,10 @@ export const MsgItem: FC<MsgItemProps> = observer(
   ({
     msg,
     applyFriendLoading = false,
-    // onAcceptApplyTeamClick,
-    // onRejectApplyTeamClick,
-    // onAcceptTeamInviteClick,
-    // onRejectTeamInviteClick,
+    onAcceptApplyTeamClick,
+    onRejectApplyTeamClick,
+    onAcceptTeamInviteClick,
+    onRejectTeamInviteClick,
     onAcceptApplyFriendClick,
     onRejectApplyFriendClick,
     afterSendMsgClick,
@@ -66,21 +67,21 @@ export const MsgItem: FC<MsgItemProps> = observer(
 
     const { store } = useStateContext()
 
-    // const handleRejectApplyTeamClick = () => {
-    //   onRejectApplyTeamClick?.(msg as V2NIMTeamJoinActionInfoForUI)
-    // }
+    const handleRejectApplyTeamClick = () => {
+      onRejectApplyTeamClick?.(msg as V2NIMTeamJoinActionInfoForUI)
+    }
 
-    // const handleAcceptApplyTeamClick = () => {
-    //   onAcceptApplyTeamClick?.(msg as V2NIMTeamJoinActionInfoForUI)
-    // }
+    const handleAcceptApplyTeamClick = () => {
+      onAcceptApplyTeamClick?.(msg as V2NIMTeamJoinActionInfoForUI)
+    }
 
-    // const handleRejectTeamInviteClick = () => {
-    //   onRejectTeamInviteClick?.(msg as V2NIMTeamJoinActionInfoForUI)
-    // }
+    const handleRejectTeamInviteClick = () => {
+      onRejectTeamInviteClick?.(msg as V2NIMTeamJoinActionInfoForUI)
+    }
 
-    // const handleAcceptTeamInviteClick = () => {
-    //   onAcceptTeamInviteClick?.(msg as V2NIMTeamJoinActionInfoForUI)
-    // }
+    const handleAcceptTeamInviteClick = () => {
+      onAcceptTeamInviteClick?.(msg as V2NIMTeamJoinActionInfoForUI)
+    }
 
     const handleRejectApplyFriendClick = () => {
       onRejectApplyFriendClick?.(msg as V2NIMFriendAddApplicationForUI)
@@ -89,6 +90,19 @@ export const MsgItem: FC<MsgItemProps> = observer(
     const handleAcceptApplyFriendClick = () => {
       onAcceptApplyFriendClick?.(msg as V2NIMFriendAddApplicationForUI)
     }
+
+    const [teamInfo, setTeamInfo] = useState<V2NIMTeam>()
+
+    useEffect(() => {
+      //@ts-ignore
+      const teamId = msg.teamId
+
+      if (teamId) {
+        store.teamStore.getTeamForceActive(teamId).then((team) => {
+          setTeamInfo(team)
+        })
+      }
+    }, [msg])
 
     const renderFriendApplyMsg = () => {
       const applyMsg = msg as V2NIMFriendAddApplicationForUI
@@ -230,23 +244,208 @@ export const MsgItem: FC<MsgItemProps> = observer(
       }
     }
 
+    // 申请入群验证
+    const renderTeamJoinActionMsgWithApplication = (actionStatus) => {
+      switch (actionStatus) {
+        case V2NIMConst.V2NIMTeamJoinActionStatus
+          .V2NIM_TEAM_JOIN_ACTION_STATUS_AGREED:
+          return (
+            <div className={`${_prefix}-state`}>
+              <CheckCircleFilled className={`${_prefix}-state-icon`} />
+              <span>{t('acceptResultText')}</span>
+            </div>
+          )
+
+        case V2NIMConst.V2NIMTeamJoinActionStatus
+          .V2NIM_TEAM_JOIN_ACTION_STATUS_REJECTED:
+          return (
+            <div className={`${_prefix}-state`}>
+              <CloseCircleFilled className={`${_prefix}-state-icon`} />
+              <span>{t('rejectResultText')}</span>
+            </div>
+          )
+
+        case V2NIMConst.V2NIMTeamJoinActionStatus
+          .V2NIM_TEAM_JOIN_ACTION_STATUS_EXPIRED:
+          return (
+            <div className={`${_prefix}-state`}>
+              <CloseCircleFilled className={`${_prefix}-state-icon`} />
+              <span>{t('expiredResultText')}</span>
+            </div>
+          )
+
+        default:
+          return (
+            <div className={`${_prefix}-flex`}>
+              <Button
+                className={`${_prefix}-reject-btn`}
+                onClick={handleRejectApplyTeamClick}
+                loading={applyFriendLoading}
+              >
+                {t('rejectText')}
+              </Button>
+              <Button
+                onClick={handleAcceptApplyTeamClick}
+                loading={applyFriendLoading}
+                type="primary"
+              >
+                {t('acceptText')}
+              </Button>
+            </div>
+          )
+      }
+    }
+
+    // 邀请入群验证
+    const renderTeamJoinActionMsgWithInvite = (actionStatus) => {
+      switch (actionStatus) {
+        case V2NIMConst.V2NIMTeamJoinActionStatus
+          .V2NIM_TEAM_JOIN_ACTION_STATUS_AGREED:
+          return (
+            <div className={`${_prefix}-state`}>
+              <CheckCircleFilled className={`${_prefix}-state-icon`} />
+              <span>{t('acceptResultText')}</span>
+            </div>
+          )
+
+        case V2NIMConst.V2NIMTeamJoinActionStatus
+          .V2NIM_TEAM_JOIN_ACTION_STATUS_REJECTED:
+          return (
+            <div className={`${_prefix}-state`}>
+              <CloseCircleFilled className={`${_prefix}-state-icon`} />
+              <span>{t('rejectResultText')}</span>
+            </div>
+          )
+
+        case V2NIMConst.V2NIMTeamJoinActionStatus
+          .V2NIM_TEAM_JOIN_ACTION_STATUS_EXPIRED:
+          return (
+            <div className={`${_prefix}-state`}>
+              <CloseCircleFilled className={`${_prefix}-state-icon`} />
+              <span>{t('expiredResultText')}</span>
+            </div>
+          )
+
+        default:
+          return (
+            <div className={`${_prefix}-flex`}>
+              <Button
+                className={`${_prefix}-reject-btn`}
+                onClick={handleRejectTeamInviteClick}
+                loading={applyFriendLoading}
+              >
+                {t('rejectText')}
+              </Button>
+              <Button
+                onClick={handleAcceptTeamInviteClick}
+                loading={applyFriendLoading}
+                type="primary"
+              >
+                {t('acceptText')}
+              </Button>
+            </div>
+          )
+      }
+    }
+
     const renderTeamJoinActionMsg = () => {
-      // TODO 暂不支持群相关申请
       const teamJoinActionMsg = msg as V2NIMTeamJoinActionInfoForUI
 
       switch (teamJoinActionMsg.actionType) {
+        //申请入群
         case V2NIMConst.V2NIMTeamJoinActionType
           .V2NIM_TEAM_JOIN_ACTION_TYPE_APPLICATION:
-          return null
+          return (
+            <>
+              <div className={`${_prefix}-flex`}>
+                <ComplexAvatarContainer
+                  account={msg.operatorAccountId}
+                  prefix={commonPrefix}
+                  afterSendMsgClick={afterSendMsgClick}
+                />
+                <span className={`${_prefix}-name`}>
+                  {store.uiStore.getAppellation({
+                    account: msg.operatorAccountId,
+                  })}
+                </span>
+                <span className={`${_prefix}-label`}>
+                  {t('applyTeamText')} {teamInfo?.name}
+                </span>
+              </div>
+              {renderTeamJoinActionMsgWithApplication(
+                teamJoinActionMsg.actionStatus
+              )}
+            </>
+          )
+        //邀请入群
         case V2NIMConst.V2NIMTeamJoinActionType
           .V2NIM_TEAM_JOIN_ACTION_TYPE_INVITATION:
-          return null
+          return (
+            <>
+              <div className={`${_prefix}-flex`}>
+                <ComplexAvatarContainer
+                  account={msg.operatorAccountId}
+                  prefix={commonPrefix}
+                  afterSendMsgClick={afterSendMsgClick}
+                />
+                <span className={`${_prefix}-name`}>
+                  {store.uiStore.getAppellation({
+                    account: msg.operatorAccountId,
+                  })}
+                </span>
+                <span className={`${_prefix}-label`}>
+                  {t('inviteTeamText')}{' '}
+                  <span className={`${_prefix}-label-team-name`}>
+                    {teamInfo?.name}
+                  </span>
+                </span>
+              </div>
+              {renderTeamJoinActionMsgWithInvite(
+                teamJoinActionMsg.actionStatus
+              )}
+            </>
+          )
+        //管理拒绝申请入群
         case V2NIMConst.V2NIMTeamJoinActionType
           .V2NIM_TEAM_JOIN_ACTION_TYPE_REJECT_APPLICATION:
-          return null
+          return (
+            <div className={`${_prefix}-flex`}>
+              <ComplexAvatarContainer
+                account={msg.operatorAccountId}
+                prefix={commonPrefix}
+                afterSendMsgClick={afterSendMsgClick}
+              />
+              <span className={`${_prefix}-name`}>
+                {store.uiStore.getAppellation({
+                  account: msg.operatorAccountId,
+                })}
+              </span>
+              <span className={`${_prefix}-label`}>
+                {t('rejectedTeamText')} {teamInfo?.name}
+              </span>
+            </div>
+          )
+        // 成员拒绝邀请入群
         case V2NIMConst.V2NIMTeamJoinActionType
           .V2NIM_TEAM_JOIN_ACTION_TYPE_REJECT_INVITATION:
-          return null
+          return (
+            <div className={`${_prefix}-flex`}>
+              <ComplexAvatarContainer
+                account={msg.operatorAccountId}
+                prefix={commonPrefix}
+                afterSendMsgClick={afterSendMsgClick}
+              />
+              <span className={`${_prefix}-name`}>
+                {store.uiStore.getAppellation({
+                  account: msg.operatorAccountId,
+                })}
+              </span>
+              <span className={`${_prefix}-label`}>
+                {t('rejectTeamInviteText')} {teamInfo?.name}
+              </span>
+            </div>
+          )
+
         default:
           return null
       }

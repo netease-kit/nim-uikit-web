@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { MsgList } from './components/MsgList'
 import { useEventTracking, useStateContext, useTranslation } from '../../common'
 import packageJson from '../../../package.json'
@@ -12,6 +12,7 @@ import {
   V2NIMTeamJoinActionInfoForUI,
 } from '@xkit-yx/im-store-v2/dist/types/types'
 import { TMsgItem, TMsgItemType } from './components/MsgItem'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 export interface MsgListContainerProps {
   /**
@@ -100,18 +101,64 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
     const [teamInviteLoading, setTeamInviteLoading] = useState(false)
     const [applyFriendLoading, setApplyFriendLoading] = useState(false)
 
+    const handleErrorCode = (code, defaultTip) => {
+      switch (code) {
+        case 109432:
+          message.error(t('noPermission'))
+          break
+        case 109404:
+          message.error(t('processedValidationMessageText'))
+          break
+        case 108404:
+          message.error(t('teamNotExitsText'))
+          break
+        case 109311:
+          message.error(t('aleadyInTeamText'))
+          break
+        case 109313:
+          message.error(t('verifyMsgNotExitsText'))
+          break
+        case 108437:
+          message.error(t('teamMemberLimitText'))
+          break
+        default:
+          message.error(defaultTip)
+      }
+    }
+
     const onAcceptApplyTeamClick = (
       actionInfo: V2NIMTeamJoinActionInfoForUI
     ) => {
       setApplyTeamLoaidng(true)
+
       store.teamStore
-        .passTeamApplyActive(actionInfo)
+        .acceptJoinApplicationActive(actionInfo)
         .then(() => {
           message.success(t('acceptedText'))
+          store.sysMsgStore.updateTeamJoinActionMsg([
+            {
+              ...actionInfo,
+              isRead: true,
+              actionStatus:
+                V2NIMConst.V2NIMTeamJoinActionStatus
+                  .V2NIM_TEAM_JOIN_ACTION_STATUS_AGREED,
+            },
+          ])
           afterAcceptApplyTeam?.(actionInfo)
         })
         .catch((err) => {
-          message.error(t('acceptFailedText'))
+          handleErrorCode(err.code, t('acceptFailedText'))
+
+          store.sysMsgStore.updateTeamJoinActionMsg([
+            {
+              ...actionInfo,
+              isRead: true,
+              actionStatus:
+                V2NIMConst.V2NIMTeamJoinActionStatus
+                  .V2NIM_TEAM_JOIN_ACTION_STATUS_EXPIRED,
+            },
+          ])
+
           logger.error('同意该申请失败: ', err)
         })
         .finally(() => {
@@ -126,11 +173,31 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
       store.teamStore
         .rejectTeamApplyActive(actionInfo)
         .then(() => {
-          message.success(t('rejectedText'))
+          message.success(t('rejectedTeamText'))
+          store.sysMsgStore.updateTeamJoinActionMsg([
+            {
+              ...actionInfo,
+              isRead: true,
+              actionStatus:
+                V2NIMConst.V2NIMTeamJoinActionStatus
+                  .V2NIM_TEAM_JOIN_ACTION_STATUS_REJECTED,
+            },
+          ])
           afterRejectApplyTeam?.(actionInfo)
         })
         .catch((err) => {
-          message.error(t('rejectFailedText'))
+          handleErrorCode(err.code, t('rejectTeamFailedText'))
+
+          store.sysMsgStore.updateTeamJoinActionMsg([
+            {
+              ...actionInfo,
+              isRead: true,
+              actionStatus:
+                V2NIMConst.V2NIMTeamJoinActionStatus
+                  .V2NIM_TEAM_JOIN_ACTION_STATUS_EXPIRED,
+            },
+          ])
+
           logger.error('拒绝该申请失败: ', err)
         })
         .finally(() => {
@@ -146,10 +213,30 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
         .acceptTeamInviteActive(actionInfo)
         .then(() => {
           message.success(t('acceptedText'))
+          store.sysMsgStore.updateTeamJoinActionMsg([
+            {
+              ...actionInfo,
+              isRead: true,
+              actionStatus:
+                V2NIMConst.V2NIMTeamJoinActionStatus
+                  .V2NIM_TEAM_JOIN_ACTION_STATUS_AGREED,
+            },
+          ])
           afterAcceptTeamInvite?.(actionInfo)
         })
         .catch((err) => {
-          message.error(t('acceptFailedText'))
+          handleErrorCode(err.code, t('acceptFailedText'))
+
+          store.sysMsgStore.updateTeamJoinActionMsg([
+            {
+              ...actionInfo,
+              isRead: true,
+              actionStatus:
+                V2NIMConst.V2NIMTeamJoinActionStatus
+                  .V2NIM_TEAM_JOIN_ACTION_STATUS_EXPIRED,
+            },
+          ])
+
           logger.error('同意该申请失败: ', err)
         })
         .finally(() => {
@@ -164,11 +251,29 @@ export const MsgListContainer: FC<MsgListContainerProps> = observer(
       store.teamStore
         .rejectTeamInviteActive(actionInfo)
         .then(() => {
-          message.success(t('rejectedText'))
+          message.success(t('rejectedTeamText'))
+          store.sysMsgStore.updateTeamJoinActionMsg([
+            {
+              ...actionInfo,
+              isRead: true,
+              actionStatus:
+                V2NIMConst.V2NIMTeamJoinActionStatus
+                  .V2NIM_TEAM_JOIN_ACTION_STATUS_REJECTED,
+            },
+          ])
           afterRejectTeamInvite?.(actionInfo)
         })
         .catch((err) => {
-          message.error(t('rejectFailedText'))
+          handleErrorCode(err.code, t('rejectTeamFailedText'))
+          store.sysMsgStore.updateTeamJoinActionMsg([
+            {
+              ...actionInfo,
+              isRead: true,
+              actionStatus:
+                V2NIMConst.V2NIMTeamJoinActionStatus
+                  .V2NIM_TEAM_JOIN_ACTION_STATUS_EXPIRED,
+            },
+          ])
           logger.error('拒绝该申请失败: ', err)
         })
         .finally(() => {

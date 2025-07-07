@@ -56,6 +56,8 @@ interface IMAppProps {
   teamMsgReceiptVisible: boolean;
   needMention: boolean;
   teamManagerVisible: boolean;
+  enableV2CloudConversation: boolean;
+  aiStream: boolean;
 }
 const IM: React.FC<IMAppProps> = observer((props) => {
   const {
@@ -67,6 +69,8 @@ const IM: React.FC<IMAppProps> = observer((props) => {
     teamMsgReceiptVisible,
     needMention,
     teamManagerVisible,
+    enableV2CloudConversation,
+    aiStream,
   } = props;
   const callViewProviderRef = useRef<CallViewProviderRef>(null);
   const [model, setModel] = useState<"chat" | "contact" | "collection">("chat");
@@ -105,8 +109,7 @@ const IM: React.FC<IMAppProps> = observer((props) => {
           callType,
         });
         setCallingVisible(false);
-      } catch (error) {
-        // @ts-ignore
+      } catch (error: any) {
         switch (error.code) {
           // 忙线
           case "105":
@@ -171,6 +174,53 @@ const IM: React.FC<IMAppProps> = observer((props) => {
     [callingVisible, handleCall, conversationType, relation]
   );
 
+  const goChat = useCallback(() => {
+    setModel("chat");
+  }, []);
+
+  // 接受好友申请后，主动发一条信息
+  const afterAcceptApplyFriend = useCallback(
+    (data) => {
+      const textMsg = nim.V2NIMMessageCreator.createTextMessage(
+        t("passFriendAskText")
+      );
+
+      store.msgStore
+        .sendMessageActive({
+          msg: textMsg,
+          conversationId: nim.V2NIMConversationIdUtil.p2pConversationId(
+            data.operatorAccountId
+          ),
+        })
+        .then(() => {
+          setModel("chat");
+        });
+    },
+    [nim.V2NIMConversationIdUtil, nim.V2NIMMessageCreator, store.msgStore]
+  );
+
+  useEffect(() => {
+    if (callViewProviderRef.current?.neCall) {
+      //注册呼叫结束事件监听
+      callViewProviderRef.current?.neCall?.on("onRecordSend", (options) => {
+        //@ts-ignore
+        store.msgStore.addMsg(options.conversationId, [options]);
+        document.getElementById(options.messageClientId)?.scrollIntoView({
+          block: "nearest", // 滚动到目标元素的最近可见位置
+          inline: "nearest", // 避免水平方向的滚动
+        });
+      });
+      // 设置呼叫超时时间
+      callViewProviderRef.current?.neCall?.setTimeout(30);
+      // 接通成功事件
+      callViewProviderRef.current?.neCall?.on("onCallConnected", () => {
+        // 暂停音视频消息的播放
+        pauseAllAudio();
+        pauseAllVideo();
+      });
+    }
+  }, [callViewProviderRef.current?.neCall, store.msgStore]);
+
   // 根据msg.type 自定义渲染话单消息，当msg.type 为 g2 代表的是话单消息，使用renderP2pCustomMessage进行自定义渲染
   const renderP2pCustomMessage = useCallback(
     (options: RenderP2pCustomMessageOptions) => {
@@ -183,11 +233,12 @@ const IM: React.FC<IMAppProps> = observer((props) => {
         return null;
       }
 
-      const attach = msg.attachment as any;
+      const attach = msg.attachment;
       const raw = JSON.parse(attach?.raw || "{}");
       const duration = raw.durations[0]?.duration;
       const status = raw.status;
       const type = raw.type;
+
       const icon = type == 1 ? "icon-yuyin8" : "icon-shipin8";
       const myAccount = store.userStore.myUserInfo.accountId;
       //判断当前消息是发出的消息还是接收的消息
@@ -255,52 +306,20 @@ const IM: React.FC<IMAppProps> = observer((props) => {
       store.userStore.myUserInfo.accountId,
     ]
   );
-
-  const goChat = useCallback(() => {
-    setModel("chat");
-  }, []);
-
-  const afterAcceptApplyFriend = useCallback(
-    (data) => {
-      const textMsg = nim.V2NIMMessageCreator.createTextMessage(
-        t("passFriendAskText")
-      );
-
-      store.msgStore
-        .sendMessageActive({
-          msg: textMsg,
-          conversationId: nim.V2NIMConversationIdUtil.p2pConversationId(
-            data.operatorAccountId
-          ),
-        })
-        .then(() => {
-          setModel("chat");
-        });
-    },
-    [nim.V2NIMConversationIdUtil, nim.V2NIMMessageCreator, store.msgStore]
-  );
-
-  useEffect(() => {
-    if (callViewProviderRef.current?.neCall) {
-      //注册呼叫结束事件监听
-      callViewProviderRef.current?.neCall?.on("onRecordSend", (options) => {
-        //@ts-ignore
-        store.msgStore.addMsg(options.conversationId, [options]);
-        document.getElementById(options.messageClientId)?.scrollIntoView({
-          block: "nearest", // 滚动到目标元素的最近可见位置
-          inline: "nearest", // 避免水平方向的滚动
-        });
-      });
-      // 设置呼叫超时时间
-      callViewProviderRef.current?.neCall?.setTimeout(30);
-      // 接通成功事件
-      callViewProviderRef.current?.neCall?.on("onCallConnected", () => {
-        // 暂停音视频消息的播放
-        pauseAllAudio();
-        pauseAllVideo();
-      });
+  // 如需要展示总未读数量，去掉!!，以及修改对应组件展示逻辑
+  const totalUnreadCount = useMemo(() => {
+    if (enableV2CloudConversation) {
+      // 云端会话
+      return !!store.conversationStore?.totalUnreadCount;
+    } else {
+      // 本地会话
+      return !!store.localConversationStore?.totalUnreadCount;
     }
-  }, [callViewProviderRef.current?.neCall, store.msgStore]);
+  }, [
+    enableV2CloudConversation,
+    store.conversationStore?.totalUnreadCount,
+    store.localConversationStore?.totalUnreadCount,
+  ]);
 
   const renderContent = useCallback(() => {
     return (
@@ -318,7 +337,7 @@ const IM: React.FC<IMAppProps> = observer((props) => {
             <div className="avatar-icon">
               <MyAvatarContainer />
             </div>
-            <Badge dot={false}>
+            <Badge dot={totalUnreadCount}>
               <div
                 className={classNames("chat-icon", {
                   active: model === "chat",
@@ -369,6 +388,8 @@ const IM: React.FC<IMAppProps> = observer((props) => {
             addFriendNeedVerify={addFriendNeedVerify}
             needMention={needMention}
             teamManagerVisible={teamManagerVisible}
+            enableV2CloudConversation={enableV2CloudConversation}
+            aiStream={aiStream}
             locale={locale}
           />
           {model === "chat" && (
@@ -423,6 +444,9 @@ const IM: React.FC<IMAppProps> = observer((props) => {
     teamManagerVisible,
     afterAcceptApplyFriend,
     goChat,
+    totalUnreadCount,
+    enableV2CloudConversation,
+    aiStream,
   ]);
 
   return (

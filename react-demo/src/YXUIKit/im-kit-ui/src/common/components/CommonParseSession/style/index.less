@@ -50,6 +50,12 @@
   color: @yx-text-color-4;
 }
 
+.common-parse-session-top-text-tooltip{
+  .@{prefix}-mention {
+    margin-right: 2px;
+  }
+}
+
 .@{prefix}-noti {
   padding: 22px 16px;
   line-height: 16px;
@@ -227,6 +233,19 @@
     padding: 0;
   }
   // cursor: pointer;
+  .common-parse-session-audio-container {
+    background: rgb(224, 222, 222);
+    border-radius: 6px;
+  }
+}
+
+.chat-message-list-item-self {
+  .@{prefix}-reply-wrapper {
+    .common-parse-session-audio-container {
+      background: rgb(208, 228, 240);
+      border-radius: 6px;
+    }
+  }
 }
 
 .@{prefix}-map-menu-popover {

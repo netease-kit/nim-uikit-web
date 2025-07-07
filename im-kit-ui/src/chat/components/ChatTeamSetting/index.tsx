@@ -23,6 +23,7 @@ import {
   V2NIMUpdateSelfMemberInfoParams,
 } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
+import { isDiscussionFunc } from '../../../utils'
 
 export interface HistoryStack {
   path: GroupSettingType
@@ -46,6 +47,7 @@ export interface ChatTeamSettingProps {
   onUpdateTeamInfo: (team: V2NIMUpdateTeamInfoParams) => void
   onUpdateMyMemberInfo: (params: V2NIMUpdateSelfMemberInfoParams) => void
   onTeamMuteChange: (mute: boolean) => void
+  onLeaveDiscussion?: () => void
   onTeamDisturbChange: (disturb: boolean) => void
   afterSendMsgClick?: () => void
   setNavHistoryStack: (stack: HistoryStack[]) => void
@@ -72,6 +74,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
   isGroupManager,
   navHistoryStack,
   onDismissTeam,
+  onLeaveDiscussion,
   onLeaveTeam,
   onAddMembersClick,
   onTransferTeamClick,
@@ -93,16 +96,20 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
   const [nickInTeam, setNickInTeam] = useState('')
 
   const path = navHistoryStack[navHistoryStack.length - 1]?.path || 'home'
+  // 是否是讨论组
+  const isDiscussion = useMemo(() => {
+    return isDiscussionFunc(team.serverExtension)
+  }, [team.serverExtension])
 
   const GROUP_SETTING_NAV_TITLE: { [key in GroupSettingType]: string } =
     useMemo(
       () => ({
         home: t('setText'),
-        list: t('teamMemberText'),
-        detail: t('teamInfoText'),
+        list: isDiscussion ? t('discussionMemberText') : t('teamMemberText'),
+        detail: isDiscussion ? t('discussionText') : t('teamInfoText'),
         power: t('teamPowerText'),
       }),
-      [t]
+      [t, isDiscussion]
     )
 
   const handleStackPush = (path: GroupSettingType) => {
@@ -139,13 +146,15 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
 
   const showLeaveConfirm = () => {
     confirm({
-      title: t('leaveTeamTitle'),
+      title: isDiscussion ? t('leaveDiscussionTitle') : t('leaveTeamTitle'),
       icon: <ExclamationCircleOutlined />,
-      content: t('leaveTeamConfirmText'),
+      content: isDiscussion
+        ? t('leaveDiscussionConfirmText')
+        : t('leaveTeamConfirmText'),
       okText: t('okText'),
       cancelText: t('cancelText'),
       onOk() {
-        onLeaveTeam()
+        isDiscussion ? onLeaveDiscussion?.() : onLeaveTeam()
       },
     })
   }
@@ -153,6 +162,10 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
   const isOwnerOrManager = isGroupOwner || isGroupManager
 
   const hasUpdateTeamPower = useMemo(() => {
+    if (isDiscussion) {
+      return true
+    }
+
     if (
       team.updateInfoMode ===
         V2NIMConst.V2NIMTeamUpdateInfoMode
@@ -166,7 +179,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
       team.updateInfoMode ===
       V2NIMConst.V2NIMTeamUpdateInfoMode.V2NIM_TEAM_UPDATE_INFO_MODE_ALL
     )
-  }, [team.updateInfoMode, isOwnerOrManager])
+  }, [team.updateInfoMode, isOwnerOrManager, isDiscussion])
 
   const myMemberInfo = useMemo(() => {
     return (
@@ -217,12 +230,15 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
               onClick={handleStackPush.bind(null, 'list')}
             >
               <div>
-                <b>{t('teamMemberText')}</b>
+                {isDiscussion ? (
+                  <b>{t('discussionMemberText')}</b>
+                ) : (
+                  <b>{t('teamMemberText')}</b>
+                )}
                 <span className={`${_prefix}-members-num`}>
                   ({members.length}) {t('personUnit')}
                 </span>
               </div>
-              {/* {groupList.length > 6 && <RightOutlined size={10} />} */}
               <RightOutlined size={10} />
             </div>
             <div className={`${_prefix}-members-list`}>
@@ -245,20 +261,26 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
               })}
             </div>
           </div>
-          <div className={`${_prefix}-item`}>
-            <b>{t('nickInTeamText')}</b>
-            <Input
-              className={`${_prefix}-nickinteam`}
-              value={nickInTeam}
-              allowClear
-              maxLength={15}
-              onChange={handleChangeNickInTeam}
-              onBlur={handleUpdateMyMemberInfo}
-              placeholder={t('editNickInTeamText')}
-            />
-          </div>
+          {!isDiscussion && (
+            <div className={`${_prefix}-item`}>
+              <b>{t('nickInTeamText')}</b>
+              <Input
+                className={`${_prefix}-nickinteam`}
+                value={nickInTeam}
+                allowClear
+                maxLength={15}
+                onChange={handleChangeNickInTeam}
+                onBlur={handleUpdateMyMemberInfo}
+                placeholder={t('editNickInTeamText')}
+              />
+            </div>
+          )}
           <div className={`${_prefix}-disturb ${_prefix}-item`}>
-            <b>{t('teamDoNotDisturbText')}</b>
+            <b>
+              {isDiscussion
+                ? t('discussionDoNotDisturbText')
+                : t('teamDoNotDisturbText')}
+            </b>
             <Switch
               checked={
                 teamDoNotDisturbMode !==
@@ -269,6 +291,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
             />
           </div>
           {team.teamType !== V2NIMConst.V2NIMTeamType.V2NIM_TEAM_TYPE_INVALID &&
+          !isDiscussion &&
           isOwnerOrManager ? (
             <div
               className={`${_prefix}-power ${_prefix}-item`}
@@ -292,6 +315,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
           )}
           {path === 'list' && (
             <GroupList
+              isDiscussion={isDiscussion}
               members={members}
               myMemberInfo={myMemberInfo}
               onRemoveTeamMemberClick={onRemoveTeamMemberClick}
@@ -317,6 +341,7 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
         </>
       )}
       {path === 'home' &&
+        !isDiscussion &&
         (isGroupOwner ? (
           <div className={`${_prefix}-group-operation`}>
             {localOptions.allowTransferTeamOwner && (
@@ -345,6 +370,17 @@ const ChatTeamSetting: FC<ChatTeamSettingProps> = ({
             {t('leaveTeamButtonText')}
           </Button>
         ))}
+      {path === 'home' && isDiscussion && (
+        <div>
+          <Button
+            danger
+            className={`${_prefix}-exit-btn`}
+            onClick={showLeaveConfirm}
+          >
+            {t('leaveDiscussionButtonText')}
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

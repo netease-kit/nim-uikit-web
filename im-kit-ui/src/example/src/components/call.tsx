@@ -16,11 +16,11 @@ const Call: FC<IProps> = ({ handleCall }) => {
         <span>{t('voiceCallText')}</span>
       </div>
       <div
-        onClick={() => handleCall(callTypeMap['vedio'])}
+        onClick={() => handleCall(callTypeMap['video'])}
         className="calling-item"
       >
         <i className="calling-item-icon iconfont icon-shipin8" />
-        <span>{t('vedioCallText')}</span>
+        <span>{t('videoCallText')}</span>
       </div>
     </div>
   )

@@ -1,4 +1,4 @@
-import React, { FC, useMemo } from 'react'
+import React, { FC, useEffect, useMemo, useState } from 'react'
 import { Menu } from 'antd'
 import {
   ComplexAvatarContainer,
@@ -68,6 +68,25 @@ export const P2PItem: FC<P2PItemProps | P2PItemPropsForLocal> = observer(
 
     const to =
       nim.V2NIMConversationIdUtil.parseConversationTargetId(conversationId)
+
+    const [isOnline, setIsOnline] = useState<boolean>(false)
+
+    useEffect(() => {
+      if (
+        store.subscriptionStore.stateMap.get(to) &&
+        localOptions.loginStateVisible
+      ) {
+        setIsOnline(
+          store.subscriptionStore.stateMap.get(to)?.statusType ===
+            V2NIMConst.V2NIMUserStatusType.V2NIM_USER_STATUS_TYPE_LOGIN
+        )
+      }
+    }, [
+      store.subscriptionStore.stateMap,
+      localOptions.loginStateVisible,
+      to,
+      store.subscriptionStore.stateMap.get(to),
+    ])
 
     const menuRenderer = useMemo(() => {
       const items = [
@@ -144,6 +163,8 @@ export const P2PItem: FC<P2PItemProps | P2PItemPropsForLocal> = observer(
       ) : null
     }
 
+    const isAiUser = store.aiUserStore.isAIUser(to)
+
     return (
       <ConversationItem
         isTop={stickTop}
@@ -163,13 +184,22 @@ export const P2PItem: FC<P2PItemProps | P2PItemPropsForLocal> = observer(
         conversationId={conversationId}
         avatarRenderer={
           avatarRenderer ?? (
-            <ComplexAvatarContainer
-              account={to}
-              prefix={commonPrefix}
-              canClick={false}
-              count={isSelected ? 0 : unreadCount}
-              dot={isSelected ? false : mute && unreadCount > 0}
-            />
+            <div className={`${prefix}-item-avatar-wrapper`}>
+              <ComplexAvatarContainer
+                account={to}
+                prefix={commonPrefix}
+                canClick={false}
+                count={isSelected ? 0 : unreadCount}
+                dot={isSelected ? false : mute && unreadCount > 0}
+              />
+              {localOptions.loginStateVisible &&
+                !isAiUser &&
+                (isOnline ? (
+                  <div className={`${prefix}-item-login-state-icon`}></div>
+                ) : (
+                  <div className={`${prefix}-item-unlogin-state-icon`}></div>
+                ))}
+            </div>
           )
         }
       />

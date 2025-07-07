@@ -43,6 +43,7 @@ const GroupPower: React.FC<GroupPowerProps> = ({
   commonPrefix = 'common',
 }) => {
   const { localOptions } = useStateContext()
+
   const { t } = useTranslation()
   const _prefix = `${prefix}-group-power`
 
@@ -171,6 +172,7 @@ const GroupPower: React.FC<GroupPowerProps> = ({
                 serverExtension: JSON.stringify({
                   ...ext,
                   yxAllowAt: value,
+                  lastOpt: 'yxAllowAt',
                 } as YxServerExt),
               })
             }}
@@ -212,7 +214,55 @@ const GroupPower: React.FC<GroupPowerProps> = ({
             onChange={onTeamMuteChange}
           />
         </div>
+        {localOptions.enableChangeTeamJoinMode && (
+          <div className={`${_prefix}-action-item`}>
+            <div>
+              <label>{t('teamJoinModeText')}</label>
+              <div className={`${_prefix}-action-item-explain`}>
+                {t('teamJoinModeExplainText')}
+              </div>
+            </div>
+            <Switch
+              checked={
+                team.agreeMode ==
+                V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_AUTH
+              }
+              onChange={(value) => {
+                onUpdateTeamInfo({
+                  agreeMode: value
+                    ? V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_AUTH
+                    : V2NIMConst.V2NIMTeamAgreeMode
+                        .V2NIM_TEAM_AGREE_MODE_NO_AUTH,
+                })
+              }}
+            />
+          </div>
+        )}
+        {localOptions.enableChangeTeamAgreeMode && (
+          <div className={`${_prefix}-action-item`}>
+            <div>
+              <label>{t('teamAgreeModeText')}</label>
+              <div className={`${_prefix}-action-item-explain`}>
+                {t('teamAgreeModeExplainText')}
+              </div>
+            </div>
+            <Switch
+              checked={
+                team.joinMode ==
+                V2NIMConst.V2NIMTeamJoinMode.V2NIM_TEAM_JOIN_MODE_APPLY
+              }
+              onChange={(value) => {
+                onUpdateTeamInfo({
+                  joinMode: value
+                    ? V2NIMConst.V2NIMTeamJoinMode.V2NIM_TEAM_JOIN_MODE_APPLY
+                    : V2NIMConst.V2NIMTeamJoinMode.V2NIM_TEAM_JOIN_MODE_FREE,
+                })
+              }}
+            />
+          </div>
+        )}
       </div>
+
       <ChatTeamMemberModal
         visible={memberModalVisible}
         onCancel={() => {

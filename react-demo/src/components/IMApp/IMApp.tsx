@@ -44,7 +44,6 @@ import {
   pauseAllVideo,
 } from "@xkit-yx/im-kit-ui/src/common/components/CommonParseSession";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
-import { RenderP2pCustomMessageOptions } from "@xkit-yx/im-kit-ui/src/chat/components/ChatP2pMessageList";
 
 interface IMAppProps {
   appkey: string; //传入您的App Key
@@ -57,6 +56,7 @@ interface IMAppProps {
   needMention: boolean;
   teamManagerVisible: boolean;
   enableV2CloudConversation: boolean;
+  aiStream: boolean;
 }
 const IM: React.FC<IMAppProps> = observer((props) => {
   const {
@@ -69,6 +69,7 @@ const IM: React.FC<IMAppProps> = observer((props) => {
     needMention,
     teamManagerVisible,
     enableV2CloudConversation,
+    aiStream,
   } = props;
   const callViewProviderRef = useRef<CallViewProviderRef>(null);
   const [model, setModel] = useState<"chat" | "contact" | "collection">("chat");
@@ -176,6 +177,7 @@ const IM: React.FC<IMAppProps> = observer((props) => {
     setModel("chat");
   }, []);
 
+  // 接受好友申请后，主动发一条信息
   const afterAcceptApplyFriend = useCallback(
     (data) => {
       const textMsg = nim.V2NIMMessageCreator.createTextMessage(
@@ -220,7 +222,7 @@ const IM: React.FC<IMAppProps> = observer((props) => {
 
   // 根据msg.type 自定义渲染话单消息，当msg.type 为 g2 代表的是话单消息，使用renderP2pCustomMessage进行自定义渲染
   const renderP2pCustomMessage = useCallback(
-    (options: RenderP2pCustomMessageOptions) => {
+    (options) => {
       const msg = options.msg;
 
       // msg.type 为 g2 代表的是话单消息 renderP2pCustomMessage 返回 null 就会按照组件默认的逻辑进行展示消息
@@ -235,6 +237,7 @@ const IM: React.FC<IMAppProps> = observer((props) => {
       const duration = raw.durations[0]?.duration;
       const status = raw.status;
       const type = raw.type;
+
       const icon = type == 1 ? "icon-yuyin8" : "icon-shipin8";
       const myAccount = store.userStore.myUserInfo.accountId;
       //判断当前消息是发出的消息还是接收的消息
@@ -385,6 +388,7 @@ const IM: React.FC<IMAppProps> = observer((props) => {
             needMention={needMention}
             teamManagerVisible={teamManagerVisible}
             enableV2CloudConversation={enableV2CloudConversation}
+            aiStream={aiStream}
             locale={locale}
           />
           {model === "chat" && (
@@ -441,6 +445,7 @@ const IM: React.FC<IMAppProps> = observer((props) => {
     goChat,
     totalUnreadCount,
     enableV2CloudConversation,
+    aiStream,
   ]);
 
   return (

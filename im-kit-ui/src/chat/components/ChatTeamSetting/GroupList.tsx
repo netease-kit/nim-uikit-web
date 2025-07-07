@@ -10,6 +10,7 @@ import { AutoSizer, List } from 'react-virtualized'
 export interface GroupListProps {
   myMemberInfo: V2NIMTeamMember
   members: V2NIMTeamMember[]
+  isDiscussion?: boolean
   onRemoveTeamMemberClick: (member: V2NIMTeamMember) => void
   afterSendMsgClick?: () => void
   renderTeamMemberItem?: (
@@ -27,6 +28,7 @@ const GroupList: FC<GroupListProps> = observer(
   ({
     myMemberInfo,
     members,
+    isDiscussion,
     onRemoveTeamMemberClick,
     afterSendMsgClick,
     renderTeamMemberItem,
@@ -90,7 +92,11 @@ const GroupList: FC<GroupListProps> = observer(
         return (
           renderTeamMemberItem?.(itemProps) ?? (
             <div key={key} style={style}>
-              <GroupItem key={item.accountId} {...itemProps} />
+              <GroupItem
+                isDiscussion={isDiscussion}
+                key={item.accountId}
+                {...itemProps}
+              />
             </div>
           )
         )
@@ -113,7 +119,11 @@ const GroupList: FC<GroupListProps> = observer(
           allowClear
           className={`${_prefix}-input`}
           value={groupSearchText}
-          placeholder={t('searchTeamMemberPlaceholder')}
+          placeholder={
+            isDiscussion
+              ? t('searchDiscussionMemberPlaceholder')
+              : t('searchTeamMemberPlaceholder')
+          }
           onChange={(e) => handleSearch(e.target.value)}
         />
         <div className={`${_prefix}-list`}>

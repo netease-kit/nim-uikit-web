@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, useMemo } from 'react'
 import { UserOutlined, TeamOutlined } from '@ant-design/icons'
 import { ContactItemProps, ContactItem } from './ContactItem'
 import { CommonIcon, useStateContext, useTranslation } from '../../../common'
@@ -29,59 +29,67 @@ export const ContactList: FC<ContactListProps> = observer(
 
     const { localOptions } = useStateContext()
 
-    const dataSource: ContactItemProps[] = [
-      {
-        contactType: 'msgList',
-        label: t('msgMenuText'),
-        show: true,
-        icon: <TeamOutlined />,
-        backgroundColor: '#60CFA7',
-        onItemClick: (contactType) => {
-          onItemClick(contactType)
+    const dataSource: ContactItemProps[] = useMemo(() => {
+      return [
+        {
+          contactType: 'msgList',
+          label: t('msgMenuText'),
+          show: true,
+          icon: <TeamOutlined />,
+          backgroundColor: '#60CFA7',
+          onItemClick: (contactType) => {
+            onItemClick(contactType)
+          },
+          unread: systemMsgUnread > 99 ? '99+' : systemMsgUnread,
         },
-        unread: systemMsgUnread,
-      },
-      {
-        contactType: 'blackList',
-        label: t('blackMenuText'),
-        show: true,
-        icon: <UserOutlined />,
-        backgroundColor: '#53C3F3',
-        onItemClick: (contactType) => {
-          onItemClick(contactType)
+        {
+          contactType: 'blackList',
+          label: t('blackMenuText'),
+          show: true,
+          icon: <UserOutlined />,
+          backgroundColor: '#53C3F3',
+          onItemClick: (contactType) => {
+            onItemClick(contactType)
+          },
         },
-      },
-      {
-        contactType: 'friendList',
-        label: t('friendMenuText'),
-        show: true,
-        icon: <UserOutlined />,
-        backgroundColor: '#537FF4',
-        onItemClick: (contactType) => {
-          onItemClick(contactType)
+        {
+          contactType: 'friendList',
+          label: t('friendMenuText'),
+          show: true,
+          icon: <UserOutlined />,
+          backgroundColor: '#537FF4',
+          onItemClick: (contactType) => {
+            onItemClick(contactType)
+          },
         },
-      },
-      {
-        contactType: 'groupList',
-        label: t('teamMenuText'),
-        show: true,
-        icon: <TeamOutlined />,
-        backgroundColor: '#BE65D9',
-        onItemClick: (contactType) => {
-          onItemClick(contactType)
+        {
+          contactType: 'groupList',
+          label: t('teamMenuText'),
+          show: !!localOptions.enableTeam,
+          icon: <TeamOutlined />,
+          backgroundColor: '#BE65D9',
+          onItemClick: (contactType) => {
+            onItemClick(contactType)
+          },
         },
-      },
-      {
-        contactType: 'aiList',
-        label: t('aiMenuText'),
-        show: !!localOptions.aiVisible,
-        icon: <CommonIcon type="icon-a-zu281" size={18} />,
-        backgroundColor: '#854FE2',
-        onItemClick: (contactType) => {
-          onItemClick(contactType)
+        {
+          contactType: 'aiList',
+          label: t('aiMenuText'),
+          show: !!localOptions.aiVisible,
+          icon: <CommonIcon type="icon-a-zu281" size={18} />,
+          backgroundColor: '#854FE2',
+          onItemClick: (contactType) => {
+            onItemClick(contactType)
+          },
         },
-      },
-    ]
+      ]
+    }, [
+      localOptions.aiVisible,
+      onItemClick,
+      systemMsgUnread,
+      t,
+      localOptions.enableTeam,
+    ])
 
     return (
       <div className={`${_prefix}-wrapper`}>

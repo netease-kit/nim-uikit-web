@@ -11,7 +11,9 @@ interface IProps {
   addFriendNeedVerify: boolean
   needMention: boolean
   teamManagerVisible: boolean
+  enableV2CloudConversation: boolean
   locale: 'zh' | 'en'
+  aiStream: boolean
 }
 const SettingModal: FC<IProps> = ({
   isSettingModalOpen,
@@ -21,6 +23,8 @@ const SettingModal: FC<IProps> = ({
   addFriendNeedVerify,
   needMention,
   teamManagerVisible,
+  enableV2CloudConversation,
+  aiStream,
   locale,
 }) => {
   return (
@@ -98,6 +102,37 @@ const SettingModal: FC<IProps> = ({
             value={teamManagerVisible}
             onChange={(value) => {
               sessionStorage.setItem('teamManagerVisible', value.toString())
+              window.location.reload()
+            }}
+          />
+        </Form.Item>
+        <Form.Item label={t('enableV2CloudConversationText')}>
+          <Select
+            options={[
+              { label: t('yesText'), value: true },
+              { label: t('noText'), value: false },
+            ]}
+            style={{ width: '150px' }}
+            value={enableV2CloudConversation}
+            onChange={(value) => {
+              sessionStorage.setItem(
+                'enableV2CloudConversation',
+                value.toString()
+              )
+              window.location.reload()
+            }}
+          />
+        </Form.Item>
+        <Form.Item label={t('aiStreamText')}>
+          <Select
+            options={[
+              { label: t('yesText'), value: true },
+              { label: t('noText'), value: false },
+            ]}
+            style={{ width: '150px' }}
+            value={aiStream}
+            onChange={(value) => {
+              sessionStorage.setItem('aiStream', value.toString())
               window.location.reload()
             }}
           />

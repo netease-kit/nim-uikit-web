@@ -42,6 +42,9 @@ const defaultLocalOptions: Required<LocalOptions> = {
   teamAgreeMode: V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_NO_AUTH,
   teamJoinMode: V2NIMConst.V2NIMTeamJoinMode.V2NIM_TEAM_JOIN_MODE_FREE,
   teamInviteMode: V2NIMConst.V2NIMTeamInviteMode.V2NIM_TEAM_INVITE_MODE_MANAGER,
+  enableTeam: true,
+  enableChangeTeamJoinMode: true,
+  enableChangeTeamAgreeMode: true,
   teamUpdateTeamMode:
     V2NIMConst.V2NIMTeamUpdateInfoMode.V2NIM_TEAM_UPDATE_INFO_MODE_MANAGER,
   teamUpdateExtMode:

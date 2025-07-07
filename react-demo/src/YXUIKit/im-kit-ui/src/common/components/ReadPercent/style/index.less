@@ -7,6 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
   &-icon {
     color: @yx-avatar-color-3!important;
   }
@@ -46,6 +47,59 @@
     border-radius: 50%;
     background-color: @yx-primary-color-outline;
   }
+
+  &-detail-list {
+    display: flex;
+    max-height: 200px;
+    overflow: hidden;
+    .@{ant-prefix}-empty-image svg {
+      width: 100px !important;
+      height: 100px !important;
+      display: inline-block;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+  }
+  &-detail-list-title {
+    width: 100%;
+    text-align: center;
+    height: 25px;
+  }
+  &-detail-list-column-content {
+    max-height: 230px;
+    height: 150px;
+    overflow-y: auto;
+  }
+  &-detail-list-column {
+    max-width: 160px;
+    min-width: 160px;
+    box-sizing: border-box;
+    position: relative;
+  }
+  &-detail-list-item {
+    display: flex;
+    width: 160px;
+    margin: 8px 0;
+    align-items: center;
+    .ant-avatar-image {
+      vertical-align: inherit !important;
+    }
+    .avatar-text {
+      position: relative;
+      bottom: 3px;
+    }
+  }
+  &-detail-list-item-nick {
+    margin-left: 8px;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+  }
+
   &-sector {
     display: inline-block;
     position: relative;

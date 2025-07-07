@@ -599,3 +599,25 @@ export const getAvatarBackgroundColor = (account): string => {
 
   return colorMap[bgColorIndex]
 }
+
+export const throttle = (func, wait: number) => {
+  let lastTime = 0
+
+  return function (this: any, ...args: any[]) {
+    const now = Date.now()
+
+    if (now - lastTime >= wait) {
+      lastTime = now
+      func.apply(this, args)
+    }
+  }
+}
+
+export const isDiscussionFunc = (serverExtension: string | undefined) => {
+  try {
+    return JSON.parse(serverExtension || '{}').im_ui_kit_group
+  } catch (error) {
+    console.warn('parse serverExtension error', error)
+    return false
+  }
+}

@@ -4,6 +4,7 @@ import {
   useEventTracking,
   CreateTeamModal,
 } from '../../common'
+import CreateDiscussionModal from './components/CreateDiscussionModal'
 import AddPanel from './components/AddPanel'
 import AddFriendModal from './components/AddFriendModal'
 import JoinTeamModal from './components/JoinTeamModal'
@@ -12,7 +13,11 @@ import { observer } from 'mobx-react'
 // todo, v10.6.0 有静态方法可以获取版本号
 import sdkPkg from 'nim-web-sdk-ng/package.json'
 
-export type PanelScene = 'addFriend' | 'joinTeam' | 'createTeam'
+export type PanelScene =
+  | 'addFriend'
+  | 'joinTeam'
+  | 'createTeam'
+  | 'createDiscussion'
 
 export interface AddContainerProps {
   /**
@@ -45,6 +50,8 @@ export const AddContainer: React.FC<AddContainerProps> = observer(
     const [addFriendModalVisible, setAddFriendModalVisible] = useState(false)
     const [joinTeamModalVisible, setJoinTeamModalVisible] = useState(false)
     const [createModalVisible, setCreateModalVisible] = useState(false)
+    const [createDiscussionModalVisible, setCreateDiscussionModalVisible] =
+      useState(false)
 
     const handleChangeScene = (scene: PanelScene, visible: boolean) => {
       switch (scene) {
@@ -56,6 +63,9 @@ export const AddContainer: React.FC<AddContainerProps> = observer(
           break
         case 'joinTeam':
           setJoinTeamModalVisible(visible)
+          break
+        case 'createDiscussion':
+          setCreateDiscussionModalVisible(visible)
           break
         default:
           break
@@ -100,6 +110,14 @@ export const AddContainer: React.FC<AddContainerProps> = observer(
             setCreateModalVisible(false)
           }}
           onChat={handleChat.bind(null, 'createTeam')}
+          prefix={commonPrefix}
+        />
+        <CreateDiscussionModal
+          visible={createDiscussionModalVisible}
+          onCancel={() => {
+            setCreateDiscussionModalVisible(false)
+          }}
+          onChat={handleChat.bind(null, 'createDiscussion')}
           prefix={commonPrefix}
         />
       </div>
