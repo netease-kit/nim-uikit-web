@@ -3,7 +3,7 @@
 ### 配置项目
 ```typescript
 // 请到下面路径的文件配置
-// scr/App.vue
+// src/components/IMApp/index.vue
   const initOptions = {
     appkey: "", // 请填写你的appkey
     account: "", // 请填写你的account

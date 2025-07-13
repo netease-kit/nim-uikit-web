@@ -1,34 +1,33 @@
 <template>
-  <div :class="$style.containerWrapper">
-    <div :class="$style.container">
-      <!-- IMUIKIT 相关内容 -->
-      <div :class="$style.header">
-        <div :class="$style.search" ref="search" />
-        <div :class="$style.add" ref="add" />
+  <div class="chat-container">
+    <div class="container">
+      <div class="header">
+        <div class="search" ref="searchRef" />
+        <div class="add" ref="addRef" />
       </div>
-      <div :class="$style.content">
-        <div :class="$style.left">
-          <div :class="$style['avatar-icon']" ref="avatar" />
+      <div class="content">
+        <div class="left">
+          <div class="avatar-icon" ref="avatarRef" />
           <div
+            class="chat-icon"
             :class="{
-              [$style['chat-icon']]: true,
-              [$style.active]: model === 'chat',
+              active: model === 'chat',
             }"
             @click="() => (model = 'chat')"
           >
             <i
+              class="iconfont icon-im"
               :class="{
-                [$style['iconfont']]: true,
                 iconfont: true,
                 'icon-im': true,
               }"
             />
-            <div :class="$style['icon-label']">会话</div>
+            <div class="icon-label">会话</div>
           </div>
           <div
+            class="contact-icon"
             :class="{
-              [$style['contact-icon']]: true,
-              [$style.active]: model === 'collect',
+              active: model === 'collect',
             }"
             @click="
               () => {
@@ -38,48 +37,53 @@
             "
           >
             <i
+              class="iconfont icon-daohang-shoucang"
               :class="{
-                [$style['iconfont']]: true,
                 iconfont: true,
                 'icon-daohang-shoucang': true,
               }"
             />
-            <div :class="$style['icon-label']">收藏</div>
+            <div class="icon-label">收藏</div>
           </div>
           <div
+            class="contact-icon"
             :class="{
-              [$style['contact-icon']]: true,
-              [$style.active]: model === 'contact',
+              active: model === 'contact',
             }"
             @click="() => (model = 'contact')"
           >
             <i
+              class="iconfont icon-tongxunlu-weixuanzhong"
               :class="{
-                [$style['iconfont']]: true,
                 iconfont: true,
                 'icon-tongxunlu-weixuanzhong': true,
               }"
             />
-            <div :class="$style['icon-label']">通讯录</div>
+            <div class="icon-label">通讯录</div>
           </div>
-          <div :class="$style['logout-icon']"></div>
+          <div class="logout-icon"></div>
         </div>
-        <div :class="$style.right" v-show="model === 'chat'">
-          <div :class="$style['right-list']" ref="conversation" />
-          <div :class="$style['right-content']" ref="chat" />
+        <div class="right" v-show="model === 'chat'">
+          <div class="right-list" ref="conversationRef" />
+          <div class="right-content" ref="chatRef" />
         </div>
-        <div :class="$style.right" v-show="model === 'contact'">
-          <div :class="$style['right-list']" ref="contactList" />
-          <div :class="$style['right-content']" ref="contactInfo" />
+        <div class="right" v-show="model === 'contact'">
+          <div class="right-list" ref="contactListRef" />
+          <div class="right-content" ref="contactInfoRef" />
         </div>
-        <div :class="$style.collect" v-if="model === 'collect'">
-          <div :class="$style.collectRight" ref="collect"></div>
+        <div class="collect" v-if="model === 'collect'">
+          <div class="collectRight" ref="collectRef"></div>
         </div>
       </div>
     </div>
   </div>
 </template>
-<script>
+
+<script setup name="ChatRoom">
+import { IMUIKit } from "@xkit-yx/im-kit-ui";
+import V2NIM from "nim-web-sdk-ng";
+import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
+import { ref, onMounted, nextTick } from "vue";
 import {
   ConversationContainer, // 会话列表组件
   ChatContainer, // 聊天（会话消息）组件
@@ -93,70 +97,147 @@ import {
 import "@xkit-yx/im-kit-ui/es/style/css";
 import "./iconfont.css";
 
-export default {
-  name: "IMApp",
+//需要用到的 ref
+const searchRef = ref();
+const addRef = ref();
+const avatarRef = ref();
+const conversationRef = ref();
+const chatRef = ref();
+const contactListRef = ref();
+const contactInfoRef = ref();
+const collectRef = ref();
+let uikit;
 
-  data: function () {
-    return {
-      model: "chat",
-    };
-  },
-  mounted() {
-    this.$uikit.render(
-      SearchContainer,
-      {
-        onClickChat: () => {
-          this.model = "chat";
-        },
-      },
-      this.$refs.search
-    );
-    this.$uikit.render(
-      AddContainer,
-      {
-        onClickChat: () => {
-          this.model = "chat";
-        },
-      },
-      this.$refs.add
-    );
-    this.$uikit.render(MyAvatarContainer, null, this.$refs.avatar);
-    this.$uikit.render(ConversationContainer, null, this.$refs.conversation);
-    this.$uikit.render(
-      ChatContainer,
-      {
-        // 以下是自定义渲染，用 compile 函数包裹 html 就可以了，注意 class 要写成 className
-        // 安装并引入： import { compile } from "jsx-web-compiler";
-        // renderHeader: () => compile(`<div className="my-header">123</div>`),
-        // renderEmpty: () => compile("<div>This is empty</div>"),
-      },
-      this.$refs.chat
-    );
-    this.$uikit.render(ContactListContainer, null, this.$refs.contactList);
-    this.$uikit.render(
-      ContactInfoContainer,
-      {
-        afterSendMsgClick: () => {
-          this.model = "chat";
-        },
-        onGroupItemClick: () => {
-          this.model = "chat";
-        },
-      },
-      this.$refs.contactInfo
-    );
-  },
-  methods: {
-    renderCollection() {
-      setTimeout(() => {
-        this.$uikit.render(ChatCollectionList, null, this.$refs.collect);
-      }, 0);
-    },
-  },
+const initOptions = {
+  appkey: "",
+  account: "",
+  token: "",
 };
+// 默认菜单
+const model = ref("chat");
+// 聊天室配置
+const localOptions = {
+  // 添加好友模式，默认需要验证
+  addFriendNeedVerify: true,
+  // 群组加入模式，默认不需要验证
+  //@ts-ignore
+  teamJoinMode: V2NIMConst.V2NIMTeamJoinMode.V2NIM_TEAM_JOIN_MODE_FREE,
+  // 群组被邀请模式，默认不需要验证
+  teamAgreeMode:
+    //@ts-ignore
+    V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_NO_AUTH,
+  // 单聊消息是否显示已读未读 默认 false
+  p2pMsgReceiptVisible: true,
+  // 群聊消息是否显示已读未读 默认 false
+  teamMsgReceiptVisible: true,
+  // 是否需要@消息 默认 true
+  needMention: true,
+  // 是否显示在线离线状态 默认 true
+  loginStateVisible: true,
+  // 是否允许转让群主
+  allowTransferTeamOwner: true,
+  // 是否需要显示群管理员相关主动功能，默认 false
+  teamManagerVisible: true,
+};
+// 初始化IM系统
+async function initIMSystem() {
+  // 检查IM信息
+  if (!initOptions?.appkey || !initOptions?.account || !initOptions?.token) {
+    alert("缺少IM认证信息，请补充参数");
+    throw new Error("缺少IM认证信息，请补充参数");
+  }
+
+  const nim = V2NIM.getInstance({
+    ...initOptions,
+    // 是否开启云端会话，默认不开启
+    enableV2CloudConversation: false,
+    debugLevel: "debug",
+    apiVersion: "v2",
+  });
+
+  // IM 连接
+  nim.V2NIMLoginService.login(initOptions.account, initOptions.token, {
+    retryCount: 5,
+  });
+
+  // 添加连接状态监听
+  nim.V2NIMLoginService.on("onLoginStatus", (status) => {
+    console.log("IM登录状态变化:", status);
+  });
+
+  // 初始化 UIKit 实例
+  uikit = new IMUIKit({
+    nim,
+    singleton: true,
+    localOptions,
+  });
+
+  try {
+    // 使用 Promise.all 等待所有 render 完成
+    await Promise.all([
+      uikit.render(
+        SearchContainer,
+        {
+          onClickChat: () => {
+            model.value = "chat";
+          },
+        },
+        searchRef.value
+      ),
+      uikit.render(
+        AddContainer,
+        {
+          onClickChat: () => {
+            model.value = "chat";
+          },
+        },
+        addRef.value
+      ),
+      uikit.render(MyAvatarContainer, null, avatarRef.value),
+      uikit.render(ConversationContainer, null, conversationRef.value),
+      uikit.render(
+        ChatContainer,
+        {
+          // 自定义渲染配置
+        },
+        chatRef.value
+      ),
+      uikit.render(ContactListContainer, null, contactListRef.value),
+      uikit.render(
+        ContactInfoContainer,
+        {
+          afterSendMsgClick: () => {
+            model.value = "chat";
+          },
+          onGroupItemClick: () => {
+            model.value = "chat";
+          },
+        },
+        contactInfoRef.value
+      ),
+    ]);
+
+    // 在这里执行需要等待所有 render 完成后的操作
+    nextTick(() => {
+      console.log("所有组件渲染完成");
+    });
+  } catch (error) {
+    console.error("组件渲染失败:", error);
+  }
+}
+
+function renderCollection() {
+  setTimeout(() => {
+    uikit.render(ChatCollectionList, null, collectRef.value);
+  }, 0);
+}
+
+onMounted(() => {
+  initIMSystem();
+});
 </script>
 
-<style module>
+<style scoped>
 body {
   background: #d8dee5;
 }
