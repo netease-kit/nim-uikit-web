@@ -33,7 +33,6 @@
             @click="
               () => {
                 model = 'collect';
-                renderCollection();
               }
             "
           >
@@ -72,7 +71,7 @@
           <div :class="$style['right-list']" ref="contactList" />
           <div :class="$style['right-content']" ref="contactInfo" />
         </div>
-        <div :class="$style.collect" v-if="model === 'collect'">
+        <div :class="$style.collect" v-show="model === 'collect'">
           <div :class="$style.collectRight" ref="collect"></div>
         </div>
       </div>
@@ -132,6 +131,7 @@ export default {
       },
       this.$refs.chat
     );
+    this.$uikit.render(ChatCollectionList, null, this.$refs.collect);
     this.$uikit.render(ContactListContainer, null, this.$refs.contactList);
     this.$uikit.render(
       ContactInfoContainer,
@@ -145,13 +145,6 @@ export default {
       },
       this.$refs.contactInfo
     );
-  },
-  methods: {
-    renderCollection() {
-      setTimeout(() => {
-        this.$uikit.render(ChatCollectionList, null, this.$refs.collect);
-      }, 0);
-    },
   },
 };
 </script>
