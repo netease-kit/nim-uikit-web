@@ -72,10 +72,7 @@ export const P2PItem: FC<P2PItemProps | P2PItemPropsForLocal> = observer(
     const [isOnline, setIsOnline] = useState<boolean>(false)
 
     useEffect(() => {
-      if (
-        store.subscriptionStore.stateMap.get(to) &&
-        localOptions.loginStateVisible
-      ) {
+      if (localOptions.loginStateVisible) {
         setIsOnline(
           store.subscriptionStore.stateMap.get(to)?.statusType ===
             V2NIMConst.V2NIMUserStatusType.V2NIM_USER_STATUS_TYPE_LOGIN

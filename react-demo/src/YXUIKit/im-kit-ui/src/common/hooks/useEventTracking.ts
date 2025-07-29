@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { EventTracking } from '@xkit-yx/utils'
+import { storeUtils } from '@xkit-yx/im-store-v2'
 
 export interface UseEventTrackingProps {
   appkey: string
@@ -20,6 +21,12 @@ export const useEventTracking = ({
       version: version,
       component: component,
       imVersion: imVersion,
+      platform: 'WEB',
+      channel: 'netease',
+      os: '',
+      framework: 'React',
+      language: storeUtils.detectLanguage(),
+      container: 'WEB',
     })
 
     eventTracking.track('init', '')

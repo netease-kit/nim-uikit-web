@@ -32,10 +32,7 @@ export const FriendItem: FC<FriendItemProps> = observer(
     const [isOnline, setIsOnline] = useState<boolean>(false)
 
     useEffect(() => {
-      if (
-        store.subscriptionStore.stateMap.get(account) &&
-        localOptions.loginStateVisible
-      ) {
+      if (localOptions.loginStateVisible) {
         setIsOnline(
           store.subscriptionStore.stateMap.get(account)?.statusType ===
             V2NIMConst.V2NIMUserStatusType.V2NIM_USER_STATUS_TYPE_LOGIN

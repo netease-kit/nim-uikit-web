@@ -590,6 +590,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
               await store.msgStore.sendMessageActive({
                 msg,
                 conversationId,
+                conversationType,
                 progress: () => true,
                 sendBefore: () => {
                   scrollToBottom()
@@ -601,6 +602,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
               await store.msgStore.sendMessageActive({
                 msg,
                 conversationId,
+                conversationType,
                 sendBefore: () => {
                   scrollToBottom()
                 },
@@ -614,7 +616,13 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           //
         }
       },
-      [store.msgStore, conversationId, scrollToBottom, onAISendHandler]
+      [
+        store.msgStore,
+        conversationId,
+        conversationType,
+        scrollToBottom,
+        onAISendHandler,
+      ]
     )
 
     const onSendText = useCallback(
@@ -636,6 +644,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             await store.msgStore.sendMessageActive({
               msg: textMsg,
               conversationId,
+              conversationType,
               serverExtension: ext as Record<string, unknown>,
               sendBefore: () => {
                 scrollToBottom()
@@ -673,6 +682,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           await store.msgStore.sendMessageActive({
             msg: fileMsg,
             conversationId,
+            conversationType,
             sendBefore: () => {
               scrollToBottom()
             },
@@ -687,6 +697,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       [
         store.msgStore,
         conversationId,
+        conversationType,
         scrollToBottom,
         nim.V2NIMMessageCreator,
         onAISendHandler,
@@ -703,6 +714,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             msg: imgMsg,
             conversationId,
             previewImg,
+            conversationType,
             progress: () => true,
             sendBefore: () => {
               scrollToBottom()
@@ -718,6 +730,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       [
         store.msgStore,
         conversationId,
+        conversationType,
         scrollToBottom,
         nim.V2NIMMessageCreator,
         onAISendHandler,
@@ -734,6 +747,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             msg: videoMsg,
             conversationId,
             previewImg,
+            conversationType,
             progress: () => true,
             sendBefore: () => {
               scrollToBottom()
@@ -749,6 +763,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       [
         store.msgStore,
         conversationId,
+        conversationType,
         scrollToBottom,
         nim.V2NIMMessageCreator,
         onAISendHandler,

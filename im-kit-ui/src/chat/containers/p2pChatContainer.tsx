@@ -181,10 +181,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     const [isOnline, setIsOnline] = useState<boolean>(false)
 
     useEffect(() => {
-      if (
-        store.subscriptionStore.stateMap.get(receiverId) &&
-        localOptions.loginStateVisible
-      ) {
+      if (localOptions.loginStateVisible) {
         setIsOnline(
           store.subscriptionStore.stateMap.get(receiverId)?.statusType ===
             V2NIMConst.V2NIMUserStatusType.V2NIM_USER_STATUS_TYPE_LOGIN
@@ -431,6 +428,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
               await store.msgStore.sendMessageActive({
                 msg,
                 conversationId,
+                conversationType,
                 progress: () => true,
                 sendBefore: () => {
                   scrollToBottom()
@@ -442,6 +440,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
               await store.msgStore.sendMessageActive({
                 msg,
                 conversationId,
+                conversationType,
                 sendBefore: () => {
                   scrollToBottom()
                 },
@@ -452,6 +451,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
               await store.msgStore.sendMessageActive({
                 msg,
                 conversationId,
+                conversationType,
                 sendBefore: () => {
                   scrollToBottom()
                 },
@@ -465,7 +465,13 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           //
         }
       },
-      [store.msgStore, conversationId, scrollToBottom, onAISendHandler]
+      [
+        store.msgStore,
+        conversationId,
+        scrollToBottom,
+        onAISendHandler,
+        conversationType,
+      ]
     )
 
     const stopAIStreamMessage = (msg: V2NIMMessage) => {
@@ -515,6 +521,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             await store.msgStore.sendMessageActive({
               msg: textMsg,
               conversationId,
+              conversationType,
               serverExtension: ext as Record<string, unknown>,
               sendBefore: () => {
                 scrollToBottom()
@@ -552,6 +559,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           await store.msgStore.sendMessageActive({
             msg: fileMsg,
             conversationId,
+            conversationType,
             sendBefore: () => {
               scrollToBottom()
             },
@@ -569,6 +577,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         scrollToBottom,
         nim.V2NIMMessageCreator,
         onAISendHandler,
+        conversationType,
       ]
     )
 
@@ -581,6 +590,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           await store.msgStore.sendMessageActive({
             msg: imgMsg,
             conversationId,
+            conversationType,
             previewImg,
             progress: () => true,
             sendBefore: () => {
@@ -600,6 +610,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         scrollToBottom,
         nim.V2NIMMessageCreator,
         onAISendHandler,
+        conversationType,
       ]
     )
 
@@ -612,6 +623,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           await store.msgStore.sendMessageActive({
             msg: videoMsg,
             conversationId,
+            conversationType,
             previewImg,
             progress: () => true,
             sendBefore: () => {
@@ -631,6 +643,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         scrollToBottom,
         nim.V2NIMMessageCreator,
         onAISendHandler,
+        conversationType,
       ]
     )
 
