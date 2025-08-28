@@ -5,6 +5,8 @@
 
 .@{prefix}-text-wrapper {
   padding: 12px 16px;
+  color: @yx-primary-text-color-2;
+  font-size: @yx-primary-font-size;
   .@{ant-prefix}-tooltip {
     max-width: 80%;
     max-height: 240px;
@@ -46,6 +48,49 @@
   vertical-align: middle;
 }
 
+.@{prefix}-video-container {
+  
+  cursor: pointer;
+  position: relative;
+  img{
+    display: block;
+    min-width: 50px;
+    max-height: 200px;
+    min-height: 200px;
+    width: auto;
+    object-fit: contain;
+  }
+  .@{prefix}-video-play-btn {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+
+    &::before {
+      content: '';
+      display: block;
+      margin-left: 2px; // 使三角形更居中
+      width: 0;
+      height: 0;
+      border-left: 14px solid #fff;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+    }
+  }
+
+  &:hover .@{prefix}-video-play-btn {
+    background: rgba(0, 0, 0, 0.6);
+  }
+}
+
 .@{prefix}-mention {
   color: @yx-text-color-4;
 }
@@ -73,6 +118,7 @@
   display: flex;
   flex-direction: column;
   max-width: 100%;
+  height: 46px;
 }
 .@{prefix}-audio-text {
   margin-top: 15px;
@@ -101,11 +147,11 @@
 }
 
 .@{prefix}-location-card {
-  // border: 1px solid @yx-border-color-1;
-  // border-radius: @yx-primary-border-radius;
   position: relative;
   background-color: #fff;
   width: 288px;
+  height: 180px;
+  box-sizing: border-box;
   .@{prefix}-location-title {
     padding: 8px 10px 0 10px;
   }
@@ -129,6 +175,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
+  height: 68px;
 
   .@{prefix}-file-icon {
     font-size: @yx-font-size-32;
@@ -214,14 +261,25 @@
   overflow: hidden!important;
 }
 
+.@{prefix}-ai-text-not-support{
+  display: block;
+  width: 100%;
+  text-align: center;
+  color: #999999;
+}
+
 .@{prefix}-reply-wrapper {
   font-size: @yx-font-size-12;
   color: @yx-text-color-1;
   padding: 12px 16px;
-  border-bottom: 1px solid #bbd2ed;
+  // border-bottom: 1px solid #bbd2ed;
   // display: flex;
   // .@{prefix}-reply-nick {
   //   white-space: nowrap;
+  //   flex-basis: 100px;
+  //   overflow: hidden;
+  //   box-sizing: border-box;
+  //   text-overflow: ellipsis;
   // }
   .@{prefix}-text-wrapper {
     padding: 0;
@@ -238,6 +296,48 @@
     border-radius: 6px;
   }
 }
+
+.@{prefix}-reply-popover-content{
+  overflow: hidden; 
+  display: flex;
+  justify-content: center;
+  overflow-y: auto;
+  .@{prefix}-ai-text{
+    width: 100%;
+  }
+}
+.@{prefix}-reply-popover{
+  .@{prefix}-reply-popover-content-media {
+    width: 240px;
+    height: 160px;
+    overflow: hidden;
+    max-width: 320px;
+ }
+}
+  
+
+
+.@{prefix}-reply-wrapper-top{
+  height: 40px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #bbd2ed;
+  cursor: pointer;
+}
+
+
+
+.@{prefix}-reply-popover {
+  max-width: 450px;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.@{prefix}-image-container {
+    margin: 0;
+    height: 200px;
+    min-width: 80px;
+  }
 
 .chat-message-list-item-self {
   .@{prefix}-reply-wrapper {
@@ -293,3 +393,4 @@
     color: #333333;
   }
 }
+

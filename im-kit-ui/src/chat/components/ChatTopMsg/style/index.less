@@ -32,6 +32,23 @@
       white-space: break-spaces !important;
       max-height: 22px;
       line-height: 22px;
+      padding-top: 0px;
+      text-align: left;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .common-parse-session-image-container {
+      max-height: 36px;
+    }
+
+    .common-parse-session-text-wrapper {
+      max-width: 600px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+      display: block !important;
     }
 
     .@{parse-session-cls} {
@@ -53,15 +70,6 @@
         background-color: @yx-background-color-8;
         padding: 0 10px;
         border-radius: 8px;
-      }
-
-      &-text-wrapper {
-        padding: 0;
-        flex: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        cursor: pointer;
       }
 
       &-location-card {

@@ -437,6 +437,17 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
               })
               break
             case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TEXT:
+              if (msg.threadReply) {
+                const beReplyMsg =
+                  await nim.V2NIMMessageService.getMessageListByRefers([
+                    msg.threadReply,
+                  ])
+
+                if (beReplyMsg.length > 0) {
+                  store.msgStore.replyMsgActive(beReplyMsg[0])
+                }
+              }
+
               await store.msgStore.sendMessageActive({
                 msg,
                 conversationId,
@@ -446,6 +457,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
                 },
                 onAISend: onAISendHandler,
               })
+
               break
             default:
               await store.msgStore.sendMessageActive({
@@ -1076,6 +1088,35 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         )
       }
     }, [nim, conversationId, scrollToBottom])
+
+    useEffect(() => {
+      return () => {
+        if (conversationId) {
+          // 获取当前会话的所有消息
+          const allMsgs = store.msgStore.getMsg(conversationId)
+
+          // 如果消息数量大于20条，则删除最旧的消息，只保留最近20条
+          if (allMsgs.length > 20) {
+            // 按时间排序，确保获取到最旧的消息
+            const sortedMsgs = [...allMsgs].sort(
+              (a, b) => a.createTime - b.createTime
+            )
+
+            // 计算需要删除的消息数量
+            const deleteCount = allMsgs.length - 20
+
+            // 获取需要删除的消息的 messageClientId
+            const msgsToDelete = sortedMsgs.slice(0, deleteCount)
+            const idClientsToDelete = msgsToDelete.map(
+              (msg) => msg.messageClientId
+            )
+
+            // 删除指定的消息，保留最近20条
+            store.msgStore.removeMsg(conversationId, idClientsToDelete)
+          }
+        }
+      }
+    }, [])
 
     // useLayoutEffect(() => {
     //   const onReceiveMessagesModified = (msg: V2NIMMessage[]) => {
