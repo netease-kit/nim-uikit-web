@@ -13,6 +13,7 @@ import { MenuItem } from '../ChatMessageItem'
 import { debounce } from '@xkit-yx/utils'
 import ChatForwardModal from '../ChatForwardModal'
 import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 
 const LIMIT = 100
 
@@ -97,20 +98,21 @@ const CollectionList: React.FC<CollectionListProps> = ({
         limit: LIMIT,
         collectionType: 0,
       })
+    } else {
+      setList([])
     }
   }, [isVisible])
 
   const getCollectionList = async (options: V2NIMCollectionOption) => {
     try {
-      const data = await nim.V2NIMMessageService.getCollectionListByOption(
+      const data = await nim.V2NIMMessageService.getCollectionListExByOption(
         options
       )
 
-      logger.log('getCollectionList success: ', data, options)
-      const newData = [...data, ...list]
+      const newData = [...list, ...data.collectionList]
 
       setList(newData)
-      setNoMore(data.length < LIMIT ? true : false)
+      setNoMore(data.collectionList.length < LIMIT ? true : false)
     } catch (error) {
       message.error(t('getCollectionFailed'))
       logger.error(
@@ -178,14 +180,15 @@ const CollectionList: React.FC<CollectionListProps> = ({
           containerRef.current.clientHeight -
           70
       ) {
-        const current = list[0]
+        const current = list[list.length - 1]
 
         if (current && !noMore) {
           getCollectionList({
             limit: LIMIT,
             collectionType: 0,
-            beginTime: current.updateTime,
             anchorCollection: current,
+            direction:
+              V2NIMConst.V2NIMQueryDirection.V2NIM_QUERY_DIRECTION_DESC,
           })
         }
       }

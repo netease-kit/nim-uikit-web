@@ -39,6 +39,7 @@
     margin: 20px 30px;
     background-color: @yx-primary-color;
     border-radius: 10px;
+    box-sizing: border-box;
 
     .@{parse-session-cls}-file-box {
       justify-content: flex-start;
@@ -54,6 +55,8 @@
       white-space: break-spaces;
     }
   }
+
+  
 
   &-content {
     width: 100%;
@@ -80,4 +83,15 @@
     justify-content: space-between;
     align-items: center;
   }
+}
+
+.chat-collection-item-content-top-msg {
+  .common-parse-session-video-container{
+    width: fit-content;
+  }
+}
+.chat-collection-item-content-top-msg{
+   .common-parse-session-reply-wrapper-top{
+  width: 900px ;
+}
 }

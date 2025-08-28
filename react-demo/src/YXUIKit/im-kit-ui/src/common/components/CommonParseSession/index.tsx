@@ -37,6 +37,8 @@ import { V2NIMError } from 'nim-web-sdk-ng/dist/esm/nim/src/types'
 import { AI_SEARCH_MENU_KEY, fileIconMap } from '../../../constant'
 import Markdown from 'react-markdown'
 import { LoadingOutlined } from '@ant-design/icons'
+import VideoModal from './videoModal'
+import { log } from 'console'
 
 export interface IParseSessionProps {
   prefix?: string
@@ -140,6 +142,11 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     const [replyImgUrl, setReplyImgUrl] = useState('')
     const [threadReply, setThreadReply] = useState<V2NIMMessage | 'noFind'>()
     const [aiSearchText, setAiSearchText] = useState('')
+    const msgRef = useRef<HTMLDivElement | null>(null)
+
+    const [thumbImageUrl, setThumbImageUrl] = useState('')
+
+    const [replyThumbImageUrl, setReplyThumbImageUrl] = useState('')
 
     const aiSearchDropdownContainerRef = useRef<HTMLDivElement>(null)
 
@@ -166,11 +173,12 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         msg.attachment &&
         (msg.attachment as V2NIMMessageImageAttachment).url
       ) {
-        const url = getDownloadUrl(msg)
+        // const url = getDownloadUrl(msg)
 
-        getBlobImg(url).then((blobUrl) => {
-          setImgUrl(blobUrl)
-        })
+        // getBlobImg(url).then((blobUrl) => {
+        //   setImgUrl(blobUrl)
+        // })
+        setImgUrl((msg.attachment as V2NIMMessageImageAttachment).url)
       }
     }, [msg])
 
@@ -182,11 +190,8 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         replyMsg.attachment &&
         (replyMsg.attachment as V2NIMMessageImageAttachment).url
       ) {
-        const url = getDownloadUrl(replyMsg)
-
-        getBlobImg(url).then((blobUrl) => {
-          setReplyImgUrl(blobUrl)
-        })
+        // @ts-ignore
+        setReplyImgUrl(replyMsg.attachment.url)
       }
 
       if (threadReply !== 'noFind') {
@@ -197,11 +202,8 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           threadReply.attachment &&
           (threadReply.attachment as V2NIMMessageImageAttachment).url
         ) {
-          const url = getDownloadUrl(threadReply)
-
-          getBlobImg(url).then((blobUrl) => {
-            setReplyImgUrl(blobUrl)
-          })
+          // @ts-ignore
+          setReplyImgUrl(threadReply.attachment.url)
         }
       }
     }, [replyMsg, threadReply])
@@ -228,8 +230,10 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
               )
             })
         }
+      } else {
+        setThreadReply(undefined)
       }
-    }, [nim.V2NIMMessageService, msg.threadReply, store.msgStore, storeMsg])
+    }, [nim.V2NIMMessageService, msg.threadReply, storeMsg])
 
     useEffect(() => {
       const handleOtherClick = () => {
@@ -315,7 +319,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       handler()
     }
 
-    const renderAiSteamMsg = (msg: V2NIMMessageForUI) => {
+    const renderAiSteamMsg = (msg: V2NIMMessageForUI, isReplyMsg?: boolean) => {
       const aiStreamStatus = msg?.aiConfig?.aiStreamStatus
 
       switch (aiStreamStatus) {
@@ -328,11 +332,15 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           return <div>{t('aiErrorText')}</div>
 
         default:
+          if (isReplyMsg) {
+            return <span>{msg.text || ''}</span>
+          }
+
           return <Markdown>{msg.text || ''}</Markdown>
       }
     }
 
-    const renderCustomText = (msg: V2NIMMessageForUI, isReplyMsg: boolean) => {
+    const renderCustomText = (msg: V2NIMMessageForUI, isReplyMsg?: boolean) => {
       const isAiMessage =
         msg.aiConfig?.aiStatus ===
         V2NIMConst.V2NIMMessageAIStatus.V2NIM_MESSAGE_AI_STATUS_RESPONSE
@@ -397,7 +405,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
               className={`${_prefix}-text-wrapper ${_prefix}-ai-text`}
               ref={aiSearchDropdownContainerRef}
             >
-              {renderAiSteamMsg(msg)}
+              {renderAiSteamMsg(msg, isReplyMsg)}
             </div>
           </Dropdown>
         )
@@ -562,7 +570,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
-    const renderImage = (msg: V2NIMMessageForUI, isReplyMsg: boolean) => {
+    const renderImage = (msg: V2NIMMessageForUI, isReplyMsg?: boolean) => {
       const { uploadProgress } = msg
       const attachment = msg.attachment as V2NIMMessageImageAttachment
 
@@ -572,6 +580,55 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         !attachment?.url
       ) {
         return renderUploadMsg(msg)
+      }
+
+      if (isReplyMsg) {
+        const showReplyMsg = threadReply || replyMsg
+
+        if (showReplyMsg && showReplyMsg !== 'noFind') {
+          const attachment =
+            showReplyMsg.attachment as V2NIMMessageImageAttachment
+
+          const size = attachment.size || 0
+
+          const imgSizeConstant = 1024 * 1024 * 20
+
+          const width = attachment.width
+          const height = attachment.height
+
+          // 小于20M 才能使用缩略图功能，大于20M，建议以文件消息进行发送
+          if (size < imgSizeConstant) {
+            if (width && height) {
+              nim.V2NIMStorageService.getImageThumbUrl(attachment, {
+                height: 200,
+                width: Math.floor((200 * width) / height),
+              }).then((res) => {
+                setReplyThumbImageUrl(res.url)
+              })
+            }
+          }
+        }
+      } else {
+        const attachment = msg.attachment as V2NIMMessageImageAttachment
+
+        const size = attachment.size || 0
+
+        const imgSizeConstant = 1024 * 1024 * 20
+
+        const width = attachment.width
+        const height = attachment.height
+
+        // 小于20M 才能使用缩略图功能，大于20M，建议以文件消息进行发送
+        if (size < imgSizeConstant) {
+          if (width && height) {
+            nim.V2NIMStorageService.getImageThumbUrl(attachment, {
+              height: 200,
+              width: Math.floor((200 * width) / height),
+            }).then((res) => {
+              setThumbImageUrl(res.url)
+            })
+          }
+        }
       }
 
       return (
@@ -588,14 +645,16 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
             <Image
               rootClassName={`${_prefix}-image`}
               loading="lazy"
-              src={replyImgUrl}
+              preview={{ src: replyImgUrl }}
+              src={replyThumbImageUrl || replyImgUrl}
             />
           )}
           {imgUrl && (
             <Image
               rootClassName={`${_prefix}-image`}
               loading="lazy"
-              src={imgUrl}
+              preview={{ src: imgUrl }}
+              src={thumbImageUrl || imgUrl}
             />
           )}
         </div>
@@ -1064,19 +1123,30 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
+    const [videoModalVisible, setVideoModalVisible] = useState(false)
+    const [videoModalUrl, setVideoModalUrl] = useState('')
+
     // 渲染视频消息
     const renderVideo = (msg: V2NIMMessageForUI) => {
       const uploadProgress = msg.uploadProgress
       const attachment = msg.attachment as V2NIMMessageVideoAttachment
 
-      let url = attachment.url
+      const url = attachment.url
 
-      if (attachment.file && !url) {
-        try {
-          url = URL.createObjectURL(attachment.file)
-        } catch (error) {
-          logger.warn('createObjectURL fail: ', attachment)
-        }
+      // 被拉黑
+      if (msg.messageStatus.errorCode === 102426) {
+        return (
+          <div className={`${_prefix}-video-container`}>
+            <div className={`${_prefix}-video-play-btn`} />
+            <img
+              className={`${_prefix}-upload-img`}
+              src={
+                msg.previewImg ||
+                'https://yx-web-nosdn.netease.im/common/33d3e1fa8de771277ea4466564ef37aa/emptyImg.png'
+              }
+            />
+          </div>
+        )
       }
 
       // 上传中或没有真实 url 时走这里
@@ -1084,7 +1154,6 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         return renderUploadMsg(msg)
       }
 
-      url = url.startsWith('blob:') ? url : getDownloadUrl(msg)
       if (needTextTooltop) {
         return (
           <Tooltip
@@ -1110,21 +1179,37 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         )
       }
 
+      const videoFirstFrame = url
+        ? `${url}${url.includes('?') ? '&' : '?'}vframe&offset=1`
+        : ''
+
       return (
-        <video
-          src={url}
-          id={`msg-video-${msg.messageClientId}`}
-          className={`${_prefix}-video`}
-          controls
-          onPlay={() => {
-            // 播放视频，暂停其他视频和音频
-            pauseOtherVideo(msg.messageClientId)
-            pauseAllAudio()
-          }}
-          onError={() => {
-            // 处理异常 例如：视频格式不支持播放等
-          }}
-        />
+        <>
+          <div
+            onClick={() => {
+              // 打开弹窗并设置播放地址
+              setVideoModalUrl(attachment.url)
+              setVideoModalVisible(true)
+              // 打开前暂停所有内嵌视频/音频，避免串音
+              pauseAllVideo()
+              pauseAllAudio()
+            }}
+            className={`${_prefix}-video-container`}
+          >
+            <div className={`${_prefix}-video-play-btn`} />
+            {videoFirstFrame && (
+              <img className={`${_prefix}-image`} src={videoFirstFrame} />
+            )}
+          </div>
+          <VideoModal
+            visible={videoModalVisible}
+            url={videoModalUrl}
+            onCancel={() => setVideoModalVisible(false)}
+            title={t('videoMsgText')}
+            prefix={prefix}
+            autoplay={true}
+          />
+        </>
       )
     }
 
@@ -1186,60 +1271,23 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
-    // 渲染回复消息
-    const renderReplyMsg = (msg?: V2NIMMessageForUI) => {
-      // 给数字人发送图片会返回这个错误码，此时直接不渲染，在renderContent 直接提示 格式不支持
-      // 群禁言，数字人会返回108306，此时不展示
-      if (
-        msg?.messageStatus?.errorCode === 107336 ||
-        msg?.messageStatus?.errorCode === 108306
-      ) {
-        return null
+    const renderReplyMsgTop = (reply?: V2NIMMessage | 'noFind') => {
+      if (!reply) return null
+
+      let isAiResponseMessage = false
+
+      if (reply !== 'noFind') {
+        isAiResponseMessage =
+          reply?.aiConfig?.aiStatus ===
+          V2NIMConst.V2NIMMessageAIStatus.V2NIM_MESSAGE_AI_STATUS_RESPONSE
       }
 
-      // 撤回回复消息，只需要展示 重新编辑 即可，不需要展示被回复的内容
-      if (msg?.isRecallMsg) {
-        return null
-      }
-
-      // needTextTooltop 代表是指定消息 不需要展示被回复的消息
-      if (needTextTooltop) {
-        return null
-      }
-
-      if (threadReply) {
-        return finalRenderReplyMsg(threadReply)
-      }
-
-      if (replyMsg) {
-        return finalRenderReplyMsg(replyMsg)
-      }
-
-      return null
-    }
-
-    const finalRenderReplyMsg = (reply: V2NIMMessage | 'noFind') => {
-      if (reply === 'noFind') {
-        return (
-          <div
-            className={`${_prefix}-reply-wrapper`}
-            onClick={() => {
-              // 滚动到回复的消息
-              // document.getElementById(replyMsg.idClient)?.scrollIntoView()
-            }}
-          >
-            {t('recallReplyMessageText')}
-          </div>
-        )
-      }
-
-      const isAiResponseMessage =
-        reply?.aiConfig?.aiStatus ===
-        V2NIMConst.V2NIMMessageAIStatus.V2NIM_MESSAGE_AI_STATUS_RESPONSE
-
-      const renderSenderId = isAiResponseMessage
-        ? reply?.aiConfig?.accountId
-        : reply.senderId
+      const renderSenderId =
+        reply !== 'noFind'
+          ? isAiResponseMessage
+            ? reply?.aiConfig?.accountId
+            : reply?.senderId
+          : ''
 
       const nick = store.uiStore.getAppellation({
         account: renderSenderId as string,
@@ -1248,20 +1296,128 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       })
 
       return (
-        <div
-          className={`${_prefix}-reply-wrapper`}
-          onClick={() => {
-            // 滚动到回复的消息
-            // document.getElementById(replyMsg.idClient)?.scrollIntoView()
-          }}
+        <Popover
+          content={
+            reply && reply !== 'noFind' ? (
+              <div
+                className={`${_prefix}-reply-popover-content${
+                  reply.messageType ===
+                    V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_IMAGE ||
+                  reply.messageType ===
+                    V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_VIDEO
+                    ? ` ${_prefix}-reply-popover-content-media`
+                    : ''
+                }`}
+              >
+                {renderMsgContent(reply as V2NIMMessageForUI, true)}
+              </div>
+            ) : (
+              t('recallReplyMessageText')
+            )
+          }
+          placement="top"
+          trigger={['click']}
+          getPopupContainer={() => msgRef.current as HTMLElement}
+          overlayClassName={`${_prefix}-reply-popover`}
         >
-          <div className={`${_prefix}-reply-nick`}>{nick}：</div>
-          {renderMsgContent(reply, true)}
+          <div className={`${_prefix}-reply-wrapper-top`}>
+            {nick && (
+              <div
+                style={{
+                  whiteSpace: 'nowrap',
+                }}
+                className={`${_prefix}-reply-nick`}
+              >
+                {nick}：
+              </div>
+            )}
+            {(() => {
+              if (reply === 'noFind') {
+                return t('recallReplyMessageText')
+              }
+
+              switch (reply?.messageType) {
+                case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TEXT:
+                  return (
+                    <span
+                      style={{
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {reply.text}
+                    </span>
+                  )
+
+                case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_AUDIO:
+                  return `[${t('audioMsgText')}]`
+                case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_FILE:
+                  return `[${t('fileMsgText')}]`
+                case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL:
+                  return `[${t('callMsgText')}]`
+                case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_LOCATION:
+                  return `[${t('geoMsgText')}]`
+                case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_IMAGE:
+                  return `[${t('imgMsgText')}]`
+                case V2NIMConst.V2NIMMessageType
+                  .V2NIM_MESSAGE_TYPE_NOTIFICATION:
+                  return `[${t('notiMsgText')}]`
+                case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_ROBOT:
+                  return `[${t('robotMsgText')}]`
+                case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TIPS:
+                  return `[${t('tipMsgText')}]`
+                case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_VIDEO:
+                  return `[${t('videoMsgText')}]`
+                default:
+                  return `[${t('notSupportMessageText')}]`
+              }
+            })()}
+          </div>
+        </Popover>
+      )
+    }
+
+    // 渲染回复消息
+    const renderReplyMsg = (msg: V2NIMMessageForUI) => {
+      // 给数字人发送图片会返回这个错误码，此时直接不渲染，在renderContent 直接提示 格式不支持
+
+      if (msg.messageStatus.errorCode === 107336) {
+        return (
+          <span className={`${_prefix}-ai-text-not-support`}>
+            {t('tipAIMessageText')}
+          </span>
+        )
+      }
+
+      // 群禁言，数字人会返回108306，此时不展示
+      if (msg?.messageStatus?.errorCode === 108306) {
+        return null
+      }
+
+      // 撤回回复消息，只需要展示 重新编辑 即可，不需要展示被回复的内容
+      if (msg?.isRecallMsg) {
+        return null
+      }
+
+      // needTextTooltop 代表是置顶消息
+      if (needTextTooltop) {
+        return renderCustomText(msg)
+      }
+
+      const showReplyMsg = threadReply || replyMsg
+
+      return (
+        <div className={`${_prefix}-reply-wrapper`}>
+          <div style={{ height: '40px' }}>
+            {renderReplyMsgTop(showReplyMsg)}
+          </div>
+          {renderCustomText(msg)}
         </div>
       )
     }
 
-    const renderMsgContent = (msg: V2NIMMessageForUI, isReplyMsg: boolean) => {
+    const renderMsgContent = (msg: V2NIMMessageForUI, isReplyMsg?: boolean) => {
       if (msg.recallType === 'reCallMsg' || msg.recallType === 'beReCallMsg') {
         return renderSpecialMsg()
       }
@@ -1308,11 +1464,28 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       }
     }
 
-    return (
-      <>
-        {renderReplyMsg(msg)}
-        {renderMsgContent(msg, false)}
-      </>
-    )
+    const finalRenderMsg = () => {
+      // 老版本的的回复消息方案
+      try {
+        const { yxReplyMsg } = JSON.parse(
+          msg.serverExtension || '{}'
+        ) as YxServerExt
+
+        if (yxReplyMsg && !msg.isRecallMsg) {
+          return renderReplyMsg(msg)
+        }
+      } catch (error) {
+        //
+      }
+
+      // 新版本回复消息
+      if (msg.threadReply && !msg.isRecallMsg) {
+        return renderReplyMsg(msg)
+      }
+
+      return renderMsgContent(msg)
+    }
+
+    return <div ref={msgRef}>{finalRenderMsg()}</div>
   }
 )

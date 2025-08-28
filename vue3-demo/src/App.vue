@@ -20,9 +20,9 @@ export default {
   },
   mounted() {
     const initOptions = {
-      appkey: "", // 请填写你的appkey
-      account: "", // 请填写你的account
-      token: "", // 请填写你的token
+      appkey: "", //您在云信控制台注册的appkey
+      account: "", //云信控制台上的account
+      token: "",
     };
     const localOptions = {
       // 添加好友模式，默认需要验证

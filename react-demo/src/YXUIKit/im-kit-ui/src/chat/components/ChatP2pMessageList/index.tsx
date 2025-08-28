@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react'
+import React, { forwardRef, useState } from 'react'
 import MessageListItem, { MessageItemProps } from '../ChatMessageItem'
 import { Alert, Spin } from 'antd'
 import { ArrowDownOutlined } from '@ant-design/icons'
@@ -9,6 +9,7 @@ import { observer } from 'mobx-react'
 import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
 import { V2NIMMessage } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
 import { V2NIMUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService'
+import VirtualMessageItem from '../ChatMessageItem/virtualMessageItem'
 
 export interface RenderP2pCustomMessageOptions extends MessageItemProps {
   receiverId: string
@@ -82,8 +83,16 @@ const ChatP2pMessageList = observer(
 
       const renderMsgs = storeUtils.getFilterMsgs(msgs)
 
+      const [scrollTop, setScrollTop] = useState<number>(0)
+
+      function handleScroll(e: React.UIEvent<HTMLDivElement, UIEvent>) {
+        onScroll?.(e)
+
+        setScrollTop(e.currentTarget.scrollTop)
+      }
+
       return (
-        <div className={_prefix} ref={ref} onScroll={onScroll}>
+        <div className={_prefix} ref={ref} onScroll={handleScroll}>
           <div className={`${_prefix}-tip`}>
             {noMore ? t('noMoreText') : loadingMore ? <Spin /> : null}
           </div>
@@ -129,9 +138,12 @@ const ChatP2pMessageList = observer(
               )
 
               return (
-                <div id={msg.messageClientId} key={msg.messageClientId}>
-                  {msgItem}
-                </div>
+                <VirtualMessageItem
+                  key={msg.messageClientId}
+                  msg={msg}
+                  msgItem={msgItem}
+                  scrollTop={scrollTop}
+                />
               )
             })}
           </div>

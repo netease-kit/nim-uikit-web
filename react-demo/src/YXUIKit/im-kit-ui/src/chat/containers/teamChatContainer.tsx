@@ -590,6 +590,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
               await store.msgStore.sendMessageActive({
                 msg,
                 conversationId,
+                conversationType,
                 progress: () => true,
                 sendBefore: () => {
                   scrollToBottom()
@@ -601,6 +602,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
               await store.msgStore.sendMessageActive({
                 msg,
                 conversationId,
+                conversationType,
                 sendBefore: () => {
                   scrollToBottom()
                 },
@@ -614,7 +616,13 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           //
         }
       },
-      [store.msgStore, conversationId, scrollToBottom, onAISendHandler]
+      [
+        store.msgStore,
+        conversationId,
+        conversationType,
+        scrollToBottom,
+        onAISendHandler,
+      ]
     )
 
     const onSendText = useCallback(
@@ -636,6 +644,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             await store.msgStore.sendMessageActive({
               msg: textMsg,
               conversationId,
+              conversationType,
               serverExtension: ext as Record<string, unknown>,
               sendBefore: () => {
                 scrollToBottom()
@@ -673,6 +682,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           await store.msgStore.sendMessageActive({
             msg: fileMsg,
             conversationId,
+            conversationType,
             sendBefore: () => {
               scrollToBottom()
             },
@@ -687,6 +697,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       [
         store.msgStore,
         conversationId,
+        conversationType,
         scrollToBottom,
         nim.V2NIMMessageCreator,
         onAISendHandler,
@@ -703,6 +714,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             msg: imgMsg,
             conversationId,
             previewImg,
+            conversationType,
             progress: () => true,
             sendBefore: () => {
               scrollToBottom()
@@ -718,6 +730,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       [
         store.msgStore,
         conversationId,
+        conversationType,
         scrollToBottom,
         nim.V2NIMMessageCreator,
         onAISendHandler,
@@ -734,6 +747,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             msg: videoMsg,
             conversationId,
             previewImg,
+            conversationType,
             progress: () => true,
             sendBefore: () => {
               scrollToBottom()
@@ -749,6 +763,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       [
         store.msgStore,
         conversationId,
+        conversationType,
         scrollToBottom,
         nim.V2NIMMessageCreator,
         onAISendHandler,
@@ -1398,12 +1413,6 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       if (memoryMsgs.length < 10) {
         getHistory(Date.now()).then(() => {
           scrollToBottom()
-          // TODO 考虑以下这段代码是否还需要
-          // if (conversation && !conversation.lastMessage && res && res[0]) {
-          //   store.conversationStore.addConversation([
-          //     { ...conversation, lastMessage: res[0] },
-          //   ])
-          // }
         })
       } else {
         // 获取自己发出去的消息
@@ -1734,6 +1743,35 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
         nim.V2NIMMessageService.off('onReceiveMessages', onMsgToast)
       }
     }, [nim, conversationId, myUser.accountId, store.uiStore, t])
+
+    useEffect(() => {
+      return () => {
+        if (conversationId) {
+          // 获取当前会话的所有消息
+          const allMsgs = store.msgStore.getMsg(conversationId)
+
+          // 如果消息数量大于20条，则删除最旧的消息，只保留最近20条
+          if (allMsgs.length > 20) {
+            // 按时间排序，确保获取到最旧的消息
+            const sortedMsgs = [...allMsgs].sort(
+              (a, b) => a.createTime - b.createTime
+            )
+
+            // 计算需要删除的消息数量
+            const deleteCount = allMsgs.length - 20
+
+            // 获取需要删除的消息的 messageClientId
+            const msgsToDelete = sortedMsgs.slice(0, deleteCount)
+            const idClientsToDelete = msgsToDelete.map(
+              (msg) => msg.messageClientId
+            )
+
+            // 删除指定的消息，保留最近20条
+            store.msgStore.removeMsg(conversationId, idClientsToDelete)
+          }
+        }
+      }
+    }, [])
 
     return conversation ? (
       <div className={`${prefix}-wrap`}>
