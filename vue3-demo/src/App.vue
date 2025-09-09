@@ -1,79 +1,107 @@
 <template>
-  <IMApp v-if="uikitInit" />
+  <div v-if="showUiKit" class="app-container">
+    <router-view></router-view>
+  </div>
 </template>
-<script lang="ts">
-import IMApp from "./components/IMApp/index.vue";
-import { IMUIKit } from "@xkit-yx/im-kit-ui";
-import V2NIM from "nim-web-sdk-ng";
-import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 
-import { app } from "./main";
+<script lang="ts">
+import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
+import RootStore from "@xkit-yx/im-store-v2";
+import V2NIM from "nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK";
+import type { V2NIMMessage } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
+import { getCurrentInstance } from "vue";
+
 export default {
   name: "App",
-  components: {
-    IMApp,
+  methods: {
+    initIMUiKit(opts: { appkey: string; account: string; token: string }) {
+      const init = () => {
+        //初始化nim
+        const nim = V2NIM.getInstance(
+          {
+            appkey: opts.appkey,
+            needReconnect: true,
+            debugLevel: "debug",
+            apiVersion: "v2",
+            enableV2CloudConversation: false,
+          },
+          {
+            V2NIMLoginServiceConfig: {
+              lbsUrls: ["https://lbs.netease.im/lbs/webconf.jsp"],
+              linkUrl: "weblink.netease.im",
+            },
+          }
+        );
+        // 初始化store
+        const store = new RootStore(
+          // @ts-ignore
+          //参数一：NIMSDK，必填
+          nim,
+          // 本地化配置，必填，详细参数说明请参考全局上下文的底部常见问题
+          {
+            // 添加好友是否需要验证
+            addFriendNeedVerify: false,
+            // 是否需要显示 p2p 消息、p2p会话列表消息已读未读，默认 false
+            p2pMsgReceiptVisible: true,
+            // 是否需要显示群组消息已读未读，默认 false
+            teamMsgReceiptVisible: true,
+            // 群组被邀请模式，默认需要验证
+            teamAgreeMode:
+              V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_NO_AUTH,
+            // 发送消息前回调, 可对消息体进行修改，添加自定义参数
+            sendMsgBefore: async (options: {
+              msg: V2NIMMessage;
+              conversationId: string;
+              serverExtension?: Record<string, unknown>;
+            }) => {
+              return { ...options };
+            },
+          },
+          //参数三：平台，可选
+          "Web"
+        );
+        return {
+          nim,
+          store,
+        };
+      };
+
+      const { nim, store } = init();
+      const app = getCurrentInstance();
+
+      // 将nim和store 挂载，供组件内部访问
+      if (app) {
+        app.appContext.app.config.globalProperties.$NIM = nim;
+        app.appContext.app.config.globalProperties.$UIKitStore = store;
+      }
+
+      nim.V2NIMLoginService.login(opts.account, opts.token).then(() => {
+        // IM 登录成功后跳转到会话页面
+        this.showUiKit = true;
+        this.$router.push("/chat");
+      });
+    },
   },
   data() {
     return {
-      uikitInit: false,
+      showUiKit: false,
     };
   },
   mounted() {
-    const initOptions = {
-      appkey: "", //您在云信控制台注册的appkey
-      account: "", //云信控制台上的account
-      token: "",
-    };
-    const localOptions = {
-      // 添加好友模式，默认需要验证
-      addFriendNeedVerify: true,
-      // 群组加入模式，默认不需要验证
-      //@ts-ignore
-      teamJoinMode: V2NIMConst.V2NIMTeamJoinMode.V2NIM_TEAM_JOIN_MODE_FREE,
-      // 群组被邀请模式，默认不需要验证
-      teamAgreeMode:
-        //@ts-ignore
-        V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_NO_AUTH,
-      // 单聊消息是否显示已读未读 默认 false
-      p2pMsgReceiptVisible: true,
-      // 群聊消息是否显示已读未读 默认 false
-      teamMsgReceiptVisible: true,
-      // 是否需要@消息 默认 true
-      needMention: true,
-      // 是否显示在线离线状态 默认 true
-      loginStateVisible: true,
-      // 是否允许转让群主
-      allowTransferTeamOwner: true,
-      // 是否需要显示群管理员相关主动功能，默认 false
-      teamManagerVisible: true,
-    };
-
-    // 初始化 IM SDK 实例
-    const nim = V2NIM.getInstance({
-      appkey: initOptions.appkey,
-      account: initOptions.account,
-      token: initOptions.token,
-      // 是否开启云端会话，默认不开启
-      enableV2CloudConversation: false,
-      debugLevel: "debug",
-      apiVersion: "v2",
+    this.initIMUiKit({
+      appkey: "", // 请填写你的appkey
+      account: "", // 请填写你的account
+      token: "", // 请填写你的token
     });
-
-    // IM 连接
-    nim.V2NIMLoginService.login(initOptions.account, initOptions.token, {
-      retryCount: 5,
-    });
-
-    // 初始化 UIKit 实例
-    app.config.globalProperties.$uikit = new IMUIKit({
-      //@ts-ignore
-      nim,
-      singleton: true,
-      localOptions,
-    });
-    if (app.config.globalProperties.$uikit) {
-      this.uikitInit = true;
-    }
   },
 };
 </script>
+
+<style>
+.app-container {
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  background-image: url("./assets/bg.png");
+}
+</style>
