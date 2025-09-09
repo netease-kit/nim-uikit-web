@@ -5,7 +5,7 @@
   <p>单击跳转查看 <a href="https://deepwiki.com/netease-kit/nim-uikit-web/1-overview">DeepWiki</a> 源码解读。</p>
 </div>
 
--------------------------------
+---
 
 网易云信即时通讯界面组件（简称 IM UIKit）是基于 [NIM SDK（网易云信 IM SDK）](https://doc.yunxin.163.com/messaging2/concept/DI0Nzc2NzA?platform=client) 开发的一款即时通讯 UI 组件库，包括聊天、会话、圈组、搜索、通讯录、群管理等组件。通过 IM UIKit，您可快速集成包含 UI 界面的即时通讯应用。
 
@@ -42,7 +42,6 @@ IM UIKit 业务逻辑层提供完善的业务逻辑处理能力。您无需关�
 IM UIKit 提供了多个 UI 组件，您可以自行选择并组合。IM UIKit 利用 React Context API，内部管理了各个组件之间的状态，并利用 React 单向数据流来驱动 UI 更新与渲染。
 
 <img alt="app_structure.drawio.png" src="https://yx-web-nosdn.netease.im/common/aa16d3bba199e56f8d92a95d65b20ef4/app_structure.drawio.png" style="width:60%;border: 1px solid #BFBFBF;">
-
 
 ## 相关文档
 
