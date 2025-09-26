@@ -45,7 +45,6 @@ const fileIconMap = {
 
 const {
   name = "",
-  url = "",
   ext = "",
   size = 0,
 } = (props.msg.attachment as V2NIMMessageFileAttachment) || {};
@@ -68,11 +67,9 @@ const suffixName = ext;
 
 // 下载链接
 const downloadHref = computed(() => {
-  if (url) {
-    return addUrlSearch(
-      (props.msg.attachment as V2NIMMessageFileAttachment)?.url,
-      `download=${name}${ext}`
-    );
+  const _url = (props.msg.attachment as V2NIMMessageFileAttachment)?.url;
+  if (_url) {
+    return addUrlSearch(_url, `download=${name}${ext}`);
   }
 });
 

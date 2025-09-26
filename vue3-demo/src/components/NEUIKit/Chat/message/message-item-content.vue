@@ -1,10 +1,12 @@
 <template>
+  <!-- 文本消息 -->
   <div
     v-if="
       props.msg.messageType ===
       V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TEXT
     "
   >
+    <!-- 回复消息 -->
     <ReplyMessage v-if="!!replyMsg" :replyMsg="replyMsg"></ReplyMessage>
     <MessageText :msg="props.msg"></MessageText>
   </div>

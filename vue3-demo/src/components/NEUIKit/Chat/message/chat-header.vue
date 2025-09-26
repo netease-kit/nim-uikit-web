@@ -10,7 +10,7 @@
       }"
       @click="onAvatarClick"
     >
-      <Avatar size="36" :account="to" :avatar="avatar" :teamId="to" />
+      <Avatar size="36" :account="to" :avatar="avatar" />
     </div>
 
     <div class="title-container">
@@ -35,7 +35,7 @@
 
 <script lang="ts" setup>
 // 聊天头组件
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import Avatar from "../../CommonComponents/Avatar.vue";
 import UserCardModal from "../../CommonComponents/UserCardModal.vue";
 import { V2NIMConst } from "nim-web-sdk-ng";

@@ -6,15 +6,22 @@
       :items="blacklist"
       :item-size="60"
       :buffer="100"
-      key-field="id"
+      key-field="accountId"
       v-slot="{ item }"
     >
-      <div @click="() => handleItemClick(item)" class="black-item" :key="item">
+      <div
+        @click="() => handleItemClick(item)"
+        class="black-item"
+        :key="item.accountId"
+      >
         <div class="item-left">
-          <Avatar :account="item" />
-          <Appellation class="black-name" :account="item" />
+          <Avatar :account="item.accountId" />
+          <Appellation class="black-name" :account="item.accountId" />
         </div>
-        <div class="black-button" @click="(e) => handleClick(e, item)">
+        <div
+          class="black-button"
+          @click="(e) => handleClick(e, item.accountId)"
+        >
           {{ t("removeBlacklist") }}
         </div>
       </div>
@@ -56,7 +63,7 @@ const emit = defineEmits<{
   onBlackItemClick: [];
 }>();
 
-const blacklist = ref<string[]>([]);
+const blacklist = ref<{ accountId: string }[]>([]);
 const users = ref();
 
 const { proxy } = getCurrentInstance()!;
@@ -99,7 +106,11 @@ const handleItemClick = (item) => {
 
 /** 黑名单列表监听 */
 const blacklistWatch = autorun(() => {
-  blacklist.value = store?.relationStore.blacklist;
+  blacklist.value = store?.relationStore.blacklist.map((item) => {
+    return {
+      accountId: item,
+    };
+  });
 });
 
 /** 用户列表监听 */

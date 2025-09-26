@@ -263,8 +263,11 @@ const isShowRemoveBtn = (target: V2NIMTeamMember) => {
 
 // 群成员点击
 const handleTeamMemberClick = (accountId: string) => {
-  selectedAccount.value = accountId;
-  showUserCard.value = true;
+  const myUserAccountId = proxy?.$NIM.V2NIMLoginService.getLoginUser();
+  if (myUserAccountId !== accountId) {
+    selectedAccount.value = accountId;
+    showUserCard.value = true;
+  }
 };
 
 // 对群成员进行排序，群主在前，管理员在后，其他成员按加入时间排序

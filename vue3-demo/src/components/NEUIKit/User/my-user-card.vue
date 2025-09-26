@@ -95,6 +95,7 @@
               :placeholder="t('mobilePlaceholderText')"
               :inputStyle="{ background: '#f1f5f8', padding: '10px' }"
               :maxlength="11"
+              @input="handleMobileInput"
               type="tel"
             />
           </div>
@@ -200,6 +201,20 @@ const fileInput = ref<HTMLInputElement | null>(null);
 // 触发文件选择
 const triggerFileInput = () => {
   fileInput.value?.click();
+};
+
+const handleMobileInput = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const value = target.value;
+  // 只保留数字字符
+  const numericValue = value.replace(/[^0-9]/g, "");
+
+  // 如果值发生了变化，更新输入框的值
+  if (value !== numericValue) {
+    editableUserInfo.value.mobile = numericValue;
+    // 手动设置输入框的值，因为v-model可能不会立即更新DOM
+    target.value = numericValue;
+  }
 };
 
 // 头像更改处理

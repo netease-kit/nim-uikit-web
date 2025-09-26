@@ -68,6 +68,7 @@ const handleClick = () => {
   align-items: center;
   height: 50px;
   margin: 10px 0;
+  width: 100%;
 }
 
 .search-result-list-item:hover {

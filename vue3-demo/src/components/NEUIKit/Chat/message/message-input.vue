@@ -281,9 +281,11 @@ const inputWrapperRef = ref();
 const cursorPosition = ref(0); // 记录光标位置
 const atPosition = ref(0); // 记录@符号的位置
 
-// 发送图片消息
+// 发送图片消息 触发图片选择
 const imageInput = ref<HTMLInputElement | null>(null);
+// 发送视频消息 触发视频选择
 const videoInput = ref<HTMLInputElement | null>(null);
+// 发送文件消息 触发文件选择
 const fileInput = ref<HTMLInputElement | null>(null);
 
 /** 是否允许@ 所有人 */
@@ -317,6 +319,7 @@ const updateTeamMute = (teamMute) => {
   }
 
   isTeamMute.value = true;
+  inputText.value = "";
   return;
 };
 
@@ -477,6 +480,7 @@ const onAtMembersExtHandler = () => {
 // 发送文本消息
 const handleSendTextMsg = () => {
   if (inputText.value.trim() === "") return;
+  if (isTeamMute.value) return;
   let text = replaceEmoji(inputText.value);
   const textMsg = proxy?.$NIM.V2NIMMessageCreator.createTextMessage(text);
   const ext = onAtMembersExtHandler();
@@ -516,6 +520,7 @@ const removeReplyMsg = () => {
 
 // 点击表情
 const handleEmoji = (emoji: { key: string; type: string }) => {
+  if (isTeamMute.value) return;
   // 获取当前光标位置
   let currentCursorPos = cursorPosition.value;
 
@@ -555,8 +560,8 @@ const handleSendFileMsg = () => {
   fileInput.value?.click();
 };
 
+// 检查文件大小，如果超过100MB则提示并返回false
 const checkFileSize = (file: File): boolean => {
-  // 检查文件大小，如果超过100MB则提示并返回false
   const maxSize = 100 * 1024 * 1024; // 100MB
   if (file.size > maxSize) {
     toast.error(t("uploadLimitText"));
@@ -732,6 +737,8 @@ const onImageSelected = async (event: Event) => {
   }
 };
 
+let teamWatch = () => {};
+
 watch(
   () => props.conversationId,
   (newConversationId, oldConversationId) => {
@@ -744,45 +751,43 @@ watch(
       teamMembers.value = [];
       mentionPopoverVisible.value = false;
       inputText.value = "";
+      teamWatch();
+
+      teamWatch = autorun(() => {
+        if (
+          props.conversationType ===
+          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
+        ) {
+          const _team: V2NIMTeam = store?.teamStore.teams.get(
+            props.to
+          ) as V2NIMTeam;
+
+          teamMembers.value = store?.teamMemberStore.getTeamMember(
+            props.to
+          ) as V2NIMTeamMember[];
+
+          const myUser = store?.userStore.myUserInfo;
+          isTeamOwner.value = _team?.ownerAccountId == myUser?.accountId;
+          isTeamManager.value = teamMembers.value
+            .filter(
+              (item) =>
+                item.memberRole ===
+                V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
+            )
+            .some(
+              (member) => member.accountId === (myUser ? myUser.accountId : "")
+            );
+          team.value = _team;
+
+          updateTeamMute(_team.chatBannedMode);
+        }
+      });
     }
   },
   { immediate: true }
 );
 
-let teamWatch = () => {};
-
 onMounted(() => {
-  /** 群监听 */
-  teamWatch = autorun(() => {
-    if (
-      props.conversationType ===
-      V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
-    ) {
-      const _team: V2NIMTeam = store?.teamStore.teams.get(
-        props.to
-      ) as V2NIMTeam;
-
-      teamMembers.value = store?.teamMemberStore.getTeamMember(
-        props.to
-      ) as V2NIMTeamMember[];
-
-      const myUser = store?.userStore.myUserInfo;
-      isTeamOwner.value = _team?.ownerAccountId == myUser?.accountId;
-      isTeamManager.value = teamMembers.value
-        .filter(
-          (item) =>
-            item.memberRole ===
-            V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
-        )
-        .some(
-          (member) => member.accountId === (myUser ? myUser.accountId : "")
-        );
-      team.value = _team;
-
-      updateTeamMute(_team.chatBannedMode);
-    }
-  });
-
   // 撤回后，重新编辑消息
   emitter.on(events.ON_REEDIT_MSG, (_msg) => {
     const msg = _msg as V2NIMMessageForUI;
@@ -837,6 +842,10 @@ onMounted(() => {
 onUnmounted(() => {
   removeReplyMsg();
   teamWatch();
+  emitter.off(events.ON_REEDIT_MSG);
+  emitter.off(events.REPLY_MSG);
+  emitter.off(events.CLOSE_PANEL);
+  emitter.off(events.AIT_TEAM_MEMBER);
 });
 </script>
 

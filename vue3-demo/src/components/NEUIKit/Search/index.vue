@@ -11,56 +11,56 @@
         <div class="search-title">{{ t("searchTitleText") }}</div>
       </div>
     </div>
-    <Add />
+    <Add @goChat="emit('goChat')" />
     <SearchModal
       v-if="searchModalVisible"
       :visible="searchModalVisible"
       @close="searchModalVisible = false"
+      @goChat="emit('goChat')"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted, getCurrentInstance, onUnmounted } from "vue";
 import Icon from "../CommonComponents/Icon.vue";
 import Add from "./add/index.vue";
 import { t } from "../utils/i18n";
 import SearchModal from "./search-modal.vue";
-const searchText = ref("");
-const inputFocus = ref(false);
+import { showToast } from "../utils/toast";
+import { STORAGE_KEY } from "../utils/constants";
+import { useRouter } from "vue-router";
 
 const searchModalVisible = ref(false);
 
-const handleInputFocus = () => {
-  inputFocus.value = true;
+const { proxy } = getCurrentInstance()!;
+const store = proxy?.$UIKitStore;
+const nim = proxy?.$NIM;
+const router = useRouter();
+
+const handelKickedOffline = () => {
+  showToast({
+    message: "您已被踢下线",
+    type: "info",
+  });
+
+  sessionStorage.removeItem(STORAGE_KEY);
+  router.push("/login");
+  store?.destroy();
+  nim.V2NIMLoginService.off("onKickedOffline", handelKickedOffline);
 };
 
-const handleInputBlur = () => {
-  inputFocus.value = false;
-};
+const emit = defineEmits<{
+  goChat: [];
+}>();
 
-const toggleDropdown = () => {
-  // Dropdown 组件会自动处理显示/隐藏
-};
+onMounted(() => {
+  nim.V2NIMLoginService.on("onKickedOffline", handelKickedOffline);
+});
 
-const handleMenuClick = (action: string) => {
-  console.log("Menu clicked:", action);
-  // 这里可以添加具体的处理逻辑
-  switch (action) {
-    case "addFriend":
-      // 添加好友逻辑
-      break;
-    case "createGroup":
-      // 创建群组逻辑
-      break;
-    case "createDiscussion":
-      // 创建讨论组逻辑
-      break;
-    case "joinGroup":
-      // 加入群组逻辑
-      break;
-  }
-};
+onUnmounted(() => {
+  nim.V2NIMLoginService.off("onKickedOffline", handelKickedOffline);
+});
 </script>
 
 <style scoped>

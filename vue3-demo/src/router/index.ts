@@ -17,12 +17,6 @@ const router = createRouter({
       name: "Chat",
       component: () => import("../views/chat/IM.vue"),
     },
-    {
-      // 登录页面
-      path: "/login",
-      name: "Login",
-      component: () => import("../views/login/LoginPage.vue"),
-    },
   ],
 });
 

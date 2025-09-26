@@ -59,6 +59,7 @@ const uninstallUserInfoWatch = autorun(async () => {
     .getAppellation({
       account: props.account,
       teamId: props.teamId,
+      ignoreAlias: true,
     })
     .slice(-2);
 });

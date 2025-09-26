@@ -92,6 +92,7 @@ const emit = defineEmits<{
   close: [];
   chat: [teamId: string];
   "update:visible": [value: boolean];
+  goChat: [];
 }>();
 
 const { proxy } = getCurrentInstance()!; // 获取组件实例
@@ -117,6 +118,7 @@ const handleChange = (event) => {
 const handleSearch = async () => {
   try {
     const team = await store?.teamStore.getTeamForceActive(searchValue.value);
+    inTeam.value = !!store?.teamStore.teams.get(searchValue.value);
 
     if (!team) {
       searchResEmpty.value = true;
@@ -124,7 +126,10 @@ const handleSearch = async () => {
       searchRes.value = team;
     }
   } catch (error) {
-    searchResEmpty.value = true;
+    showToast({
+      message: t("searchFailText"),
+      type: "info",
+    });
   }
 };
 
@@ -153,11 +158,19 @@ const handleAdd = async () => {
     }
 
     adding.value = false;
-  } catch (error) {
-    showToast({
-      message: t("joinTeamFailedText"),
-      type: "error",
-    });
+  } catch (error: any) {
+    if (error.code === 108437) {
+      showToast({
+        message: t("joinTeamLimitText"),
+        type: "error",
+      });
+    } else {
+      showToast({
+        message: t("joinTeamFailedText"),
+        type: "error",
+      });
+    }
+
     adding.value = false;
   }
 };
@@ -175,6 +188,7 @@ const handleChat = async () => {
         searchRes.value.teamId
       );
     }
+    emit("goChat");
 
     handleClose();
   }
@@ -191,7 +205,6 @@ const handleUpdateVisible = (value: boolean) => {
 onMounted(() => {
   inTeam.value = !!store?.teamStore.teams.has(searchRes.value?.teamId || "");
 });
-
 </script>
 
 <style scoped>

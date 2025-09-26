@@ -162,6 +162,9 @@ export default {
   uikitVersion: "Version",
   IMVersion: "IM Version",
   productInfoText: "Product Info",
+  joinTeamFailedText: "Join Team Failed",
+  joinTeamLimitText: "Team member limit reached",
+  teamMuteText: "Team Mute",
 
   weekText: "Weeks ago",
   dayText: "Days ago",

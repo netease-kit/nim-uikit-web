@@ -55,7 +55,9 @@
           <div class="avatar-container">
             <Avatar v-if="props.account" size="60" :account="props.account" />
           </div>
-          <div class="username">{{ userInfo?.name }}</div>
+          <div class="username">
+            {{ userInfo?.name || userInfo?.accountId }}
+          </div>
         </div>
         <div class="user-details">
           <div class="detail-item" v-if="relation !== 'stranger'">

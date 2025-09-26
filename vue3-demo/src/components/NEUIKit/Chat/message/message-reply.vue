@@ -44,7 +44,10 @@
         </div>
       </div>
       <template #content>
-        <div class="popover-message-content">
+        <div
+          @click="(e) => e.stopPropagation()"
+          class="popover-message-content"
+        >
           <MessageItemContent :msg="replyMsg" />
         </div>
       </template>

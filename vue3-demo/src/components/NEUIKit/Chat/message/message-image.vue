@@ -11,20 +11,24 @@
         class="msg-image"
         :lazy-load="true"
         mode="aspectFill"
-        :src="msg.previewImg"
+        :src="msg.previewImg || thumbImageUrl || imageUrl"
       />
     </div>
-    <img
+    <div
       v-else-if="
         msg.sendingState ==
         V2NIMConst.V2NIMMessageSendingState
           .V2NIM_MESSAGE_SENDING_STATE_SUCCEEDED
       "
-      class="msg-image"
-      :lazy-load="true"
-      mode="aspectFill"
-      :src="thumbImageUrl"
-    />
+    >
+      <img
+        v-if="thumbImageUrl || imageUrl"
+        class="msg-image"
+        :lazy-load="true"
+        mode="aspectFill"
+        :src="thumbImageUrl || imageUrl"
+      />
+    </div>
     <img
       v-else-if="
         msg.sendingState ==
@@ -33,7 +37,7 @@
       class="msg-image"
       :lazy-load="true"
       mode="aspectFill"
-      :src="msg.previewImg"
+      :src="msg.previewImg || thumbImageUrl || imageUrl"
     />
   </div>
 

@@ -91,6 +91,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   close: [];
   "update:visible": [value: boolean];
+  goChat: [];
 }>();
 
 const inputFocus = ref(false);
@@ -244,6 +245,7 @@ const handleItemClick = async (item: any) => {
         receiverId
       );
     }
+    emit("goChat");
   } catch {
     showToast({
       message: t("selectSessionFailText"),
@@ -367,6 +369,7 @@ onUnmounted(() => {
   height: 50px;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .close-btn {
