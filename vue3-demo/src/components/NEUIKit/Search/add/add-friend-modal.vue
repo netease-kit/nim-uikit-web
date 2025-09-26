@@ -95,6 +95,7 @@ const props = withDefaults(defineProps<Props>(), {
 // 添加 Modal 相关的 emits
 const emit = defineEmits<{
   close: [];
+  goChat: [];
   "update:visible": [value: boolean];
 }>();
 
@@ -110,7 +111,6 @@ const handleUpdateVisible = (value: boolean) => {
 
 const { proxy } = getCurrentInstance()!; // 获取组件实例
 const store = proxy?.$UIKitStore;
-const nim = proxy?.$NIM;
 
 // 搜索结果状态
 const searchResState = ref<"beginSearch" | "searchEmpty" | "searchResult">(
@@ -142,8 +142,6 @@ const handleSearch = async () => {
       searchResState.value = "searchResult";
     }
   } catch (error) {
-    searchResState.value = "searchEmpty";
-
     showToast({
       message: t("searchFailText"),
       type: "info",
@@ -166,7 +164,7 @@ const applyFriend = async () => {
 
       showToast({
         message: t("applyFriendSuccessText"),
-        type: "info",
+        type: "success",
       });
     } catch (error) {
       showToast({
@@ -182,8 +180,20 @@ const gotoChat = async () => {
   const to = userInfo.value?.accountId;
   if (to) {
     try {
-      const conversationId = nim?.V2NIMConversationIdUtil.p2pConversationId(to);
-      await store?.uiStore.selectConversation(conversationId);
+      if (store?.sdkOptions?.enableV2CloudConversation) {
+        await store?.conversationStore?.insertConversationActive(
+          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
+          to,
+          true
+        );
+      } else {
+        await store?.localConversationStore?.insertConversationActive(
+          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
+          to,
+          true
+        );
+      }
+      emit("goChat");
     } catch (error) {
       showToast({
         message: t("gotoChatFailText"),

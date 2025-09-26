@@ -81,6 +81,7 @@ import {
   getCurrentInstance,
   computed,
   nextTick,
+  watch,
 } from "vue";
 import ChatHeader from "./message/chat-header.vue";
 import MessageList from "./message/message-list.vue";
@@ -414,6 +415,7 @@ const getHistory = async (endTime: number, lastMsgId?: string) => {
         if (historyMsgs.length < HISTORY_LIMIT) {
           noMore.value = true;
         }
+
         // 消息已读未读相关
         handleHistoryMsgReceipt(historyMsgs);
         return historyMsgs;
@@ -738,6 +740,14 @@ const removeMsgs = () => {
   }
 };
 
+// 当有漫游消息且是首次加载时，漫游和历史消息加起来超过15条，如果仅在拉取历史消息的逻辑中去发送已读回执，就会遗漏漫游消息的已读回执，所以在此处拿到完整的消息一并处理
+watch(
+  () => selectedConversation.value,
+  () => {
+    handleHistoryMsgReceipt(msgs.value);
+  }
+);
+
 onMounted(() => {
   setChatHeaderAndPlaceholder();
 
@@ -764,8 +774,11 @@ onMounted(() => {
 
   //消息头像点击
   emitter.on(events.AVATAR_CLICK, (account) => {
-    userCardAccount.value = account as string;
-    showUserCardModal.value = true;
+    const myUserAccountId = proxy?.$NIM.V2NIMLoginService.getLoginUser();
+    if (account !== myUserAccountId) {
+      userCardAccount.value = account as string;
+      showUserCardModal.value = true;
+    }
   });
 });
 

@@ -83,7 +83,8 @@ const playAudioAnimation = () => {
 };
 
 // 切换播放状态
-const togglePlay = () => {
+const togglePlay = (e) => {
+  e.stopPropagation();
   const oldAudio = pauseAllAudio();
   const msgId = oldAudio?.getAttribute("msgId");
   const attachment = props.msg.attachment as V2NIMMessageAudioAttachment;

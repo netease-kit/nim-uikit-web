@@ -22,7 +22,7 @@
             :item-size="50"
             :buffer="50"
             key-field="uniqueKey"
-            :key="`unread-${unReadListData.length}`"
+            key="accountId"
             v-slot="{ item }"
           >
             <div class="list-item" :key="item.accountId">
@@ -58,7 +58,7 @@
             :items="readListData"
             :item-size="50"
             :buffer="5"
-            key-field="uniqueKey"
+            key-field="accountId"
             v-slot="{ item }"
           >
             <div class="list-item" :key="item.accountId">

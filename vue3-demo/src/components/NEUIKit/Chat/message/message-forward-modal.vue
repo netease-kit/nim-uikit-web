@@ -376,8 +376,6 @@ const recentConversationListWatch = autorun(() => {
 
 const switchTab = (tab: "recent" | "friend" | "team") => {
   currentTab.value = tab;
-  selectedId.value = "";
-  selectedItem.value = null;
 };
 
 // 新增一个变量来存储计算好的conversationId
@@ -602,6 +600,7 @@ onUnmounted(() => {
   border-radius: 4px;
   cursor: pointer;
   margin-bottom: 4px;
+  margin-right: 2px;
   transition: background-color 0.2s;
   font-size: 14px;
   flex-shrink: 0;

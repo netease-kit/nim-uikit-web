@@ -9,7 +9,7 @@
       key-field="id"
       v-slot="{ item }"
     >
-      <div :key="item.accountId">
+      <div :key="item.id">
         <!-- 分组标题 -->
         <div v-if="item.type === 'group'" class="friend-group-title">
           {{ item.title }}
@@ -88,9 +88,9 @@ const flattenedFriendList = computed(() => {
     });
 
     // 添加该分组下的好友
-    group.data.forEach((friend, friendIndex) => {
+    group.data.forEach((friend) => {
       result.push({
-        id: `friend-${groupIndex}-${friendIndex}`,
+        id: friend.accountId,
         type: "friend",
         data: friend,
       });

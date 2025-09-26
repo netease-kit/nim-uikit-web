@@ -34,24 +34,6 @@
                 :teamId="item.teamId"
               ></Appellation>
             </div>
-            <div
-              v-if="
-                item.memberRole ===
-                V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_OWNER
-              "
-              class="owner"
-            >
-              {{ t("teamOwner") }}
-            </div>
-            <div
-              v-else-if="
-                item.memberRole ===
-                V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
-              "
-              class="manager"
-            >
-              {{ t("teamManager") }}
-            </div>
           </template>
         </div>
       </RecycleScroller>

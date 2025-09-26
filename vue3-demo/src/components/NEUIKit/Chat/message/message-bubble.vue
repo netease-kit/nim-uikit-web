@@ -149,6 +149,8 @@ const errorTipText = computed(() => {
     return t("sendFailWithInBlackText");
   } else if (props.msg.messageStatus.errorCode === 104404) {
     return t("sendFailWithDeleteText");
+  } else if (props.msg.messageStatus.errorCode === 108306) {
+    return t("teamBannedText");
   } else {
     return t("msgNetworkErrorText");
   }

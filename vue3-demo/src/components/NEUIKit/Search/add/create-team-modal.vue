@@ -115,6 +115,7 @@ import { ref, computed, onMounted, getCurrentInstance, watch } from "vue";
 import { t } from "../../utils/i18n";
 import { toast } from "../../utils/toast";
 import Input from "../../CommonComponents/Input.vue";
+import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 
 // Props
 interface Props {
@@ -127,17 +128,14 @@ const props = withDefaults(defineProps<Props>(), {
   p2pAccountId: "",
 });
 
-// Emits
-interface Emits {
-  (e: "update:visible", visible: boolean): void;
-  (e: "close"): void;
-}
-
-const emit = defineEmits<Emits>();
+const emit = defineEmits<{
+  close: [];
+  goChat: [];
+  "update:visible": [value: boolean];
+}>();
 
 const { proxy } = getCurrentInstance()!;
 const store = proxy?.$UIKitStore;
-const nim = proxy?.$NIM;
 
 // 响应式数据
 const friendList = ref<PersonSelectItem[]>([]);
@@ -239,12 +237,24 @@ const createTeam = async () => {
 
     let teamId = team?.teamId;
     if (teamId) {
-      store?.uiStore.selectConversation(
-        nim.V2NIMConversationIdUtil.teamConversationId(teamId)
-      );
+      if (store?.sdkOptions?.enableV2CloudConversation) {
+        await store.conversationStore?.insertConversationActive(
+          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
+          teamId,
+          true
+        );
+      } else {
+        await store?.localConversationStore?.insertConversationActive(
+          V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
+          teamId,
+          true
+        );
+      }
     }
 
     toast.success(t("createTeamSuccessText"));
+
+    emit("goChat");
 
     // 创建成功后关闭弹窗
     handleClose();

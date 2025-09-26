@@ -1,6 +1,6 @@
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import RootStore from "@xkit-yx/im-store-v2";
-import V2NIM from "nim-web-sdk-ng";
+import V2NIM from "nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK";
 import type { V2NIMMessage } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
 export const init = () => {
   // 是否开启云端会话，实际根据您的业务调整
@@ -45,7 +45,7 @@ export const init = () => {
         return { ...options };
       },
     },
-    "H5"
+    "Web"
   );
   return {
     nim,

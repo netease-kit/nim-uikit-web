@@ -132,10 +132,16 @@ const handleUpdateVisible = (visible: boolean) => {
 
 // 复选框变化处理
 const checkboxChange = (selectList) => {
+  // 获取当前群成员列表
+  const currentTeamMembers =
+    store?.teamMemberStore.getTeamMember(props.teamId) || [];
+  const teamMemberIds = currentTeamMembers.map((member) => member.accountId);
+
   friendList.value = friendList.value.map((item) => {
     return {
       accountId: item.accountId,
       checked: selectList.includes(item.accountId),
+      disabled: teamMemberIds.includes(item.accountId), // 已在群中的好友设为禁用状态
     };
   });
 

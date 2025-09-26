@@ -22,8 +22,8 @@
     >
       <img
         class="msg-video-frame"
+        v-if="videoFirstFrameDataUrl"
         :src="videoFirstFrameDataUrl"
-        alt="视频首帧"
       />
       <!-- 播放按钮覆盖层 -->
       <div class="play-button-overlay">
@@ -43,7 +43,10 @@
       "
       class="video-frame-wrapper"
     >
-      <img class="msg-video-frame" :src="msg.previewImg" />
+      <img
+        class="msg-video-frame"
+        :src="msg.previewImg || videoFirstFrameDataUrl"
+      />
       <!-- 播放按钮覆盖层 -->
       <div class="play-button-overlay">
         <div class="play-button">
@@ -58,7 +61,7 @@
   <!-- 视频播放 Modal -->
   <Modal
     v-model:visible="isVideoModalVisible"
-    :title="'视频播放'"
+    :title="t('videoPlayText')"
     :width="800"
     :height="600"
     :showDefaultFooter="false"
@@ -91,7 +94,7 @@ import { ref, computed } from "vue";
 import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import Modal from "../../CommonComponents/Modal.vue";
-
+import { t } from "../../utils/i18n";
 // Props
 interface Props {
   msg: V2NIMMessageForUI;
@@ -128,6 +131,10 @@ const videoUrl = computed(() => {
 
 // 事件处理
 const handleVideoClick = () => {
+  // 暂停所有音频播放
+  const audio = document.getElementById("yx-audio-message") as HTMLAudioElement;
+  audio?.pause();
+
   if (
     props.msg.sendingState ===
     V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_SUCCEEDED

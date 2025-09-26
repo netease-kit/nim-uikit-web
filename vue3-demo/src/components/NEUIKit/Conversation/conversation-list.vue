@@ -44,8 +44,6 @@ import Empty from "../CommonComponents/Empty.vue";
 import ConversationItem from "./conversation-item.vue";
 import { t } from "../utils/i18n";
 import { showToast } from "../utils/toast";
-import { useRouter } from "vue-router";
-import { neUiKitRouterPath } from "../utils/uikitRouter";
 import { trackInit } from "../utils/reporter";
 import type {
   V2NIMConversationForUI,
@@ -58,10 +56,6 @@ const conversationList = ref<
 const addDropdownVisible = ref(false);
 
 const currentMoveSessionId = ref("");
-
-let buttonClass = "button-box";
-
-const router = useRouter();
 
 const { proxy } = getCurrentInstance()!; // 获取组件实例
 const store = proxy?.$UIKitStore;
@@ -166,8 +160,24 @@ const handleConversationItemClick = async (
   currentMoveSessionId.value = "";
   try {
     flag = true;
+    // 处理@消息相关
+    if (
+      conversation.type ===
+        V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM ||
+      conversation.type ===
+        V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_SUPER_TEAM
+    ) {
+      if (store?.sdkOptions?.enableV2CloudConversation) {
+        await store?.conversationStore?.markConversationReadActive(
+          conversation.conversationId
+        );
+      } else {
+        await store?.localConversationStore?.markConversationReadActive(
+          conversation.conversationId
+        );
+      }
+    }
     await store?.uiStore.selectConversation(conversation.conversationId);
-    router.push(neUiKitRouterPath.chat);
   } catch {
     showToast({
       message: t("selectSessionFailText"),

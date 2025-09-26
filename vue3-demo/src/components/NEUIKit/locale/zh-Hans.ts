@@ -110,6 +110,9 @@ export default {
   nickPlaceholderText: "请输入昵称",
   signPlaceholderText: "请输入签名",
   emailPlaceholderText: "请输入邮箱",
+  joinTeamFailedText: "加入群组失败",
+  joinTeamLimitText: "群组人数达到上限",
+  teamMuteText: "当前群聊禁言中",
 
   teamTitle: "群名称",
   teamIntro: "群介绍",

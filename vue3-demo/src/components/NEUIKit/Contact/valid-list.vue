@@ -161,7 +161,7 @@ const handleAcceptApplyFriendClick = async (
   try {
     try {
       await store.friendStore.acceptAddApplicationActive(msg);
-      toast.info(t("acceptedText"));
+      toast.success(t("acceptedText"));
     } catch (error) {
       toast.info(t("acceptFailedText"));
     }
@@ -185,7 +185,7 @@ const handleAcceptApplyFriendClick = async (
 
 /** 监听验证消息 */
 const validMsgWatch = autorun(() => {
-  validMsg.value = store?.sysMsgStore.friendApplyMsgs;
+  validMsg.value = store?.sysMsgStore.friendApplyMsgs.sort();
   store?.sysMsgStore.friendApplyMsgs?.map((item) => {
     store?.userStore.getUserActive(item.applicantAccountId);
   });

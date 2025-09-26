@@ -32,16 +32,19 @@
       v-if="addFriendModalVisible"
       :visible="addFriendModalVisible"
       @close="addFriendModalVisible = false"
+      @goChat="$emit('goChat')"
     />
     <CreateTeamModal
       v-if="createTeamModalVisible"
       :visible="createTeamModalVisible"
+      @goChat="$emit('goChat')"
       @close="createTeamModalVisible = false"
     />
     <JoinTeamModal
       v-if="joinTeamModalVisible"
       :visible="joinTeamModalVisible"
       @close="joinTeamModalVisible = false"
+      @goChat="$emit('goChat')"
     />
   </div>
 </template>
@@ -54,6 +57,11 @@ import { t } from "../../utils/i18n";
 import AddFriendModal from "./add-friend-modal.vue";
 import CreateTeamModal from "./create-team-modal.vue";
 import JoinTeamModal from "./join-team-modal.vue";
+
+const $emit = defineEmits<{
+  goChat: [];
+}>();
+
 // 定义菜单项数组
 const menuItems = ref([
   {

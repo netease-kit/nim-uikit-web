@@ -209,6 +209,7 @@ const formatMessageTime = (timestamp: number) => {
 // 监听昵称变化
 const uninstallAppellationWatch = autorun(() => {
   // 昵称展示顺序 群昵称 > 备注 > 个人昵称 > 帐号
+  // 断网重联下，若群成员修改昵称，可以通过拉取群成员接口，触发此函数执行，获取最新的群昵称
   appellation.value = proxy?.$UIKitStore.uiStore.getAppellation({
     account: props.msg.senderId,
     teamId:
