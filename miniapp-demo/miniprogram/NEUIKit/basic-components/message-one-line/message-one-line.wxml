@@ -1,0 +1,34 @@
+<view class="message-one-line {{customClass}}" style="{{customStyle}}">
+  <view class="message-one-line-left">
+    <view class="message-one-line-avatar">
+      <image 
+        wx:if="{{avatar}}"
+        class="message-one-line-avatar-img" 
+        src="{{avatar}}" 
+        mode="aspectFill"
+        bind:error="onAvatarError"
+      />
+      <view wx:else class="message-one-line-avatar-placeholder">
+        <icon name="person" size="24" color="#999" />
+      </view>
+    </view>
+  </view>
+  
+  <view class="message-one-line-content">
+    <view class="message-one-line-header">
+      <text class="message-one-line-name">{{name || '未知用户'}}</text>
+      <text class="message-one-line-time">{{formatTime}}</text>
+    </view>
+    
+    <view class="message-one-line-message">
+      <text class="message-one-line-text">{{lastMessage || '暂无消息'}}</text>
+      <view wx:if="{{unreadCount > 0}}" class="message-one-line-badge">
+        <text class="message-one-line-badge-text">{{unreadCount > 99 ? '99+' : unreadCount}}</text>
+      </view>
+    </view>
+  </view>
+  
+  <view wx:if="{{showArrow}}" class="message-one-line-arrow">
+    <icon name="arrow-right" size="16" color="#999" />
+  </view>
+</view>

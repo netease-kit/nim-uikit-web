@@ -1,0 +1,1 @@
+<view class="status-bar-placeholder" style="height: {{statusBarHeight}}px; background-color: {{backgroundColor}};"></view>

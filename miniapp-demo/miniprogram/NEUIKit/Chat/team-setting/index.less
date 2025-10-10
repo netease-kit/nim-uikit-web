@@ -1,0 +1,735 @@
+/* 群聊设置容器 */
+.team-setting-container {
+  height: 100vh;
+  background-color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 状态栏占位 */
+.status-bar-placeholder {
+  background-color: #ffffff;
+}
+
+/* 导航栏 */
+.team-setting-header {
+  height: 88rpx;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.header-left {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-title {
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #333333;
+}
+
+.header-right {
+  width: 80rpx;
+}
+
+/* 内容区域 */
+.team-setting-content {
+  flex: 1;
+  padding: 20rpx;
+  overflow-y: auto;
+}
+
+/* 设置卡片 */
+.team-setting-card {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+  overflow: hidden;
+}
+
+/* 设置项 */
+.team-setting-item {
+  padding: 30rpx 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.team-setting-item:last-child {
+  border-bottom: none;
+}
+
+
+/* 群组信息项 */
+.team-info-item {
+  padding: 40rpx 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.team-info-section {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.team-avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 20rpx;
+  margin-right: 24rpx;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  flex-shrink: 0;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 20rpx;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e0e0e0;
+  color: #666666;
+  font-size: 32rpx;
+  font-weight: 500;
+}
+
+.avatar-text {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #666666;
+}
+
+.team-members-wrap {
+  padding: 40rpx 32rpx;
+
+  .team-members-info {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    .team-info-count {
+      font-size: 24rpx;
+      color: #999999;
+      margin-right: 16rpx;
+    }
+  }
+
+  .member-list {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20rpx;
+  }
+}
+
+.team-info-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.team-info-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333333;
+  margin-bottom: 8rpx;
+}
+
+.team-info-subtitle {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.team-details {
+  flex: 1;
+}
+
+.team-name {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333333;
+  margin-bottom: 8rpx;
+}
+
+.team-member-count {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.team-actions {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.action-btn {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f8f8;
+  border-radius: 50%;
+}
+
+/* 设置项 */
+.setting-item {
+  min-height: 80rpx;
+}
+
+.setting-label {
+  font-size: 28rpx;
+  color: #333333;
+  flex: 1;
+}
+
+.setting-value {
+  font-size: 28rpx;
+  color: #666666;
+  margin-left: 20rpx;
+  max-width: 400rpx;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 群成员头像列表 */
+.member-avatars {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  margin-top: 20rpx;
+  gap: 16rpx;
+  
+  .member-item {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     max-width: 80rpx;
+     
+     .member-avatar {
+       width: 60rpx;
+       height: 60rpx;
+       border-radius: 50%;
+       border: 2rpx solid #ffffff;
+       box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+       margin-bottom: 8rpx;
+     }
+     
+     appellation {
+       font-size: 20rpx;
+       color: #666666;
+       text-align: center;
+       max-width: 80rpx;
+       overflow: hidden;
+       text-overflow: ellipsis;
+       white-space: nowrap;
+     }
+   }
+  
+  .member-add {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+    .add-icon {
+      width: 39px;
+      height: 39px;
+      border-radius: 50%;
+      background-color: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px dashed #cccccc;
+      color: #999999;
+    }
+  }
+  
+  .add-member-btn {
+    width: 60rpx;
+    height: 60rpx;
+    border-radius: 50%;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2rpx dashed #cccccc;
+    
+    .add-icon {
+      width: 24rpx;
+      height: 24rpx;
+      color: #999999;
+    }
+  }
+}
+
+/* 群信息卡片 */
+.team-info-card {
+  .team-basic-info {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 30rpx;
+    
+    .team-avatar {
+      width: 100rpx;
+      height: 100rpx;
+      border-radius: 16rpx;
+      margin-right: 24rpx;
+    }
+    
+    .team-info {
+      flex: 1;
+      
+      .team-name {
+        font-size: 32rpx;
+        font-weight: 600;
+        color: #333333;
+        margin-bottom: 8rpx;
+      }
+      
+      .team-member-count {
+        font-size: 26rpx;
+        color: #999999;
+      }
+    }
+    
+    .arrow-icon {
+      width: 24rpx;
+      height: 24rpx;
+      color: #cccccc;
+    }
+  }
+}
+
+.setting-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10rpx;
+}
+
+.setting-right {
+  display: flex;
+  align-items: center;
+  padding: 10rpx;
+  gap: 16rpx;
+}
+
+/* 危险操作卡片 */
+.danger-card {
+  margin-top: 40rpx;
+}
+
+.danger-item {
+  justify-content: center;
+}
+
+.danger-label {
+  font-size: 28rpx;
+  color: #ff4757;
+  font-weight: 500;
+}
+
+/* 加载状态 */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.loading-content {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 60rpx 80rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid #f0f0f0;
+  border-top: 4rpx solid #007AFF;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20rpx;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #666666;
+}
+
+/* 确认对话框 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.modal-content {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  margin: 0 60rpx;
+  max-width: 600rpx;
+  overflow: hidden;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333333;
+  text-align: center;
+  padding: 40rpx 40rpx 20rpx;
+}
+
+.modal-message {
+  font-size: 28rpx;
+  color: #666666;
+  text-align: center;
+  padding: 0 40rpx 40rpx;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.modal-button {
+  flex: 1;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.cancel-button {
+  color: #666666;
+  border-right: 1rpx solid #f0f0f0;
+}
+
+.confirm-button {
+  color: #007AFF;
+}
+
+/* 深色主题 */
+.dark-theme {
+  background-color: #1a1a1a;
+}
+
+.dark-theme .team-setting-header {
+  background-color: #2a2a2a;
+  border-bottom-color: #3a3a3a;
+}
+
+.dark-theme .header-title {
+  color: #ffffff;
+}
+
+.dark-theme .team-setting-card {
+  background-color: #2a2a2a;
+}
+
+.dark-theme .team-setting-item {
+  border-bottom-color: #3a3a3a;
+}
+
+.dark-theme .team-name {
+  color: #ffffff;
+}
+
+.dark-theme .team-member-count {
+  color: #999999;
+}
+
+.dark-theme .setting-label {
+  color: #ffffff;
+}
+
+.dark-theme .setting-value {
+    color: #999999;
+  }
+
+  /* 群成员头像列表 - 暗色主题 */
+  .member-avatars {
+    .add-member-btn {
+      background-color: #2a2a2a;
+      border-color: #555555;
+      
+      .add-icon {
+        color: #888888;
+      }
+    }
+  }
+
+  /* 群信息卡片 - 暗色主题 */
+  .team-info-card {
+    .team-basic-info {
+      .team-info {
+        .team-name {
+          color: #ffffff;
+        }
+        
+        .team-member-count {
+          color: #888888;
+        }
+      }
+      
+      .arrow-icon {
+        color: #666666;
+      }
+    }
+  }
+
+.dark-theme .action-btn {
+  background-color: #3a3a3a;
+}
+
+.dark-theme .avatar-placeholder {
+  background-color: #3a3a3a;
+  color: #999999;
+}
+
+.dark-theme .modal-content {
+  background-color: #2a2a2a;
+}
+
+.dark-theme .modal-title {
+  color: #ffffff;
+}
+
+.dark-theme .modal-message {
+  color: #cccccc;
+}
+
+.dark-theme .modal-actions {
+  border-top-color: #3a3a3a;
+}
+
+.dark-theme .cancel-button {
+  color: #999999;
+  border-right-color: #3a3a3a;
+}
+
+/* 交互效果和动画 */
+.team-setting-item {
+  transition: background-color 0.2s ease;
+}
+
+.team-setting-item:active {
+  background-color: #f8f8f8;
+}
+
+.dark-theme .team-setting-item:active {
+  background-color: #333333;
+}
+
+.action-btn {
+  transition: all 0.2s ease;
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+  background-color: #e8e8e8;
+}
+
+.dark-theme .action-btn:active {
+  background-color: #444444;
+}
+
+.modal-button {
+  transition: background-color 0.2s ease;
+}
+
+.modal-button:active {
+  background-color: #f0f0f0;
+}
+
+.dark-theme .modal-button:active {
+  background-color: #333333;
+}
+
+/* 危险操作按钮样式 */
+.danger-btn {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx 0;
+  margin: 20rpx 0;
+  text-align: center;
+  font-size: 28rpx;
+  color: #ff4757;
+  transition: all 0.2s ease;
+}
+
+.danger-btn:active {
+  background-color: #ff4757;
+  color: #ffffff;
+  transform: scale(0.98);
+}
+
+.dark-theme .danger-btn {
+  background-color: #2a2a2a;
+  border-color: #ff4757;
+}
+
+.dark-theme .danger-btn:active {
+  background-color: #ff4757;
+  color: #ffffff;
+}
+
+/* 开关组件样式优化 */
+switch {
+  transform: scale(0.8);
+}
+
+/* 头像加载状态 */
+.avatar-image {
+  transition: opacity 0.3s ease;
+}
+
+.avatar-loading {
+  opacity: 0.6;
+}
+
+/* 卡片阴影效果 */
+.team-setting-card {
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s ease;
+}
+
+.team-setting-card:active {
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.12);
+}
+
+.dark-theme .team-setting-card {
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .team-setting-card:active {
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.4);
+}
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .team-setting-content {
+    padding: 16rpx;
+  }
+  
+  .team-setting-item {
+    padding: 24rpx 28rpx;
+  }
+  
+  .team-info-item {
+    padding: 32rpx 28rpx;
+  }
+  
+  .modal-content {
+    margin: 0 40rpx;
+  }
+}
+
+/* 无障碍访问优化 */
+.team-setting-item[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* 加载状态优化 */
+.loading-overlay {
+  backdrop-filter: blur(4rpx);
+}
+
+.loading-content {
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.2);
+}
+
+.dark-theme .loading-content {
+  background-color: #2a2a2a;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .loading-text {
+  color: #cccccc;
+}
+
+/* 成员头像列表优化 */
+.member-avatars {
+  .member-avatar {
+    transition: transform 0.2s ease;
+  }
+  
+  .member-avatar:active {
+    transform: scale(0.95);
+  }
+  
+  .add-member-btn {
+    transition: all 0.2s ease;
+  }
+  
+  .add-member-btn:active {
+    transform: scale(0.95);
+    background-color: #e8e8e8;
+  }
+  
+  .dark-theme .add-member-btn:active {
+    background-color: #333333;
+  }
+}
+
+/* 滚动条样式 */
+.team-setting-content::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+/* 文本选择禁用 */
+.team-setting-container {
+  -webkit-user-select: none;
+  user-select: none;
+}

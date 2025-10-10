@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "login-form": "../login-form/login-form",
+    "status-bar-placeholder": "../../basic-components/status-bar-placeholder/status-bar-placeholder"
+  }
+}

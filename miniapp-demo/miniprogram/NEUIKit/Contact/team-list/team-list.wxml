@@ -1,0 +1,54 @@
+<view class="teamlist-container">
+  <!-- 动态状态栏占位 -->
+  <view class="status-bar-placeholder" style="height: {{statusBarHeight}}px; background-color: #fff;"></view>
+  
+  <!-- 导航栏 -->
+  <nav-bar 
+    title="{{teamMenuText}}" 
+    showLeft="{{false}}" 
+    backgroundColor="#ffffff"
+    showSetting="{{false}}"
+  ></nav-bar>
+  
+  <!-- 群组列表 -->
+  <view class="teamlist-content">
+    <view wx:if="{{teamList.length > 0}}" class="teamlist-list">
+      <view 
+        wx:for="{{teamList}}" 
+        wx:key="teamId" 
+        class="teamlist-item" 
+        bindtap="handleTeamItemClick" 
+        data-team="{{item}}"
+      >
+        <avatar 
+          account="{{item.teamId}}"
+          avatar="{{item.avatar}}"
+          nick="{{item.name || item.teamId}}"
+          size="{{42}}"
+          isTeam="{{true}}"
+        ></avatar>
+        
+        <view class="teamlist-info">
+          <view class="teamlist-name">
+            {{item.name || item.teamId}}
+          </view>
+          <view class="teamlist-desc">
+            {{item.memberCount}}人 · {{item.intro || '暂无群介绍'}}
+          </view>
+        </view>
+        
+        <view class="teamlist-actions">
+          <icon class="more-icon" type="icon-jiantou" color="#999"></icon>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 空状态 -->
+    <view wx:else class="empty-container">
+      <empty 
+        type="noTeam"
+        text="{{noTeamText}}"
+      ></empty>
+    </view>
+  </view>
+</view>

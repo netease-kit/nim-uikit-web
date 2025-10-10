@@ -1,0 +1,54 @@
+<view class="team-member-container">
+  <!-- 导航栏 -->
+  <view class="nav-bar" style="padding-top: {{statusBarHeight}}px;">
+    <view class="nav-back" bindtap="handleBack">
+      <icon type="icon-zuojiantou" size="20" color="#333333" />
+    </view>
+    <view class="nav-title">群成员</view>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 添加成员按钮 -->
+  <view wx:if="{{canAddMember}}" class="add-item" bindtap="handleAddMember">
+    <view class="add-item-label">添加群成员</view>
+    <icon type="icon-jiantou" size="16" color="#999" />
+  </view>
+
+  <!-- 成员列表 -->
+  <view wx:if="{{teamMembers.length > 0}}" class="member-list">
+    <view class="team-item" wx:for="{{teamMembers}}" wx:key="accountId">
+      <view class="team-member">
+        <avatar 
+          account="{{item.accountId}}" 
+          avatar="{{item.avatar}}" 
+          size="40" 
+        />
+        <appellation 
+          class="user-name" 
+          account="{{item.accountId}}" 
+          teamId="{{teamId}}" 
+        />
+        <!-- 角色标签 -->
+        <view wx:if="{{team.ownerAccountId === item.accountId}}" class="user-tag">
+          {{teamOwnerText}}
+        </view>
+        <view wx:elif="{{item.memberRole === 1}}" class="user-tag">
+          {{teamManagerText}}
+        </view>
+      </view>
+      <view 
+        wx:if="{{item.canRemove}}" 
+        class="btn-remove" 
+        bindtap="handleRemoveMember"
+        data-account="{{item.accountId}}"
+      >
+        移除
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:else class="empty-state">
+    <view class="empty-text">暂无群成员</view>
+  </view>
+</view>

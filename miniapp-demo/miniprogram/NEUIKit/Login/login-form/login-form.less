@@ -1,0 +1,84 @@
+.login-form {
+  padding: 0 30px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.login-title {
+  font-size: 48rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.login-tips {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 80rpx;
+  line-height: 1.5;
+}
+
+.form-input-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  border-bottom: 2rpx solid #e5e5e5;
+  padding: 20rpx 20rpx 10rpx 0;
+
+  &.input-error {
+    border-bottom-color: #ff3b30;
+  }
+
+  .phone-addon-before{
+    font-size: 32rpx;
+    color: #666;
+    padding-right: 20rpx;
+    border-right: 2rpx solid #e5e5e5;
+  }
+
+  .input {
+    flex: 1;
+    height: 72rpx;
+    border: 0;
+    border-radius: 12rpx;
+    transition: border-color .2s;
+    outline: none;
+    box-sizing: border-box;
+    color: #000;
+    font-size: 32rpx;
+    padding-left: 16rpx;
+    white-space: nowrap;
+  }
+
+  .sms-addon-after {
+    font-size: 28rpx;
+    color: #337eff;
+
+    &.disabled {
+      color: #999;
+    }
+  }
+}
+
+.error-msg {
+  font-size: 24rpx;
+  color: #ff3b30;
+  margin-top: 10rpx;
+}
+
+.login-btn {
+  width: 100%;
+  height: 100rpx;
+  margin-top: 158rpx;
+  border-radius: 16rpx;
+  background-color: #337eff;
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 600;
+  text-align: center;
+  line-height: 100rpx;
+
+  &.loading {
+    background-color: #999;
+  }
+}

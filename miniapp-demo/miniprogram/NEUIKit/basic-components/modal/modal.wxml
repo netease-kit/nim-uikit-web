@@ -1,0 +1,12 @@
+<modal
+  title="{{title}}"
+  hidden="{{!visible}}"
+  confirm-text="{{confirmText}}"
+  cancel-text="{{cancelText}}"
+  bindconfirm="handleConfirmClick"
+  bindcancel="handleCancelClick"
+  class="{{customClass}}"
+  style="{{customStyle}}"
+>
+  <slot></slot>
+</modal>

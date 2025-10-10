@@ -1,0 +1,8 @@
+{
+  "component": true,
+  "styleIsolation": "apply-shared",
+  "usingComponents": {
+    "icon": "../../basic-components/icon/icon",
+    "user-card": "../../basic-components/user-card/user-card"
+  }
+}

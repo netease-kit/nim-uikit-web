@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "通讯录",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "contact": "/NEUIKit/Contact/index/index"
+  }
+}

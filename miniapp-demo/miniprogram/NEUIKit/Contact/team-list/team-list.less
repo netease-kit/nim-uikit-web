@@ -1,0 +1,141 @@
+/* 群组列表容器 */
+.teamlist-container {
+  position: relative;
+  height: 100vh;
+  box-sizing: border-box;
+  background-color: #fff;
+  overflow: hidden;
+}
+
+/* 状态栏占位区域 */
+.status-bar-placeholder {
+  width: 100%;
+  background-color: #fff;
+}
+
+/* 导航栏 */
+.navigation-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 28rpx;
+  padding-top: 8rpx;
+  background-color: #fff;
+  border-bottom: 1rpx solid #f5f6fa;
+  position: relative;
+  z-index: 100;
+}
+
+/* 导航栏左侧 */
+.nav-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.nav-left:active {
+  background-color: #f5f6fa;
+}
+
+/* 导航栏标题 */
+.nav-title {
+  flex: 1;
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 导航栏右侧 */
+.nav-right {
+  width: 52rpx;
+  height: 52rpx;
+}
+
+/* 群组列表内容 */
+.teamlist-content {
+  height: calc(100vh - 200rpx); /* 减去导航栏高度 */
+  box-sizing: border-box;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: #fff;
+}
+
+/* 群组列表 */
+.teamlist-list {
+  background-color: #fff;
+}
+
+/* 群组项 */
+.teamlist-item {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 32rpx;
+  min-height: 112rpx;
+  transition: background-color 0.2s;
+}
+
+.teamlist-item:active {
+  background-color: #f5f6fa;
+}
+
+.teamlist-item:last-child {
+  border-bottom: none;
+}
+
+/* 群组信息 */
+.teamlist-info {
+  flex: 1;
+  margin-left: 20rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 68rpx;
+}
+
+/* 群组名称 */
+.teamlist-name {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.4;
+  margin-bottom: 6rpx;
+  word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 群组描述 */
+.teamlist-desc {
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.4;
+  word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 群组操作 */
+.teamlist-actions {
+  margin-left: 20rpx;
+}
+
+/* 更多图标 */
+.more-icon {
+  margin-left: 24rpx;
+}
+
+/* 空状态容器 */
+.empty-container {
+  padding: 80rpx 32rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 320rpx;
+}

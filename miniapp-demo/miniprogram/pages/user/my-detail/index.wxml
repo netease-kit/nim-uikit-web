@@ -1,0 +1,8 @@
+<view class="page-wrapper">
+  <my-detail 
+    bind:back="onBack"
+    bind:avatarSelect="onAvatarSelect"
+    bind:nicknameEdit="onNicknameEdit"
+    bind:save="onSave"
+  ></my-detail>
+</view>

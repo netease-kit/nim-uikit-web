@@ -1,0 +1,21 @@
+<view class="user-wrapper {{extClass}}" style="{{customStyleStr}}">
+  <view class="avatar-wrapper">
+    <avatar wx:if="{{account}}" size="70" account="{{account}}" avatar="{{avatar}}"></avatar>
+  </view>
+  <view class="account-wrapper">
+    <view wx:if="{{alias}}">
+      <view class="main">{{alias}}</view>
+      <view class="deputy">{{nameText}}:{{nick || account}}</view>
+    </view>
+    <view wx:else class="main">{{nick || account}}</view>
+    <view class="deputy">
+      <view class="account">{{accountText}}:{{account}}</view>
+      <icon bindtap="copyAccount"
+        class="copy-icon"
+        type="icon-fuzhi1"
+        color="#A6ADB6"
+        size="20"
+      ></icon>
+    </view>
+  </view>
+</view>

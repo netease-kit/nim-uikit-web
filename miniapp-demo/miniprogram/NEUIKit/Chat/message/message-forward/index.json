@@ -1,0 +1,8 @@
+{
+  "component": true,
+  "styleIsolation": "apply-shared",
+  "usingComponents": {
+    "icon": "../../../basic-components/icon/icon",
+    "message-avatar": "../message-avatar/index"
+  }
+}

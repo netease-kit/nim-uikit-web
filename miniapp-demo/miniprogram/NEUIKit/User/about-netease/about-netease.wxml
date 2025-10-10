@@ -1,0 +1,41 @@
+<view class="wrapper">
+  <!-- 状态栏占位 -->
+  <view class="status-bar-placeholder" style="height: {{statusBarHeight}}px;"></view>
+  
+  <!-- 导航栏 -->
+  <nav-bar title="{{aboutText}}" bind:back="onBack"></nav-bar>
+  
+  <!-- Logo和应用名称 -->
+  <view class="logo-box">
+    <image 
+      class="logo-img" 
+      src="https://yx-web-nosdn.netease.im/common/fcd2d5e8d2897d4b2d965e06509f47d2/about-logo.png"
+      mode="aspectFit"
+    ></image>
+    <view class="app-name">{{appText}}</view>
+  </view>
+  
+  <!-- 关于信息项容器 -->
+  <view class="aboutInfo-item-wrapper">
+    <!-- UIKit版本 -->
+    <view class="item">
+      <view class="item-label">{{uikitVersionText}}</view>
+      <view class="item-value">{{uikitVersion}}</view>
+    </view>
+    
+    <!-- IM版本 -->
+    <view class="item">
+      <view class="item-label">{{imVersionText}}</view>
+      <view class="item-value">{{imVersion}}</view>
+    </view>
+    
+    <!-- 产品介绍 -->
+    <view class="item clickable-item" bindtap="onProductIntroClick">
+      <view class="item-label">{{productIntroText}}</view>
+      <view class="item-arrow">
+        <icon type="icon-jiantou" size="16" color="#999999" />
+      </view>
+    </view>
+
+  </view>
+</view>

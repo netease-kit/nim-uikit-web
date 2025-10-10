@@ -1,0 +1,22 @@
+/* 使用小程序原生modal组件，大部分样式由系统提供 */
+/* 可以通过以下方式自定义原生modal的样式 */
+
+/* 自定义modal内容样式 */
+modal {
+  /* 原生modal组件的自定义样式可以在这里添加 */
+}
+
+/* 如果需要自定义slot内容的样式 */
+.modal-content {
+  padding: 16px;
+  text-align: center;
+  font-size: 14px;
+  color: #333;
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .modal-content {
+    color: #fff;
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "component": true,
+  "styleIsolation": "apply-shared",
+  "usingComponents": {
+    "avatar": "../../basic-components/avatar/avatar",
+    "nav-bar": "../../basic-components/nav-bar/nav-bar",
+    "appellation": "../../basic-components/appellation/appellation",
+    "empty": "../../basic-components/empty/empty",
+    "icon": "../../basic-components/icon/icon"
+  }
+}

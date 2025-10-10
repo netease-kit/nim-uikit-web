@@ -1,0 +1,25 @@
+<view 
+  class="chat-tooltip {{extClass}}" 
+  style="--theme-bg-color: {{color}}; {{customStyleStr}}"
+>
+  <view 
+    class="chat_tooltip_content"
+    bindtouchstart="handleTouchStart"
+    bindtouchend="handleTouchEnd"
+    bindtouchmove="handleTouchMove"
+  >
+    <slot></slot>
+    <view 
+      class="chat_tooltip__mask" 
+      wx:if="{{isShow}}"
+      catchtouchstart="close"
+    ></view>
+    <view 
+      class="chat_tooltip__popper {{colorClass}}"
+      catchtap="stopPropagation"
+      style="{{popperStyle}}"
+    >
+      <slot name="content">{{content}}</slot>
+    </view>
+  </view>
+</view>

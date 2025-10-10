@@ -1,0 +1,10 @@
+<view class="message-read-info-page">
+  <message-read-info 
+    theme="{{theme}}"
+    message-id="{{messageId}}"
+    conversation-id="{{conversationId}}"
+    bind:refresh="onRefresh"
+    bind:export="onExport"
+    bind:user-click="onUserClick"
+  />
+</view>

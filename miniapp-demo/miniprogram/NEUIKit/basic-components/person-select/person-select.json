@@ -1,0 +1,9 @@
+{
+  "component": true,
+  "styleIsolation": "apply-shared",
+  "usingComponents": {
+    "avatar": "/NEUIKit/basic-components/avatar/avatar",
+    "appellation": "/NEUIKit/basic-components/appellation/appellation",
+    "empty": "/NEUIKit/basic-components/empty/empty"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "验证消息",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "valid-list": "/NEUIKit/Contact/valid-list/valid-list"
+  }
+}

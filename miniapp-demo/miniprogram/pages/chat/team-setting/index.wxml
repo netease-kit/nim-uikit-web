@@ -1,0 +1,5 @@
+<team-setting 
+  teamId="{{teamId}}" 
+  conversationId="{{conversationId}}" 
+  theme="{{theme}}"
+/>

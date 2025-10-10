@@ -1,0 +1,51 @@
+<view class="add-member-container">
+  <!-- 导航栏 -->
+  <view class="nav-bar" style="padding-top: {{statusBarHeight}}px;">
+    <view class="nav-back" bindtap="handleBack">
+      <icon type="icon-zuojiantou" size="20" color="#333333" />
+    </view>
+    <view class="nav-title">{{addMemberText}}</view>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 好友列表 -->
+  <view wx:if="{{friendList.length > 0}}" class="friend-list">
+    <view class="friend-item" wx:for="{{friendList}}" wx:key="accountId">
+      <view class="friend-info">
+        <avatar 
+          account="{{item.account}}" 
+          avatar="{{item.avatar}}" 
+          size="40" 
+        />
+        <view class="friend-details">
+          <view class="friend-name">{{item.nick || item.account}}</view>
+        </view>
+      </view>
+      <view class="friend-action">
+        <checkbox-group bindchange="handleSelectFriend" data-account="{{item.account}}">
+          <checkbox value="{{item.account}}" checked="{{item.isInTeam || item.selected}}" disabled="{{item.isInTeam || item.isBlacklisted}}" />
+        </checkbox-group>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:else class="empty-state">
+    <view class="empty-text">暂无可添加的好友</view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-state">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <!-- 底部确定按钮 -->
+  <view class="bottom-action">
+    <view 
+      class="confirm-button {{selectedMembers.length > 0 ? 'active' : 'disabled'}}" 
+      bindtap="handleConfirm"
+    >
+      {{confirmText}}{{selectedMembers.length > 0 ? '(' + selectedMembers.length + ')' : ''}}
+    </view>
+  </view>
+</view>

@@ -1,0 +1,167 @@
+.conversation-wrapper {
+  position: relative;
+  height: 100vh;
+  background-color: #fff;
+
+  .dropdown-mark {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999;
+    background-color: transparent;
+  }
+
+  // 状态栏占位区域
+  .status-bar-placeholder {
+    width: 100%;
+    background-color: #fff;
+  }
+
+  // nav-bar组件自定义样式
+  .navbar-left-content {
+    display: flex;
+    align-items: center;
+    font-size: 36rpx;
+    font-weight: 600;
+    color: #333;
+
+    .navbar-logo-img {
+      width: 54rpx;
+      height: 54rpx;
+      margin-right: 16rpx;
+      border-radius: 8rpx;
+    }
+
+    .navbar-app-text {
+      font-size: 36rpx;
+      font-weight: 600;
+      color: #333;
+    }
+  }
+
+  .navbar-right-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44rpx;
+    height: 44rpx;
+    border-radius: 8rpx;
+    transition: background-color 0.2s;
+
+    &:active {
+      background-color: #f5f6fa;
+    }
+  }
+
+  // 新增：搜索框和按钮组合容器
+  .search-and-actions {
+    display: flex;
+    align-items: center;
+    padding: 20rpx 32rpx;
+    gap: 20rpx;
+
+    .conversation-search {
+      flex: 1; // 搜索框占据剩余空间
+      
+      .search-input-wrapper {
+        display: flex;
+        align-items: center;
+        background-color: #f5f6fa;
+        border-radius: 12rpx;
+        padding: 10rpx 24rpx;
+        
+        .search-icon-wrapper {
+          margin-right: 16rpx;
+          
+          .search-icon {
+            display: block;
+          }
+        }
+        
+        .search-input {
+          font-size: 28rpx;
+          color: #a6adb6;
+          flex: 1;
+        }
+      }
+    }
+
+    // 按钮样式（从原导航栏移过来）
+    .button-box {
+      position: relative;
+      flex-shrink: 0; // 防止按钮被压缩
+
+      .button-icon-add {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        border-radius: 8rpx;
+        transition: background-color 0.2s;
+
+        &:active {
+          background-color: #f5f6fa;
+        }
+      }
+
+      &.button-box-active .button-icon-add {
+        background-color: #f5f6fa;
+      }
+
+      .dropdown-container {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        z-index: 1000;
+        background-color: #fff;
+        border-radius: 16rpx;
+        box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        min-width: 200rpx;
+
+        .add-menu-list {
+          .add-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 24rpx 32rpx;
+            font-size: 28rpx;
+            color: #333;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background-color 0.2s;
+
+            &:active {
+              background-color: #f5f6fa;
+            }
+
+            &:not(:last-child) {
+              border-bottom: 1rpx solid #f5f6fa;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .security-tip {
+    padding: 0 20rpx;
+    background: #fff5e1;
+    height: 88rpx;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 24rpx;
+    text-align: center;
+    white-space: wrap;
+    color: #eb9718;
+    text-align: left;
+    display: flex;
+    align-items: center;
+  }
+
+  // 移除原来的 .conversation-search 样式，因为已经整合到 .search-and-actions 中
+  .conversation-list-wrapper {
+    flex: 1;
+    height: calc(100vh - 200rpx); // 减去导航栏的高度
+  }
+}

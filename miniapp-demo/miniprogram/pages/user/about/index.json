@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "关于",
+  "usingComponents": {
+    "about-netease": "../../../NEUIKit/User/about-netease/about-netease"
+  }
+}

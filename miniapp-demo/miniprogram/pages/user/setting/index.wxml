@@ -1,0 +1,8 @@
+<view class="page-wrapper">
+  <setting 
+    bind:back="onBack"
+    bind:settingChange="onSettingChange"
+    bind:languageChanged="onLanguageChanged"
+    bind:logout="onLogout"
+  ></setting>
+</view>

@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "chat": "/NEUIKit/Chat/index/index"
+  },
+  "navigationBarTitleText": "聊天",
+  "enablePullDownRefresh": false,
+  "onReachBottomDistance": 50,
+  "disableScroll": true
+}

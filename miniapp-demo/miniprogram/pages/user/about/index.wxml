@@ -1,0 +1,7 @@
+<view class="page-wrapper">
+  <about-netease 
+    statusBarHeight="{{statusBarHeight}}"
+    bind:back="onBack"
+    bind:itemClick="onAboutItemClick"
+  ></about-netease>
+</view>

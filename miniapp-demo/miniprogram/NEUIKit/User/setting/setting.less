@@ -1,0 +1,73 @@
+.wrapper {
+  background-color: #f5f6fa;
+  min-height: 100vh;
+}
+
+/* 状态栏占位 */
+.status-bar-placeholder {
+  width: 100%;
+  background-color: #fff;
+}
+
+/* 设置项容器 */
+.setting-item-wrapper {
+  background-color: #fff;
+  margin-top: 20rpx;
+}
+
+/* 设置项 */
+.setting-item {
+  display: flex;
+  min-height: 120rpx;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 30rpx;
+}
+
+/* 左侧标签 */
+.item-left {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+/* 右侧内容 */
+.item-right {
+  display: flex;
+  align-items: center;
+}
+
+/* 分隔线 */
+.divider {
+  height: 1rpx;
+  background-color: #f5f6fa;
+  margin: 0 30rpx;
+}
+
+/* 退出登录按钮 */
+.logout-btn {
+  background-color: #fff;
+  margin-top: 40rpx;
+  padding: 30rpx;
+  text-align: center;
+  font-size: 32rpx;
+  color: #ff4757;
+  font-weight: 500;
+  border-radius: 0;
+  position: relative;
+}
+
+.logout-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: none;
+  border-radius: 0;
+}
+
+.logout-btn:active {
+  background-color: #f5f6fa;
+}

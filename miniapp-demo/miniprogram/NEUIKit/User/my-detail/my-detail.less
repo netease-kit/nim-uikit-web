@@ -1,0 +1,121 @@
+.wrapper {
+  background-color: #f5f6fa;
+  min-height: 100vh;
+}
+
+/* 状态栏占位 */
+.status-bar-placeholder {
+  width: 100%;
+  background-color: #ffffff;
+}
+
+.gender,
+.birthday,
+.mobile,
+.email {
+  color: #333333;
+  font-size: 14px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sign {
+  color: #333333;
+  font-size: 14px;
+  max-width: 450px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  text-align: right;
+  margin-right: 20rpx;
+}
+
+/* 用户信息项容器 */
+.userInfo-item-wrapper {
+  background-color: #fff;
+  margin-top: 20rpx;
+  margin-left: 20rpx;
+  margin-right: 20rpx;
+  border-radius: 10rpx;
+}
+
+/* 用户信息项 */
+.userInfo-item {
+  display: flex;
+  min-height: 80rpx;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15rpx 30rpx;
+  border-bottom: 1rpx solid #f5f6fa;
+  position: relative;
+  z-index: 1;
+}
+
+.userInfo-item:last-child {
+  border-bottom: none;
+}
+
+/* 左侧标签 */
+.item-left {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+/* 右侧内容 */
+.item-right {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+/* 昵称显示 */
+.nick {
+  font-size: 32rpx;
+  color: #666;
+  margin-right: 20rpx;
+  max-width: 400rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 账号显示 */
+.account {
+  font-size: 32rpx;
+  color: #999;
+  margin-right: 20rpx;
+}
+
+/* 复制按钮 */
+.copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60rpx;
+  height: 60rpx;
+  transition: opacity 0.2s;
+}
+
+.copy-btn:active {
+  opacity: 0.6;
+}
+
+/* 箭头图标 */
+.arrow {
+  margin-left: 20rpx;
+}
+
+/* picker组件样式 */
+picker {
+  border-bottom: 1rpx solid #f5f6fa;
+}
+
+/* 分隔线 */
+.box-shadow {
+  height: 20rpx;
+  background-color: #f5f6fa;
+}

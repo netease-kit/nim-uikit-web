@@ -1,0 +1,103 @@
+.chat-tooltip {
+  position: relative;
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version */
+  -webkit-tap-highlight-color: transparent; /* 移除触摸高亮效果 */
+}
+
+.chat_tooltip_content {
+  height: 100%;
+  position: relative;
+  display: inline-block;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chat_tooltip__popper {
+  visibility: hidden;
+  position: absolute;
+  border-radius: 4px;
+  font-size: 12px;
+  padding: 10px;
+  min-width: 10px;
+  max-width: calc(100vw - 20px); /* 限制最大宽度，两边留10px边距 */
+  overflow-wrap: break-word;  /* 允许长单词换行 */
+  white-space: normal;  /* 允许文本换行 */
+  display: inline-block;
+  white-space: nowrap;
+  z-index: 99;
+  background-color: #fff;
+}
+
+.chat_tooltip__popper.white-theme {
+  background-color: #fff;
+  color: #303133;
+}
+
+.chat_tooltip__popper.dark-theme {
+  background-color: var(--theme-bg-color, #303133);
+  color: #fff;
+}
+
+.chat_tooltip__mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: rgba(256, 256, 256, 0);
+  z-index: 8;
+}
+
+.chat_popper__icon {
+  width: 0;
+  height: 0;
+  z-index: 9;
+  position: absolute;
+}
+
+.chat_popper__arrow {
+  bottom: -5px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+}
+
+.chat_popper__right {
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  left: -5px;
+}
+
+.chat_popper__left {
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  right: -5px;
+}
+
+.chat_popper__up {
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  top: -5px;
+}
+
+.fixed {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: auto;
+  background: red;
+  z-index: -1;
+}

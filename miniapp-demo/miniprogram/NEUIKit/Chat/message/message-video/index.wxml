@@ -1,0 +1,36 @@
+<view class="video-message" bindtap="handleVideoClick">
+  <!-- 视频封面 -->
+  <view class="video-wrapper">
+    <!-- 加载状态 -->
+    <view wx:if="{{msg.sendingState === 'sending'}}" class="loading-spinner"></view>
+    
+    <!-- 视频封面图片 -->
+    <image 
+      wx:else
+      class="video-cover" 
+      src="{{videoCoverUrl}}" 
+      mode="aspectFill" 
+      lazy-load="{{true}}"
+      binderror="handleImageError"
+    />
+    
+    <!-- 默认视频封面（当图片加载失败时显示） -->
+    <view wx:if="{{showDefaultCover}}" class="default-video-cover">
+      <view class="default-play-icon">
+        <view class="play-triangle-large"></view>
+      </view>
+    </view>
+    
+    <!-- 播放按钮（仅在有封面图片时显示） -->
+    <view class="video-play-button" wx:if="{{!showDefaultCover && msg.sendingState !== 'sending'}}">
+      <view class="play-icon">
+        <view class="play-triangle"></view>
+      </view>
+    </view>
+    
+    <!-- 视频时长 -->
+    <view class="video-duration" wx:if="{{videoDuration && msg.sendingState !== 'sending'}}">
+      {{videoDuration}}
+    </view>
+  </view>
+</view>

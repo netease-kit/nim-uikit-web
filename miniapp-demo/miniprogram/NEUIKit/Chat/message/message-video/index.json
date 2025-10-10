@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "icon": "../../../basic-components/icon/icon"
+  }
+}

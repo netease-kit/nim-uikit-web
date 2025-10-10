@@ -1,0 +1,27 @@
+<view class="face-wrapper">
+  <view class="face-control">
+    <view class="emoji-block">
+      <view class="emoji-row" wx:for="{{emojiMatrix}}" wx:key="index">
+        <view 
+          class="emoji-item" 
+          wx:for="{{item}}" 
+          wx:for-item="emoji" 
+          wx:key="emoji"
+          data-emoji="{{emoji}}"
+          bindtap="onEmojiClick"
+        >
+          <icon type="{{emojiIconMap[emoji]}}" size="24" wx:if="{{emoji}}" />
+          <view class="placeholder" wx:else></view>
+        </view>
+      </view>
+    </view>
+    <view class="control-buttons">
+      <view class="delete-btn" bindtap="onDeleteClick">
+        <icon type="shanchu" size="20" />
+      </view>
+      <view class="send-btn" bindtap="onSendClick">
+        发送
+      </view>
+    </view>
+  </view>
+</view>

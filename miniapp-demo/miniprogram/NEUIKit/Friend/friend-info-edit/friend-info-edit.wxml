@@ -1,0 +1,27 @@
+<view class="group-set-container">
+  <!-- 动态状态栏占位 -->
+  <view class="status-bar-placeholder" style="height: {{statusBarHeight}}px; background-color: #fff;"></view>
+  
+  <nav-bar title="{{remarkText}}" />
+  
+  <view class="content-container">
+    <view class="group-name-input-container">
+      <input
+        class="alias-input"
+        value="{{alias}}"
+        maxlength="15"
+        bindinput="handleInput"
+        placeholder="{{friendEditPlaceholder}}"
+        placeholder-class="input-placeholder"
+      />
+      <view class="input-length">{{inputLengthTips}}</view>
+    </view>
+  </view>
+  
+  <!-- 底部确定按钮 -->
+  <view class="bottom-button-container">
+    <view class="save-button" bindtap="handleSave">
+      {{saveText}}
+    </view>
+  </view>
+</view>

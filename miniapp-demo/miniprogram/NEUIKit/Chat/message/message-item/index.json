@@ -1,0 +1,14 @@
+{
+  "component": true,
+  "styleIsolation": "apply-shared",
+  "usingComponents": {
+    "message-avatar": "../message-avatar/index",
+    "message-bubble": "../message-bubble/index",
+    "message-text": "../message-text/index",
+    "message-audio": "../message-audio/index",
+    "message-video": "../message-video/index",
+    "message-file": "../message-file/index",
+    "message-notification": "../message-notification/index",
+    "icon": "../../../basic-components/icon/icon"
+  }
+}
