@@ -1,0 +1,10 @@
+{
+  "component": true,
+  "styleIsolation": "apply-shared",
+  "usingComponents": {
+    "icon": "../../basic-components/icon/icon",
+    "nav-bar": "../../basic-components/nav-bar/nav-bar",
+    "badge": "../../basic-components/badge/badge",
+    "friend-list": "../friend-list/friend-list"
+  }
+}

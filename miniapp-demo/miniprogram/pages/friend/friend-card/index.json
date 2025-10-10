@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "好友名片",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "friend-card": "/NEUIKit/Friend/friend-card/friend-card"
+  }
+}

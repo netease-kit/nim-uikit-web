@@ -1,0 +1,12 @@
+{
+  "component": true,
+  "styleIsolation": "shared",
+  "usingComponents": {
+    "icon": "../../basic-components/icon/icon",
+    "nav-bar": "../../basic-components/nav-bar/nav-bar",
+    "network-alert": "../../basic-components/network-alert/network-alert",
+    "message-list": "../message/message-list/index",
+    "message-input": "../message/message-input/index",
+    "message-forward-modal": "../message/message-forward-modal/index"
+  }
+}

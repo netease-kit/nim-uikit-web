@@ -1,0 +1,64 @@
+.input-wrapper {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  font-size: 16px;
+  padding-right: 10px;
+}
+
+.input {
+  width: 100%;
+  height: 36rpx;
+  border: none;
+  border-radius: 4px;
+  transition: border-color 0.2s;
+  outline: none;
+  box-sizing: border-box;
+  color: #000;
+  font-size: 16px;
+  padding-left: 5px;
+  white-space: nowrap;
+}
+
+.input:focus {
+  border-color: #409eff;
+}
+
+.input-wrapper:hover .input {
+  border-color: #c0c4cc;
+}
+
+.input::placeholder {
+  color: #c0c4cc;
+}
+
+.is-disabled .input {
+  background-color: #f5f7fa;
+  border-color: #e4e7ed;
+  color: #c0c4cc;
+  cursor: not-allowed;
+}
+
+.clear-icon {
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #c0c4cc;
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #c0c4cc;
+  text-align: center;
+  line-height: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-icon:hover {
+  color: #909399;
+}

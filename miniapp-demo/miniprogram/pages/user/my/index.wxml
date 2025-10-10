@@ -1,0 +1,7 @@
+<view class="page-wrapper">
+  <user-index 
+    bind:navigateToDetail="onUserNavigation"
+    bind:navigateToSetting="onSettingNavigation"
+    bind:navigateToAbout="onAboutNavigation"
+  ></user-index>
+</view>

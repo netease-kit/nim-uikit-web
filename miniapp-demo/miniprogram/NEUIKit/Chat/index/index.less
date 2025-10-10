@@ -1,0 +1,351 @@
+/* 聊天页面主组件样式 */
+.msg-page-wrapper-h5 {
+  width: 100%;
+  height: 100vh;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: #f5f5f5;
+  /* 为底部固定的输入框预留空间 */
+  padding-bottom: 120px;
+  /* 设置状态栏高度CSS变量 */
+  --status-bar-height: var(--status-bar-height, 44px);
+
+  /* 状态栏占位 */
+  .status-bar-placeholder {
+    width: 100%;
+    background-color: #fff;
+    flex-shrink: 0;
+  }
+
+  /* 网络状态提示区域 */
+  .msg-alert {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    z-index: 10;
+  }
+
+  /* 加载状态覆盖层 */
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f0f0f0;
+      border-top: 4px solid #007AFF;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    .loading-text {
+      font-size: 16px;
+      color: #ffffff;
+      font-weight: 500;
+    }
+  }
+
+  /* 错误状态覆盖层 */
+  .error-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+
+    .error-icon {
+      margin-bottom: 16px;
+      opacity: 0.8;
+    }
+
+    .error-text {
+      font-size: 16px;
+      color: #ffffff;
+      margin-bottom: 24px;
+      text-align: center;
+      padding: 0 40px;
+      line-height: 1.5;
+    }
+
+    .error-retry {
+      padding: 12px 24px;
+      background-color: #007AFF;
+      color: #ffffff;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      transition: background-color 0.2s;
+
+      &:active {
+        background-color: #0056b3;
+      }
+    }
+  }
+
+  /* 消息操作菜单 */
+  .message-action-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+
+    .action-menu-content {
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 8px 0;
+      margin: 0 40px;
+      max-width: 280px;
+      width: 100%;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+
+      .action-item {
+        display: flex;
+        align-items: center;
+        padding: 16px 20px;
+        font-size: 16px;
+        color: #333333;
+        transition: background-color 0.2s;
+
+        icon {
+          margin-right: 12px;
+        }
+
+        &:active {
+          background-color: #f8f8f8;
+        }
+
+        &.danger {
+          color: #ff3b30;
+        }
+
+        &:not(:last-child) {
+          border-bottom: 1px solid #f0f0f0;
+        }
+      }
+    }
+  }
+
+  /* 确认对话框 */
+  .confirm-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+
+    .confirm-content {
+      background-color: #ffffff;
+      border-radius: 12px;
+      margin: 0 40px;
+      max-width: 320px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+
+      .confirm-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333333;
+        text-align: center;
+        padding: 24px 20px 12px;
+      }
+
+      .confirm-message {
+        font-size: 14px;
+        color: #666666;
+        text-align: center;
+        padding: 0 20px 24px;
+        line-height: 1.5;
+      }
+
+      .confirm-actions {
+        display: flex;
+        border-top: 1px solid #f0f0f0;
+
+        .confirm-button {
+          flex: 1;
+          padding: 16px;
+          text-align: center;
+          font-size: 16px;
+          transition: background-color 0.2s;
+
+          &:active {
+            background-color: #f8f8f8;
+          }
+
+          &.cancel {
+            color: #666666;
+            border-right: 1px solid #f0f0f0;
+          }
+
+          &.confirm {
+            color: #007AFF;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* 深色主题 */
+.msg-page-wrapper-h5.dark-theme {
+  background-color: #000000;
+
+  .loading-overlay {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+
+  .error-overlay {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+
+  .message-action-menu {
+    .action-menu-content {
+      background-color: #1c1c1e;
+
+      .action-item {
+        color: #ffffff;
+        border-bottom-color: #38383a;
+
+        &:active {
+          background-color: #2c2c2e;
+        }
+
+        &.danger {
+          color: #ff453a;
+        }
+      }
+    }
+  }
+
+  .confirm-modal {
+    .confirm-content {
+      background-color: #1c1c1e;
+
+      .confirm-title {
+        color: #ffffff;
+      }
+
+      .confirm-message {
+        color: #8e8e93;
+      }
+
+      .confirm-actions {
+        border-top-color: #38383a;
+
+        .confirm-button {
+          &:active {
+            background-color: #2c2c2e;
+          }
+
+          &.cancel {
+            color: #8e8e93;
+            border-right-color: #38383a;
+          }
+
+          &.confirm {
+            color: #007AFF;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* 动画 */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .msg-page-wrapper-h5 {
+    .message-action-menu {
+      .action-menu-content {
+        margin: 0 20px;
+
+        .action-item {
+          padding: 14px 16px;
+          font-size: 15px;
+        }
+      }
+    }
+
+    .confirm-modal {
+      .confirm-content {
+        margin: 0 20px;
+
+        .confirm-title {
+          font-size: 16px;
+          padding: 20px 16px 10px;
+        }
+
+        .confirm-message {
+          font-size: 13px;
+          padding: 0 16px 20px;
+        }
+
+        .confirm-actions {
+          .confirm-button {
+            padding: 14px;
+            font-size: 15px;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* 安全区域适配 */
+@supports (bottom: env(safe-area-inset-bottom)) {
+  .msg-page-wrapper-h5 {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* 禁用文本选择 */
+.msg-page-wrapper-h5 {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 滚动条样式在小程序中不支持，已移除 */

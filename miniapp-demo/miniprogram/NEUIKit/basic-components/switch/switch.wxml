@@ -1,0 +1,10 @@
+<!-- 自定义 Switch 组件 - 内部使用原生 switch -->
+<switch 
+  checked="{{checked}}"
+  disabled="{{disabled}}"
+  type="{{type}}"
+  color="{{color}}"
+  bindchange="handleChange"
+  class="{{customClass}}"
+  style="{{customStyle}}"
+/>

@@ -1,0 +1,27 @@
+<view class="msg-text" style="font-size: {{fontSize || 16}}px;">
+  <block wx:for="{{textArr}}" wx:key="key">
+    <block wx:if="{{item.type === 'text'}}">
+      <text class="msg-text">{{item.value}}</text>
+    </block>
+    <block wx:elif="{{item.type === 'Ait'}}">
+      <text class="msg-text ait-text"> {{item.value}} </text>
+    </block>
+    <block wx:elif="{{item.type === 'emoji'}}">
+      <icon 
+        type="{{emojiIconMap[item.value]}}"
+        size="{{fontSize || 22}}"
+        class="emoji-icon"
+      />
+    </block>
+    <block wx:elif="{{item.type === 'link'}}">
+      <text 
+        class="msg-text link-text" 
+        style="font-size: {{fontSize || 16}}px;"
+        data-url="{{item.value}}"
+        bindtap="onLinkTap"
+      >
+        {{item.value}}
+      </text>
+    </block>
+  </block>
+</view>

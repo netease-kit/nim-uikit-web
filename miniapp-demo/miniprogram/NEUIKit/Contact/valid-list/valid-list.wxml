@@ -1,0 +1,141 @@
+<view class="validlist-container" style="--status-bar-height: {{statusBarHeight}}px;">
+  <!-- 动态状态栏占位 -->
+  <view class="status-bar-placeholder" style="height: {{statusBarHeight}}px; background-color: #fff;"></view>
+  <!-- 导航栏 -->
+  <nav-bar 
+    title="{{validMsgText}}" 
+    showLeft="{{false}}" 
+    backgroundColor="#ffffff"
+    showSetting="{{false}}"
+  ></nav-bar>
+  
+  <!-- 验证消息列表 -->
+  <view class="validlist-content">
+    <view wx:if="{{validList.length > 0}}" class="validlist-list">
+      <view 
+        wx:for="{{validList}}" 
+        wx:key="timestamp" 
+        class="validlist-item"
+        bindtap="handleValidMsgItemClick" 
+        data-item="{{item}}"
+      >
+        <!-- 好友申请 已同意 -->
+        <block wx:if="{{item.status === 1}}">
+          <view class="validlist-item-left">
+            <avatar 
+              account="{{item.applicantAccountId}}"
+              size="{{84}}"
+            ></avatar>
+            <view class="validlist-info">
+              <view class="validlist-name">
+                <appellation 
+                  account="{{item.applicantAccountId}}"
+                  showAlias="{{true}}"
+                  prefix=""
+                ></appellation>
+              </view>
+              <view class="validlist-action">{{applyFriendText}}</view>
+            </view>
+          </view>
+          <view class="validlist-state">
+            <icon type="icon-yidu" size="{{16}}" color="#999"></icon>
+            <text class="validlist-state-text">{{acceptResultText}}</text>
+          </view>
+        </block>
+        
+        <!-- 好友申请 已拒绝 -->
+        <block wx:elif="{{item.status === 2}}">
+          <!-- 我发起的申请被拒绝 -->
+          <block wx:if="{{item.isMeApplicant}}">
+            <view class="validlist-item-left">
+              <avatar 
+                account="{{item.recipientAccountId}}"
+                size="{{84}}"
+              ></avatar>
+              <view class="validlist-info">
+                <view class="validlist-name">
+                  <appellation 
+                    account="{{item.recipientAccountId}}"
+                    showAlias="{{true}}"
+                    prefix=""
+                  ></appellation>
+                </view>
+                <view class="validlist-action">{{beRejectResultText}}</view>
+              </view>
+            </view>
+          </block>
+          <!-- 我拒绝了别人的申请 -->
+          <block wx:else>
+            <view class="validlist-item-left">
+              <avatar 
+                account="{{item.applicantAccountId}}"
+                size="{{84}}"
+              ></avatar>
+              <view class="validlist-info">
+                <view class="validlist-name">
+                  <appellation 
+                    account="{{item.applicantAccountId}}"
+                    showAlias="{{true}}"
+                    prefix=""
+                  ></appellation>
+                </view>
+                <view class="validlist-action">{{applyFriendText}}</view>
+              </view>
+            </view>
+            <view class="validlist-state">
+              <icon type="icon-shandiao" size="{{16}}" color="#999"></icon>
+              <text class="validlist-state-text">{{rejectResultText}}</text>
+            </view>
+          </block>
+        </block>
+        
+        <!-- 好友申请 未处理 -->
+        <block wx:elif="{{item.status === 0}}">
+          <!-- 只显示别人发给我的申请 -->
+          <block wx:if="{{!item.isMeApplicant}}">
+            <view class="validlist-item-left">
+              <avatar 
+                account="{{item.applicantAccountId}}"
+                size="{{84}}"
+              ></avatar>
+              <view class="validlist-info">
+                <view class="validlist-name">
+                  <appellation 
+                    account="{{item.applicantAccountId}}"
+                    showAlias="{{true}}"
+                    prefix=""
+                  ></appellation>
+                </view>
+                <view class="validlist-action">{{applyFriendText}}</view>
+              </view>
+            </view>
+            <view class="validlist-buttons">
+              <view 
+                class="validlist-button button-reject {{applyFriendLoading ? 'disabled' : ''}}"
+                bindtap="handleRejectApply" 
+                data-item="{{item}}"
+              >
+                {{rejectText}}
+              </view>
+              <view 
+                class="validlist-button button-accept {{applyFriendLoading ? 'disabled' : ''}}"
+                bindtap="handleAcceptApply" 
+                data-item="{{item}}"
+              >
+                {{acceptText}}
+              </view>
+            </view>
+          </block>
+        </block>
+      </view>
+    </view>
+    
+    <!-- 空状态 -->
+    <view wx:else class="empty-container">
+      <empty 
+        type="noValidMsg"
+        text="{{validEmptyText}}"
+      ></empty>
+    </view>
+  </view>
+</view>

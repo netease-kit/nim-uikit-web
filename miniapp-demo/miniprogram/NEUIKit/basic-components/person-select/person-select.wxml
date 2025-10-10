@@ -1,0 +1,53 @@
+<view class="friend-select-wrapper {{customClass}}" wx:if="{{personList.length > 0}}" style="{{customStyle}}">
+  <view class="member-wrapper">
+    <!-- 单选模式 -->
+    <view wx:if="{{radio}}" class="radio-group">
+      <view 
+        class="member-item" 
+        wx:for="{{personList}}" 
+        wx:key="accountId"
+        bind:tap="handleItemTap"
+        data-account-id="{{item.accountId}}"
+        data-index="{{index}}"
+      >
+        <view class="radio-label">
+          <view class="radio-input-wrapper">
+            <view 
+              class="radio-custom {{selectAccount.indexOf(item.accountId) !== -1 ? 'checked' : ''}} {{item.disabled || (selectAccount.length >= max && selectAccount.indexOf(item.accountId) === -1) ? 'disabled' : ''}}"
+            ></view>
+          </view>
+          <avatar class="user-avatar" size="36" account="{{item.accountId}}" />
+          <view class="user-name">
+            <appellation account="{{item.accountId}}" team-id="{{item.teamId}}" />
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 多选模式 -->
+    <view wx:else class="checkbox-group">
+      <view 
+        class="member-item" 
+        wx:for="{{personList}}" 
+        wx:key="accountId"
+        bind:tap="handleItemTap"
+        data-account-id="{{item.accountId}}"
+        data-index="{{index}}"
+      >
+        <view class="checkbox-label">
+          <view class="checkbox-input-wrapper">
+            <view 
+              class="checkbox-custom {{item.checked ? 'checked' : ''}} {{item.disabled || (selectAccount.length >= max && selectAccount.indexOf(item.accountId) === -1) ? 'disabled' : ''}}"
+            ></view>
+          </view>
+          <avatar class="user-avatar" size="36" account="{{item.accountId}}" />
+          <view class="user-name">
+            <appellation account="{{item.accountId}}" team-id="{{item.teamId}}" />
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<empty wx:else text="{{emptyText || '暂无好友'}}" />

@@ -1,0 +1,3 @@
+<view class="message-notification {{theme === 'dark' ? 'message-notification--dark' : ''}}" wx:if="{{notificationContent}}">
+  {{notificationContent}}
+</view>

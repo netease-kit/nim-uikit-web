@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "login": "/NEUIKit/Login/login/login"
+  },
+  "navigationStyle": "custom"
+}

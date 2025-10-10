@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "team-setting": "/NEUIKit/Chat/team-setting/index"
+  },
+  "navigationBarTitleText": "群聊设置",
+  "enablePullDownRefresh": false,
+  "onReachBottomDistance": 50
+}

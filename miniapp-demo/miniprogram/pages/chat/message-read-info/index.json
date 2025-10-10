@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "message-read-info": "/NEUIKit/Chat/message-read-info/index"
+  },
+  "navigationBarTitleText": "消息已读详情",
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 50
+}

@@ -1,0 +1,72 @@
+{
+  "pages": [
+    "pages/conversation/conversation-list/index",
+    "pages/contacts/index/index",
+    "pages/user/my/index",
+    "pages/login/index",
+    "pages/conversation/conversation-search/index",
+    "pages/contacts/black-list/index",
+    "pages/contacts/valid-list/index",
+    "pages/contacts/team-list/index",
+    "pages/friend/add-friend/index",
+    "pages/friend/friend-card/index",
+    "pages/friend/friend-info-edit/index",
+    "pages/team/create-team/index",
+    "pages/team/member-list/index",
+    "pages/team/add-member/index",
+    "pages/team-info-edit/index",
+    "pages/team-avatar-edit/index",
+    "pages/user/my-detail/index",
+    "pages/user/detail-edit/index",
+    "pages/user/setting/index",
+    "pages/user/about/index",
+    "pages/chat/index/index",
+    "pages/chat/message-read-info/index",
+    "pages/chat/p2p-setting/index",
+    "pages/chat/team-setting/index",
+    "pages/index/index",
+    "pages/logs/logs"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationStyle": "custom"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#337EFF",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/conversation/conversation-list/index",
+        "text": "消息",
+        "iconPath": "static/images/conversation.png",
+        "selectedIconPath": "static/images/conversation-selected.png"
+      },
+      {
+        "pagePath": "pages/contacts/index/index",
+        "text": "通讯录",
+        "iconPath": "static/images/contact.png",
+        "selectedIconPath": "static/images/contact-selected.png"
+      },
+      {
+        "pagePath": "pages/user/my/index",
+        "text": "我的",
+        "iconPath": "static/images/me.png",
+        "selectedIconPath": "static/images/me-selected.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "rendererOptions": {
+    "skyline": {
+      "defaultDisplayBlock": true,
+      "disableABTest": true,
+      "sdkVersionBegin": "3.0.0",
+      "sdkVersionEnd": "15.255.255"
+    }
+  },
+  "componentFramework": "glass-easel",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

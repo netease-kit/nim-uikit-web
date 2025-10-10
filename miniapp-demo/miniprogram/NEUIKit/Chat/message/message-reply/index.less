@@ -1,0 +1,166 @@
+/* 回复消息容器 */
+.reply-message {
+  display: flex;
+  align-items: flex-start;
+  padding: 8px 12px;
+  margin: 4px 0;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  position: relative;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* 回复线条 */
+.reply-line {
+  width: 3px;
+  background-color: #337eff;
+  border-radius: 2px;
+  margin-right: 8px;
+  flex-shrink: 0;
+  align-self: stretch;
+  min-height: 20px;
+}
+
+/* 回复内容区域 */
+.reply-content {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* 发送者名称 */
+.reply-sender {
+  font-size: 12px;
+  color: #337eff;
+  font-weight: 500;
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 回复文本内容 */
+.reply-text {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* 媒体消息样式 */
+.reply-media {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.media-text {
+  margin-left: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: calc(100% - 20px);
+}
+
+/* 关闭按钮 */
+.reply-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.8);
+  transition: all 0.2s ease;
+}
+
+.reply-close:active {
+  background-color: rgba(255, 255, 255, 1);
+  transform: scale(0.9);
+}
+
+/* 不同主题样式 */
+.reply-message.dark {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.reply-message.dark .reply-text {
+  color: #ccc;
+}
+
+.reply-message.dark .reply-media {
+  color: #ccc;
+}
+
+.reply-message.dark .reply-close {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 375px) {
+  .reply-message {
+    padding: 6px 10px;
+    margin: 3px 0;
+  }
+  
+  .reply-sender,
+  .reply-text,
+  .media-text {
+    font-size: 11px;
+  }
+  
+  .reply-line {
+    width: 2px;
+    margin-right: 6px;
+  }
+  
+  .reply-close {
+    width: 20px;
+    height: 20px;
+    top: 2px;
+    right: 2px;
+  }
+}
+
+/* 动画效果 */
+.reply-message {
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 长按效果 */
+.reply-message:active {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+/* 特殊消息类型样式 */
+.reply-media icon {
+  flex-shrink: 0;
+}
+
+/* 文件名显示优化 */
+.reply-media .media-text {
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

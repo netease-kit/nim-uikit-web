@@ -1,0 +1,11 @@
+{
+  "component": true,
+  "styleIsolation": "apply-shared",
+  "usingComponents": {
+    "icon": "../../basic-components/icon/icon",
+    "nav-bar": "../../basic-components/nav-bar/nav-bar",
+    "network-alert": "../../basic-components/network-alert/network-alert",
+    "empty": "../../basic-components/empty/empty",
+    "conversation-item": "../conversation-item/conversation-item"
+  }
+}

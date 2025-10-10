@@ -1,0 +1,24 @@
+<view 
+  class="avatar" 
+  style="width: {{avatarSize}}px; height: {{avatarSize}}px;"
+  bindtap="handleAvatarClick"
+  bindlongpress="longpress"
+  bindtouchend="touchend"
+>
+  <!-- 使用遮罩层避免android长按头像会出现保存图片的弹窗 -->
+  <view class="img-mask"></view>
+  
+  <image
+    wx:if="{{avatarUrl}}"
+    class="avatar-img"
+    src="{{avatarUrl}}"
+    mode="aspectFill"
+    lazy-load="{{true}}"
+  />
+  
+  <view class="avatar-name-wrapper" style="background-color: {{color}}">
+    <view class="avatar-name-text" style="font-size: {{fontSize}}px">
+      {{appellation}}
+    </view>
+  </view>
+</view>

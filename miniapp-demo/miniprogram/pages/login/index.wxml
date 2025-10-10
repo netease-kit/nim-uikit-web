@@ -1,0 +1,3 @@
+<view class="login-page">
+  <login bind:loginSuccess="onLoginSuccess" />
+</view>

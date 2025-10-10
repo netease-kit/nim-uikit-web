@@ -1,0 +1,79 @@
+<view class="p2p-setting-container {{theme === 'dark' ? 'dark-theme' : ''}}">
+  <!-- 状态栏 -->
+  <view class="status-bar-placeholder" style="height: {{statusBarHeight}}px;"></view>
+  <!-- 导航栏 -->
+  <view class="p2p-setting-header">
+    <view class="header-left" bindtap="handleBack">
+      <icon type="icon-zuojiantou" size="20" color="{{theme === 'dark' ? '#ffffff' : '#333333'}}" />
+    </view>
+    <view class="header-title">设置</view>
+    <view class="header-right"></view>
+  </view>
+  <!-- 内容区域 -->
+  <!-- 内容区域 -->
+  <view class="p2p-setting-content">
+    <!-- 用户信息卡片 - 参考Vue版本布局 -->
+    <view class="p2p-setting-card">
+      <view class="p2p-setting-item user-info-item">
+        <view class="user-info-section">
+          <message-avatar 
+            account="{{account}}" 
+            size="40" 
+            theme="{{theme}}"
+          />
+          <view class="user-nick">{{myNick}}</view>
+        </view>
+        <view class="add-member-btn" bindtap="handleAddTeamMember">
+          <icon type="icon-tianjiaanniu" size="20" color="#999999" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 设置选项卡片 - 参考Vue版本简洁布局 -->
+    <view class="p2p-setting-card">
+      <!-- 消息免打扰 -->
+      <view class="p2p-setting-item setting-item">
+        <view class="setting-label">消息免打扰</view>
+        <switch 
+          checked="{{!isMute}}" 
+          bindchange="handleSessionMuteChange"
+          color="#007AFF"
+        />
+      </view>
+      
+      <!-- 置顶聊天 -->
+      <view class="p2p-setting-item setting-item">
+        <view class="setting-label">置顶聊天</view>
+        <switch 
+          checked="{{isStickTop}}" 
+          bindchange="handleStickTopChange"
+          color="#007AFF"
+        />
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-overlay" wx:if="{{loading}}">
+    <view class="loading-content">
+      <view class="loading-spinner"></view>
+      <view class="loading-text">{{loadingText}}</view>
+    </view>
+  </view>
+
+  <!-- 确认对话框 -->
+  <view class="modal-overlay" wx:if="{{showConfirmModal}}" bindtap="handleModalCancel">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-title">{{confirmTitle}}</view>
+      <view class="modal-message">{{confirmMessage}}</view>
+      <view class="modal-actions">
+        <view class="modal-button cancel-button" bindtap="handleModalCancel">
+          取消
+        </view>
+        <view class="modal-button confirm-button" bindtap="handleModalConfirm">
+          确定
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,140 @@
+/* 消息列表容器 */
+.msg-list-wrapper {
+  flex: 1;
+  /* 消息列表容器高度计算：100vh减去状态栏、导航栏、输入框和网络状态提示的高度，以及动态面板高度 */
+  height: calc(100vh - var(--status-bar-height, 44px) - 48px - 80px - 20px - var(--input-panel-height, 0px));
+  background-color: #f5f6fa;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 滚动区域 */
+.message-scroll-list {
+  height: 100%;
+  padding: 8px 0;
+  box-sizing: border-box;
+  /* 确保滚动区域有明确的高度 */
+  min-height: 200px;
+}
+
+/* 查看更多文本 */
+.view-more-text {
+  text-align: center;
+  padding: 12px 16px;
+  color: #337eff;
+  font-size: 14px;
+  background-color: rgba(51, 126, 255, 0.1);
+  margin: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(51, 126, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.view-more-text:active {
+  background-color: rgba(51, 126, 255, 0.2);
+  transform: scale(0.98);
+}
+
+/* 加载中文本 */
+.loading-text {
+  text-align: center;
+  padding: 12px 16px;
+  color: #999;
+  font-size: 14px;
+  background-color: #f0f0f0;
+  margin: 8px 16px;
+  border-radius: 8px;
+}
+
+/* 没有更多消息提示 */
+.msg-tip {
+  text-align: center;
+  padding: 8px 16px;
+  color: #999;
+  font-size: 12px;
+  margin: 4px 0;
+}
+
+/* 空状态样式 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #999;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.empty-text {
+  font-size: 16px;
+  color: #999;
+}
+
+/* 消息项间距 */
+.msg-list-wrapper .message-item {
+  margin-bottom: 4px;
+}
+
+/* 滚动条样式优化 */
+.message-scroll-list::-webkit-scrollbar {
+  display: none;
+}
+
+/* 适配不同屏幕尺寸 */
+@media screen and (max-width: 375px) {
+  .view-more-text,
+  .loading-text {
+    margin: 8px 12px;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .empty-icon {
+    font-size: 40px;
+  }
+  
+  .empty-text {
+    font-size: 14px;
+  }
+}
+
+/* 消息列表动画 */
+.msg-list-wrapper {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 加载状态动画 */
+.loading-text::after {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #999;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  margin-left: 8px;
+  animation: spin 1s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "个人详情",
+  "usingComponents": {
+    "my-detail": "../../../NEUIKit/User/my-detail/my-detail"
+  }
+}

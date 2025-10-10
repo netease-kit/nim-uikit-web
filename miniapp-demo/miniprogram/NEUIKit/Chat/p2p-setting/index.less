@@ -1,0 +1,365 @@
+.p2p-setting-container {
+  height: 100%;
+  background-color: #eff1f4;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+
+  // 状态栏占位符
+  .status-bar-placeholder {
+    width: 100%;
+    background-color: #ffffff;
+  }
+
+  // 导航栏 - 参考Vue版本简洁设计
+  .p2p-setting-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 44px;
+    padding: 0 16px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e5e5;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+
+    .header-left,
+    .header-right {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header-title {
+      flex: 1;
+      text-align: center;
+      font-size: 17px;
+      font-weight: 600;
+      color: #333333;
+    }
+  }
+
+  // 内容区域
+  .p2p-setting-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+  }
+
+  // 设置卡片 - 参考Vue版本样式
+  .p2p-setting-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 0 8px 0 10px;
+    margin: 10px 20px;
+    box-sizing: border-box;
+
+    &:first-of-type {
+      margin-top: 10px;
+    }
+  }
+
+  // 设置项 - 参考Vue版本布局
+  .p2p-setting-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 0;
+    color: #000;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid #f5f8fc;
+    }
+
+    &.user-info-item {
+      align-items: flex-start;
+    }
+
+    &.setting-item {
+      justify-content: space-between;
+    }
+  }
+
+  // 用户信息区域 - 参考Vue版本布局
+  .user-info-section {
+    margin-right: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .user-nick {
+      margin-top: 5px;
+      color: #000;
+      font-size: 12px;
+      max-width: 70px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  // 添加成员按钮 - 参考Vue版本设计
+  .add-member-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 100%;
+    border: 1px dashed #999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  // 设置标签 - 参考Vue版本样式
+  .setting-label {
+    font-size: 16px;
+    color: #000;
+  }
+
+
+
+  // 加载状态
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+
+    .loading-content {
+      background-color: #ffffff;
+      padding: 24px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      min-width: 120px;
+    }
+
+    .loading-spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #e5e5e5;
+      border-top: 2px solid #007AFF;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .loading-text {
+      font-size: 14px;
+      color: #666666;
+    }
+  }
+
+  // 确认对话框
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+
+    .modal-content {
+      background-color: #ffffff;
+      border-radius: 12px;
+      margin: 0 32px;
+      max-width: 300px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .modal-title {
+      padding: 20px 20px 8px;
+      font-size: 17px;
+      font-weight: 600;
+      color: #333333;
+      text-align: center;
+    }
+
+    .modal-message {
+      padding: 0 20px 20px;
+      font-size: 14px;
+      color: #666666;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .modal-actions {
+      display: flex;
+      border-top: 1px solid #e5e5e5;
+
+      .modal-button {
+        flex: 1;
+        padding: 12px;
+        text-align: center;
+        font-size: 16px;
+        background-color: #ffffff;
+
+        &:not(:last-child) {
+          border-right: 1px solid #e5e5e5;
+        }
+
+        &:active {
+          background-color: #f8f8f8;
+        }
+
+        &.cancel-button {
+          color: #666666;
+        }
+
+        &.confirm-button {
+          color: #007AFF;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  // 暗色主题 - 参考Vue版本保持简洁
+  &.dark-theme {
+    background-color: #1c1c1e;
+
+    .p2p-setting-header {
+      background-color: #2c2c2e;
+      border-bottom-color: #3a3a3c;
+
+      .header-title {
+        color: #ffffff;
+      }
+    }
+
+    .p2p-setting-card {
+      background-color: #2c2c2e;
+    }
+
+    .p2p-setting-item {
+      &:not(:last-child) {
+        border-bottom-color: #3a3a3c;
+      }
+    }
+
+    .user-nick {
+      color: #ffffff;
+    }
+
+    .add-member-btn {
+      border-color: #666666;
+    }
+
+    .setting-label {
+      color: #ffffff;
+    }
+
+    .loading-content {
+      background-color: #2c2c2e;
+    }
+
+    .loading-text {
+      color: #999999;
+    }
+
+    .modal-content {
+      background-color: #2c2c2e;
+    }
+
+    .modal-title {
+      color: #ffffff;
+    }
+
+    .modal-message {
+      color: #999999;
+    }
+
+    .modal-actions {
+      border-top-color: #3a3a3c;
+
+      .modal-button {
+        background-color: #2c2c2e;
+
+        &:not(:last-child) {
+          border-right-color: #3a3a3c;
+        }
+
+        &:active {
+          background-color: #3a3a3c;
+        }
+
+        &.cancel-button {
+          color: #999999;
+        }
+      }
+    }
+  }
+
+  // 动画
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  // 响应式设计
+  @media (max-width: 375px) {
+    .p2p-setting-card {
+      margin: 8px 12px;
+    }
+
+    .p2p-setting-item {
+      padding: 10px 12px;
+      min-height: 40px;
+
+      &.user-info-item {
+        padding: 12px;
+      }
+    }
+
+    .modal-overlay {
+      .modal-content {
+        margin: 0 24px;
+      }
+    }
+  }
+
+  // 文本选择
+  .user-nick,
+  .setting-label,
+  .action-label,
+  .danger-label {
+    user-select: none;
+  }
+
+  // 滚动条样式
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+  }
+
+  &.dark-theme ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}

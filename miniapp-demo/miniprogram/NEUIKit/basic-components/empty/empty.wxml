@@ -1,0 +1,8 @@
+<view class="empty-wrapper {{extClass}}">
+  <image
+    class="empty-img"
+    src="{{imageSrc}}"
+    mode="aspectFit"
+  />
+  <view class="empty-text" wx:if="{{text}}">{{text}}</view>
+</view>

@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "编辑资料",
+  "usingComponents": {
+    "detail-item-edit": "../../../NEUIKit/User/detail-item-edit/detail-item-edit"
+  }
+}
