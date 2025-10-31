@@ -18,7 +18,7 @@
           @click="() => handleItemClick(item)"
         >
           <!-- @所有人项 -->
-          <template v-if="item.accountId === AT_ALL_ACCOUNT">
+          <template v-if="item.accountId === AT_ALL_ACCOUNT && allowAtAll">
             <Icon :size="28" type="icon-team2" color="#fff" />
             <span class="member-name">
               {{ t("teamAll") }}
@@ -62,6 +62,7 @@ import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 const props = withDefaults(
   defineProps<{
     teamId: string;
+    allowAtAll: boolean;
   }>(),
   {}
 );

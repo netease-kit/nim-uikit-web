@@ -21,7 +21,7 @@
           :href="item.value"
           target="_blank"
           rel="noopener noreferrer"
-          :style="{ color: '#1861df', fontSize: (fontSize || 16) + 'px' }"
+          :style="{ color: '#1861df', fontSize: (fontSize || 14) + 'px' }"
         >
           {{ item.value }}
         </a>

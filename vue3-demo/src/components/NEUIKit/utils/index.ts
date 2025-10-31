@@ -362,3 +362,13 @@ export const copyText = (text: string) => {
     document.body.removeChild(textArea);
   }
 };
+
+/** 是否是讨论组 */
+export const isDiscussionFunc = (serverExtension: string | undefined) => {
+  try {
+    return JSON.parse(serverExtension || "{}").im_ui_kit_group;
+  } catch (error) {
+    console.warn("parse serverExtension error", error);
+    return false;
+  }
+};

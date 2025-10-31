@@ -113,53 +113,58 @@ function stringReplace(source: string | any[], match: RegExp, fn: Function) {
 
 export function parseText(text: string, ext?: string): Match[] {
   if (!text) return [];
-  const regexLink = /(https?:\/\/\S+)/gi;
-  const yxAitMsg = ext ? JSON.parse(ext).yxAitMsg : null;
-  const emojiArr = stringReplace(text, emojiRegExp, (item: any) => {
-    return {
-      type: "emoji",
-      value: item,
-    };
-  });
-
-  const emojiAndLinkArr = stringReplace(emojiArr, regexLink, (item: any) => {
-    return {
-      type: "link",
-      value: item,
-    };
-  });
-
-  let emojiAndLinkAndAitArr = emojiAndLinkArr;
-  if (yxAitMsg) {
-    Object.keys(yxAitMsg)?.forEach((key) => {
-      const item = yxAitMsg[key];
-      emojiAndLinkAndAitArr = stringReplace(
-        emojiAndLinkAndAitArr,
-        item.text,
-        (item: any) => {
-          return {
-            type: "Ait",
-            value: item,
-          };
-        }
-      );
-    });
-  }
-
-  const result = emojiAndLinkAndAitArr.map((item) => {
-    if (typeof item == "string") {
+  try {
+    const regexLink = /(https?:\/\/\S+)/gi;
+    const yxAitMsg = ext ? JSON.parse(ext).yxAitMsg : null;
+    const emojiArr = stringReplace(text, emojiRegExp, (item: any) => {
       return {
-        type: "text",
+        type: "emoji",
         value: item,
       };
-    } else {
-      return item;
+    });
+
+    const emojiAndLinkArr = stringReplace(emojiArr, regexLink, (item: any) => {
+      return {
+        type: "link",
+        value: item,
+      };
+    });
+
+    let emojiAndLinkAndAitArr = emojiAndLinkArr;
+    if (yxAitMsg) {
+      Object.keys(yxAitMsg)?.forEach((key) => {
+        const item = yxAitMsg[key];
+        emojiAndLinkAndAitArr = stringReplace(
+          emojiAndLinkAndAitArr,
+          item.text,
+          (item: any) => {
+            return {
+              type: "Ait",
+              value: item,
+            };
+          }
+        );
+      });
     }
-  });
-  return result.map((item, index) => {
-    return {
-      ...item,
-      key: index + item.type,
-    };
-  });
+
+    const result = emojiAndLinkAndAitArr.map((item) => {
+      if (typeof item == "string") {
+        return {
+          type: "text",
+          value: item,
+        };
+      } else {
+        return item;
+      }
+    });
+    return result.map((item, index) => {
+      return {
+        ...item,
+        key: index + item.type,
+      };
+    });
+  } catch (error) {
+    console.error("parseText error", error);
+    return [];
+  }
 }

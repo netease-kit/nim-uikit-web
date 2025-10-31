@@ -15,6 +15,20 @@
       />
     </div>
     <div
+      class="msg-image"
+      v-else-if="
+        msg.sendingState ==
+        V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_UNKNOWN
+      "
+    >
+      <img
+        class="msg-image"
+        :lazy-load="true"
+        mode="aspectFill"
+        :src="msg.previewImg || thumbImageUrl || imageUrl"
+      />
+    </div>
+    <div
       v-else-if="
         msg.sendingState ==
         V2NIMConst.V2NIMMessageSendingState
@@ -77,7 +91,7 @@ const currentPreviewUrl = ref("");
 // 图片URL计算属性
 const imageUrl = computed(() => {
   // 被拉黑
-  if (props.msg.messageStatus.errorCode == 102426) {
+  if (props.msg?.messageStatus?.errorCode == 102426) {
     return "https://yx-web-nosdn.netease.im/common/c1f278b963b18667ecba4ee9a6e68047/img-fail.png";
   }
 

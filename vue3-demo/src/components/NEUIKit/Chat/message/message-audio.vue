@@ -141,6 +141,11 @@ const pauseAllAudio = (): HTMLAudioElement => {
   border-radius: 4px;
 }
 
+.collection-item-content-top-msg > .audio-in,
+.collection-item-content-top-msg > .audio-out {
+  padding: 5px;
+}
+
 .audio-in {
   flex-direction: row-reverse;
   background-color: #e8eaed;

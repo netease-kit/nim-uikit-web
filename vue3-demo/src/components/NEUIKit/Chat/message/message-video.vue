@@ -11,12 +11,15 @@
       <img class="msg-video-frame" :src="msg.previewImg" />
     </div>
 
-    <!-- 发送成功状态 -->
+    <!-- 发送成功状态/未知状态（收藏消息统一为未知状态） -->
     <div
       v-else-if="
         msg.sendingState ==
-        V2NIMConst.V2NIMMessageSendingState
-          .V2NIM_MESSAGE_SENDING_STATE_SUCCEEDED
+          V2NIMConst.V2NIMMessageSendingState
+            .V2NIM_MESSAGE_SENDING_STATE_SUCCEEDED ||
+        msg.sendingState ==
+          V2NIMConst.V2NIMMessageSendingState
+            .V2NIM_MESSAGE_SENDING_STATE_UNKNOWN
       "
       class="video-frame-wrapper"
     >
@@ -111,6 +114,7 @@ const videoRef = ref<HTMLVideoElement | null>(null);
 const videoFirstFrameDataUrl = computed(() => {
   //@ts-ignore
   const url = props.msg.attachment?.url;
+
   return url ? `${url}${url.includes("?") ? "&" : "?"}vframe&offset=1` : "";
 });
 
@@ -137,7 +141,10 @@ const handleVideoClick = () => {
 
   if (
     props.msg.sendingState ===
-    V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_SUCCEEDED
+      V2NIMConst.V2NIMMessageSendingState
+        .V2NIM_MESSAGE_SENDING_STATE_SUCCEEDED ||
+    props.msg.sendingState ===
+      V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_UNKNOWN
   ) {
     isVideoModalVisible.value = true;
   }

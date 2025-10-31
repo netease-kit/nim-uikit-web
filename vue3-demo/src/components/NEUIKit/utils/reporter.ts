@@ -7,7 +7,7 @@ export const trackInit = (
 ): void => {
   const eventTracking = new EventTracking({
     appKey: appKey,
-    version: "10.0.0",
+    version: "10.1.0",
     component: component,
     imVersion: sdkPkg.version,
     platform: "WEB",

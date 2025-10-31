@@ -19,7 +19,6 @@
     :msg="props.msg"
   />
   <!-- 视频消息 -->
-
   <MessageVideo
     v-else-if="
       props.msg.messageType ===

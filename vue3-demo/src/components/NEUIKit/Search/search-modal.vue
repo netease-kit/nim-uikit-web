@@ -37,13 +37,16 @@
           class="search-scroller"
           :items="searchResult"
           :item-size="50"
-          :buffer="200"
+          :buffer="5"
           key-field="renderKey"
           v-slot="{ item }"
         >
           <div :key="item.renderKey">
             <div class="result-title" v-if="item.id == 'friends'">
               {{ t("friendText") }}
+            </div>
+            <div class="result-title" v-else-if="item.id == 'discussions'">
+              {{ t("discussionTitleText") }}
             </div>
             <div class="result-title" v-else-if="item.id == 'groups'">
               {{ t("teamText") }}
@@ -78,7 +81,7 @@ import Empty from "../CommonComponents/Empty.vue";
 import Input from "../CommonComponents/Input.vue";
 import Modal from "../CommonComponents/Modal.vue";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
-
+import { isDiscussionFunc } from "../utils";
 // 新增props和emits
 interface Props {
   visible: boolean;
@@ -125,11 +128,36 @@ const searchListWatch = autorun(() => {
           ...user,
         };
       }) || [];
-  const teamList = store?.uiStore.teamList || [];
+  const teamList =
+    store?.uiStore.teamList.filter((team) => {
+      if (team?.serverExtension) {
+        try {
+          return !isDiscussionFunc(team.serverExtension);
+        } catch (e) {
+          return true;
+        }
+      }
+    }) || [];
+
+  const discussionList =
+    store?.uiStore.teamList.filter((team) => {
+      if (team?.serverExtension) {
+        try {
+          return isDiscussionFunc(team.serverExtension);
+        } catch (e) {
+          return true;
+        }
+      }
+    }) || [];
   searchList.value = [
     {
       id: "friends",
       list: friends,
+    },
+
+    {
+      id: "discussions",
+      list: discussionList,
     },
     {
       id: "groups",
@@ -147,10 +175,21 @@ const searchResult = computed(() => {
           id: "friends",
           renderKey: "friends",
         });
-        item.list.forEach((item: any) => {
+        item.list.forEach((item) => {
           res.push({
             ...item,
             renderKey: item.accountId,
+          });
+        });
+      } else if (item.id === "discussions") {
+        res.push({
+          id: "discussions",
+          renderKey: "discussions",
+        });
+        item.list.forEach((item) => {
+          res.push({
+            ...item,
+            renderKey: item.teamId,
           });
         });
       } else if (item.id === "groups") {
@@ -158,7 +197,7 @@ const searchResult = computed(() => {
           id: "groups",
           renderKey: "groups",
         });
-        item.list.forEach((item: any) => {
+        item.list.forEach((item) => {
           res.push({
             ...item,
             renderKey: item.teamId,
@@ -168,6 +207,7 @@ const searchResult = computed(() => {
     });
     return res;
   };
+
   if (searchText.value) {
     const finalSections = searchList.value
       .map((item) => {
@@ -184,10 +224,19 @@ const searchResult = computed(() => {
           };
         }
 
+        if (item.id === "discussions") {
+          return {
+            ...item,
+            list: item.list?.filter((item) => {
+              return (item.name || item.teamId).includes(searchText.value);
+            }),
+          };
+        }
+
         if (item.id === "groups") {
           return {
             ...item,
-            list: item.list?.filter((item: any) => {
+            list: item.list?.filter((item) => {
               return (item.name || item.teamId).includes(searchText.value);
             }),
           };

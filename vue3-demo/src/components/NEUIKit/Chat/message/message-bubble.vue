@@ -142,6 +142,7 @@ const props = withDefaults(
 const { proxy } = getCurrentInstance()!; // 获取组件实例
 
 const store = proxy?.$UIKitStore;
+const nim = proxy?.$NIM;
 
 const errorTipText = computed(() => {
   // 消息发送失败时，在感叹号，hover上提示失败原因
@@ -195,14 +196,12 @@ const msgActions = computed(() => {
       show:
         props.msg.messageType !==
           V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL &&
-        [
+        ![
           V2NIMConst.V2NIMMessageSendingState
             .V2NIM_MESSAGE_SENDING_STATE_SENDING,
           V2NIMConst.V2NIMMessageSendingState
             .V2NIM_MESSAGE_SENDING_STATE_FAILED,
-        ].includes(props.msg.sendingState)
-          ? false
-          : true,
+        ].includes(props.msg.sendingState),
     },
     {
       name: t("forwardText"),
@@ -221,6 +220,19 @@ const msgActions = computed(() => {
             .V2NIM_MESSAGE_SENDING_STATE_FAILED,
         ].includes(props.msg.sendingState),
     },
+    {
+      name: t("collectionText"),
+      class: "action-collect",
+      key: "action-collect",
+      show:
+        props.msg.messageType !==
+          V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL &&
+        props.msg &&
+        props.msg.sendingState ===
+          V2NIMConst.V2NIMMessageSendingState
+            .V2NIM_MESSAGE_SENDING_STATE_SUCCEEDED,
+      iconType: "icon-collection",
+    },
   ];
 });
 
@@ -236,11 +248,18 @@ const handleActionItemClick = (key: string) => {
       handleReplyMsg();
       break;
     case "action-forward":
-      emitter.emit(events.CONFIRM_FORWARD_MSG, props.msg);
+      handleForwardMsg();
+      break;
+    case "action-collect":
+      handleCollectMsg();
       break;
     default:
       break;
   }
+};
+
+const handleForwardMsg = () => {
+  emitter.emit(events.CONFIRM_FORWARD_MSG, props.msg);
 };
 
 const scrollBottom = async () => {
@@ -248,6 +267,56 @@ const scrollBottom = async () => {
     emitter.emit(events.ON_SCROLL_BOTTOM);
     clearTimeout(timer);
   }, 300);
+};
+
+// 收藏消息
+const handleCollectMsg = async () => {
+  try {
+    const conversationId = store?.uiStore.selectedConversation as string;
+
+    const conversation = store?.sdkOptions?.enableV2CloudConversation
+      ? store?.conversationStore?.conversations.get(conversationId)
+      : store?.localConversationStore?.conversations.get(conversationId);
+
+    const conversationType = nim.V2NIMConversationIdUtil.parseConversationType(
+      props.msg.conversationId
+    );
+    const isTeamMessage =
+      conversationType ===
+      V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM; // V2NIM_CONVERSATION_TYPE_TEAM
+
+    // 获取teamId（如果是群聊）
+    const teamId = isTeamMessage
+      ? nim.V2NIMConversationIdUtil.parseConversationTargetId(
+          props.msg.conversationId
+        )
+      : undefined;
+
+    await proxy?.$NIM.V2NIMMessageService.addCollection({
+      collectionType: props.msg.messageType + 1000,
+      collectionData: JSON.stringify({
+        message: proxy?.$NIM.V2NIMMessageConverter.messageSerialization(
+          props.msg
+        ),
+        conversationName: conversation?.name,
+        senderName: store?.uiStore.getAppellation({
+          account: props.msg.senderId,
+          teamId: teamId,
+        }),
+        avatar: store?.userStore.users.get(props.msg.senderId)?.avatar,
+      }),
+      uniqueId: props.msg.messageServerId,
+    });
+    showToast({
+      message: t("addCollectionSuccessText"),
+      type: "success",
+    });
+  } catch (error: unknown) {
+    showToast({
+      message: t("addCollectionFailedText"),
+      type: "error",
+    });
+  }
 };
 
 // 重发消息

@@ -2,7 +2,7 @@
   <Modal
     :visible="visible"
     :title="t('addMemberText')"
-    :confirmText="t('okText')"
+    :confirmText="t('addMemberText')"
     :cancelText="t('cancelText')"
     :width="800"
     :height="600"
@@ -13,55 +13,55 @@
   >
     <div class="add-member-content">
       <!-- 主要内容区域：左右分栏 -->
-      <div class="main-content">
-        <!-- 左侧：好友选择 -->
-        <div class="left-panel">
-          <div class="friends-section">
-            <div class="section-header">
-              <span class="section-div friend-select-text">{{
-                t("friendSelectText")
-              }}</span>
-            </div>
-            <div class="person-select-container">
-              <PersonSelect
-                :personList="friendList"
-                @checkboxChange="checkboxChange"
-                :radio="false"
-                :showBtn="false"
-                avatarSize="32"
-              />
-            </div>
+      <!-- 左侧：好友选择 -->
+      <div class="left-panel">
+        <div class="friends-section">
+          <div class="section-header">
+            <span class="section-div friend-select-text">{{
+              t("friendText")
+            }}</span>
+          </div>
+          <div class="person-select-container">
+            <PersonSelect
+              :personList="friendList"
+              :selected="selectedAccounts"
+              @update:selected="onSelectedUpdate"
+              @checkboxChange="onSelectedUpdate"
+              :radio="false"
+              :showBtn="false"
+              avatarSize="32"
+            />
           </div>
         </div>
+      </div>
 
-        <!-- 右侧：已选择的好友 -->
-        <div class="right-panel">
-          <div class="selected-friends-section">
-            <div class="selected-header">
-              <span class="selected-count"
-                >{{ t("selectedText") }}: {{ teamMembers.length }}
-                {{ t("personUnit") }}</span
+      <!-- 右侧：已选择的好友 -->
+      <div class="right-panel">
+        <div class="selected-friends-section">
+          <div class="selected-header">
+            <span class="selected-count"
+              >{{ t("selectedText") }}: {{ teamMembers.length }}
+              {{ t("personUnit") }}</span
+            >
+          </div>
+          <div class="selected-friends-container">
+            <div class="selected-friends-list">
+              <div
+                v-for="accountId in teamMembers"
+                :key="accountId"
+                class="selected-friend-item"
               >
-            </div>
-            <div class="selected-friends-container">
-              <div class="selected-friends-list">
-                <div
-                  v-for="accountId in teamMembers"
-                  :key="accountId"
-                  class="selected-friend-item"
-                >
-                  <Avatar
-                    class="selected-avatar"
-                    size="32"
+                <Avatar
+                  class="selected-avatar"
+                  size="32"
+                  :account="accountId"
+                />
+                <div class="selected-friend-info">
+                  <Appellation
+                    class="selected-friend-name"
                     :account="accountId"
+                    :fontSize="14"
                   />
-                  <div class="selected-friend-info">
-                    <Appellation
-                      class="selected-friend-name"
-                      :account="accountId"
-                      :fontSize="14"
-                    />
-                  </div>
                 </div>
               </div>
             </div>
@@ -109,12 +109,19 @@ const store = proxy?.$UIKitStore;
 
 // 响应式数据
 const friendList = ref<PersonSelectItem[]>([]);
-// 群成员
-const teamMembers = computed(() => {
-  return friendList.value
-    .filter((item) => item.checked)
-    .map((item) => item.accountId);
-});
+// 受控选中集合
+const selectedAccounts = ref<string[]>([]);
+// 右侧“已选择”列表直接基于受控集合
+const teamMembers = computed(() => selectedAccounts.value);
+
+// 受控更新入口（支持最大数量提示）
+const onSelectedUpdate = (next: string[]) => {
+  if (next.length >= 200) {
+    toast.info(t("maxSelectedText"));
+    return;
+  }
+  selectedAccounts.value = next;
+};
 
 // 事件处理
 const handleClose = () => {
@@ -127,27 +134,6 @@ const handleUpdateVisible = (visible: boolean) => {
   emit("update:visible", visible);
   if (!visible) {
     emit("close");
-  }
-};
-
-// 复选框变化处理
-const checkboxChange = (selectList) => {
-  // 获取当前群成员列表
-  const currentTeamMembers =
-    store?.teamMemberStore.getTeamMember(props.teamId) || [];
-  const teamMemberIds = currentTeamMembers.map((member) => member.accountId);
-
-  friendList.value = friendList.value.map((item) => {
-    return {
-      accountId: item.accountId,
-      checked: selectList.includes(item.accountId),
-      disabled: teamMemberIds.includes(item.accountId), // 已在群中的好友设为禁用状态
-    };
-  });
-
-  if (selectList.length >= 200) {
-    toast.info(t("maxSelectedText"));
-    return;
   }
 };
 
@@ -165,7 +151,7 @@ const addTeamMember = debounce(() => {
 
   store?.teamMemberStore
     .addTeamMemberActive({ teamId: props.teamId, accounts: teamMembers.value })
-    .then(async () => {
+    .then(() => {
       toast.success(t("addTeamMemberSuccessText"));
     })
     .catch((err: any) => {
@@ -189,14 +175,13 @@ onMounted(() => {
       (item) => !store?.relationStore.blacklist.includes(item.accountId)
     ) || [];
 
-  // 获取当前群成员列表
   const currentTeamMembers =
     store?.teamMemberStore.getTeamMember(props.teamId) || [];
   const teamMemberIds = currentTeamMembers.map((member) => member.accountId);
 
   friendList.value = list.map((item) => ({
     accountId: item.accountId,
-    disabled: teamMemberIds.includes(item.accountId), // 已在群中的好友设为禁用状态
+    disabled: teamMemberIds.includes(item.accountId),
   }));
 });
 </script>
@@ -204,10 +189,10 @@ onMounted(() => {
 <style scoped>
 .add-member-content {
   display: flex;
-  flex-direction: column;
   gap: 20px;
-  max-height: 440px;
-  overflow-y: hidden;
+  flex: 1;
+  max-height: 470px;
+  padding: 0 20px;
 }
 
 .section-div {
@@ -295,15 +280,6 @@ onMounted(() => {
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
-}
-
-/* 主要内容区域：左右分栏 */
-.main-content {
-  display: flex;
-  gap: 20px;
-  flex: 1;
-  min-height: 300px;
-  padding: 0 20px;
 }
 
 /* 左侧面板 */

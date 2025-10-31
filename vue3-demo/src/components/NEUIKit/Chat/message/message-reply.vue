@@ -37,7 +37,8 @@
           {{
             replyMsg?.messageType
               ? `[${
-                  REPLY_MSG_TYPE_MAP[replyMsg.messageType] || "Unsupported Type"
+                  REPLY_MSG_TYPE_MAP[replyMsg.messageType] ||
+                  t("unknownMsgText")
                 }]`
               : "[Unknown]"
           }}

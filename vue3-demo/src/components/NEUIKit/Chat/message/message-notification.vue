@@ -28,6 +28,8 @@ const teamId =
     ? props.msg.receiverId
     : "";
 
+const teamManagerVisible = proxy?.$UIKitStore.localOptions.teamManagerVisible;
+
 // 通知消息内容
 const notificationContent = ref("");
 
@@ -57,7 +59,9 @@ const notificationContentWatch = autorun(() => {
               team.inviteMode ===
               V2NIMConst.V2NIMTeamInviteMode.V2NIM_TEAM_INVITE_MODE_ALL
                 ? t("teamAll")
-                : t("teamOwnerAndManagerText")
+                : teamManagerVisible
+                ? t("teamOwnerAndManagerText")
+                : t("teamOwner")
             }”`
           );
         }
@@ -67,7 +71,9 @@ const notificationContentWatch = autorun(() => {
               team.updateInfoMode ===
               V2NIMConst.V2NIMTeamUpdateInfoMode.V2NIM_TEAM_UPDATE_INFO_MODE_ALL
                 ? t("teamAll")
-                : t("teamOwnerAndManagerText")
+                : teamManagerVisible
+                ? t("teamOwnerAndManagerText")
+                : t("teamOwner")
             }”`
           );
         }
@@ -93,7 +99,9 @@ const notificationContentWatch = autorun(() => {
             content.push(
               `${t("updateAllowAt")}“${
                 ext[ALLOW_AT] === "manager"
-                  ? t("teamOwnerAndManagerText")
+                  ? teamManagerVisible
+                    ? t("teamOwnerAndManagerText")
+                    : t("teamOwner")
                   : t("teamAll")
               }”`
             );

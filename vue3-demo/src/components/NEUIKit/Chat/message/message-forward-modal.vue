@@ -251,6 +251,7 @@ const emit = defineEmits<{
   (e: "cancel"): void;
   (e: "confirm", targetId: string, type: "friend" | "team"): void;
   (e: "close"): void;
+  (e: "send"): void;
 }>();
 
 const { proxy } = getCurrentInstance()!;

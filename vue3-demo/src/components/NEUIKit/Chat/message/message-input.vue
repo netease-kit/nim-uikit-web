@@ -18,12 +18,7 @@
         <!-- 当回复消息时，输入框上需要展示被回复的消息-->
         <div v-if="isReplyMsg" class="reply-message-wrapper">
           <div class="reply-message-close" @click="removeReplyMsg">
-            <Icon
-              color="#929299"
-              :iconStyle="{ fontWeight: '200' }"
-              :size="13"
-              type="icon-guanbi"
-            />
+            <Icon color="#929299" :size="13" type="icon-guanbi" />
           </div>
           <div class="reply-line">｜</div>
           <div class="reply-title">{{ t("replyText") }}</div>
@@ -38,8 +33,7 @@
               "
               color="#929299"
               :fontSize="13"
-            >
-            </Appellation>
+            />
           </div>
           <div class="reply-to-colon">:</div>
           <div
@@ -62,7 +56,7 @@
                 replyMsg?.messageType
                   ? `[${
                       REPLY_MSG_TYPE_MAP[replyMsg.messageType] ||
-                      "Unsupported Type"
+                      t("unknownMsgText")
                     }]`
                   : "[Unknown]"
               }}
@@ -71,24 +65,23 @@
         </div>
 
         <div class="msg-input-container">
-          <Input
+          <Textarea
             id="msg-input"
             ref="msgInputRef"
-            class="msg-input"
+            class="msg-textarea"
             :placeholder="isTeamMute ? t('teamMuteText') : inputPlaceholder"
             v-model="inputText"
             :disabled="isTeamMute"
             :focus="isFocus"
-            :confirm-hold="true"
-            cursor-spacing="20"
-            adjust-position="true"
-            confirm-type="send"
+            :autoResize="true"
+            :minRows="1"
+            :maxRows="4"
             @confirm="handleSendTextMsg"
             @blur="handleInputBlur"
             @focus="handleInputFocus"
             @input="handleInputChange"
           >
-          </Input>
+          </Textarea>
 
           <div class="msg-input-icons">
             <div class="input-icon">
@@ -177,7 +170,8 @@
       </div>
       <template #content>
         <MentionChooseList
-          :team-id="to"
+          :teamId="to"
+          :allowAtAll="allowAtAll"
           @handleMemberClick="handleMentionSelect"
           @item-click="handleMentionSelect"
           @close-popup="handleCloseMention"
@@ -228,6 +222,7 @@ import type {
   YxServerExt,
   YxAitMsg,
 } from "@xkit-yx/im-store-v2/dist/types/types";
+import Textarea from "../../CommonComponents/Textarea.vue";
 
 const { proxy } = getCurrentInstance()!; // 获取组件实例
 const store = proxy?.$UIKitStore;
@@ -337,8 +332,8 @@ const handleImgActionItemClick = (key: string) => {
 const handleInputFocus = () => {
   isFocus.value = true;
   // 记录当前光标位置
-  if (msgInputRef.value && msgInputRef.value.inputRef) {
-    cursorPosition.value = msgInputRef.value.inputRef.selectionStart || 0;
+  if (msgInputRef.value && msgInputRef.value.textareaRef) {
+    cursorPosition.value = msgInputRef.value.textareaRef.selectionStart || 0;
   }
 };
 
@@ -346,16 +341,16 @@ const handleInputFocus = () => {
 const handleInputBlur = () => {
   isFocus.value = false;
   // 记录失焦时的光标位置
-  if (msgInputRef.value && msgInputRef.value.inputRef) {
-    cursorPosition.value = msgInputRef.value.inputRef.selectionStart || 0;
+  if (msgInputRef.value && msgInputRef.value.textareaRef) {
+    cursorPosition.value = msgInputRef.value.textareaRef.selectionStart || 0;
   }
 };
 
 // 处理输入框内容变化
 const handleInputChange = (event) => {
   // 获取当前光标位置
-  if (msgInputRef.value && msgInputRef.value.inputRef) {
-    cursorPosition.value = msgInputRef.value.inputRef.selectionStart || 0;
+  if (msgInputRef.value && msgInputRef.value.textareaRef) {
+    cursorPosition.value = msgInputRef.value.textareaRef.selectionStart || 0;
   }
 
   // 当前输入的是@ 展示群成员列表
@@ -394,9 +389,12 @@ const handleMentionSelect = (member) => {
 
   // 设置光标位置到插入内容之后
   nextTick(() => {
-    if (msgInputRef.value && msgInputRef.value.inputRef) {
+    if (msgInputRef.value && msgInputRef.value.textareaRef) {
       const newCursorPos = atPosition.value + nickInTeam.length + 2; // @xxx + 空格
-      msgInputRef.value.inputRef.setSelectionRange(newCursorPos, newCursorPos);
+      msgInputRef.value.textareaRef.setSelectionRange(
+        newCursorPos,
+        newCursorPos
+      );
       msgInputRef.value.focus();
     }
   });
@@ -484,6 +482,7 @@ const handleSendTextMsg = () => {
   let text = replaceEmoji(inputText.value);
   const textMsg = proxy?.$NIM.V2NIMMessageCreator.createTextMessage(text);
   const ext = onAtMembersExtHandler();
+  isReplyMsg.value = false;
   store?.msgStore
     .sendMessageActive({
       msg: textMsg,
@@ -504,7 +503,6 @@ const handleSendTextMsg = () => {
         await nextTick();
         scrollBottom();
       }
-      isReplyMsg.value = false;
     });
 
   inputText.value = "";
@@ -525,9 +523,9 @@ const handleEmoji = (emoji: { key: string; type: string }) => {
   let currentCursorPos = cursorPosition.value;
 
   // 如果能获取到实时光标位置，使用实时位置
-  if (msgInputRef.value && msgInputRef.value.inputRef) {
+  if (msgInputRef.value && msgInputRef.value.textareaRef) {
     currentCursorPos =
-      msgInputRef.value.inputRef.selectionStart || cursorPosition.value;
+      msgInputRef.value.textareaRef.selectionStart || cursorPosition.value;
   }
 
   // 在光标位置插入表情
@@ -544,9 +542,12 @@ const handleEmoji = (emoji: { key: string; type: string }) => {
 
   // 设置光标位置到插入表情之后
   nextTick(() => {
-    if (msgInputRef.value && msgInputRef.value.inputRef) {
+    if (msgInputRef.value && msgInputRef.value.textareaRef) {
       const newCursorPos = currentCursorPos + emoji.key.length;
-      msgInputRef.value.inputRef.setSelectionRange(newCursorPos, newCursorPos);
+      msgInputRef.value.textareaRef.setSelectionRange(
+        newCursorPos,
+        newCursorPos
+      );
       msgInputRef.value.focus();
       // 更新记录的光标位置
       cursorPosition.value = newCursorPos;
@@ -779,7 +780,7 @@ watch(
             );
           team.value = _team;
 
-          updateTeamMute(_team.chatBannedMode);
+          updateTeamMute(_team?.chatBannedMode);
         }
       });
     }
@@ -870,6 +871,7 @@ onUnmounted(() => {
 .msg-input-container {
   flex: 1;
   display: flex;
+  align-items: center;
 }
 
 .msg-input {
@@ -1125,5 +1127,10 @@ onUnmounted(() => {
   cursor: pointer;
   color: #333;
   z-index: 999999;
+}
+
+.msg-textarea {
+  display: flex;
+  align-items: center;
 }
 </style>

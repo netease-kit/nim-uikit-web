@@ -34,7 +34,10 @@
       </div>
 
       <!-- 搜索结果 -->
-      <div v-else-if="searchRes" class="search-result-content">
+      <div
+        v-else-if="searchRes && searchRes !== 'notFind'"
+        class="search-result-content"
+      >
         <div class="team-info">
           <Avatar
             size="40"
@@ -59,12 +62,16 @@
           </div>
         </div>
       </div>
+      <!-- 未找到 -->
+      <div v-if="searchRes == 'notFind'" class="empty-content">
+        {{ t("searchNoResText") }}
+      </div>
     </div>
   </Modal>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, getCurrentInstance, watch, onMounted } from "vue";
+import { ref, getCurrentInstance, onMounted } from "vue";
 import Modal from "../../CommonComponents/Modal.vue";
 import Input from "../../CommonComponents/Input.vue";
 import Avatar from "../../CommonComponents/Avatar.vue";
@@ -101,7 +108,7 @@ const nim = proxy?.$NIM;
 
 // 响应式数据
 const searchValue = ref("");
-const searchRes = ref<V2NIMTeam | undefined>(undefined);
+const searchRes = ref<V2NIMTeam | undefined | "notFind">(undefined);
 const searchResEmpty = ref(false);
 const adding = ref(false);
 
@@ -126,6 +133,7 @@ const handleSearch = async () => {
       searchRes.value = team;
     }
   } catch (error) {
+    searchRes.value = "notFind";
     showToast({
       message: t("searchFailText"),
       type: "info",
@@ -135,7 +143,7 @@ const handleSearch = async () => {
 
 const handleAdd = async () => {
   try {
-    if (searchRes.value) {
+    if (searchRes.value && searchRes.value !== "notFind") {
       if (
         searchRes.value.teamType ===
         V2NIMConst.V2NIMTeamType.V2NIM_TEAM_TYPE_INVALID
@@ -176,7 +184,7 @@ const handleAdd = async () => {
 };
 
 const handleChat = async () => {
-  if (searchRes.value) {
+  if (searchRes.value && searchRes.value !== "notFind") {
     if (store?.sdkOptions?.enableV2CloudConversation) {
       await store?.conversationStore?.insertConversationActive(
         V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
@@ -203,7 +211,9 @@ const handleUpdateVisible = (value: boolean) => {
 };
 
 onMounted(() => {
-  inTeam.value = !!store?.teamStore.teams.has(searchRes.value?.teamId || "");
+  if (searchRes.value !== "notFind") {
+    inTeam.value = !!store?.teamStore.teams.has(searchRes.value?.teamId || "");
+  }
 });
 </script>
 

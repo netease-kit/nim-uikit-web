@@ -2,48 +2,17 @@
   <Modal
     v-if="visible"
     :visible="visible"
-    :title="t('createTeamText')"
+    :title="t('createDiscussionText')"
     :confirmText="t('createButtonText')"
     :cancelText="t('cancelText')"
     :width="900"
     :height="610"
     :showDefaultFooter="true"
-    @confirm="createTeam"
+    @confirm="createDiscussion"
     @cancel="handleClose"
     @close="handleClose"
   >
-    <div class="create-team-content">
-      <!-- 群名称输入 -->
-      <div class="team-name-section">
-        <div class="section-div team-name-label">{{ t("teamTitle") }}</div>
-        <Input
-          v-model="teamName"
-          :inputStyle="{
-            backgroundColor: '#f1f5f8',
-          }"
-          type="text"
-          class="team-name-input"
-          :placeholder="t('teamTitlePlaceholder')"
-          :maxlength="30"
-        />
-      </div>
-
-      <!-- 群头像选择 -->
-      <div class="team-avatar-section">
-        <div class="section-div team-name-label">{{ t("teamAvatar") }}</div>
-        <div class="avatar-selector">
-          <div
-            class="avatar-option"
-            :class="{ selected: selectedAvatarIndex === index }"
-            v-for="(avatar, index) in teamAvatarOptions"
-            :key="index"
-            @click="selectAvatar(index)"
-          >
-            <img :src="avatar" alt="群头像" class="avatar-img" />
-          </div>
-        </div>
-      </div>
-
+    <div class="create-discussion-content">
       <!-- 主要内容区域：左右分栏 -->
       <div class="main-content">
         <!-- 左侧：好友选择 -->
@@ -51,7 +20,7 @@
           <div class="friends-section">
             <div class="section-header">
               <span class="section-div friend-select-text">{{
-                t("friendSelectText")
+                t("friendText")
               }}</span>
             </div>
             <div class="person-select-container">
@@ -144,15 +113,6 @@ const teamName = ref("");
 const selectedAvatarIndex = ref(0);
 const selectedAccounts = ref<string[]>([]);
 
-// 群头像选项
-const teamAvatarOptions = [
-  "https://yx-web-nosdn.netease.im/common/2425b4cc058e5788867d63c322feb7ac/groupAvatar1.png",
-  "https://yx-web-nosdn.netease.im/common/62c45692c9771ab388d43fea1c9d2758/groupAvatar2.png",
-  "https://yx-web-nosdn.netease.im/common/d1ed3c21d3f87a41568d17197760e663/groupAvatar3.png",
-  "https://yx-web-nosdn.netease.im/common/e677d8551deb96723af2b40b821c766a/groupAvatar4.png",
-  "https://yx-web-nosdn.netease.im/common/fd6c75bb6abca9c810d1292e66d5d87e/groupAvatar5.png",
-];
-
 const teamMembers = computed(() => {
   return selectedAccounts.value;
 });
@@ -165,10 +125,6 @@ const handleClose = () => {
   emit("close");
 };
 
-const selectAvatar = (index: number) => {
-  selectedAvatarIndex.value = index;
-};
-
 const onSelectedUpdate = (next: string[]) => {
   if (next.length > 200) {
     toast.info(t("maxSelectedText"));
@@ -177,26 +133,17 @@ const onSelectedUpdate = (next: string[]) => {
   selectedAccounts.value = next;
 };
 
-const checkboxChange = (selectList) => {
-  friendList.value = friendList.value.map((item) => {
-    if (item.accountId === p2pAccountId) {
-      return {
-        accountId: item.accountId,
-        checked: true,
-        disabled: true,
-      };
-    } else {
-      return {
-        accountId: item.accountId,
-        checked: selectList.includes(item.accountId),
-      };
-    }
-  });
-
-  if (selectList.length >= 200) {
-    toast.info(t("maxSelectedText"));
-    return;
-  }
+// 群头像
+const createTeamAvatar = () => {
+  const teamAvatarArr = [
+    "https://yx-web-nosdn.netease.im/common/2425b4cc058e5788867d63c322feb7ac/groupAvatar1.png",
+    "https://yx-web-nosdn.netease.im/common/62c45692c9771ab388d43fea1c9d2758/groupAvatar2.png",
+    "https://yx-web-nosdn.netease.im/common/d1ed3c21d3f87a41568d17197760e663/groupAvatar3.png",
+    "https://yx-web-nosdn.netease.im/common/e677d8551deb96723af2b40b821c766a/groupAvatar4.png",
+    "https://yx-web-nosdn.netease.im/common/fd6c75bb6abca9c810d1292e66d5d87e/groupAvatar5.png",
+  ];
+  const _index = Math.floor(Math.random() * 5);
+  return teamAvatarArr[_index];
 };
 
 const createTeamName = (teamMembers: string[]) => {
@@ -220,8 +167,8 @@ const createTeamName = (teamMembers: string[]) => {
   );
   return _teamName;
 };
-
-const createTeam = async () => {
+// 创建讨论组和创建群聊本质调用的都是创建群的接口，仅在创建群接口时，群扩展字段添加im_ui_kit_group参数区分，讨论组本质也是群，只是少了群的一些能力，旨在于快速创建讨论
+const createDiscussion = async () => {
   try {
     if (flag) return;
     if (teamMembers?.value?.length == 0) {
@@ -236,9 +183,21 @@ const createTeam = async () => {
     flag = true;
 
     const team = await store?.teamStore.createTeamActive({
+      type: V2NIMConst.V2NIMTeamType.V2NIM_TEAM_TYPE_ADVANCED,
       accounts: [...teamMembers.value],
-      avatar: teamAvatarOptions[selectedAvatarIndex.value],
+      avatar: createTeamAvatar(),
       name: createTeamName(teamMembers.value),
+      joinMode: V2NIMConst.V2NIMTeamJoinMode.V2NIM_TEAM_JOIN_MODE_FREE,
+      agreeMode: V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_NO_AUTH,
+      inviteMode: V2NIMConst.V2NIMTeamInviteMode.V2NIM_TEAM_INVITE_MODE_ALL,
+      updateInfoMode:
+        V2NIMConst.V2NIMTeamUpdateInfoMode.V2NIM_TEAM_UPDATE_INFO_MODE_ALL,
+      updateExtensionMode:
+        V2NIMConst.V2NIMTeamUpdateExtensionMode
+          .V2NIM_TEAM_UPDATE_EXTENSION_MODE_ALL,
+      serverExtension: JSON.stringify({
+        im_ui_kit_group: true,
+      }),
     });
 
     let teamId = team?.teamId;
@@ -258,14 +217,13 @@ const createTeam = async () => {
       }
     }
 
-    toast.success(t("createTeamSuccessText"));
-
+    toast.success(t("createDiscussionSuccessText"));
     emit("goChat");
 
     // 创建成功后关闭弹窗
     handleClose();
   } catch (error) {
-    toast.error(t("createTeamFailedText"));
+    toast.error(t("createDiscussionFailedText"));
   } finally {
     flag = false;
   }
@@ -315,11 +273,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.create-team-content {
+.create-discussion-content {
   display: flex;
   flex-direction: column;
   gap: 20px;
   max-height: 480px;
+  height: 100%;
   overflow-y: hidden;
 }
 

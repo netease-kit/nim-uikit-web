@@ -103,7 +103,7 @@ import type {
   V2NIMMessage,
   V2NIMMessageRefer,
 } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
-
+import { isDiscussionFunc } from "../utils";
 export interface YxReplyMsg {
   messageClientId: string;
   scene: V2NIMConst.V2NIMConversationType;
@@ -160,7 +160,7 @@ const teamAvatar = ref<string>("");
 trackInit("ChatUIKit", nim.options.appkey);
 
 /**是否需要显示群组消息已读未读，默认 false */
-const teamManagerVisible = store?.localOptions.teamMsgReceiptVisible;
+const teamMsgReceiptVisible = store?.localOptions.teamMsgReceiptVisible;
 
 /**是否需要显示 p2p 消息、p2p会话列表消息已读未读，默认 false */
 const p2pMsgReceiptVisible = store?.localOptions.p2pMsgReceiptVisible;
@@ -278,9 +278,10 @@ const onTeamDismissed = (data: any) => {
 };
 
 /** 自己主动离开群组或被管理员踢出回调 */
-const onTeamLeft = (data: any) => {
+const onTeamLeft = (data) => {
+  const isDiscussion = isDiscussionFunc(data?.serverExtension);
   showToast({
-    message: t("onRemoveTeamText"),
+    message: isDiscussion ? t("onRemoveDiscussionText") : t("onRemoveTeamText"),
     type: "warning",
     duration: 1000,
   });
@@ -329,7 +330,7 @@ const handleMsgReceipt = (msg: V2NIMMessage[]) => {
   } else if (
     msg[0].conversationType ===
       V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM &&
-    teamManagerVisible
+    teamMsgReceiptVisible
   ) {
     store?.msgStore.sendTeamMsgReceiptActive(msg);
   }
@@ -361,7 +362,7 @@ const handleHistoryMsgReceipt = (msgs: V2NIMMessage[]) => {
   } else if (
     conversationType.value ===
       V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM &&
-    teamManagerVisible
+    teamMsgReceiptVisible
   ) {
     const myUserAccountId = proxy?.$NIM.V2NIMLoginService.getLoginUser();
     const myMsgs = msgs
