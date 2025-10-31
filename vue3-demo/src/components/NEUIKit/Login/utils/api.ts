@@ -6,7 +6,7 @@ const baseUrl = "https://yiyong-user-center-qa.netease.im";
 //   : 'https://yiyong-user-center-qa.netease.im'
 
 const loginByCodeHeader = {
-  appKey: "3e215d27b6a6a9e27dad7ef36dd5b65c",
+  appKey: "",
   parentScope: 2,
   scope: 7,
 };

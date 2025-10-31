@@ -11,7 +11,7 @@ const teamManagerVisible =
 export const init = () => {
   const nim = V2NIM.getInstance(
     {
-      appkey: "3e215d27b6a6a9e27dad7ef36dd5b65c",
+      appkey: "",
       needReconnect: true,
       debugLevel: "debug",
       apiVersion: "v2",
