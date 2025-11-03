@@ -40,6 +40,12 @@
       @goChat="$emit('goChat')"
       @close="createTeamModalVisible = false"
     />
+    <CreateDiscussionModal
+      v-if="createDiscussionModalVisible"
+      :visible="createDiscussionModalVisible"
+      @close="createDiscussionModalVisible = false"
+      @goChat="$emit('goChat')"
+    />
     <JoinTeamModal
       v-if="joinTeamModalVisible"
       :visible="joinTeamModalVisible"
@@ -56,6 +62,7 @@ import Dropdown from "../../CommonComponents/Dropdown.vue";
 import { t } from "../../utils/i18n";
 import AddFriendModal from "./add-friend-modal.vue";
 import CreateTeamModal from "./create-team-modal.vue";
+import CreateDiscussionModal from "./create-discussion-modal.vue";
 import JoinTeamModal from "./join-team-modal.vue";
 
 const $emit = defineEmits<{
@@ -74,6 +81,12 @@ const menuItems = ref([
     icon: "icon-chuangjianqunzu",
     text: t("createTeamText"),
   },
+  // 创建讨论组和创建群聊本质调用的都是创建群的接口，仅在创建群接口时，群扩展字段添加im_ui_kit_group参数区分，讨论组本质也是群，只是少了群的一些能力，旨在于快速创建讨论
+  {
+    action: "createDiscussion",
+    icon: "icon-chuangjianqunzu",
+    text: t("createDiscussionText"),
+  },
   {
     action: "joinTeam",
     icon: "icon-join",
@@ -84,6 +97,7 @@ const menuItems = ref([
 const addFriendModalVisible = ref(false);
 const createTeamModalVisible = ref(false);
 const joinTeamModalVisible = ref(false);
+const createDiscussionModalVisible = ref(false);
 
 const handleMenuClick = (action: string) => {
   // 这里可以添加具体的处理逻辑
@@ -93,6 +107,9 @@ const handleMenuClick = (action: string) => {
       break;
     case "createTeam":
       createTeamModalVisible.value = true;
+      break;
+    case "createDiscussion":
+      createDiscussionModalVisible.value = true;
       break;
     case "joinTeam":
       joinTeamModalVisible.value = true;

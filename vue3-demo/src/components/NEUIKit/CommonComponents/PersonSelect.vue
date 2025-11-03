@@ -17,11 +17,11 @@
                 type="radio"
                 class="radio-input"
                 :value="item.accountId"
-                :checked="selectAccount.includes(item.accountId)"
+                :checked="currentSelected.includes(item.accountId)"
                 :disabled="
                   item.disabled ||
-                  (selectAccount.length >= max &&
-                    !selectAccount.includes(item.accountId))
+                  (currentSelected.length >= max &&
+                    !currentSelected.includes(item.accountId))
                 "
                 @change="handleRadioChange($event, item.accountId)"
               />
@@ -61,11 +61,11 @@
                 type="checkbox"
                 class="checkbox-input"
                 :value="item.accountId"
-                :checked="selectAccount.includes(item.accountId)"
+                :checked="currentSelected.includes(item.accountId)"
                 :disabled="
                   item.disabled ||
-                  (selectAccount.length >= max &&
-                    !selectAccount.includes(item.accountId))
+                  (currentSelected.length >= max &&
+                    !currentSelected.includes(item.accountId))
                 "
               />
               <span class="checkbox-custom"></span>
@@ -87,7 +87,7 @@
       </div>
     </div>
   </div>
-  <Empty v-else :text="t('noFriendText')"></Empty>
+  <Empty v-else :text="emptyText"></Empty>
 </template>
 
 <script lang="ts" setup>
@@ -95,8 +95,8 @@ import Avatar from "./Avatar.vue";
 import Appellation from "./Appellation.vue";
 import Empty from "./Empty.vue";
 import { t } from "../utils/i18n";
-import { ref, onMounted } from "vue";
 import { RecycleScroller } from "vue-virtual-scroller";
+import { computed } from "vue";
 
 export type PersonSelectItem = {
   accountId: string;
@@ -113,6 +113,8 @@ const props = withDefaults(
     radio?: boolean;
     max?: number;
     avatarSize?: string;
+    selected: string[]; // 受控：由外部传入当前选中
+    emptyText?: string;
   }>(),
   {
     showBtn: true,
@@ -120,20 +122,17 @@ const props = withDefaults(
     radio: false,
     max: 999999999999999,
     avatarSize: "36",
+    selected: () => [],
+    emptyText: t("noFriendText"),
   }
 );
 
-const selectAccount = ref<string[]>([]);
-
-onMounted(() => {
-  selectAccount.value = props.personList
-    .filter((item) => item.checked)
-    .map((item) => item.accountId);
-});
+const currentSelected = computed<string[]>(() => props.selected);
 
 const $emit = defineEmits<{
-  (event: "checkboxChange", selectList: string | string[]): void;
+  (event: "checkboxChange", selectList: string[]): void;
   (event: "onBtnClick"): void;
+  (event: "update:selected", selectList: string[]): void;
 }>();
 
 const onBtnClick = () => {
@@ -141,40 +140,34 @@ const onBtnClick = () => {
 };
 
 const handleRadioChange = (event: Event, accountId: string) => {
-  event.preventDefault(); // 添加这行，阻止默认行为
-
+  event.preventDefault();
   const checked = (event.target as HTMLInputElement).checked;
-  selectAccount.value = checked ? [accountId] : [];
-  $emit("checkboxChange", selectAccount.value);
+  const nextSelected = checked ? [accountId] : [];
+  $emit("update:selected", nextSelected);
+  $emit("checkboxChange", nextSelected);
 };
 
 const handleCheckboxChange = (event: Event, accountId: string) => {
-  event.preventDefault(); // 添加这行，阻止默认行为
+  event.preventDefault();
 
-  // 查找当前项目
   const currentItem = props.personList.find(
     (item) => item.accountId === accountId
   );
-
-  // 检查是否禁用
   const isDisabled =
     currentItem?.disabled ||
-    (selectAccount.value.length >= props.max &&
-      !selectAccount.value.includes(accountId));
-
-  // 如果禁用，直接返回，不处理点击
+    (currentSelected.value.length >= props.max &&
+      !currentSelected.value.includes(accountId));
   if (isDisabled) {
     return;
   }
 
-  const newChecked = !selectAccount.value.includes(accountId);
+  const willSelect = !currentSelected.value.includes(accountId);
+  const nextSelected = willSelect
+    ? [...currentSelected.value, accountId]
+    : currentSelected.value.filter((id) => id !== accountId);
 
-  if (newChecked) {
-    selectAccount.value = [...selectAccount.value, accountId];
-  } else {
-    selectAccount.value = selectAccount.value.filter((id) => id !== accountId);
-  }
-  $emit("checkboxChange", selectAccount.value);
+  $emit("update:selected", nextSelected);
+  $emit("checkboxChange", nextSelected);
 };
 </script>
 

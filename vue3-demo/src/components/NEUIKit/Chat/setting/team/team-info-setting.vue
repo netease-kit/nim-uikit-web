@@ -4,7 +4,9 @@
     <div class="form-content">
       <!-- 群头像 -->
       <div class="form-item team-avatar">
-        <div class="form-label">{{ t("teamAvatar") }}</div>
+        <div class="form-label">
+          {{ isDiscussion ? t("discussionAvatarText") : t("teamAvatar") }}
+        </div>
         <Popover trigger="click" width="300px" placement="bottom">
           <div class="avatar-container">
             <Avatar
@@ -22,7 +24,7 @@
                   :key="index"
                   @click="selectAvatar(avatar)"
                 >
-                  <img :src="avatar" alt="群头像" class="avatar-img" />
+                  <img :src="avatar" class="avatar-img" />
                 </div>
               </div>
             </div>
@@ -32,7 +34,9 @@
 
       <!-- 群ID -->
       <div class="form-item">
-        <div class="form-label">{{ t("teamIdText") }}</div>
+        <div class="form-label">
+          {{ isDiscussion ? t("discussionIdText") : t("teamIdText") }}
+        </div>
         <input
           type="text"
           class="form-input readonly"
@@ -43,7 +47,9 @@
 
       <!-- 群名称 -->
       <div class="form-item">
-        <div class="form-label">{{ t("teamTitle") }}</div>
+        <div class="form-label">
+          {{ isDiscussion ? t("discussionTitle") : t("teamTitle") }}
+        </div>
         <div
           class="input-container"
           :class="{ 'input-container-disabled': !canEditTeamInfo }"
@@ -63,7 +69,7 @@
       </div>
 
       <!-- 群介绍 -->
-      <div class="form-item last-item">
+      <div v-if="!isDiscussion" class="form-item last-item">
         <div class="form-label">{{ t("teamIntro") }}</div>
         <div class="textarea-container">
           <textarea
@@ -109,11 +115,15 @@ import Avatar from "../../../CommonComponents/Avatar.vue";
 
 interface Props {
   teamId: string;
+  isTeamOwner: boolean;
+  isTeamManager: boolean;
+  team: V2NIMTeam | undefined;
+  teamMembers: V2NIMTeamMember[];
+  isDiscussion: boolean;
 }
 
 const { proxy } = getCurrentInstance()!;
 const store = proxy?.$UIKitStore as RootStore;
-const nim = proxy?.$NIM;
 
 const props = defineProps<Props>();
 
@@ -123,26 +133,28 @@ const emit = defineEmits(["onChangeSubPath"]);
 const teamName = ref("");
 // 群介绍
 const teamIntro = ref("");
-// 群
-const team = ref<V2NIMTeam>();
-// 当前会话
-const conversation = ref<
-  V2NIMConversationForUI | V2NIMLocalConversationForUI
->();
-
-/**是否是云端会话 */
-const enableV2CloudConversation = store?.sdkOptions?.enableV2CloudConversation;
-const myInfoInTeam = ref<V2NIMTeamMember>();
 
 // 权限检查计算属性
 const canEditTeamInfo = computed(() => {
-  if (!myInfoInTeam.value) return false;
-  const memberRole = myInfoInTeam.value.memberRole;
-  // 只有群主和管理员可以编辑群信息
+  if (props.isDiscussion) {
+    return true;
+  }
+
+  if (props.isTeamOwner) {
+    return true;
+  }
+
+  if (
+    props?.team?.updateInfoMode ===
+      V2NIMConst.V2NIMTeamUpdateInfoMode.V2NIM_TEAM_UPDATE_INFO_MODE_MANAGER &&
+    props.isTeamManager
+  ) {
+    return true;
+  }
+
   return (
-    memberRole ===
-      V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_OWNER ||
-    memberRole === V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
+    props?.team?.updateInfoMode ===
+    V2NIMConst.V2NIMTeamUpdateInfoMode.V2NIM_TEAM_UPDATE_INFO_MODE_ALL
   );
 });
 
@@ -171,9 +183,9 @@ const handleSave = () => {
   }
 
   // 检查是否有变更
-  const originalName = team.value?.name || "";
-  const originalIntro = team.value?.intro || "";
-  const originalAvatar = team.value?.avatar || "";
+  const originalName = props.team?.name || "";
+  const originalIntro = props.team?.intro || "";
+  const originalAvatar = props.team?.avatar || "";
   const hasNameChanged = teamName.value !== originalName;
   const hasIntroChanged = teamIntro.value !== originalIntro;
   const hasAvatarChanged = selectedAvatar.value !== originalAvatar;
@@ -205,7 +217,7 @@ const handleSave = () => {
       info: updateInfo,
     })
     .then(() => {
-      toast.info(t("updateTeamSuccessText"));
+      toast.success(t("updateTeamSuccessText"));
     })
     .catch((err: any) => {
       switch (err?.code) {
@@ -219,42 +231,10 @@ const handleSave = () => {
     });
 };
 
-let teamWatch = () => {};
-let teamMembersWatch = () => {};
-let conversationWatch = () => {};
-
 onMounted(() => {
-  const conversationId = nim.V2NIMConversationIdUtil.teamConversationId(
-    props.teamId
-  );
-  teamWatch = autorun(() => {
-    if (props.teamId) {
-      team.value = store.teamStore.teams.get(props.teamId);
-      // 初始化表单数据
-      if (team.value) {
-        teamName.value = team.value.name || "";
-        teamIntro.value = team.value.intro || "";
-        selectedAvatar.value = team.value.avatar || "";
-      }
-    }
-    teamMembersWatch = autorun(() => {
-      myInfoInTeam.value = store?.teamMemberStore.getTeamMember(props.teamId, [
-        store?.userStore.myUserInfo.accountId,
-      ])?.[0];
-    });
-  });
-
-  conversationWatch = autorun(() => {
-    conversation.value = enableV2CloudConversation
-      ? store.conversationStore?.conversations.get(conversationId)
-      : store.localConversationStore?.conversations.get(conversationId);
-  });
-});
-
-onUnmounted(() => {
-  teamWatch();
-  conversationWatch();
-  teamMembersWatch();
+  teamName.value = props?.team?.name || "";
+  teamIntro.value = props?.team?.intro || "";
+  selectedAvatar.value = props?.team?.avatar || "";
 });
 </script>
 

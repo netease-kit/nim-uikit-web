@@ -1,6 +1,6 @@
 <template>
   <div class="nim-dropdown" ref="dropdownRef">
-    <div class="nim-dropdown-trigger" @contextmenu.prevent="handleContextMenu">
+    <div class="nim-dropdown-trigger" @contextmenu.prevent="handleContextMenu" @click="handleClick">
       <slot></slot>
     </div>
     <Transition name="dropdown" v-if="visible">
@@ -21,10 +21,13 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import type { CSSProperties } from "vue";
 
+// 全局dropdown管理 - 使用模块级变量确保所有实例共享
+let globalActiveDropdown: (() => void) | null = null;
+
 // 定义props
 const props = withDefaults(
   defineProps<{
-    trigger?: "contextmenu";
+    trigger?: "contextmenu" | "click" | "both";
     lazy?: boolean;
     dropdownStyle?: CSSProperties;
     placement?: "top" | "bottom";
@@ -46,23 +49,44 @@ const contentStyle = computed<CSSProperties>(() => ({
   position: "absolute",
   left: `${position.value.x}px`,
   top: `${position.value.y}px`,
-  zIndex: 9999, // 提高 z-index
+  zIndex: 99999, // 进一步提高 z-index
   transformOrigin: props.placement === "top" ? "bottom" : "top",
   ...props.dropdownStyle,
 }));
 
 const showDropdown = () => {
+  // 如果有其他dropdown打开，先关闭它
+  if (globalActiveDropdown && globalActiveDropdown !== hideDropdown) {
+    globalActiveDropdown();
+  }
+  
+  // 设置当前dropdown为活跃状态
+  globalActiveDropdown = hideDropdown;
+  
   visible.value = true;
   hasBeenShown.value = true;
 };
 
 const hideDropdown = () => {
   visible.value = false;
+  
+  // 清除全局活跃dropdown引用
+  if (globalActiveDropdown === hideDropdown) {
+    globalActiveDropdown = null;
+  }
+};
+
+// 处理点击事件
+const handleClick = (event: MouseEvent) => {
+  if (props.trigger === "click" || props.trigger === "both") {
+    // 复用右键菜单的逻辑
+    handleContextMenu(event);
+  }
 };
 
 // 处理右键菜单事件
 const handleContextMenu = async (event: MouseEvent) => {
-  if (props.trigger === "contextmenu" || props.trigger === "both") {
+  if (props.trigger === "contextmenu" || props.trigger === "click"  || props.trigger === "both") {
     event.preventDefault();
     event.stopPropagation();
 
@@ -215,5 +239,6 @@ onUnmounted(() => {
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   padding: 4px 0px;
   min-width: 70px;
+  z-index: 99999; /* 确保样式中也有高z-index */
 }
 </style>

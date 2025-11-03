@@ -114,6 +114,8 @@ export default {
   addCollectionSuccessText: "Add collection success",
   addCollectionFailedText: "Add collection Failed",
   deleteCollectionFailedText: "Delete collection Failed",
+  deleteCollectionConfirmText:
+    "Are you sure you want to delete this collection?",
   noCollectionsText: "No collection",
   teamBannedText: "Message Banned",
   you: "You",
@@ -189,8 +191,17 @@ export default {
   customMsgText: "Custom Message",
   unknownMsgText: "Unknown Message",
   noFriendText: "No Friends",
+  teamManagerSelect: "Team Manager",
   onDismissTeamText: "This team has been dismissed",
   onRemoveTeamText: "You have left the team",
+  onRemoveDiscussionText: "You have left the discussion group",
+  discussionText: "Discussion Group",
+  discussionTitleText: "Discussion Group",
+  discussionAvatarText: "Discussion Group Avatar",
+
+  discussionIdText: "Discussion Group ID",
+  discussionTitle: "Discussion Group Name",
+  searchDiscussionMemberPlaceholder: "Search Discussion Group Members",
   selectSessionFailText: "Failed to select conversation",
   noExistUser: "This user does not exist",
   enterAccount: "Enter account",
@@ -222,6 +233,10 @@ export default {
   forwardFailText: "Forward Failed",
   getMessageFailed: "Fail to get message",
   getForwardMessageFailed: "Fail to get forward message",
+  updateBitConfigMaskSuccess: "Update group message notification success",
+  updateBitConfigMaskFailed: "Update group message notification failed",
+  teamDoNotDisturbText: "Team Mute",
+  discussionDoNotDisturbText: "Discussion Group Mute",
   sendFailWithInBlackText:
     "The other party has blocked you, message sending failed",
   sendFailWithDeleteText:
@@ -318,6 +333,19 @@ export default {
   nickPlaceholderText: "Please enter nickname",
   signPlaceholderText: "Please enter signature",
   emailPlaceholderText: "Please enter email",
+  teamManagerEditInfoText: "Team Manager Edit Info",
+  updateTeamManagerSuccessText: "Update team manager success",
+  updateTeamManagerFailText: "Update team manager fail",
+
+  createDiscussionText: "Create Discussion",
+  createDiscussionSuccessText: "Create discussion group successfully",
+  createDiscussionFailedText: "Create discussion group failed",
+  discussionMemberText: "Discussion group member",
+  leaveDiscussionTitle: "Leave Discussion Group",
+  leaveDiscussionConfirmText:
+    "Are you sure you want to leave this discussion group?",
+  leaveDiscussionSuccessText: "Successfully left this discussion group",
+  leaveDiscussionFailedText: "Failed to leave this discussion group",
 
   //demo层
   session: "session",

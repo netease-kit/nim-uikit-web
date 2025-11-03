@@ -43,7 +43,7 @@
               <ConversationItemIsRead
                 v-if="showSessionUnread"
                 :conversation="props.conversation"
-              ></ConversationItemIsRead>
+              />
               <span
                 v-if="props.conversation.lastMessage"
                 class="conversation-item-desc-content"
@@ -84,7 +84,7 @@
 import Avatar from "../CommonComponents/Avatar.vue";
 import Appellation from "../CommonComponents/Appellation.vue";
 import Icon from "../CommonComponents/Icon.vue";
-import { computed, onUpdated, getCurrentInstance } from "vue";
+import { computed, getCurrentInstance } from "vue";
 import dayjs from "dayjs";
 import { t } from "../utils/i18n";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
@@ -308,7 +308,7 @@ function handleConversationItemClick() {
 }
 
 .conversation-item-checked {
-  background-color: #ebf3fc;
+  background-color: #ebf3fc !important;
 }
 
 .conversation-item-state {
@@ -423,6 +423,12 @@ function handleConversationItemClick() {
   cursor: pointer;
   color: rgba(0, 0, 0, 0.85);
   cursor: pointer;
+}
+
+.conversation-item-read-state {
+  display: inline-block;
+  width: 17px;
+  height: 22px;
 }
 
 .conversation-dropdown-item:hover {

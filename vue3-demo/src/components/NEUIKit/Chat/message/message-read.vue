@@ -128,19 +128,19 @@ const p2pMsgRotateDeg = ref(0);
 const showUserCardModal = ref(false);
 const selectedAccount = ref<string>("");
 
-// 处理头像点击事件 - 从 message-read-info.vue 提升过来
+// 处理头像点击事件
 const handleAvatarClick = (account: string) => {
   selectedAccount.value = account;
   showUserCardModal.value = true;
 };
 
-// 关闭用户名片弹窗 - 从 message-read-info.vue 提升过来
+// 关闭用户名片弹窗
 const handleCloseModal = () => {
   showUserCardModal.value = false;
   selectedAccount.value = "";
 };
 
-// 处理弹窗可见性更新 - 从 message-read-info.vue 提升过来
+// 处理弹窗可见性更新
 const handleUpdateVisible = (visible: boolean) => {
   showUserCardModal.value = visible;
   if (!visible) {

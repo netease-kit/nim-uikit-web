@@ -8,7 +8,11 @@
           v-model="searchKeyword"
           type="text"
           class="search-input"
-          :placeholder="t('searchTeamMemberPlaceholder')"
+          :placeholder="
+            isDiscussion
+              ? t('searchDiscussionMemberPlaceholder')
+              : t('searchTeamMemberPlaceholder')
+          "
           @input="handleSearch"
         />
         <Icon
@@ -56,7 +60,8 @@
           <div
             v-if="
               item.memberRole ===
-              V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_OWNER
+                V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_OWNER &&
+              !isDiscussion
             "
             class="user-tag"
           >
@@ -64,10 +69,9 @@
           </div>
           <div
             v-else-if="
-              !isHovering(item) &&
               item.memberRole ===
                 V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
-            "
+            && !isHovering(item)"
             class="user-tag"
           >
             {{ t("manager") }}
@@ -86,14 +90,14 @@
         </div>
       </RecycleScroller>
 
-      <Empty v-else :text="t('noTeamMember')" />
+      <Empty v-else :text="t('searchNoResText')" />
     </div>
 
     <UserCardModal
-      v-if="showUserCard"
-      :visible="showUserCard"
+      v-if="!!selectedAccount"
+      :visible="!!selectedAccount"
       :account="selectedAccount"
-      @close="showUserCard = false"
+      @close="selectedAccount = ''"
     />
   </div>
 </template>
@@ -101,6 +105,7 @@
 <script lang="ts" setup>
 /** 群成员列表组件 */
 import Avatar from "../../../CommonComponents/Avatar.vue";
+import UserCardModal from "../../../CommonComponents/UserCardModal.vue";
 import { ref, computed, onUnmounted, onMounted, getCurrentInstance } from "vue";
 import { RecycleScroller } from "vue-virtual-scroller";
 import { autorun } from "mobx";
@@ -115,10 +120,10 @@ import type {
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { showModal } from "../../../utils/modal";
 import { showToast } from "../../../utils/toast";
-import UserCardModal from "../../../CommonComponents/UserCardModal.vue";
 
 interface Props {
   teamId: string;
+  isDiscussion: boolean;
 }
 const props = defineProps<Props>();
 
@@ -132,7 +137,6 @@ const searchKeyword = ref<string>("");
 const filteredTeamMembers = ref<V2NIMTeamMember[]>([]);
 const hoveredItemId = ref<string | null>(null);
 
-const showUserCard = ref(false);
 const selectedAccount = ref("");
 
 // 搜索功能
@@ -166,18 +170,25 @@ const setHoverItem = (accountId: string | null) => {
 
 // 是否在hover
 const isHovering = (item) => {
-  // 如果是普通成员，直接返回false
-  if (!isTeamManager.value) {
-    return false;
-  } else if (
-    isTeamManager.value &&
-    item.memberRole ===
-      V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
-  ) {
-    return false;
+  // 如果是群主，可以hover所有其他成员
+  if (isTeamOwner.value) {
+    return hoveredItemId.value === item.accountId;
   }
-
-  return hoveredItemId.value === item.accountId;
+  
+  // 如果是管理员，只能hover普通成员
+  if (isTeamManager.value) {
+    // 管理员不能hover群主和其他管理员
+    if (
+      item.memberRole === V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_OWNER ||
+      item.memberRole === V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
+    ) {
+      return false;
+    }
+    return hoveredItemId.value === item.accountId;
+  }
+  
+  // 普通成员不能hover任何人
+  return false;
 };
 
 // 移除群成员
@@ -247,9 +258,12 @@ const isShowRemoveBtn = (target: V2NIMTeamMember) => {
     return false;
   }
 
+  // 群主可以移除管理员和普通成员，但不能移除其他群主
   if (isTeamOwner.value) {
-    return true;
+    return target.memberRole !== V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_OWNER;
   }
+
+  // 管理员只能移除普通成员，不能移除群主和其他管理员
   if (isTeamManager.value) {
     return (
       target.memberRole !==
@@ -258,6 +272,7 @@ const isShowRemoveBtn = (target: V2NIMTeamMember) => {
         V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
     );
   }
+  
   return false;
 };
 
@@ -266,7 +281,6 @@ const handleTeamMemberClick = (accountId: string) => {
   const myUserAccountId = proxy?.$NIM.V2NIMLoginService.getLoginUser();
   if (myUserAccountId !== accountId) {
     selectedAccount.value = accountId;
-    showUserCard.value = true;
   }
 };
 

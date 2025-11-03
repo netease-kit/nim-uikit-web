@@ -2,10 +2,13 @@ import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import RootStore from "@xkit-yx/im-store-v2";
 import V2NIM from "nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK";
 import type { V2NIMMessage } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
+// 是否开启云端会话，实际根据您的业务调整
+const enableV2CloudConversation =
+  sessionStorage.getItem("enableV2CloudConversation") === "on";
+const teamManagerVisible =
+  sessionStorage.getItem("teamManagerVisible") !== "off";
+
 export const init = () => {
-  // 是否开启云端会话，实际根据您的业务调整
-  const enableV2CloudConversation =
-    sessionStorage.getItem("enableV2CloudConversation") === "on";
   const nim = V2NIM.getInstance(
     {
       appkey: "",
@@ -35,6 +38,8 @@ export const init = () => {
       // 群组被邀请模式，默认需要验证
       teamAgreeMode:
         V2NIMConst.V2NIMTeamAgreeMode.V2NIM_TEAM_AGREE_MODE_NO_AUTH,
+      // 是否展示群管理员
+      teamManagerVisible,
       // 发送消息前回调, 可对消息体进行修改，添加自定义参数
       aiVisible: false,
       sendMsgBefore: async (options: {

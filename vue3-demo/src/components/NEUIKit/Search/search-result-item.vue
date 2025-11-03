@@ -69,12 +69,13 @@ const handleClick = () => {
   height: 50px;
   margin: 10px 0;
   width: 100%;
+  padding-left: 5px;
 }
 
 .search-result-list-item:hover {
   background-color: #f5f7fa;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .result-item-avatar {
