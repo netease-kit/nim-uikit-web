@@ -43,9 +43,6 @@ Component({
         }) : []);
         const teamList = (store && store.uiStore && store.uiStore.teamList) || [];
 
-        console.log('===============================friends================================', friends)
-        console.log('===============================teamList================================', teamList)
-
         this.setData({
           searchList: [
             {
@@ -79,8 +76,6 @@ Component({
         this.setData({
           statusBarHeight: statusBarHeight
         });
-        
-        console.log('状态栏高度设置为:', statusBarHeight, 'px');
       } catch (error) {
         console.error('获取系统信息失败:', error);
         // 设置默认值

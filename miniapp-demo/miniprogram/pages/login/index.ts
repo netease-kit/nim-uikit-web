@@ -2,20 +2,15 @@
 Page({
   data: {},
 
-  onLoad() {
-    console.log('登录页面加载')
-  },
+  onLoad() {},
 
-  onShow() {
-    console.log('登录页面显示')
-  },
+  onShow() {},
 
   /**
    * 登录成功回调
    */
   onLoginSuccess(event: any) {
     const { detail } = event
-    console.log('登录成功:', detail)
     
     // 存储登录信息
     if (detail.token) {

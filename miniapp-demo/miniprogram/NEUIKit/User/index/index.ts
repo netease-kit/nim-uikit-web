@@ -43,8 +43,6 @@ Component({
         this.setData({
           statusBarHeight: totalHeight
         });
-        
-        console.log('状态栏高度:', statusBarHeight, 'px, 导航栏高度:', navBarHeight, 'px, 总高度:', totalHeight, 'px');
       } catch (error) {
         console.error('获取系统信息失败:', error);
         // 设置默认值（状态栏44px + 导航栏48px）
@@ -82,13 +80,11 @@ Component({
     },
 
     gotoSetting() {
-      console.log('Navigate to setting');
       // 触发事件让父组件处理导航
       this.triggerEvent('navigateToSetting', {});
     },
 
     gotoAbout() {
-      console.log('Navigate to about');
       // 触发事件让父组件处理导航
       this.triggerEvent('navigateToAbout', {});
     }

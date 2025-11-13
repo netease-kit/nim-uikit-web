@@ -24,8 +24,7 @@
     "pages/chat/message-read-info/index",
     "pages/chat/p2p-setting/index",
     "pages/chat/team-setting/index",
-    "pages/index/index",
-    "pages/logs/logs"
+    "pages/index/index"
   ],
   "window": {
     "navigationBarTextStyle": "black",

@@ -9,9 +9,7 @@ Page({
     displayName: '群'
   },
 
-  onLoad(options: any) {
-    console.log('TeamInfoEdit onLoad', options)
-    
+  onLoad(options: any) {    
     // 获取状态栏高度
     const systemInfo = wx.getSystemInfoSync()
     this.setData({

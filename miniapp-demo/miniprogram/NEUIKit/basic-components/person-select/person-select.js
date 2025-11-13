@@ -49,7 +49,6 @@ Component({
   observers: {
     'personList': function(personList) {
 
-      console.log('personList',personList)
       // 初始化选中状态
       if (personList && personList.length > 0) {
         const selectedAccounts = personList

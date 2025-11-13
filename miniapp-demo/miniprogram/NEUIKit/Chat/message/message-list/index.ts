@@ -34,7 +34,8 @@ Component({
     scrollTop: 0,
     finalMsgs: [] as any[],
     lastScrollTop: 0,
-    autoScrollToBottom: true
+    autoScrollToBottom: true,
+    scrollIntoView: ''
   },
 
   observers: {
@@ -203,11 +204,14 @@ Component({
       return formatMessageTime(timestamp);
     },
     
-    // 滚动到底部
+    // 滚动到底部（使用底部锚点，避免高度计算误差）
     scrollToBottom() {
       wx.nextTick(() => {
-        this.setData({
-          scrollTop: 999999
+        // 先清空，再设置到锚点，确保重复设置也能触发滚动
+        this.setData({ scrollIntoView: '' }, () => {
+          wx.nextTick(() => {
+            this.setData({ scrollIntoView: 'bottom-anchor' });
+          });
         });
       });
     },
@@ -277,20 +281,19 @@ Component({
 
     // 处理头像点击事件
     handleAvatarClick(e: any) {
-      console.log('Message list received avatar click:', e.detail);
       this.triggerEvent('avatarClick', e.detail);
     },
     
-    // 滚动到指定消息
+    // 滚动到指定消息（通过scroll-into-view确保对齐）
     scrollToMessage(messageClientId: string) {
-      const query = this.createSelectorQuery();
-      query.select(`[data-message-id="${messageClientId}"]`).boundingClientRect((res) => {
-        if (res) {
-          this.setData({
-            scrollTop: res.top
+      const id = `msg-${messageClientId}`;
+      wx.nextTick(() => {
+        this.setData({ scrollIntoView: '' }, () => {
+          wx.nextTick(() => {
+            this.setData({ scrollIntoView: id });
           });
-        }
-      }).exec();
+        });
+      });
     },
     
     // 获取消息列表高度

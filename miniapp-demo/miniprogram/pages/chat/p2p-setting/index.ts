@@ -13,9 +13,7 @@ Page({
   /**
    * 生命周期函数--监听页面加载
    */
-  onLoad(options: any) {
-    console.log('P2pSettingPage onLoad:', options);
-    
+  onLoad(options: any) {    
     // 从页面参数获取对方用户ID
     if (options.to) {
       const account = options.to;
@@ -26,11 +24,6 @@ Page({
         account: account,
         conversationId: conversationId
       });
-      
-      console.log('P2pSettingPage 设置参数:', {
-        account,
-        conversationId
-      });
     }
     
     // 获取系统主题
@@ -40,30 +33,22 @@ Page({
   /**
    * 生命周期函数--监听页面初次渲染完成
    */
-  onReady() {
-    console.log('P2pSettingPage onReady');
-  },
+  onReady() {},
 
   /**
    * 生命周期函数--监听页面显示
    */
-  onShow() {
-    console.log('P2pSettingPage onShow');
-  },
+  onShow() {},
 
   /**
    * 生命周期函数--监听页面隐藏
    */
-  onHide() {
-    console.log('P2pSettingPage onHide');
-  },
+  onHide() {},
 
   /**
    * 生命周期函数--监听页面卸载
    */
-  onUnload() {
-    console.log('P2pSettingPage onUnload');
-  },
+  onUnload() {},
 
   /**
    * 页面相关事件处理函数--监听用户下拉动作
@@ -76,9 +61,7 @@ Page({
   /**
    * 页面上拉触底事件的处理函数
    */
-  onReachBottom() {
-    console.log('P2pSettingPage onReachBottom');
-  },
+  onReachBottom() {},
 
   /**
    * 用户点击右上角分享
@@ -110,7 +93,6 @@ Page({
    * 处理消息免打扰状态变化
    */
   onMuteChange(event: any) {
-    console.log('P2pSettingPage onMuteChange:', event.detail);
     const { muted } = event.detail;
     
     wx.showToast({
@@ -124,7 +106,6 @@ Page({
    * 处理置顶聊天状态变化
    */
   onStickChange(event: any) {
-    console.log('P2pSettingPage onStickChange:', event.detail);
     const { sticked } = event.detail;
     
     wx.showToast({
@@ -138,8 +119,6 @@ Page({
    * 处理清空聊天记录
    */
   onClearHistory(event: any) {
-    console.log('P2pSettingPage onClearHistory:', event.detail);
-    
     wx.showModal({
       title: '确认清空',
       content: '确定要清空聊天记录吗？此操作不可恢复。',
@@ -178,7 +157,6 @@ Page({
    * 处理拉黑用户
    */
   onBlockUser(event: any) {
-    console.log('P2pSettingPage onBlockUser:', event.detail);
     const { blocked } = event.detail;
     
     const action = blocked ? '拉黑' : '取消拉黑';
@@ -232,7 +210,6 @@ Page({
    * 处理查看用户信息
    */
   onUserInfo(event: any) {
-    console.log('P2pSettingPage onUserInfo:', event.detail);
     const { userInfo } = event.detail;
     
     // 显示用户信息操作选项
@@ -250,9 +227,7 @@ Page({
           this.addToContacts(userInfo);
         }
       },
-      fail: (err) => {
-        console.log('用户取消操作:', err);
-      }
+      fail: (err) => {}
     });
   },
 
@@ -260,7 +235,6 @@ Page({
    * 显示用户详细信息
    */
   showUserDetail(userInfo: any) {
-    console.log('显示用户详细信息:', userInfo);
     wx.showToast({
       title: '查看用户详情功能待实现',
       icon: 'none',
@@ -272,7 +246,6 @@ Page({
    * 分享用户名片
    */
   shareUserCard(userInfo: any) {
-    console.log('分享用户名片:', userInfo);
     wx.showToast({
       title: '发送名片功能待实现',
       icon: 'none',
@@ -284,7 +257,6 @@ Page({
    * 添加到通讯录
    */
   addToContacts(userInfo: any) {
-    console.log('添加到通讯录:', userInfo);
     wx.showToast({
       title: '添加到通讯录功能待实现',
       icon: 'none',
@@ -296,7 +268,6 @@ Page({
    * 处理添加好友创建群聊
    */
   onAddTeamMember(event: any) {
-    console.log('P2pSettingPage onAddTeamMember:', event.detail);
     const { account, conversationId } = event.detail;
     
     // 跳转到创建群聊页面，传递当前用户信息

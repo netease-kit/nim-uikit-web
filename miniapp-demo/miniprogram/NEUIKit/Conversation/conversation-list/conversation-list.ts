@@ -89,8 +89,6 @@ Component({
         this.setData({
           statusBarHeight: statusBarHeight
         });
-        
-        console.log('状态栏高度设置为:', statusBarHeight, 'px');
       } catch (error) {
         console.error('获取系统信息失败:', error);
         // 设置默认值

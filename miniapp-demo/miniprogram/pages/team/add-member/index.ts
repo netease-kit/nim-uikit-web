@@ -18,9 +18,7 @@ Page({
   // 自动运行监听器
   friendListDisposer: null as any,
 
-  onLoad(options: any) {
-    console.log('添加群成员页面加载', options);
-    
+  onLoad(options: any) {    
     // 设置状态栏高度
     this.setStatusBarHeight();
     
@@ -139,9 +137,6 @@ Page({
           friendList,
           selectedMembers: initialSelectedMembers
         });
-        
-        console.log('好友列表更新完成:', friendList.length);
-        console.log('初始选中成员:', initialSelectedMembers.length);
       } catch (error) {
         console.error('更新好友列表失败:', error);
       }

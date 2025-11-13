@@ -45,10 +45,8 @@ Component({
         this.setData({
           statusBarHeight: totalHeight
         });
-        
-        console.log('状态栏高度:', statusBarHeight, 'px, 导航栏高度:', navBarHeight, 'px, 总高度:', totalHeight, 'px');
       } catch (error) {
-        console.error('获取系统信息失败:', error);
+        // console.error('获取系统信息失败:', error);
         // 设置默认值（状态栏44px + 导航栏48px）
         this.setData({
           statusBarHeight: 92
@@ -72,13 +70,9 @@ Component({
     },
 
     // 云端会话开关变化
-    onChangeEnableV2CloudConversation(event: any) {
-      console.log('switch event:', event);
-      console.log('event.detail:', event.detail);
-      
+    onChangeEnableV2CloudConversation(event: any) {      
       // 使用原生switch组件事件结构
       const checked = event.detail.value;
-      console.log('final checked value:', checked);
       
       try {
         wx.setStorageSync('enableV2CloudConversation', checked ? 'on' : 'off');
@@ -108,13 +102,9 @@ Component({
     },
 
     // 英文开关变化
-    onChangeSwitchToEnglishFlag(event: any) {
-      console.log('switch event:', event);
-      console.log('event.detail:', event.detail);
-      
+    onChangeSwitchToEnglishFlag(event: any) {      
       // 使用原生switch组件事件结构
       const checked = event.detail.value;
-      console.log('final checked value:', checked);
       
       try {
         wx.setStorageSync('switchToEnglishFlag', checked ? 'en' : 'zh');

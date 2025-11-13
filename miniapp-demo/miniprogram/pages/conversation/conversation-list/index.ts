@@ -1,21 +1,13 @@
 Page({
   data: {},
 
-  onLoad() {
-    console.log('会话列表页面加载');
-  },
+  onLoad() {},
 
-  onShow() {
-    console.log('会话列表页面显示');
-  },
+  onShow() {},
 
-  onHide() {
-    console.log('会话列表页面隐藏');
-  },
+  onHide() {},
 
-  onUnload() {
-    console.log('会话列表页面卸载');
-  },
+  onUnload() {},
 
   // 处理会话点击事件
   onSessionClick(e: any) {

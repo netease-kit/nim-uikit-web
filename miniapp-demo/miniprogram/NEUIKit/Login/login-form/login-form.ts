@@ -199,9 +199,7 @@ Component({
           title: '登录成功',
           icon: 'success'
         });
-        
-        console.log('IM登录成功');
-        
+                
         // 延迟跳转，让用户看到成功提示
         setTimeout(() => {
           wx.reLaunch({

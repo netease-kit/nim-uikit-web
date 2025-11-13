@@ -54,7 +54,6 @@ Component({
           );
           
           this.setData({ friendGroupList });
-          console.log('好友分组列表更新:', friendGroupList);
         });
         
         this.setData({ disposer });
@@ -74,7 +73,6 @@ Component({
 
     handleFriendClick(event: any) {
       const { friend } = event.currentTarget.dataset;
-      console.log('点击好友:', friend);
 
       if (!friend) return;
       

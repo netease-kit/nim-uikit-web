@@ -25,7 +25,6 @@ Component({
      * 登录成功回调
      */
     onLoginSuccess(event: any) {
-      console.log('登录成功:', event.detail)
       // 触发父组件的登录成功事件
       this.triggerEvent('loginSuccess', event.detail)
     }

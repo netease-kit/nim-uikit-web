@@ -105,7 +105,6 @@ Component({
           });
         }
       } catch (error) {
-        console.log('获取好友信息失败:', error);
         this.setData({ alias: '' });
       }
     },

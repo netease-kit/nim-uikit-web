@@ -125,9 +125,7 @@ Component({
                 // 下载成功，可以打开文件
                 wx.openDocument({
                   filePath: res.tempFilePath,
-                  success: () => {
-                    console.log('文件打开成功');
-                  },
+                  success: () => {},
                   fail: (err) => {
                     console.error('文件打开失败:', err);
                     wx.showToast({

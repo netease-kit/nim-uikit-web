@@ -43,8 +43,6 @@ Component({
         })
         return
       }
-
-      console.log('lastMessage.messageType', lastMessage.messageType)
       
       const messageType = this.getMessageTypeString(lastMessage.messageType)
       const lastMessageState = lastMessage.lastMessageState || 0

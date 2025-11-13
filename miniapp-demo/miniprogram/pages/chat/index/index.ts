@@ -13,9 +13,7 @@ Page({
   /**
    * 生命周期函数--监听页面加载
    */
-  onLoad(options: any) {
-    console.log('ChatPage onLoad:', options);
-    
+  onLoad(options: any) {    
     // 从页面参数获取会话ID
     if (options.conversationId) {
       this.setData({
@@ -43,30 +41,22 @@ Page({
   /**
    * 生命周期函数--监听页面初次渲染完成
    */
-  onReady() {
-    console.log('ChatPage onReady');
-  },
+  onReady() {},
 
   /**
    * 生命周期函数--监听页面显示
    */
-  onShow() {
-    console.log('ChatPage onShow');
-  },
+  onShow() {},
 
   /**
    * 生命周期函数--监听页面隐藏
    */
-  onHide() {
-    console.log('ChatPage onHide');
-  },
+  onHide() {},
 
   /**
    * 生命周期函数--监听页面卸载
    */
-  onUnload() {
-    console.log('ChatPage onUnload');
-  },
+  onUnload() {},
 
   /**
    * 页面相关事件处理函数--监听用户下拉动作
@@ -79,9 +69,7 @@ Page({
   /**
    * 页面上拉触底事件的处理函数
    */
-  onReachBottom() {
-    console.log('ChatPage onReachBottom');
-  },
+  onReachBottom() {},
 
   /**
    * 用户点击右上角分享
@@ -113,7 +101,6 @@ Page({
    * 处理设置按钮点击
    */
   onSetting(event: any) {
-    console.log('ChatPage onSetting:', event.detail);
     const { conversationType, to } = event.detail;
     
     if (conversationType === 'p2p') {
@@ -123,7 +110,6 @@ Page({
       });
     } else if (conversationType === 'team') {
       // 跳转到群组设置页面
-      console.log('跳转到群组设置页面');
       wx.navigateTo({
         url: `/pages/chat/team-setting/index?teamId=${to}`
       });
@@ -134,7 +120,6 @@ Page({
    * 处理消息点击
    */
   onMessageClick(event: any) {
-    console.log('ChatPage onMessageClick:', event.detail);
     const { message } = event.detail;
     
     // 可以在这里处理消息点击事件，比如显示消息详情
@@ -150,10 +135,6 @@ Page({
    * 处理头像点击
    */
   onAvatarClick(event: any) {
-    console.log('ChatPage onAvatarClick:', event.detail);
-    const { from } = event.detail;
-    
-    // 可以在这里处理头像点击事件，比如显示用户信息
-    console.log('点击了用户头像:', from);
+    // const { from } = event.detail;
   }
 });

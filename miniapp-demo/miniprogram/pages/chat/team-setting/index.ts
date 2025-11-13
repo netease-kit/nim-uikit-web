@@ -5,9 +5,7 @@ Page({
     conversationId: ''
   },
 
-  onLoad(options: any) {
-    console.log('TeamSettingPage onLoad options:', options);
-    
+  onLoad(options: any) {    
     // 从参数中获取teamId
     if (options.teamId) {
       const teamId = options.teamId;
