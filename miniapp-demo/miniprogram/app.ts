@@ -14,6 +14,11 @@ interface IAppOptionExtended extends IAppOption {
   initIMLogin(imAccid: string, imToken: string): void;
 }
 
+const APP_KEY = "3e215d27b6a6a9e27dad7ef36dd5b65c";
+const LOGIN_BY_PHONE_CODE = true;
+const ACCID = "your_accid";
+const TOKEN = "your_token";
+
 // app.ts
 App<IAppOptionExtended>({
   globalData: {
@@ -23,16 +28,16 @@ App<IAppOptionExtended>({
   onLaunch() {
     const nim = V2NIM.getInstance(
       {
-        appkey: "3e215d27b6a6a9e27dad7ef36dd5b65c",
+        appkey: APP_KEY,
         needReconnect: true,
         debugLevel: "debug",
         apiVersion: "v2",
-        enableV2CloudConversation: false,
+        enableV2CloudConversation: wx.getStorageSync('enableV2CloudConversation') === 'on' || false,
       },
       {
         V2NIMLoginServiceConfig: {
-          lbsUrls: ["https://lbs.netease.im/lbs/webconf.jsp"],
-          linkUrl: "weblink.netease.im",
+          lbsUrls: ["https://lbs.netease.im/lbs/wxwebconf.jsp"],
+          linkUrl: "wlnimsc0.netease.im",
         },
         reporterConfig: {
           enableCompass: false,
@@ -72,8 +77,14 @@ App<IAppOptionExtended>({
     this.globalData.nim = nim;
     this.globalData.store = store;
 
-    // 检查登录状态
-    this.checkLoginStatus();
+    if (!LOGIN_BY_PHONE_CODE) {
+      // OPTION A: 直接登录
+      this.initIMLogin(ACCID, TOKEN);
+    }else{
+      // OPTION B: 通过登录页进行登录
+      this.checkLoginStatus();
+    }
+
   },
 
   /**
@@ -86,7 +97,6 @@ App<IAppOptionExtended>({
       
       if (!imAccid || !imToken) {
         // 未登录，跳转到登录页
-        console.log('未找到登录信息，跳转到登录页');
         wx.reLaunch({
           url: '/pages/login/index'
         });
@@ -94,7 +104,6 @@ App<IAppOptionExtended>({
       }
 
       // 有登录信息，尝试自动登录
-      console.log('找到登录信息，尝试自动登录');
       this.initIMLogin(imAccid, imToken);
     } catch (error) {
       console.error('检查登录状态失败:', error);
@@ -120,7 +129,6 @@ App<IAppOptionExtended>({
     }
 
     nim.V2NIMLoginService.login(imAccid, imToken).then(() => {
-      console.log('IM自动登录成功');
       // 登录成功后跳转到会话列表页面
       wx.reLaunch({
         url: '/pages/conversation/conversation-list/index'

@@ -1,19 +1,11 @@
 Page({
   data: {},
 
-  onLoad() {
-    console.log('会话搜索页面加载');
-  },
+  onLoad() {},
 
-  onShow() {
-    console.log('会话搜索页面显示');
-  },
+  onShow() {},
 
-  onHide() {
-    console.log('会话搜索页面隐藏');
-  },
+  onHide() {},
 
-  onUnload() {
-    console.log('会话搜索页面卸载');
-  }
+  onUnload() {}
 });

@@ -53,13 +53,6 @@ Component({
      * 直接透传原生 switch 的事件
      */
     handleChange(event: any) {
-      console.log('自定义 Switch 组件事件:', {
-        type: event.type,
-        detail: event.detail,
-        value: event.detail.value,
-        checked: this.properties.checked
-      });
-
       // 直接透传原生事件给父组件
       this.triggerEvent('change', {
         value: event.detail.value,
@@ -103,13 +96,6 @@ Component({
    * 组件生命周期
    */
   lifetimes: {
-    attached() {
-      console.log('自定义 Switch 组件已挂载', {
-        checked: this.properties.checked,
-        disabled: this.properties.disabled,
-        type: this.properties.type,
-        color: this.properties.color
-      });
-    }
+    attached() {}
   }
 });

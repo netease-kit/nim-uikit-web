@@ -129,8 +129,6 @@ Component({
       
       // 标记为已读
       this.markAsRead(item);
-      
-      console.log('点击验证消息:', item);
     },
 
     async handleAcceptApply(event: any) {
@@ -169,12 +167,9 @@ Component({
               item.operatorAccountId || item.applicantAccountId
             ),
           });
-        } catch (msgError) {
-          console.log('发送消息失败:', msgError);
-        }
+        } catch (msgError) {}
         
       } catch (error) {
-        console.error('接受好友申请失败:', error);
         wx.showToast({
           title: this.data.acceptFailedText,
           icon: 'error'

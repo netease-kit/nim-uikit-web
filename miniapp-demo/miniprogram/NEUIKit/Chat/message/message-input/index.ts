@@ -192,8 +192,6 @@ Component({
     handleGoToConversationSettings() {
       const { conversationType, to } = this.data;
       
-      console.log('Chat handleGoToConversationSettings called:', { conversationType, to })
-
       // 根据会话类型跳转到不同的设置页面
       if (conversationType === '2') {
         // 群组会话设置页面

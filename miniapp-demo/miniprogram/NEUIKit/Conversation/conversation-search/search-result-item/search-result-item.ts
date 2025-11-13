@@ -41,8 +41,6 @@ Component({
   methods: {
     handleItemClick() {
       const { item, isTeam, to } = this.data
-
-      console.log('item', item)
       
       if (!isTeam) {
         // 跳转到好友聊天

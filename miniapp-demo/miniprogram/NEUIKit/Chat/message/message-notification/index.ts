@@ -131,8 +131,6 @@ Component({
       // 将nim、store对象存储为不需要监听变化的实例属性
       (this as any).nimInstance = nim;
       (this as any).storeInstance = store;
-
-      console.log('============ this.properties.notificationMsg ===========', this.properties.notificationMsg)
       
       if (store) {
         const notificationContentDisposer = autorun(()=>{
@@ -565,24 +563,15 @@ Component({
     
     'notificationMsg': function(notificationMsg: any) {
       if (notificationMsg && notificationMsg.messageType === 'notification') {
-
-        
-        // 遍历打印所有属性
-        console.log('=== notificationMsg ===', notificationMsg);
-
-
         // 如果没有content或text字段，尝试从attachment中解析
         if (!notificationMsg.content && !notificationMsg.text && notificationMsg.attachment) {
           const content = this.parseNotificationContent(notificationMsg.attachment);
-          console.log('解析后的内容:', content);
           if (content) {
             // 更新消息对象的content字段
             notificationMsg.content = content;
-            console.log('更新后的notificationMsg:', notificationMsg);
             this.setData({
               notificationMsg: { ...notificationMsg }
             });
-            console.log('已强制更新组件数据');
           }
         }
       }

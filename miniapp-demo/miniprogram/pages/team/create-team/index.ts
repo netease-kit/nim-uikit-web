@@ -21,9 +21,7 @@ Page({
     statusBarHeight: 0 // 状态栏高度
   },
 
-  onLoad(options: any) {
-    console.log('CreateTeamPage onLoad options:', options);
-    
+  onLoad(options: any) {    
     // 设置状态栏高度
     this.setStatusBarHeight();
     
@@ -55,10 +53,8 @@ Page({
       this.setData({
         statusBarHeight: statusBarHeight
       });
-      
-      console.log('状态栏高度设置为:', statusBarHeight, 'px');
     } catch (error) {
-      console.error('获取状态栏高度失败:', error);
+      // console.error('获取状态栏高度失败:', error);
       // 设置默认值
       this.setData({
         statusBarHeight: 44
@@ -177,10 +173,8 @@ Page({
         
         // 更新创建按钮状态
         this.updateCanCreate();
-        
-        console.log('预选用户已添加:', preSelectedUser);
       } catch (error) {
-        console.error('处理预选账号失败:', error);
+        // console.error('处理预选账号失败:', error);
       }
     }
   },

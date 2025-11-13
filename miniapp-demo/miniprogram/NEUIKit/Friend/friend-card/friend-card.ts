@@ -186,21 +186,13 @@ Component({
     },
 
     // 黑名单开关变化处理
-    handleSwitchChange(event: any) {
-      console.log('=== 原生Switch事件调试 ===')
-      console.log('完整event对象:', event)
-      console.log('event.detail:', event.detail)
-      console.log('event.detail.value:', event.detail.value)
-      console.log('当前isInBlacklist状态:', this.data.isInBlacklist)
-      
+    handleSwitchChange(event: any) {      
       // 微信小程序原生switch组件：event.detail.value 表示开关的当前状态
       // true = 开关打开，false = 开关关闭
       const switchValue = event.detail.value
-      console.log('开关状态:', switchValue ? '打开' : '关闭')
       
       // 对于黑名单功能：开关打开 = 添加黑名单，开关关闭 = 移除黑名单
       const shouldAddToBlacklist = switchValue
-      console.log('黑名单操作:', shouldAddToBlacklist ? '添加到黑名单' : '从黑名单移除')
       
       // 先更新UI状态
       this.setData({
@@ -226,21 +218,18 @@ Component({
 
       // 执行黑名单操作
       const accountId = this.data.accountId
-      console.log('操作账号:', accountId)
 
       if (shouldAddToBlacklist) {
         // 添加到黑名单
-        console.log('执行添加黑名单操作')
         store.relationStore.addUserToBlockListActive(accountId)
           .then(() => {
-            console.log('添加黑名单成功')
             wx.showToast({
               title: '已添加到黑名单',
               icon: 'success'
             })
           })
           .catch((error: any) => {
-            console.error('添加黑名单失败:', error)
+            // console.error('添加黑名单失败:', error)
             wx.showToast({
               title: this.data.setBlackFailText || '添加黑名单失败',
               icon: 'none'
@@ -252,17 +241,15 @@ Component({
           })
       } else {
         // 从黑名单移除
-        console.log('执行移除黑名单操作')
         store.relationStore.removeUserFromBlockListActive(accountId)
           .then(() => {
-            console.log('移除黑名单成功')
             wx.showToast({
               title: '已从黑名单移除',
               icon: 'success'
             })
           })
           .catch((error: any) => {
-            console.error('移除黑名单失败:', error)
+            // console.error('移除黑名单失败:', error)
             wx.showToast({
               title: this.data.removeBlackFailText || '移除黑名单失败',
               icon: 'none'

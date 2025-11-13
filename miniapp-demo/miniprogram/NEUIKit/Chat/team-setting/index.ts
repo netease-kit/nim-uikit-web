@@ -912,32 +912,17 @@ Component({
         return;
       }
 
-      console.log('Setting up autorun for teamId:', teamId);
-
       // 主动获取团队信息和成员数据（参考React版本的实现）
       await this.initTeamData(teamId, store);
 
       // 监听团队信息和成员变化
-      const teamDisposer = autorun(() => {
-        console.log('Team autorun triggered for teamId:', teamId);
-        
+      const teamDisposer = autorun(() => {        
         // 获取团队信息
         const team = (store.teamStore && store.teamStore.teams && store.teamStore.teams.get(teamId)) || null;
-        console.log('Team data from autorun:', team);
         
         // 获取团队成员 - 参考Vue版本的简洁实现
         const teamMembersRaw = (store.teamMemberStore && store.teamMemberStore.getTeamMember && store.teamMemberStore.getTeamMember(teamId)) || [];
-        console.log('Team members raw from autorun:', teamId, teamMembersRaw);
         const teamMembers = Array.isArray(teamMembersRaw) ? teamMembersRaw : [];
-        console.log('Team members from autorun:', teamMembers, 'length:', teamMembers.length);
-        
-        // 调试：检查每个成员对象的结构
-        if (teamMembers.length > 0) {
-          console.log('First team member structure:', teamMembers[0]);
-          console.log('First team member keys:', Object.keys(teamMembers[0] || {}));
-          console.log('First team member accountId:', (teamMembers[0] && teamMembers[0].accountId) ? teamMembers[0].accountId : undefined);
-          console.log('First team member avatar:', (teamMembers[0] && teamMembers[0].avatar) ? teamMembers[0].avatar : undefined);
-        }
 
         // 计算权限
         const myUser = (store.userStore && store.userStore.myUserInfo) || null;
@@ -985,16 +970,12 @@ Component({
       const conversationId = (nim && nim.V2NIMConversationIdUtil && nim.V2NIMConversationIdUtil.teamConversationId) ? nim.V2NIMConversationIdUtil.teamConversationId(teamId) : null;
       const conversationDisposer = autorun(() => {
         if (!conversationId) return;
-        
-        console.log('Conversation autorun triggered for conversationId:', conversationId);
-        
+                
         const enableV2CloudConversation = (store && store.sdkOptions && store.sdkOptions.enableV2CloudConversation) || false;
         const conversation = enableV2CloudConversation
           ? (store.conversationStore && store.conversationStore.conversations && store.conversationStore.conversations.get(conversationId)) || null
           : (store.localConversationStore && store.localConversationStore.conversations && store.localConversationStore.conversations.get(conversationId)) || null;
-        
-        console.log('Conversation data from autorun:', conversation);
-        
+                
         this.setData({
           conversation,
           isStickTop: (conversation && conversation.stickTop) ? conversation.stickTop : false

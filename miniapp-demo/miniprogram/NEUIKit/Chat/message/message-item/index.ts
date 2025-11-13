@@ -208,11 +208,8 @@ Component({
             poster: (msg.attachment && msg.attachment.thumbUrl) ? msg.attachment.thumbUrl : ((msg.attachment && msg.attachment.coverUrl) ? msg.attachment.coverUrl : '')
           }],
           current: 0,
-          success: () => {
-            console.log('视频播放成功');
-          },
+          success: () => {},
           fail: (error) => {
-            console.error('视频播放失败:', error);
             // 降级方案：显示提示
             wx.showModal({
               title: '播放失败',
@@ -252,7 +249,6 @@ Component({
 
     // 处理头像点击事件
     handleAvatarClick(e: any) {
-      console.log('Message item received avatar click:', e.detail);
       this.triggerEvent('avatarClick', e.detail);
     },
     

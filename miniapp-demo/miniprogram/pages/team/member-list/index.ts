@@ -15,9 +15,7 @@ Page({
     teamManagerText: t('teamManager')
   },
 
-  onLoad(options: any) {
-    console.log('团队成员列表页面加载', options);
-    
+  onLoad(options: any) {    
     // 设置状态栏高度
     this.setStatusBarHeight();
     

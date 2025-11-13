@@ -12,9 +12,7 @@ Page({
   /**
    * 生命周期函数--监听页面加载
    */
-  onLoad(options: any) {
-    console.log('MessageReadInfoPage onLoad:', options);
-    
+  onLoad(options: any) {    
     // 从页面参数获取消息ID和会话ID
     if (options.messageId) {
       this.setData({
@@ -35,36 +33,27 @@ Page({
   /**
    * 生命周期函数--监听页面初次渲染完成
    */
-  onReady() {
-    console.log('MessageReadInfoPage onReady');
-  },
+  onReady() {},
 
   /**
    * 生命周期函数--监听页面显示
    */
-  onShow() {
-    console.log('MessageReadInfoPage onShow');
-  },
+  onShow() {},
 
   /**
    * 生命周期函数--监听页面隐藏
    */
-  onHide() {
-    console.log('MessageReadInfoPage onHide');
-  },
+  onHide() {},
 
   /**
    * 生命周期函数--监听页面卸载
    */
-  onUnload() {
-    console.log('MessageReadInfoPage onUnload');
-  },
+  onUnload() {},
 
   /**
    * 页面相关事件处理函数--监听用户下拉动作
    */
   onPullDownRefresh() {
-    console.log('MessageReadInfoPage onPullDownRefresh');
     // 触发组件刷新
     this.onRefresh();
   },
@@ -72,9 +61,7 @@ Page({
   /**
    * 页面上拉触底事件的处理函数
    */
-  onReachBottom() {
-    console.log('MessageReadInfoPage onReachBottom');
-  },
+  onReachBottom() {},
 
   /**
    * 用户点击右上角分享
@@ -106,7 +93,6 @@ Page({
    * 处理刷新事件
    */
   onRefresh() {
-    console.log('MessageReadInfoPage onRefresh');
     // 停止下拉刷新
     wx.stopPullDownRefresh();
     
@@ -122,7 +108,6 @@ Page({
    * 处理导出事件
    */
   onExport(event: any) {
-    console.log('MessageReadInfoPage onExport:', event.detail);
     const { readUsers, unreadUsers } = event.detail;
     
     // 显示导出选项
@@ -137,9 +122,7 @@ Page({
           this.exportUserList([...readUsers, ...unreadUsers], '全部用户列表');
         }
       },
-      fail: (err) => {
-        console.log('用户取消导出:', err);
-      }
+      fail: (err) => {}
     });
   },
 
@@ -187,7 +170,6 @@ Page({
    * 处理用户点击事件
    */
   onUserClick(event: any) {
-    console.log('MessageReadInfoPage onUserClick:', event.detail);
     const { user } = event.detail;
     
     // 显示用户操作选项
@@ -196,7 +178,6 @@ Page({
       success: (res) => {
         if (res.tapIndex === 0) {
           // 查看用户信息
-          console.log('查看用户信息:', user);
           wx.showToast({
             title: '查看用户信息功能待实现',
             icon: 'none',
@@ -209,9 +190,7 @@ Page({
           });
         }
       },
-      fail: (err) => {
-        console.log('用户取消操作:', err);
-      }
+      fail: (err) => {}
     });
   }
 });

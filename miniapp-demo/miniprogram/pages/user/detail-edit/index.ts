@@ -4,9 +4,7 @@ Page({
     initialValue: ''
   },
 
-  onLoad(options: any) {
-    console.log('详情编辑页面加载', options);
-    
+  onLoad(options: any) {    
     // 从页面参数中获取编辑的字段和初始值
     const { editKey, initialValue } = options;
     this.setData({
@@ -15,9 +13,7 @@ Page({
     });
   },
 
-  onShow() {
-    console.log('详情编辑页面显示');
-  },
+  onShow() {},
 
   // 处理返回事件
   onBack() {
@@ -27,7 +23,6 @@ Page({
   // 处理保存事件
   onSave(event: any) {
     const { editKey, value } = event.detail;
-    console.log('保存用户信息:', editKey, value);
     
     // 这里可以调用API保存用户信息
     // 保存成功后返回上一页并传递结果
@@ -55,13 +50,11 @@ Page({
   // 处理输入变化事件
   onInputChange(event: any) {
     const { value } = event.detail;
-    console.log('输入内容变化:', value);
   },
 
   // 处理输入验证失败事件
   onValidationError(event: any) {
     const { message } = event.detail;
-    console.log('输入验证失败:', message);
     
     wx.showToast({
       title: message,

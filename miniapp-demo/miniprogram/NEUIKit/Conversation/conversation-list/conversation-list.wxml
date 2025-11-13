@@ -1,4 +1,6 @@
 <view class="conversation-wrapper">
+  <!-- 下拉菜单遮罩：点击遮罩关闭下拉 -->
+  <view wx:if="{{addDropdownVisible}}" class="dropdown-mark" bindtap="hideAddDropdown"></view>
   <!-- 状态栏占位 -->
   <view class="status-bar-placeholder" style="height: {{statusBarHeight}}px;"></view>
   <!-- 导航栏 -->

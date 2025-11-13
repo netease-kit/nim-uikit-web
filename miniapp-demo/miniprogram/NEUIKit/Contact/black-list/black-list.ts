@@ -88,13 +88,9 @@ Component({
     handleBlacklistItemClick(event: any) {
       const { item } = event.currentTarget.dataset;
       if (!item) return;
-      
-      // 可以跳转到用户详情页面
-      console.log('点击黑名单用户:', item);
     },
 
     async handleRemoveFromBlacklist(event: any) {
-      console.log('点击移出黑名单:', event);
       const { account } = event.currentTarget.dataset;
       if (!account) return;
       

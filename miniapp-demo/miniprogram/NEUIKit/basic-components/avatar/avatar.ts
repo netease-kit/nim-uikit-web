@@ -179,8 +179,6 @@ Component({
     handleAvatarClick() {
       const { gotoUserCard, isLongPress, account } = this.data;
       
-      console.log('Avatar clicked:', { gotoUserCard, isLongPress, account });
-      
       // 触发事件给父组件
       this.triggerEvent('avatarClick', { account });
       
@@ -188,9 +186,7 @@ Component({
         const app = getApp();
         const store = app && app.globalData && app.globalData.store;
         const myAccountId = (store && store.userStore && store.userStore.myUserInfo && store.userStore.myUserInfo.accountId) || null;
-        
-        console.log('Current user:', myAccountId, 'Clicked user:', account);
-        
+                
         if (account === myAccountId) {
           // 跳转到个人详情页
           wx.navigateTo({

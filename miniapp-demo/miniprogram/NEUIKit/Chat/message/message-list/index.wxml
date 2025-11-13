@@ -4,7 +4,7 @@
     class="message-scroll-list"
     scroll-y="{{true}}"
     scroll-top="{{scrollTop}}"
-    bindscrolltolower="onLoadMore"
+    scroll-into-view="{{scrollIntoView}}"
     enhanced="{{true}}"
     show-scrollbar="{{false}}"
     scroll-with-animation="{{true}}"
@@ -25,7 +25,7 @@
     </view>
     
     <!-- 消息列表 -->
-    <view wx:for="{{finalMsgs}}" wx:key="messageClientId" wx:for-item="item" wx:for-index="index">
+    <view wx:for="{{finalMsgs}}" wx:key="messageClientId" wx:for-item="item" wx:for-index="index" id="{{'msg-' + item.messageClientId}}" data-message-id="{{item.messageClientId}}">
       <message-item 
         class="message-item"
         msg="{{item}}"
@@ -46,5 +46,7 @@
       <view class="empty-icon">💬</view>
       <view class="empty-text">暂无消息</view>
     </view>
+    <!-- 底部锚点，用于滚动到底部定位 -->
+    <view id="bottom-anchor"></view>
   </scroll-view>
 </view>

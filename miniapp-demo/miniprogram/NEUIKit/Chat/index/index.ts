@@ -644,9 +644,7 @@ Component({
      * 跳转设置页面
      */
     handleSetting() {
-      const { conversationType, to } = this.data
-      console.log('Chat handleSetting called:', { conversationType, to })
-      
+      const { conversationType, to } = this.data      
       // 触发setting事件给父页面
       this.triggerEvent('setting', {
         conversationType,
@@ -753,9 +751,8 @@ Component({
      * 处理发送消息
      */
     handleSendMessage(event: any) {
-      const { message } = event.detail
+      // const { message } = event.detail
       // 消息发送逻辑由message-input组件处理
-      console.log('发送消息:', message)
     },
 
     /**
@@ -978,13 +975,9 @@ Component({
      * 处理转发确认
      */
     handleForwardConfirm(event: any) {
-      console.log('handleForwardConfirm 被调用，event:', event)
       const { contacts } = event.detail
       const { selectedMessage } = this.data
-      
-      console.log('选中的联系人:', contacts)
-      console.log('要转发的消息:', selectedMessage)
-      
+            
       if (!selectedMessage || !contacts || contacts.length === 0) {
         console.error('转发失败：缺少消息或联系人', { selectedMessage, contacts })
         wx.showToast({
@@ -996,10 +989,7 @@ Component({
 
       const store = getApp().globalData.store
       const nim = getApp().globalData.nim
-      
-      console.log('store:', store)
-      console.log('nim:', nim)
-      
+            
       if (!store || !store.msgStore) {
         console.error('store 或 msgStore 不存在')
         wx.showToast({
@@ -1011,17 +1001,14 @@ Component({
       
       // 将联系人转换为会话ID并转发消息
       contacts.forEach((contact: any, index: number) => {
-        console.log(`处理第 ${index + 1} 个联系人:`, contact)
         let conversationId = ''
         
         if (contact.type === 'team') {
           // 群聊会话ID
           conversationId = nim.V2NIMConversationIdUtil.teamConversationId(contact.id)
-          console.log(`生成群聊会话ID: ${conversationId}`)
         } else {
           // 单聊会话ID
           conversationId = nim.V2NIMConversationIdUtil.p2pConversationId(contact.id)
-          console.log(`生成单聊会话ID: ${conversationId}`)
         }
         
         // 根据原消息类型创建新的转发消息
@@ -1074,29 +1061,21 @@ Component({
           return
         }
         
-        console.log(`准备转发的消息:`, forwardMsg)
-        
         // 使用sendMessageActive发送转发的消息
         const sendPromise = store.msgStore.sendMessageActive({
           msg: forwardMsg,
           conversationId: conversationId,
-          sendBefore: () => {
-            console.log(`开始转发消息到: ${contact.name || contact.id}`)
-          }
+          sendBefore: () => {}
         })
         
         if (sendPromise && typeof sendPromise.then === 'function') {
-          sendPromise.then(() => {
-            console.log(`消息转发成功到: ${contact.name || contact.id}`)
-          }).catch((error: any) => {
+          sendPromise.then(() => {}).catch((error: any) => {
             console.error(`消息转发失败到: ${contact.name || contact.id}`, error)
             wx.showToast({
               title: '转发失败',
               icon: 'error'
             })
           })
-        } else {
-          console.log(`sendMessageActive 没有返回 Promise，可能是同步操作`)
         }
       })
       
@@ -1265,13 +1244,11 @@ Component({
     
     // 新消息到达时滚动到底部
     scrollToBottomAfterNewMessage() {
-      // 延迟执行，确保DOM已更新
-      setTimeout(() => {
-        const messageList = this.selectComponent('#messageList')
-        if (messageList && messageList.scrollToBottom) {
-          messageList.scrollToBottom()
-        }
-      }, 100)
+      const messageList = this.selectComponent('#messageList')
+      // 仅重置自动滚动标记，让列表在数据变更后自行滚到底部
+      if (messageList && typeof messageList.resetAutoScroll === 'function') {
+        messageList.resetAutoScroll()
+      }
     }
   },
 
