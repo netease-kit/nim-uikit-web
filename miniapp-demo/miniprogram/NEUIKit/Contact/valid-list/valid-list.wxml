@@ -24,7 +24,7 @@
           <view class="validlist-item-left">
             <avatar 
               account="{{item.applicantAccountId}}"
-              size="{{84}}"
+              size="{{42}}"
             ></avatar>
             <view class="validlist-info">
               <view class="validlist-name">
@@ -50,7 +50,7 @@
             <view class="validlist-item-left">
               <avatar 
                 account="{{item.recipientAccountId}}"
-                size="{{84}}"
+                size="{{42}}"
               ></avatar>
               <view class="validlist-info">
                 <view class="validlist-name">
@@ -69,7 +69,7 @@
             <view class="validlist-item-left">
               <avatar 
                 account="{{item.applicantAccountId}}"
-                size="{{84}}"
+                size="{{42}}"
               ></avatar>
               <view class="validlist-info">
                 <view class="validlist-name">
@@ -96,7 +96,7 @@
             <view class="validlist-item-left">
               <avatar 
                 account="{{item.applicantAccountId}}"
-                size="{{84}}"
+                size="{{42}}"
               ></avatar>
               <view class="validlist-info">
                 <view class="validlist-name">

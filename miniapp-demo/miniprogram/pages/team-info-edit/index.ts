@@ -319,7 +319,7 @@ Page({
 
       if (!isOwner && !isManager) {
         wx.showToast({
-          title: '只有群主和管理员可以编辑群信息',
+          title: '您无权限修改',
           icon: 'error'
         })
         return false

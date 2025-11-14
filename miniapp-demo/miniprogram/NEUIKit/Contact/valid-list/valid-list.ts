@@ -132,7 +132,6 @@ Component({
     },
 
     async handleAcceptApply(event: any) {
-      event.stopPropagation();
       const { item } = event.currentTarget.dataset;
       if (!item || this.data.applyFriendLoading) return;
       
@@ -180,7 +179,6 @@ Component({
     },
 
     async handleRejectApply(event: any) {
-      event.stopPropagation();
       const { item } = event.currentTarget.dataset;
       if (!item || this.data.applyFriendLoading) return;
       
@@ -215,18 +213,12 @@ Component({
 
     async markAsRead(item: any) {
       try {
-        const nim = (this as any).nimInstance;
-        if (!nim || item.read) {
+        const store = (this as any).storeInstance;
+        if (!store || item.isRead) {
           return;
         }
-        
-        // 标记系统消息为已读
-        await nim.markSysMsgRead({
-          idServer: item.idServer
-        });
-        
+        store.sysMsgStore.updateFriendApplyMsg([{ ...item, isRead: true }]);
       } catch (error) {
-        console.error('标记已读失败:', error);
       }
     }
   }

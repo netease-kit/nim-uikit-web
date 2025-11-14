@@ -1,10 +1,13 @@
 .face-wrapper {
   background: #fff;
   border-top: 1px solid #e6e6e6;
+  height: 100%;
 }
 
 .face-control {
-  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .control-buttons {
@@ -14,8 +17,15 @@
   margin-top: 16px;
 }
 
+.emoji-scroll {
+  flex: 1;
+  height: 100%;
+}
+
 .emoji-block {
+  box-sizing: border-box;
   width: 100%;
+  padding: 16px;
 }
 
 .emoji-row {

@@ -107,17 +107,19 @@
 .recent-list {
   white-space: nowrap;
   padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .recent-item {
   display: inline-block;
   text-align: center;
   margin-right: 16px;
-  width: 60px;
+  width: 40px;
 }
 
 .recent-name {
   display: block;
+  width: 40px;
   font-size: 12px;
   color: #333;
   margin-top: 4px;
@@ -137,6 +139,7 @@
 .contacts-list {
   flex: 1;
   max-height: 300px;
+  overflow-y: auto;
 }
 
 .contact-group {
@@ -222,6 +225,7 @@
   border-top: 1px solid #e5e6eb;
   background-color: #f7f8fa;
   padding: 12px 0;
+  z-index: 1001;
 }
 
 .selected-title {
@@ -252,10 +256,10 @@
   position: absolute;
   top: 0;
   right: -4px;
-  width: 10px;
-  height: 10px;
+  width: 16px;
+  height: 16px;
   background-color: #ff4757;
-  border-radius: 10px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;

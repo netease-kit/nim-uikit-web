@@ -122,7 +122,7 @@ Page({
 
       if (!canEdit) {
         wx.showToast({
-          title: '无权限修改群头像',
+          title: '您无权限修改',
           icon: 'error'
         })
       }

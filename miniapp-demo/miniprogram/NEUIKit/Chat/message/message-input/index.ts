@@ -41,8 +41,9 @@ Component({
   methods: {
     // 处理输入
     handleInput(e: any) {
+      const v = e.detail.value || '';
       this.setData({
-        inputText: e.detail.value
+        inputText: v.length > 140 ? v.slice(0, 140) : v
       });
     },
 
@@ -103,9 +104,17 @@ Component({
     handleEmoji(e: any) {
       const { emoji } = e.detail;
       const { inputText } = this.data;
-      this.setData({
-        inputText: inputText + emoji
-      });
+      if (!emoji) return;
+      if ((inputText || '').length >= 140) {
+        wx.showToast({ title: '最多140字', icon: 'none' });
+        return;
+      }
+      const next = (inputText || '') + emoji;
+      const limited = next.length > 140 ? next.slice(0, 140) : next;
+      if (limited.length !== next.length) {
+        wx.showToast({ title: '最多140字', icon: 'none' });
+      }
+      this.setData({ inputText: limited });
     },
 
     // 处理表情删除

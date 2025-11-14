@@ -146,13 +146,13 @@ Component({
       
       // 根据消息状态返回不同的文本
       switch (msg.sendingState) {
-        case 'sending':
-          return '发送中';
-        case 'failed':
-          return '发送失败';
-        case 'success':
-          // 这里可以根据实际的已读回执状态来显示
+        case 1:
           return msg.readCount > 0 ? '已读' : '未读';
+          
+        case 2:
+          return '发送失败';
+        case 3:
+          return '';
         default:
           return '';
       }
@@ -277,11 +277,11 @@ Component({
       }
       
       switch (msg.sendingState) {
-        case 'sending':
+        case 1:
           return 'icon-loading';
-        case 'failed':
+        case 3:
           return 'icon-failed';
-        case 'success':
+        case 2:
           return '';
         default:
           return '';

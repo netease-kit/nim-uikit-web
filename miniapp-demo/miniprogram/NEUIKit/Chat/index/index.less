@@ -10,7 +10,7 @@
   position: relative;
   background-color: #f5f5f5;
   /* 为底部固定的输入框预留空间 */
-  padding-bottom: 120px;
+  padding-bottom: 68px;
   /* 设置状态栏高度CSS变量 */
   --status-bar-height: var(--status-bar-height, 44px);
 
@@ -338,7 +338,7 @@
 /* 安全区域适配 */
 @supports (bottom: env(safe-area-inset-bottom)) {
   .msg-page-wrapper-h5 {
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: calc(68px + env(safe-area-inset-bottom));
   }
 }
 
