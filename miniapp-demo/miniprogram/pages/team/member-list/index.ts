@@ -84,8 +84,14 @@ Page({
       // 设置自动监听
       this.setupAutorun(store, teamId);
       
-      // 加载团队成员数据
-      await store.teamMemberStore.getTeamMemberActive({ teamId });
+      // 加载团队成员数据（需提供 queryOption）
+      await store.teamMemberStore.getTeamMemberActive({
+        teamId,
+        queryOption: {
+          limit: 200,
+          roleQueryType: 0
+        }
+      });
       
       this.setData({ loading: false });
     } catch (error) {

@@ -27,6 +27,7 @@
         placeholder="{{isTeamMute ? '您已被禁言' : '请输入消息'}}"
         value="{{inputText}}"
         disabled="{{isTeamMute}}"
+        maxlength="140"
         confirm-type="send"
         cursor-spacing="20"
         adjust-position="{{true}}"

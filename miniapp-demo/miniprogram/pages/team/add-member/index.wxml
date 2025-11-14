@@ -45,7 +45,7 @@
       class="confirm-button {{selectedMembers.length > 0 ? 'active' : 'disabled'}}" 
       bindtap="handleConfirm"
     >
-      {{confirmText}}{{selectedMembers.length > 0 ? '(' + selectedMembers.length + ')' : ''}}
+      {{confirmText}}{{(selectedMembers.length + (includeSelf ? 1 : 0)) > 0 ? '(' + (selectedMembers.length + (includeSelf ? 1 : 0)) + ')' : ''}}
     </view>
   </view>
 </view>

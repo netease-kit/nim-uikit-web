@@ -87,9 +87,9 @@
         <message-text msg="{{msg}}" />
       </message-bubble>
     </view>
-    <view wx:if="{{msg.isSelf}}" class="msg-read-status">
+    <!-- <view wx:if="{{msg.isSelf}}" class="msg-read-status">
       <text class="read-text">{{readStatus}}</text>
-    </view>
+    </view> -->
   </view>
   
   <!-- 图片消息 -->
@@ -113,9 +113,9 @@
         </view>
       </message-bubble>
     </view>
-    <view wx:if="{{msg.isSelf}}" class="msg-read-status">
+    <!-- <view wx:if="{{msg.isSelf}}" class="msg-read-status">
       <text class="read-text">{{readStatus}}</text>
-    </view>
+    </view> -->
   </view>
   
   <!-- 语音消息 -->
@@ -136,9 +136,9 @@
         <message-audio msg="{{msg}}" />
       </message-bubble>
     </view>
-    <view wx:if="{{msg.isSelf}}" class="msg-read-status">
+    <!-- <view wx:if="{{msg.isSelf}}" class="msg-read-status">
       <text class="read-text">{{readStatus}}</text>
-    </view>
+    </view> -->
   </view>
   
   <!-- 视频消息 -->
@@ -159,9 +159,9 @@
         <message-video msg="{{msg}}" bind:videoClick="handleVideoClick" />
       </message-bubble>
     </view>
-    <view wx:if="{{msg.isSelf}}" class="msg-read-status">
+    <!-- <view wx:if="{{msg.isSelf}}" class="msg-read-status">
       <text class="read-text">{{readStatus}}</text>
-    </view>
+    </view> -->
   </view>
   
   <!-- 话单消息 -->
@@ -190,9 +190,9 @@
         </view>
       </message-bubble>
     </view>
-    <view wx:if="{{msg.isSelf}}" class="msg-read-status">
+    <!-- <view wx:if="{{msg.isSelf}}" class="msg-read-status">
       <text class="read-text">{{readStatus}}</text>
-    </view>
+    </view> -->
   </view>
   
   <!-- 文件消息 -->
@@ -213,9 +213,9 @@
         <message-file msg="{{msg}}" bind:fileClick="handleFileClick" />
       </message-bubble>
     </view>
-    <view wx:if="{{msg.isSelf}}" class="msg-read-status">
+    <!-- <view wx:if="{{msg.isSelf}}" class="msg-read-status">
       <text class="read-text">{{readStatus}}</text>
-    </view>
+    </view> -->
   </view>
   
   <!-- 通知消息 -->

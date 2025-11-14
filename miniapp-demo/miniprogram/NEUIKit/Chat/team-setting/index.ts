@@ -113,16 +113,14 @@ Component({
      * 处理群信息点击
      */
     handleInfoClick() {
-      const { canEditTeamInfo, team } = this.data;
-      
-      if (!canEditTeamInfo) {
-        this.showError('您没有权限修改群信息');
-        return;
-      }
+      const { team, canEditTeamInfo } = this.data;
+      const teamId = (team && team.teamId) ? team.teamId : this.properties.teamId;
 
-      // 跳转到群信息编辑页面
+      // 允许所有成员进入信息页面查看，编辑权限在目标页面内再校验
+      const readonly = canEditTeamInfo ? '0' : '1';
+
       wx.navigateTo({
-        url: `/pages/team-info-edit/index?teamId=${(team && team.teamId) ? team.teamId : this.properties.teamId}`,
+        url: `/pages/team-info-edit/index?teamId=${teamId}&readonly=${readonly}`,
         fail: (err) => {
           console.error('跳转到群信息编辑页面失败:', err);
           this.showError('跳转失败，请重试');
@@ -635,7 +633,7 @@ Component({
           // 使用store方法设置群禁言状态，与Vue版本保持一致
           await store.teamStore.setTeamChatBannedActive({
             teamId,
-            chatBannedMode: value ? 1 : 0 // 1: V2NIM_TEAM_CHAT_BANNED_MODE_BANNED_NORMAL, 0: V2NIM_TEAM_CHAT_BANNED_MODE_UNBAN
+            chatBannedMode: value ? 1 : 0
           });
 
           this.setData({
@@ -948,6 +946,8 @@ Component({
         const displayName = this.getDisplayName((team && team.teamId) ? team.teamId : teamId);
         
         // 更新数据
+        const isTeamBanned = team ? team.chatBannedMode !== 0 : false;
+
         this.setData({
           team,
           teamMembers,
@@ -959,7 +959,7 @@ Component({
           showDismissButton,
           showLeaveButton,
           myNickname: (currentMember && currentMember.teamNick) ? currentMember.teamNick : '',
-          isTeamBanned: (team && team.chatBannedMode === 'bannedNormal') || (team && team.chatBannedMode === 'bannedAll'),
+          isTeamBanned,
           avatarColor,
           displayName
         });

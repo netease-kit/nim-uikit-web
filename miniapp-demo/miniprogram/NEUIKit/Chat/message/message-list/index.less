@@ -2,7 +2,7 @@
 .msg-list-wrapper {
   flex: 1;
   /* 消息列表容器高度计算：100vh减去状态栏、导航栏、输入框和网络状态提示的高度，以及动态面板高度 */
-  height: calc(100vh - var(--status-bar-height, 44px) - 48px - 80px - 20px - var(--input-panel-height, 0px));
+  height: calc(100vh - var(--status-bar-height, 44px) - 48px - 68px - var(--input-panel-height, 0px));
   background-color: #f5f6fa;
   position: relative;
   overflow: hidden;
@@ -11,7 +11,6 @@
 /* 滚动区域 */
 .message-scroll-list {
   height: 100%;
-  padding: 8px 0;
   box-sizing: border-box;
   /* 确保滚动区域有明确的高度 */
   min-height: 200px;

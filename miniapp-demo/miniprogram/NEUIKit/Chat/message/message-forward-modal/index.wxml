@@ -43,7 +43,7 @@
           <message-avatar 
             account="{{contact.id}}"
             avatar="{{contact.avatar}}"
-            size="48"
+            size="40"
           />
           <text class="recent-name">{{contact.name}}</text>
         </view>
@@ -128,10 +128,10 @@
             <message-avatar 
               account="{{contact.id}}"
               avatar="{{contact.avatar}}"
-              size="32"
+              size="40"
             />
             <view class="selected-remove" bindtap="handleRemoveContact" data-contact="{{contact}}">
-              <icon type="close" size="12" color="#fff" />
+              <icon type="icon-guanbi" size="8" color="#fff" />
             </view>
           </view>
           <text class="selected-name">{{contact.name}}</text>

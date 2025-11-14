@@ -8,6 +8,7 @@ Page({
     selectedMembers: [] as string[],
     loading: true,
     statusBarHeight: 0,
+    includeSelf: false,
     // 国际化文本
     addMemberText: t('addMemberText'),
     confirmText: t('confirmText'),
@@ -82,8 +83,14 @@ Page({
       // 设置自动监听
       this.setupAutorun(store, teamId);
       
-      // 加载团队成员数据
-      await store.teamMemberStore.getTeamMemberActive({ teamId });
+      // 加载团队成员数据（需提供 queryOption）
+      await store.teamMemberStore.getTeamMemberActive({
+        teamId,
+        queryOption: {
+          limit: 200,
+          roleQueryType: 0
+        }
+      });
       
       this.setData({ loading: false });
     } catch (error) {
@@ -104,6 +111,8 @@ Page({
         // 获取群成员列表
         const teamMembers = store.teamMemberStore.getTeamMember(teamId) || [];
         const teamMemberIds = teamMembers.map((member: any) => member.accountId);
+        const myUserAccountId = (store && store.userStore && store.userStore.myUserInfo) ? store.userStore.myUserInfo.accountId : null;
+        const includeSelf = myUserAccountId ? teamMemberIds.includes(myUserAccountId) : false;
         
         // 获取黑名单
         const blacklist = store.relationStore.blacklist || [];
@@ -127,6 +136,25 @@ Page({
             disabled: isInTeam || isBlacklisted // 群成员和黑名单用户禁止编辑
           };
         });
+
+        // 将“自己”加入列表（禁用且勾选），确保列表也显示自己
+        if (myUserAccountId) {
+          const selfExists = friendList.some((f: any) => f.account === myUserAccountId);
+          if (!selfExists) {
+            const selfInfo = (store && store.userStore && store.userStore.myUserInfo) ? store.userStore.myUserInfo : {};
+            const selfAppellation = (store && store.uiStore && store.uiStore.getAppellation) ? store.uiStore.getAppellation({ account: myUserAccountId }) : null;
+            const selfDisplayName = selfAppellation || selfInfo.nick || myUserAccountId;
+            friendList.unshift({
+              account: myUserAccountId,
+              avatar: selfInfo.avatar,
+              nick: selfDisplayName,
+              isInTeam: true,
+              isBlacklisted: false,
+              selected: true,
+              disabled: true
+            });
+          }
+        }
         
         // 初始化已选择的成员列表（包含现有群成员）
         const initialSelectedMembers = friendList
@@ -135,7 +163,8 @@ Page({
         
         this.setData({
           friendList,
-          selectedMembers: initialSelectedMembers
+          selectedMembers: initialSelectedMembers,
+          includeSelf: false
         });
       } catch (error) {
         console.error('更新好友列表失败:', error);

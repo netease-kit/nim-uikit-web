@@ -13,7 +13,7 @@
   <!-- 自己发送的消息 -->
   <view wx:else class="msg-container msg-container-self">
     <!-- 发送中状态 -->
-    <view wx:if="{{msg.sendingState === 'sending'}}" class="msg-status-wrapper">
+    <view wx:if="{{msg.sendingState === 3}}" class="msg-status-wrapper">
       <icon size="21" color="#337EFF" class="msg-status-icon icon-loading" type="icon-a-Frame8" />
       <view wx:if="{{bgVisible}}" class="msg-bg msg-bg-out" bindlongpress="onLongPress">
         <slot></slot>
@@ -23,12 +23,9 @@
       </view>
     </view>
     
-    <!-- 发送失败状态 -->
-    <view wx:elif="{{msg.sendingState === 'failed'}}" class="msg-failed-wrapper">
+    <view wx:elif="{{msg.sendingState === 2 || (msg.messageStatus && msg.messageStatus.errorCode!==200)}}" class="msg-failed-wrapper">
       <view class="msg-failed" bindtap="onResendMsg">
-        <view class="icon-fail">
-          <icon type="icon-gantanhao" size="15" color="white" />
-        </view>
+        <view class="icon-fail">!</view>
         <view wx:if="{{bgVisible}}" class="msg-bg msg-bg-out" bindlongpress="onLongPress">
           <slot></slot>
         </view>
@@ -36,6 +33,9 @@
           <slot></slot>
         </view>
       </view>
+      <view class="msg-failed-text" wx:if="{{msg.messageStatus && msg.messageStatus.errorCode === 102426}}">对方已将你拉黑，消息发送失败</view>
+      <view class="msg-failed-text" wx:elif="{{msg.messageStatus && msg.messageStatus.errorCode === 104404}}">对方已将你删除，消息发送失败</view>
+      <view class="msg-failed-text" wx:else>发送失败</view>
     </view>
     
     <!-- 正常状态 -->

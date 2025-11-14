@@ -264,7 +264,7 @@ Page({
         
         setTimeout(() => {
           wx.redirectTo({
-            url: `/pages/chat/index/index`
+            url: `/pages/chat/index/index?conversationId=${conversationId}`
           });
         }, 1500);
       }

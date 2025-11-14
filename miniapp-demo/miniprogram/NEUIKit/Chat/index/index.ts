@@ -108,6 +108,7 @@ Component({
     conversationTypeDisposer: null as any,
     connectedDisposer: null as any,
     msgsDisposer: null as any,
+    teamInfoDisposer: null as any,
     // 页面标题
     title: '',
     // 会话类型
@@ -185,6 +186,15 @@ Component({
       if (this.data.msgsDisposer) {
         this.data.msgsDisposer();
       }
+      if (this.data.teamInfoDisposer) {
+        this.data.teamInfoDisposer();
+      }
+      // 解绑 SDK 事件
+      this.unbindEvents();
+      // 清理绑定的回调引用
+      delete (this as any).__onReceiveMessages;
+      delete (this as any).__onTeamDismissed;
+      delete (this as any).__onTeamLeft;
       
       // 重置挂载状态，确保下次进入页面时能正常初始化
       this.setData({ isMounted: false })
@@ -311,9 +321,22 @@ Component({
         self.loadCurrentConversationMessages()
       })
 
+      const teamInfoDisposer = autorun(() => {
+        const t = self.data.conversationType
+        const to = self.data.to
+        if (t === V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM) {
+          const team = (store && store.teamStore && store.teamStore.teams) ? store.teamStore.teams.get(to) : null
+          const members = (store && store.teamMemberStore && store.teamMemberStore.getTeamMember) ? store.teamMemberStore.getTeamMember(to) || [] : []
+          const count = (team && typeof (team as any).memberCount === 'number') ? (team as any).memberCount : (Array.isArray(members) ? members.length : 0)
+          const name = (team && (team as any).name) ? (team as any).name : ''
+          self.setData({ title: `${name}(${count})` })
+        }
+      })
+
       this.setData({
         connectedDisposer,
-        msgsDisposer
+        msgsDisposer,
+        teamInfoDisposer
       })
     },
 
@@ -363,12 +386,16 @@ Component({
     bindEvents() {
       const nim = getApp().globalData.nim
 
+      ;(this as any).__onReceiveMessages = this.onReceiveMessages.bind(this)
+      ;(this as any).__onTeamDismissed = this.onTeamDismissed.bind(this)
+      ;(this as any).__onTeamLeft = this.onTeamLeft.bind(this)
+
       // 监听收到新消息
-      nim.V2NIMMessageService.on('onReceiveMessages', this.onReceiveMessages)
+      nim.V2NIMMessageService.on('onReceiveMessages', (this as any).__onReceiveMessages)
       // 监听群组解散
-      nim.V2NIMTeamService.on('onTeamDismissed', this.onTeamDismissed)
+      nim.V2NIMTeamService.on('onTeamDismissed', (this as any).__onTeamDismissed)
       // 监听离开群组
-      nim.V2NIMTeamService.on('onTeamLeft', this.onTeamLeft)
+      nim.V2NIMTeamService.on('onTeamLeft', (this as any).__onTeamLeft)
     },
 
     /**
@@ -377,24 +404,28 @@ Component({
     unbindEvents() {
       const nim = getApp().globalData.nim
 
-      nim.V2NIMMessageService.off('onReceiveMessages', this.onReceiveMessages)
-      nim.V2NIMTeamService.off('onTeamDismissed', this.onTeamDismissed)
-      nim.V2NIMTeamService.off('onTeamLeft', this.onTeamLeft)
+      nim.V2NIMMessageService.off('onReceiveMessages', (this as any).__onReceiveMessages || this.onReceiveMessages)
+      nim.V2NIMTeamService.off('onTeamDismissed', (this as any).__onTeamDismissed || this.onTeamDismissed)
+      nim.V2NIMTeamService.off('onTeamLeft', (this as any).__onTeamLeft || this.onTeamLeft)
     },
 
     /**
      * 收到新消息回调
      */
     onReceiveMessages(msgs: any[]) {
-      if (!msgs.length) return
+      try {
+        if (!Array.isArray(msgs) || msgs.length === 0) return
 
-      const firstMsg = msgs[0]
-      // 检查是否是当前会话的消息
-      if (firstMsg.conversationId === this.data.conversationId && !firstMsg.isSelf) {
-        // 发送已读回执
-        this.handleMsgReceipt(msgs)
-        // 滚动到底部
-        this.scrollToBottomAfterNewMessage()
+        const firstMsg = msgs.find((m) => m && m.conversationId)
+        if (!firstMsg) return
+
+        // 检查是否是当前会话的消息
+        if (firstMsg.conversationId === this.data.conversationId && !firstMsg.isSelf) {
+          this.handleMsgReceipt(msgs)
+          this.scrollToBottomAfterNewMessage()
+        }
+      } catch (e) {
+        console.error('处理收到消息异常:', e)
       }
     },
 
@@ -564,7 +595,7 @@ Component({
 
       const _replyMsgsMap: Record<string, any> = {}
       const reqMsgs: YxReplyMsg[] = []
-      const messageClientIds: Record<string, string> = {}
+      const messageClientIdsMap: Record<string, string[]> = {}
 
       messages.forEach(msg => {
         if (msg.serverExtension) {
@@ -585,8 +616,11 @@ Component({
                 
                 const { scene, from, to, idServer, messageClientId, time, receiverId } = yxReplyMsg
                 if (scene && from && to && idServer && messageClientId && time && receiverId) {
-                  reqMsgs.push({ scene, from, to, idServer, messageClientId, time, receiverId })
-                  messageClientIds[idServer] = msg.messageClientId
+                reqMsgs.push({ scene, from, to, idServer, messageClientId, time, receiverId })
+                if (!messageClientIdsMap[idServer]) {
+                  messageClientIdsMap[idServer] = []
+                }
+                messageClientIdsMap[idServer].push(msg.messageClientId)
                 }
               }
             }
@@ -614,11 +648,13 @@ Component({
             const store = getApp().globalData.store;
             res.forEach(item => {
               if (item.messageServerId) {
-                // 为回复消息设置发送者名称
                 if (item.senderId && store && store.uiStore) {
                   item.senderName = store.uiStore.getAppellation({ account: item.senderId }) || item.senderId;
                 }
-                _replyMsgsMap[messageClientIds[item.messageServerId]] = item
+                const cids = messageClientIdsMap[item.messageServerId] || []
+                cids.forEach(cid => {
+                  _replyMsgsMap[cid] = item
+                })
               }
             })
           }
@@ -736,7 +772,7 @@ Component({
       
       // 发送消息
       if (store && store.msgStore && store.msgStore.sendMessageActive) {
-        store.msgStore.sendMessageActive({
+        const sendPromise = store.msgStore.sendMessageActive({
           msg: textMsg,
           conversationId,
           sendBefore: () => {
@@ -744,6 +780,11 @@ Component({
             this.scrollToBottomAfterNewMessage()
           }
         })
+        if (sendPromise && typeof sendPromise.then === 'function') {
+          sendPromise.catch(() => {
+            wx.showToast({ title: '发送失败', icon: 'none' })
+          })
+        }
       }
     },
 
@@ -858,6 +899,7 @@ Component({
      */
     handleInputPanelHeightChange(event: any) {
       const { height } = event.detail;
+      console.log('输入面板高度变化:', height)
       this.setData({
         inputPanelHeight: height
       });
@@ -999,26 +1041,29 @@ Component({
         return
       }
       
-      // 将联系人转换为会话ID并转发消息
-      contacts.forEach((contact: any, index: number) => {
-        let conversationId = ''
-        
-        if (contact.type === 'team') {
-          // 群聊会话ID
-          conversationId = nim.V2NIMConversationIdUtil.teamConversationId(contact.id)
-        } else {
-          // 单聊会话ID
-          conversationId = nim.V2NIMConversationIdUtil.p2pConversationId(contact.id)
+      const sourceMsg = (selectedMessage && selectedMessage.conversationId && selectedMessage.messageClientId)
+        ? (store.msgStore.getMsg(selectedMessage.conversationId, [selectedMessage.messageClientId])?.[0] || null)
+        : null
+
+      const promises = contacts.map((contact: any) => {
+        const conversationId =
+          contact.type === 'team'
+            ? nim.V2NIMConversationIdUtil.teamConversationId(contact.id)
+            : nim.V2NIMConversationIdUtil.p2pConversationId(contact.id)
+
+        if (sourceMsg) {
+          return store.msgStore
+            .forwardMsgActive(sourceMsg, conversationId)
+            .catch((error: any) => {
+              console.error(`消息转发失败到: ${contact.name || contact.id}`, error)
+              throw error
+            })
         }
-        
-        // 根据原消息类型创建新的转发消息
+
         let forwardMsg: any = null
-        
         if (selectedMessage.messageType === 'text') {
-          // 文本消息转发
           forwardMsg = nim.V2NIMMessageCreator.createTextMessage(selectedMessage.text || '')
         } else if (selectedMessage.messageType === 'image') {
-          // 图片消息转发
           forwardMsg = nim.V2NIMMessageCreator.createImageMessage(
             (selectedMessage.attachment && selectedMessage.attachment.path) || '',
             (selectedMessage.attachment && selectedMessage.attachment.name) || '',
@@ -1027,7 +1072,6 @@ Component({
             (selectedMessage.attachment && selectedMessage.attachment.height) || 0
           )
         } else if (selectedMessage.messageType === 'audio') {
-          // 语音消息转发
           forwardMsg = nim.V2NIMMessageCreator.createAudioMessage(
             (selectedMessage.attachment && selectedMessage.attachment.path) || '',
             (selectedMessage.attachment && selectedMessage.attachment.name) || '',
@@ -1035,7 +1079,6 @@ Component({
             (selectedMessage.attachment && selectedMessage.attachment.duration) || 0
           )
         } else if (selectedMessage.messageType === 'video') {
-          // 视频消息转发
           forwardMsg = nim.V2NIMMessageCreator.createVideoMessage(
             (selectedMessage.attachment && selectedMessage.attachment.path) || '',
             (selectedMessage.attachment && selectedMessage.attachment.name) || '',
@@ -1045,46 +1088,47 @@ Component({
             (selectedMessage.attachment && selectedMessage.attachment.height) || 0
           )
         } else if (selectedMessage.messageType === 'file') {
-          // 文件消息转发
           forwardMsg = nim.V2NIMMessageCreator.createFileMessage(
             (selectedMessage.attachment && selectedMessage.attachment.path) || '',
             (selectedMessage.attachment && selectedMessage.attachment.name) || '',
             (selectedMessage.attachment && selectedMessage.attachment.size) || 0
           )
         } else {
-          // 其他类型消息，使用文本形式转发
           forwardMsg = nim.V2NIMMessageCreator.createTextMessage(`[${selectedMessage.messageType}]`)
         }
-        
+
         if (!forwardMsg) {
-          console.error('无法创建转发消息')
-          return
+          return Promise.reject(new Error('无法创建转发消息'))
         }
-        
-        // 使用sendMessageActive发送转发的消息
-        const sendPromise = store.msgStore.sendMessageActive({
-          msg: forwardMsg,
-          conversationId: conversationId,
-          sendBefore: () => {}
-        })
-        
-        if (sendPromise && typeof sendPromise.then === 'function') {
-          sendPromise.then(() => {}).catch((error: any) => {
-            console.error(`消息转发失败到: ${contact.name || contact.id}`, error)
-            wx.showToast({
-              title: '转发失败',
-              icon: 'error'
-            })
+
+        return store.msgStore
+          .sendMessageActive({
+            msg: forwardMsg,
+            conversationId,
+            sendBefore: () => {}
           })
-        }
+          .catch((error: any) => {
+            console.error(`消息转发失败到: ${contact.name || contact.id}`, error)
+            throw error
+          })
       })
-      
-      wx.showToast({
-        title: '转发成功',
-        icon: 'success'
-      })
-      
-      this.handleForwardModalClose()
+
+      Promise.all(promises)
+        .then(() => {
+          wx.showToast({
+            title: '转发成功',
+            icon: 'success'
+          })
+        })
+        .catch(() => {
+          wx.showToast({
+            title: '转发失败',
+            icon: 'error'
+          })
+        })
+        .finally(() => {
+          this.handleForwardModalClose()
+        })
     },
 
     /**
@@ -1206,6 +1250,7 @@ Component({
         : []
         
         const friends = friendList.map((item: any) => ({
+          id: item.accountId,
           userId: item.accountId,
           accountId: item.accountId,
           name: (store && store.uiStore && store.uiStore.getAppellation) ? store.uiStore.getAppellation({ account: item.accountId }) || item.nick || item.accountId : item.nick || item.accountId,
@@ -1244,11 +1289,13 @@ Component({
     
     // 新消息到达时滚动到底部
     scrollToBottomAfterNewMessage() {
-      const messageList = this.selectComponent('#messageList')
-      // 仅重置自动滚动标记，让列表在数据变更后自行滚到底部
-      if (messageList && typeof messageList.resetAutoScroll === 'function') {
-        messageList.resetAutoScroll()
-      }
+      // 延迟执行，确保DOM已更新
+      setTimeout(() => {
+        const messageList = this.selectComponent('#messageList')
+        if (messageList && messageList.scrollToBottom) {
+          messageList.scrollToBottom()
+        }
+      }, 100)
     }
   },
 

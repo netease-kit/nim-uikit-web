@@ -4,7 +4,7 @@
       <text class="msg-text">{{item.value}}</text>
     </block>
     <block wx:elif="{{item.type === 'Ait'}}">
-      <text class="msg-text ait-text"> {{item.value}} </text>
+      <text class="msg-text ait-text">{{item.value}}</text>
     </block>
     <block wx:elif="{{item.type === 'emoji'}}">
       <icon 

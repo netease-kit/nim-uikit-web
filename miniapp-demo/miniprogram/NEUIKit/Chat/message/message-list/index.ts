@@ -34,8 +34,7 @@ Component({
     scrollTop: 0,
     finalMsgs: [] as any[],
     lastScrollTop: 0,
-    autoScrollToBottom: true,
-    scrollIntoView: ''
+    autoScrollToBottom: true
   },
 
   observers: {
@@ -204,14 +203,11 @@ Component({
       return formatMessageTime(timestamp);
     },
     
-    // 滚动到底部（使用底部锚点，避免高度计算误差）
+    // 滚动到底部
     scrollToBottom() {
       wx.nextTick(() => {
-        // 先清空，再设置到锚点，确保重复设置也能触发滚动
-        this.setData({ scrollIntoView: '' }, () => {
-          wx.nextTick(() => {
-            this.setData({ scrollIntoView: 'bottom-anchor' });
-          });
+        this.setData({
+          scrollTop: 999999
         });
       });
     },
@@ -284,16 +280,16 @@ Component({
       this.triggerEvent('avatarClick', e.detail);
     },
     
-    // 滚动到指定消息（通过scroll-into-view确保对齐）
+    // 滚动到指定消息
     scrollToMessage(messageClientId: string) {
-      const id = `msg-${messageClientId}`;
-      wx.nextTick(() => {
-        this.setData({ scrollIntoView: '' }, () => {
-          wx.nextTick(() => {
-            this.setData({ scrollIntoView: id });
+      const query = this.createSelectorQuery();
+      query.select(`[data-message-id="${messageClientId}"]`).boundingClientRect((res) => {
+        if (res) {
+          this.setData({
+            scrollTop: res.top
           });
-        });
-      });
+        }
+      }).exec();
     },
     
     // 获取消息列表高度
