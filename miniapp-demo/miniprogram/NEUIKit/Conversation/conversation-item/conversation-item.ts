@@ -55,7 +55,7 @@ Component({
       const sessionName = this.getSessionName(conversation)
       const date = this.formatDate((conversation.lastMessage && conversation.lastMessage.messageRefer && conversation.lastMessage.messageRefer.createTime) ? conversation.lastMessage.messageRefer.createTime : 0)
       const unread = conversation.unreadCount || 0
-      const isMute = conversation.mute || false
+      const isMute = this.computeMute(conversation, to)
       const beMentioned = conversation.beMentioned || false
             
       // 更新置顶按钮文本
@@ -80,6 +80,19 @@ Component({
         moreActions,
         showSessionUnread: this.shouldShowSessionUnread(conversation)
       })
+    },
+
+    computeMute(conversation: any, to: string) {
+      if (typeof conversation.mute !== 'undefined') {
+        return !!conversation.mute
+      }
+      const app = getApp() as any
+      const store = app?.globalData?.store
+      if (!store) return false
+      if (conversation.type === 'P2P') {
+        return Array.isArray(store.relationStore?.mutes) && store.relationStore.mutes.includes(to)
+      }
+      return false
     },
 
     parseConversationTargetId(conversationId: string) {

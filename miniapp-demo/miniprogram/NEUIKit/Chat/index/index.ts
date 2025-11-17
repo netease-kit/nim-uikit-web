@@ -851,32 +851,37 @@ Component({
       }
       
       tempFiles.forEach((file: any) => {
+        let fileMsg: any = null;
         try {
-          // 创建文件消息
-          const fileMsg = nim.V2NIMMessageCreator.createFileMessage(file.path, file.name, file.size);
-          
-          // 发送文件消息
-          store.msgStore.sendMessageActive({
+          // 优先使用小程序路径单参创建
+          fileMsg = nim.V2NIMMessageCreator.createFileMessage(file.path);
+        } catch (e1) {
+          try {
+            // 兼容备用：部分版本支持 (path, name, size)
+            fileMsg = nim.V2NIMMessageCreator.createFileMessage(
+              file.path,
+              file.name,
+              file.size
+            );
+          } catch (e2) {
+            console.error('创建文件消息失败:', e2);
+            wx.showToast({ title: '发送失败', icon: 'error' });
+            return;
+          }
+        }
+
+        store.msgStore
+          .sendMessageActive({
             msg: fileMsg,
             conversationId: this.data.conversationId,
             sendBefore: () => {
-              // 发送文件消息后滚动到底部
-              this.scrollToBottomAfterNewMessage()
+              this.scrollToBottomAfterNewMessage();
             }
-          }).catch((error: any) => {
+          })
+          .catch((error: any) => {
             console.error('发送文件消息失败:', error);
-            wx.showToast({
-              title: '发送失败',
-              icon: 'error'
-            });
+            wx.showToast({ title: '发送失败', icon: 'error' });
           });
-        } catch (error) {
-          console.error('创建文件消息失败:', error);
-          wx.showToast({
-            title: '发送失败',
-            icon: 'error'
-          });
-        }
       });
     },
 

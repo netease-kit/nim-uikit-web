@@ -35,7 +35,7 @@
       <view class="p2p-setting-item setting-item">
         <view class="setting-label">消息免打扰</view>
         <switch 
-          checked="{{!isMute}}" 
+          checked="{{isMute}}" 
           bindchange="handleSessionMuteChange"
           color="#007AFF"
         />
