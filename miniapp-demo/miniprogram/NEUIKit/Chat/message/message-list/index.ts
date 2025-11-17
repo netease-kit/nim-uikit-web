@@ -34,7 +34,8 @@ Component({
     scrollTop: 0,
     finalMsgs: [] as any[],
     lastScrollTop: 0,
-    autoScrollToBottom: true
+    autoScrollToBottom: true,
+    scrollIntoView: ''
   },
 
   observers: {
@@ -72,12 +73,13 @@ Component({
       
       this.setData({ 
         finalMsgs 
-      }, () => {
-        // 如果是新消息，自动滚动到底部
-        if (this.data.autoScrollToBottom) {
-          this.scrollToBottom();
-        }
       });
+
+      // 首次进入或需要自动滚动时，滚动到底部
+      if (this.data.autoScrollToBottom && finalMsgs.length) {
+        this.scrollToBottom();
+        this.setData({ autoScrollToBottom: false });
+      }
     },
     
     // 处理消息列表
@@ -206,9 +208,10 @@ Component({
     // 滚动到底部
     scrollToBottom() {
       wx.nextTick(() => {
-        this.setData({
-          scrollTop: 999999
-        });
+        // this.setData({ scrollIntoView: 'message-bottom-handler' });
+        setTimeout(() => {
+          this.setData({ scrollIntoView: 'message-bottom-handler' });
+        }, 100);
       });
     },
     

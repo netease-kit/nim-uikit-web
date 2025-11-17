@@ -143,7 +143,7 @@ Component({
       
       this.setData({ 
         loading: true, 
-        loadingText: value ? '取消免打扰中...' : '设置免打扰中...' 
+        loadingText: value ? '设置免打扰中...' : '取消免打扰中...' 
       });
 
       try {
@@ -151,16 +151,16 @@ Component({
         const store = (app.globalData && app.globalData.store) ? app.globalData.store : null;
         
         if (store && store.relationStore) {
-          // 这里需要根据实际SDK实现调用相应的API
+          // 使用SDK枚举的数值形式：0=OFF(关闭免打扰)，1=ON(开启免打扰)
           await store.relationStore.setP2PMessageMuteModeActive(
             account,
-            value ? 'OFF' : 'ON' // 根据实际SDK的枚举值调整
+            value ? 1 : 0
           );
-          
-          this.setData({ isMute: !value });
-          
+
+          this.setData({ isMute: value });
+
           wx.showToast({
-            title: value ? '已取消免打扰' : '已设置免打扰',
+            title: value ? '已设置免打扰' : '已取消免打扰',
             icon: 'success'
           });
         }
@@ -180,7 +180,7 @@ Component({
      */
     async handleStickTopChange(event: any) {
       const value = event.detail.value;
-      const { conversationId } = this.properties;
+      const { conversationId, account } = this.properties;
       
       this.setData({ 
         loading: true, 
@@ -190,21 +190,27 @@ Component({
       try {
         const app = getApp();
         const store = (app.globalData && app.globalData.store) ? app.globalData.store : null;
+        const nim = (app.globalData && app.globalData.nim) ? app.globalData.nim : null;
         
         if (store) {
-          // 根据是否启用云端会话选择不同的store
-          const conversationStore = store.conversationStore || store.localConversationStore;
-          
-          if (conversationStore) {
-            await conversationStore.stickTopConversationActive(conversationId, value);
-            
-            this.setData({ isStickTop: value });
-            
-            wx.showToast({
-              title: value ? '已置顶' : '已取消置顶',
-              icon: 'success'
-            });
+          // 根据是否启用云端会话选择不同的store，并确保会话ID正确
+          const enableV2CloudConversation = (store.sdkOptions && store.sdkOptions.enableV2CloudConversation) || false;
+          const convId = (nim && nim.V2NIMConversationIdUtil && nim.V2NIMConversationIdUtil.p2pConversationId)
+            ? nim.V2NIMConversationIdUtil.p2pConversationId(account)
+            : conversationId;
+
+          if (enableV2CloudConversation) {
+            await store.conversationStore?.stickTopConversationActive(convId, value);
+          } else {
+            await store.localConversationStore?.stickTopConversationActive(convId, value);
           }
+
+          this.setData({ isStickTop: value });
+
+          wx.showToast({
+            title: value ? '已置顶' : '已取消置顶',
+            icon: 'success'
+          });
         }
       } catch (error) {
         console.error('设置置顶失败:', error);
@@ -264,7 +270,7 @@ Component({
         if (store) {
           // 取消免打扰
           if (this.data.isMute && store.relationStore) {
-            await store.relationStore.setP2PMessageMuteModeActive(account, 'OFF');
+            await store.relationStore.setP2PMessageMuteModeActive(account, 0);
           }
           
           // 取消置顶

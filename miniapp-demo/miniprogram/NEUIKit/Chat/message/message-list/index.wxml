@@ -4,6 +4,7 @@
     class="message-scroll-list"
     scroll-y="{{true}}"
     scroll-top="{{scrollTop}}"
+    scroll-into-view="{{scrollIntoView}}"
     enhanced="{{true}}"
     show-scrollbar="{{false}}"
     scroll-with-animation="{{true}}"
@@ -45,5 +46,7 @@
       <view class="empty-icon">💬</view>
       <view class="empty-text">暂无消息</view>
     </view>
+
+    <view id="message-bottom-handler" style="height: 1px;"></view>
   </scroll-view>
 </view>

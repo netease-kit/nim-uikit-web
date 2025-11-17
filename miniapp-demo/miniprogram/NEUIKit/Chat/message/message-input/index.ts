@@ -165,8 +165,12 @@ Component({
           });
           
           this.setData({
-            sendMoreVisible: false
+            sendMoreVisible: false,
+            emojiVisible: false,
+            isFocus: true,
+            inputPanelHeight: 0
           });
+          this.updateParentPanelHeight();
         },
         fail: (err) => {
           console.error('选择图片失败:', err);
@@ -188,8 +192,12 @@ Component({
           });
           
           this.setData({
-            sendMoreVisible: false
+            sendMoreVisible: false,
+            emojiVisible: false,
+            isFocus: true,
+            inputPanelHeight: 0
           });
+          this.updateParentPanelHeight();
         },
         fail: (err) => {
           console.error('选择文件失败:', err);

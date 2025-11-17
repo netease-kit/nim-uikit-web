@@ -17,7 +17,11 @@ Page({
     // 从页面参数获取对方用户ID
     if (options.to) {
       const account = options.to;
-      const conversationId = `p2p|${account}`;
+      const app = getApp() as any;
+      const nim = app?.globalData?.nim;
+      const conversationId = (nim && nim.V2NIMConversationIdUtil && nim.V2NIMConversationIdUtil.p2pConversationId)
+        ? nim.V2NIMConversationIdUtil.p2pConversationId(account)
+        : `p2p|${account}`;
       
       this.setData({
         to: account,
