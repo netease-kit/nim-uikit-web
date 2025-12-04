@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Dropdown, Image, Popover, Progress, Tooltip, message } from 'antd'
 import reactStringReplace from 'react-string-replace'
 import CommonIcon from '../CommonIcon'
+import { CloseOutlined, LoadingOutlined } from '@ant-design/icons'
 import {
   getFileType,
   parseFileSize,
@@ -36,9 +37,7 @@ import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 import { V2NIMError } from 'nim-web-sdk-ng/dist/esm/nim/src/types'
 import { AI_SEARCH_MENU_KEY, fileIconMap } from '../../../constant'
 import Markdown from 'react-markdown'
-import { LoadingOutlined } from '@ant-design/icons'
 import VideoModal from './videoModal'
-import { log } from 'console'
 
 export interface IParseSessionProps {
   prefix?: string
@@ -544,25 +543,43 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
               .V2NIM_MESSAGE_SENDING_STATE_SENDING &&
           uploadProgress !== void 0 &&
           uploadProgress < 100 ? (
-            <div className={`${_prefix}-upload-mask`}>
-              <div
-                className={`${_prefix}-upload-progress`}
-                onClick={() => {
-                  store.msgStore
-                    .cancelMessageAttachmentUploadActive(msg)
-                    .catch(() => {
-                      message.error(t('cancelUploadFailedText'))
-                    })
-                }}
-              >
-                <Progress
-                  type="circle"
-                  status="exception"
-                  percent={uploadProgress || 0}
-                  width={40}
-                  strokeColor="#899095"
-                  trailColor="rgba(0,0,0,0.5)"
-                />
+            <div
+              className={`${_prefix}-upload-mask`}
+              onClick={() => {
+                store.msgStore
+                  .cancelMessageAttachmentUploadActive(msg)
+                  .catch(() => {
+                    message.error(t('cancelUploadFailedText'))
+                  })
+              }}
+            >
+              <div className={`${_prefix}-upload-progress`}>
+                <div className={`${_prefix}-progress-row`}>
+                  <div className={`${_prefix}-progress-bar`}>
+                    <Progress
+                      percent={uploadProgress || 0}
+                      status="active"
+                      strokeColor="#4096f2ff"
+                      trailColor="rgba(255,255,255,0.35)"
+                      showInfo={false}
+                    />
+                  </div>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className={`${_prefix}-cancel-text`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      store.msgStore
+                        .cancelMessageAttachmentUploadActive(msg)
+                        .catch(() => {
+                          message.error(t('cancelUploadFailedText'))
+                        })
+                    }}
+                  >
+                    <CloseOutlined />
+                  </span>
+                </div>
               </div>
             </div>
           ) : null}
@@ -662,6 +679,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     }
 
     const renderFile = (msg: V2NIMMessageForUI) => {
+      const { uploadProgress, sendingState } = msg
       let downloadHref = ''
 
       try {
@@ -674,7 +692,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       }
 
       return (
-        <div className={`${_prefix}-file-box`}>
+        <div className={`${_prefix}-file-box`} style={{ position: 'relative' }}>
           <CommonIcon
             className={`${_prefix}-file-icon`}
             type={
@@ -704,6 +722,52 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
               )}
             </span>
           </div>
+
+          {sendingState ===
+            V2NIMConst.V2NIMMessageSendingState
+              .V2NIM_MESSAGE_SENDING_STATE_SENDING &&
+          uploadProgress !== void 0 &&
+          uploadProgress < 100 ? (
+            <div
+              className={`${_prefix}-file-upload-mask`}
+              onClick={() => {
+                store.msgStore
+                  .cancelMessageAttachmentUploadActive(msg)
+                  .catch(() => {
+                    message.error(t('cancelUploadFailedText'))
+                  })
+              }}
+            >
+              <div className={`${_prefix}-file-upload-progress`}>
+                <div className={`${_prefix}-progress-row`}>
+                  <div className={`${_prefix}-progress-bar`}>
+                    <Progress
+                      percent={uploadProgress || 0}
+                      status="active"
+                      strokeColor="#4096f2ff"
+                      trailColor="rgba(255,255,255,0.35)"
+                      showInfo={false}
+                    />
+                  </div>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className={`${_prefix}-cancel-text`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      store.msgStore
+                        .cancelMessageAttachmentUploadActive(msg)
+                        .catch(() => {
+                          message.error(t('cancelUploadFailedText'))
+                        })
+                    }}
+                  >
+                    <CloseOutlined />
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
       )
     }
@@ -1134,7 +1198,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       const url = attachment.url
 
       // 被拉黑
-      if (msg.messageStatus.errorCode === 102426) {
+      if (msg.messageStatus?.errorCode === 102426) {
         return (
           <div className={`${_prefix}-video-container`}>
             <div className={`${_prefix}-video-play-btn`} />
@@ -1382,7 +1446,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     const renderReplyMsg = (msg: V2NIMMessageForUI) => {
       // 给数字人发送图片会返回这个错误码，此时直接不渲染，在renderContent 直接提示 格式不支持
 
-      if (msg.messageStatus.errorCode === 107336) {
+      if (msg.messageStatus?.errorCode === 107336) {
         return (
           <span className={`${_prefix}-ai-text-not-support`}>
             {t('tipAIMessageText')}
@@ -1452,9 +1516,9 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           if (
             Object.keys(aiErrorMap)
               .map((item) => Number(item))
-              .includes(msg.messageStatus.errorCode)
+              .includes(msg.messageStatus?.errorCode)
           ) {
-            return renderTipAI(msg.messageStatus.errorCode)
+            return renderTipAI(msg.messageStatus?.errorCode)
           }
 
           return `[${t('tipMsgText')}，${notSupportMessageText}]`

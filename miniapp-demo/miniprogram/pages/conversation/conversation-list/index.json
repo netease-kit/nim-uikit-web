@@ -1,6 +1,0 @@
-{
-  "navigationBarTitleText": "会话列表",
-  "usingComponents": {
-    "conversation-list": "/NEUIKit/Conversation/conversation-list/conversation-list"
-  }
-}

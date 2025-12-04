@@ -572,6 +572,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             msg: fileMsg,
             conversationId,
             conversationType,
+            progress: () => true,
             sendBefore: () => {
               scrollToBottom()
             },

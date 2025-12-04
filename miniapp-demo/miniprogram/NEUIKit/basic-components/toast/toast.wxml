@@ -1,5 +1,0 @@
-<view wx:if="{{visible}}" class="toast-container {{fadeClass}} {{extClass}}" style="{{customStyleStr}}">
-  <view class="toast-content {{typeClass}}">
-    <text class="toast-text">{{message}}</text>
-  </view>
-</view>

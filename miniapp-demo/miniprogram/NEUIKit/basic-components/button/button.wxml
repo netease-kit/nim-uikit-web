@@ -1,8 +1,0 @@
-<button
-  class="ne-button {{typeClass}} {{disabledClass}} {{blockClass}} {{roundClass}} {{plainClass}} {{customClass}} {{extClass}}"
-  style="{{customStyleStr}}"
-  disabled="{{disabled}}"
-  bindtap="handleClick"
->
-  <slot></slot>
-</button>

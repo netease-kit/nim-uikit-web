@@ -1,5 +1,0 @@
-<view>
-  <view wx:if="{{dot}}" class="dot" style="{{customStyle}}"></view>
-  <view wx:elif="{{text}}" class="badge" style="{{customStyle}}">{{text}}</view>
-  <view class="hidden">{{num}}</view>
-</view>

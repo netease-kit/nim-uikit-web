@@ -1,8 +1,0 @@
-<avatar 
-  account="{{account}}"
-  teamId="{{teamId}}"
-  size="{{size}}"
-  gotoUserCard="{{gotoUserCard}}"
-  avatar="{{avatar}}"
-  fontSize="{{fontSize}}"
-/>

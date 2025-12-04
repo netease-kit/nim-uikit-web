@@ -1,7 +1,0 @@
-{
-  "navigationBarTitleText": "添加好友",
-  "navigationStyle": "custom",
-  "usingComponents": {
-    "add-friend": "/NEUIKit/Friend/add-friend/add-friend"
-  }
-}

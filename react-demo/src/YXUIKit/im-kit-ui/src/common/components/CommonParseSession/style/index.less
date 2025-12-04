@@ -118,7 +118,7 @@
   display: flex;
   flex-direction: column;
   max-width: 100%;
-  height: 46px;
+  min-height: 46px;
 }
 .@{prefix}-audio-text {
   margin-top: 15px;
@@ -206,16 +206,53 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
+}
+
+.@{prefix}-file-upload-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
 }
 .@{prefix}-upload-progress {
   cursor: pointer;
+  width: 80%;
   .@{ant-prefix}-progress-circle.@{ant-prefix}-progress-status-exception .@{ant-prefix}-progress-text{
     color: @yx-primary-color;
   }
+}
+
+/** Generic progress row and cancel text styles for upload masks */
+.@{prefix}-progress-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.@{prefix}-progress-bar {
+  flex: 1;
+}
+.@{prefix}-cancel-text {
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+/** File upload progress container width align with image/video */
+.@{prefix}-file-upload-progress {
+  width: 80%;
 }
 
 .@{prefix}-ai-text{
@@ -393,4 +430,3 @@
     color: #333333;
   }
 }
-

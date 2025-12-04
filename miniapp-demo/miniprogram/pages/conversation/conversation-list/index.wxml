@@ -1,3 +1,0 @@
-<view class="conversation-list-page">
-  <conversation-list bind:session-click="onSessionClick" />
-</view>

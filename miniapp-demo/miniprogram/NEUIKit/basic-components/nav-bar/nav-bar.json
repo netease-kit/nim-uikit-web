@@ -1,8 +1,0 @@
-{
-  "component": true,
-  "styleIsolation": "apply-shared",
-  "multipleSlots": true,
-  "usingComponents": {
-    "icon": "/NEUIKit/basic-components/icon/icon"
-  }
-}

@@ -1,7 +1,0 @@
-{
-  "navigationBarTitleText": "编辑好友信息",
-  "navigationStyle": "custom",
-  "usingComponents": {
-    "friend-info-edit": "/NEUIKit/Friend/friend-info-edit/friend-info-edit"
-  }
-}

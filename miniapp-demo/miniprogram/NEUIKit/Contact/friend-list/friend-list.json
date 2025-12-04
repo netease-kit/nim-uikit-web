@@ -1,9 +1,0 @@
-{
-  "component": true,
-  "styleIsolation": "apply-shared",
-  "usingComponents": {
-    "avatar": "../../basic-components/avatar/avatar",
-    "appellation": "../../basic-components/appellation/appellation",
-    "empty": "../../basic-components/empty/empty"
-  }
-}

@@ -1,7 +1,0 @@
-{
-  "navigationBarTitleText": "创建群聊",
-  "usingComponents": {
-    "nav-bar": "/NEUIKit/basic-components/nav-bar/nav-bar",
-    "person-select": "/NEUIKit/basic-components/person-select/person-select"
-  }
-}

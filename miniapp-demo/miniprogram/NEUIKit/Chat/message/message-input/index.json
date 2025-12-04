@@ -1,8 +1,0 @@
-{
-  "component": true,
-  "styleIsolation": "apply-shared",
-  "usingComponents": {
-    "icon": "../../../basic-components/icon/icon",
-    "face": "../face/index"
-  }
-}

@@ -65,7 +65,32 @@ const VirtualMessageItem: React.FC<VirtualMessageItemProps> = memo(
 
       // 立即执行一次高度更新
       updateHeight()
-    }, [msg.messageClientId, msg.text])
+    }, [msg.messageClientId, msg.text, msg.textOfVoice, msg.aiConfig?.aiStatus])
+
+    // 监听textOfVoice变化，强制重新计算高度
+    useEffect(() => {
+      if (msg.textOfVoice) {
+        // 延迟一段时间后强制更新，确保语音转文字内容已经渲染
+        const timer = setTimeout(() => {
+          // 获取目标父元素
+          const parentDiv = document.getElementById(msg.messageClientId)
+          // 获取子元素（单个元素用 querySelector，多个用 querySelectorAll）
+          const targetElement = parentDiv?.querySelector(
+            '.chat-message-list-item-wrap'
+          )
+          // @ts-ignore
+          const elementHeight = targetElement?.offsetHeight
+
+          if (parentDiv && targetElement && elementHeight) {
+            setMsgHeight(elementHeight)
+          } else {
+            console.warn('未找到类名为 chat-message-list-item-wrap 的子元素')
+          }
+
+          clearTimeout(timer)
+        }, 100)
+      }
+    }, [msg.textOfVoice, msg.messageClientId])
 
     return (
       <div
@@ -74,6 +99,8 @@ const VirtualMessageItem: React.FC<VirtualMessageItemProps> = memo(
         ref={msgRef}
         style={{
           height: msgHeight === 0 ? 'auto' : msgHeight,
+          // 添加最小高度，防止高度为0时的布局问题
+          minHeight: msgHeight === 0 ? 'auto' : msgHeight,
         }}
         data-height={msgHeight}
       >

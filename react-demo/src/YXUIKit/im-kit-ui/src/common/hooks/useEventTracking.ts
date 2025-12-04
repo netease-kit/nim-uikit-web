@@ -26,7 +26,7 @@ export const useEventTracking = ({
       os: '',
       framework: 'React',
       language: storeUtils.detectLanguage(),
-      container: 'WEB',
+      container: 'PC',
     })
 
     eventTracking.track('init', '')

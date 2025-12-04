@@ -1,9 +1,0 @@
-{
-  "navigationBarTitleText": "添加群成员",
-  "navigationStyle": "custom",
-  "usingComponents": {
-    "avatar": "/NEUIKit/basic-components/avatar/avatar",
-    "appellation": "/NEUIKit/basic-components/appellation/appellation",
-    "icon": "/NEUIKit/basic-components/icon/icon"
-  }
-}
