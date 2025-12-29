@@ -1,3 +1,4 @@
+import { APP_KEY } from "../../utils/constants";
 const baseUrl = "https://yiyong-user-center-qa.netease.im";
 // const baseUrl = "https://yiyong-user-center.netease.im";
 // // @ts-ignore
@@ -6,7 +7,7 @@ const baseUrl = "https://yiyong-user-center-qa.netease.im";
 //   : 'https://yiyong-user-center-qa.netease.im'
 
 const loginByCodeHeader = {
-  appKey: "",
+  appKey: APP_KEY,
   parentScope: 2,
   scope: 7,
 };

@@ -1,7 +1,7 @@
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import RootStore from "./store";
 import V2NIM from "nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK";
-
+import { IM_UIKIT_VERSION } from "./constants";
 let uiKitStore = null;
 let nim = null;
 /**
@@ -51,6 +51,8 @@ export const initIMUIKit = (appkey) => {
     },
     "Web"
   );
+  console.log("Web IMUIKit Vue2 Init", IM_UIKIT_VERSION);
+
   return {
     nim,
     store: uiKitStore,
