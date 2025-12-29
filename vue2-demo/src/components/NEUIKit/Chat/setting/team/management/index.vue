@@ -16,7 +16,7 @@
           class="team-manager-item"
           v-for="item in teamManagerList"
           :key="item.accountId"
-          @click="selectedAccount = item.accountId"
+          @click="handleTeamManagerClick(item)"
         >
           <Avatar :account="item.accountId" :team-id="item.teamId" size="36" />
         </div>
@@ -94,7 +94,7 @@ import { ALLOW_AT } from "../../../../utils/constants";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import AddTeamManagerModal from "./add-team-manager-modal.vue";
 import { toast } from "../../../../utils/toast";
-import { uiKitStore } from "../../../../utils/init";
+import { nim, uiKitStore } from "../../../../utils/init";
 const { V2NIMTeamChatBannedMode } = V2NIMConst;
 export default {
   name: "TeamManagementSetting",
@@ -184,6 +184,12 @@ export default {
   },
   methods: {
     t,
+    handleTeamManagerClick(item) {
+      const accountId = (item && item.accountId) || "";
+      const myUserAccountId = nim?.V2NIMLoginService?.getLoginUser?.() || "";
+      if (accountId && myUserAccountId && accountId === myUserAccountId) return;
+      this.selectedAccount = accountId;
+    },
     setTeamChatBanned(value) {
       const checked = value;
       this.store.teamStore

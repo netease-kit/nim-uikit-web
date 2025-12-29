@@ -185,6 +185,7 @@ export default {
   flex: 1;
   max-height: 470px;
   padding: 0 20px;
+  min-height: 380px;
 }
 
 .section-div {
