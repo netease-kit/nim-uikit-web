@@ -1,6 +1,0 @@
-{
-  "navigationBarTitleText": "搜索会话",
-  "usingComponents": {
-    "conversation-search": "/NEUIKit/Conversation/conversation-search/index"
-  }
-}

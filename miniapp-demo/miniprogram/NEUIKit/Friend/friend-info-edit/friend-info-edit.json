@@ -1,8 +1,0 @@
-{
-  "component": true,
-  "styleIsolation": "apply-shared",
-  "usingComponents": {
-    "nav-bar": "../../basic-components/nav-bar/nav-bar",
-    "input": "../../basic-components/input/input"
-  }
-}

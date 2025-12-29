@@ -1,8 +1,0 @@
-{
-  "usingComponents": {
-    "p2p-setting": "/NEUIKit/Chat/p2p-setting/index"
-  },
-  "navigationBarTitleText": "聊天设置",
-  "enablePullDownRefresh": false,
-  "onReachBottomDistance": 50
-}

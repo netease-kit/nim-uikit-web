@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useCallback } from 'react'
 import {
   Provider, // 全局上下文
 } from '@xkit-yx/im-kit-ui/src'
-import { ConfigProvider } from 'antd'
+import { ConfigProvider, message } from 'antd'
 //antd 国际化
 import zhCN from 'antd/es/locale/zh_CN'
 import enUS from 'antd/es/locale/en_US'
@@ -146,6 +146,12 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
     return nim
   }, [appkey, initOptions, otherOptions])
 
+  // 退出登录
+  const handleLogout = useCallback(async () => {
+    await nim.V2NIMLoginService.logout()
+    onLogout?.()
+  }, [onLogout, nim.V2NIMLoginService])
+
   // 登录
   useEffect(() => {
     if (
@@ -159,15 +165,25 @@ const IMAppContainer: React.FC<IMContainerProps> = (props) => {
         retryCount: 5,
       }).catch((err) => {
         console.log('登录失败的回调', err)
+        if (err.code === 102422) {
+          // 账号被封禁
+          message.error('当前账号已被封禁')
+          onLogout?.()
+        }
       })
     }
-  }, [account, token, nim.V2NIMLoginService])
 
-  // 退出登录
-  const handleLogout = useCallback(async () => {
-    await nim.V2NIMLoginService.logout()
-    onLogout?.()
-  }, [onLogout, nim.V2NIMLoginService])
+    const handelKickedOffline = () => {
+      message.error('您已被踢下线')
+      onLogout?.()
+    }
+
+    nim.V2NIMLoginService.on('onKickedOffline', handelKickedOffline)
+
+    return () => {
+      nim.V2NIMLoginService.off('onKickedOffline', handelKickedOffline)
+    }
+  }, [account, token, nim.V2NIMLoginService, onLogout])
 
   return (
     <ConfigProvider locale={curLanguage === 'zh' ? zhCN : enUS}>

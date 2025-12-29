@@ -1,21 +1,28 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Checkbox, Input, Tabs } from 'antd'
+import { Checkbox, Input, message, Tabs } from 'antd'
 import {
   useTranslation,
   ComplexAvatarContainer,
   useStateContext,
   CrudeAvatar,
   SelectModal,
+  getMsgContentTipByType,
 } from '../../../common'
 import { SelectModalItemProps } from '../../../common/components/SelectModal'
 import { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
-import { groupByPy, logger } from '../../../utils'
+import { groupByPy, logger, getFileMd5 } from '../../../utils'
 import { observer } from 'mobx-react'
+import packageJson from '../../../../package.json'
+import sdkPkg from 'nim-web-sdk-ng/package.json'
 
 const localStorageKey = '__yx_im_recent_forward__'
 const localStorageMax = 5
 const selectedMax = 9
+
+const appVersion = packageJson.version
+const sdkVersion = sdkPkg.version
 
 export type TabKey = 'conversation' | 'friend' | 'team'
 
@@ -25,22 +32,28 @@ export interface ChatRecentForwardItem extends SelectModalItemProps {
 
 export interface ChatForwardModalProps {
   msg?: V2NIMMessageForUI
+  msgs?: V2NIMMessageForUI[]
+  mergeMsg?: boolean
   visible: boolean
   onSend: () => void
   onCancel: () => void
 
   prefix?: string
   commonPrefix?: string
+  selectType?: 'checkbox' | 'radio'
 }
 
 const ChatMessageForwardModal: React.FC<ChatForwardModalProps> = observer(
   ({
     msg,
+    msgs,
+    mergeMsg = true,
     visible,
     onCancel,
     onSend,
     prefix = 'chat',
     commonPrefix = 'common',
+    selectType = 'checkbox',
   }) => {
     const { t } = useTranslation()
     const { nim, store } = useStateContext()
@@ -192,7 +205,7 @@ const ChatMessageForwardModal: React.FC<ChatForwardModalProps> = observer(
     }, [selected, recentForward])
 
     const recentRenderer = useMemo(() => {
-      const handleRecentSelect = (value: any) => {
+      const handleRecentSelect = (value: any[]) => {
         if (value.length > recentSelected.length) {
           // 合并并去重
           setSelected([...new Set([...selected, ...value])])
@@ -276,7 +289,7 @@ const ChatMessageForwardModal: React.FC<ChatForwardModalProps> = observer(
         .slice(0, localStorageMax)
     }
 
-    const handleCommentChange = (e: any) => {
+    const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setComment(e.target.value)
     }
 
@@ -287,32 +300,133 @@ const ChatMessageForwardModal: React.FC<ChatForwardModalProps> = observer(
     }
 
     const handleOk = async (data: SelectModalItemProps[]) => {
-      if (msg) {
-        const handler = (params: SelectModalItemProps) =>
-          store.msgStore.forwardMsgActive(msg, params.key, comment)
+      const targets = selectType === 'radio' ? data.slice(0, 1) : data
 
-        try {
-          // 保存5条最新的转发
-          const finalData = getUniqueLatestItems(
-            data
-              .map(
-                (item) =>
-                  ({
-                    ...item,
-                    time: Date.now(),
-                  } as ChatRecentForwardItem)
+      try {
+        const finalData = getUniqueLatestItems(
+          targets
+            .map(
+              (item) =>
+                ({
+                  ...item,
+                  time: Date.now(),
+                } as ChatRecentForwardItem)
+            )
+            .concat(recentForward)
+        )
+
+        localStorage.setItem(finalStoreKey, JSON.stringify(finalData))
+
+        // 多选转发
+        if (msgs && msgs.length && targets[0]) {
+          if (mergeMsg) {
+            // 序列化消息列表并上传
+            const { content: mergedMsgsTxt, depth } =
+              store.msgStore.serializeMergeMsgs(msgs, {
+                appVersion,
+                sdkVersion,
+              })
+
+            // 将 mergedMsgs 写入 txt 文件并上传
+            const mergedMsgsFile = new File([mergedMsgsTxt], 'mergedMsgs.txt', {
+              type: 'text/plain',
+            })
+
+            const fileUrl = await store.storageStore.uploadFileActive(
+              mergedMsgsFile
+            )
+            const md5 = await getFileMd5(mergedMsgsFile)
+
+            // 创建合并转发自定义消息
+            const abstracts = [...msgs]
+              .sort((a, b) => a.createTime - b.createTime)
+              .slice(0, 3)
+              .map((m) => {
+                const senderId = (m as any).__kit__senderId || m.senderId
+                const senderNick = store.uiStore.getAppellation({
+                  account: senderId,
+                })
+
+                const tip = getMsgContentTipByType(
+                  {
+                    messageType: m.messageType,
+                    text: store.msgStore.isChatMergedForwardMsg(m)
+                      ? `[${t('chatHistoryText')}]`
+                      : m.text || '',
+                  },
+                  t
+                )
+                const content = typeof tip === 'string' ? tip : m.text || ''
+
+                return {
+                  senderNick,
+                  content,
+                  userAccId: senderId,
+                }
+              })
+
+            const sourceConversationId = msgs[0]?.conversationId || ''
+            const convType =
+              nim.V2NIMConversationIdUtil.parseConversationType(
+                sourceConversationId
               )
-              .concat(recentForward)
-          )
+            const sessionId =
+              nim.V2NIMConversationIdUtil.parseConversationTargetId(
+                sourceConversationId
+              )
+            const sessionName =
+              convType ===
+              V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
+                ? store.teamStore.teams.get(sessionId)?.name || sessionId
+                : store.uiStore.getAppellation({ account: sessionId })
 
-          localStorage.setItem(finalStoreKey, JSON.stringify(finalData))
-          // 多选转发无论成功失败都当做成功处理，没有提示
-          await Promise.all(data.map((item) => handler(item)))
-        } catch (error) {
-          logger.error('forwardFailed', error)
-        } finally {
-          onSend()
+            const customForwardMsg =
+              nim.V2NIMMessageCreator.createCustomMessage(
+                `[${t('chatHistoryText')}]`,
+                JSON.stringify({
+                  type: 101,
+                  data: {
+                    abstracts,
+                    depth,
+                    md5,
+                    sessionId,
+                    sessionName,
+                    url: fileUrl,
+                  },
+                })
+              )
+
+            // 发送合并转发自定义消息
+            await Promise.all(
+              targets.map((item) =>
+                store.msgStore.forwardMsgActive(
+                  customForwardMsg,
+                  item.key,
+                  comment
+                )
+              )
+            )
+          } else {
+            // 逐条转发
+            await Promise.all(
+              msgs.map((m) =>
+                store.msgStore.forwardMsgActive(m, targets[0].key, comment)
+              )
+            )
+          }
+        } else if (msg) {
+          await Promise.all(
+            targets.map((item) =>
+              store.msgStore.forwardMsgActive(msg, item.key, comment)
+            )
+          )
         }
+
+        onSend()
+      } catch (error) {
+        logger.error('forwardFailed', error)
+        message.error(t('forwardSystemErrorText'))
+        onCancel()
       }
     }
 
@@ -337,7 +451,7 @@ const ChatMessageForwardModal: React.FC<ChatForwardModalProps> = observer(
         defaultValue={selected}
         itemAvatarRender={itemAvatarRender}
         recentRenderer={recentRenderer}
-        type="checkbox"
+        type={selectType}
         max={selectedMax}
         min={1}
         width={900}

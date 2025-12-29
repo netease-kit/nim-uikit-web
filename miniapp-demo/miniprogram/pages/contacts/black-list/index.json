@@ -1,7 +1,0 @@
-{
-  "navigationBarTitleText": "黑名单",
-  "navigationStyle": "custom",
-  "usingComponents": {
-    "black-list": "/NEUIKit/Contact/black-list/black-list"
-  }
-}

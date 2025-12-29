@@ -42,6 +42,9 @@ export interface ChatTeamMessageListProps
   regenAIMessage?: (msg: V2NIMMessage) => void
   onReceiveMsgBtnClick?: () => void
   onScroll?: (e: React.UIEvent<HTMLDivElement, UIEvent>) => void
+  multiSelectMode?: boolean
+  selectedMsgIds?: string[]
+  onSelectChange?: (msg: V2NIMMessageForUI, checked: boolean) => void
 }
 
 const ChatTeamMessageList = memo(
@@ -75,6 +78,9 @@ const ChatTeamMessageList = memo(
         renderMessageName,
         renderMessageInnerContent,
         renderMessageOuterContent,
+        multiSelectMode,
+        selectedMsgIds = [],
+        onSelectChange,
       },
       ref
     ) {
@@ -142,6 +148,9 @@ const ChatTeamMessageList = memo(
                   renderMessageName={renderMessageName}
                   renderMessageInnerContent={renderMessageInnerContent}
                   renderMessageOuterContent={renderMessageOuterContent}
+                  multiSelectMode={multiSelectMode}
+                  selected={selectedMsgIds.includes(msg.messageClientId)}
+                  onSelectChange={onSelectChange}
                 />
               )
 

@@ -1,0 +1,17 @@
+@import '../../../style/theme.less';
+@import '~antd/lib/style/themes/variable.less';
+
+@prefix-cls: ~'@{chat-prefix}-history-modal';
+
+.@{prefix-cls} {
+  .@{ant-prefix}-modal-body {
+    background-color: @yx-background-color-1;
+    padding: 0;
+  }
+
+  &-content {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 20px;
+  }
+}

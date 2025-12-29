@@ -1,9 +1,0 @@
-<view wx:if="{{visible}}" class="ne-loading-mask">
-  <view class="ne-loading-spinner">
-    <!-- 使用view模拟SVG圆形加载动画 -->
-    <view class="ne-loading-circular">
-      <view class="ne-loading-circle"></view>
-    </view>
-    <text wx:if="{{text}}" class="ne-loading-text">{{text}}</text>
-  </view>
-</view>

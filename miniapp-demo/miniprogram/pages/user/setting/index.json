@@ -1,6 +1,0 @@
-{
-  "navigationBarTitleText": "设置",
-  "usingComponents": {
-    "setting": "../../../NEUIKit/User/setting/setting"
-  }
-}

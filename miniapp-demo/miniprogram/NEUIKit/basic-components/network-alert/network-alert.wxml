@@ -1,3 +1,0 @@
-<view class="network-alert {{customClass}}" wx:if="{{!isConnected && text}}" style="{{customStyle}}">
-  {{text}}
-</view>

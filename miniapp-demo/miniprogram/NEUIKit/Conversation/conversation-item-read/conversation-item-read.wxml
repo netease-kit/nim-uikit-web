@@ -1,5 +1,0 @@
-<view class="conversation-item-read">
-  <view wx:if="{{showReadStatus}}" class="read-status">
-    <view class="read-text">{{readStatusText}}</view>
-  </view>
-</view>

@@ -32,7 +32,7 @@
     min-height: 200px;
     width: auto;
     object-fit: contain;
- 
+
     vertical-align: middle;
   }
 }
@@ -49,7 +49,7 @@
 }
 
 .@{prefix}-video-container {
-  
+
   cursor: pointer;
   position: relative;
   img{
@@ -118,7 +118,7 @@
   display: flex;
   flex-direction: column;
   max-width: 100%;
-  height: 46px;
+  min-height: 46px;
 }
 .@{prefix}-audio-text {
   margin-top: 15px;
@@ -200,55 +200,110 @@
   object-fit: contain;
   vertical-align: middle;
 }
+.@{prefix}-call-box {
+  padding: 12px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: @yx-primary-text-color-2;
+  font-size: @yx-primary-font-size;
+}
+.@{prefix}-call-icon {
+  font-size: @yx-font-size-18;
+  color: @yx-text-color-4;
+}
+.@{prefix}-call-status {
+  margin-right: 4px;
+}
+.@{prefix}-call-time {
+  color: @yx-text-color-2;
+}
 .@{prefix}-upload-mask {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
+}
+
+.@{prefix}-file-upload-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
 }
 .@{prefix}-upload-progress {
   cursor: pointer;
+  width: 80%;
   .@{ant-prefix}-progress-circle.@{ant-prefix}-progress-status-exception .@{ant-prefix}-progress-text{
     color: @yx-primary-color;
   }
 }
 
+/** Generic progress row and cancel text styles for upload masks */
+.@{prefix}-progress-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.@{prefix}-progress-bar {
+  flex: 1;
+}
+.@{prefix}-cancel-text {
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+/** File upload progress container width align with image/video */
+.@{prefix}-file-upload-progress {
+  width: 80%;
+}
+
 .@{prefix}-ai-text{
   .@{ant-prefix}-dropdown-menu{
-    margin-block-start: 0em;           
-    margin-block-end: 0em; 
+    margin-block-start: 0em;
+    margin-block-end: 0em;
   }
   ul{
     margin-bottom: 0px;
-    margin-block-start: -1em;           
-    margin-block-end: -1em; 
+    margin-block-start: -1em;
+    margin-block-end: -1em;
     li {
       p{
         margin-top: -22px;
       }
-    }      
+    }
   }
 
   ol{
     margin-bottom: 0px;
-    margin-block-start: -1em;            
-    margin-block-end: -1em;  
+    margin-block-start: -1em;
+    margin-block-end: -1em;
     li {
       p{
         margin-top: -22px;
       }
-    }     
+    }
   }
-  
+
   h1, h2, h3, h4, h5, h6, p{
     margin-bottom: 0px;
   }
-  
+
 }
 
 .@{prefix}-ai-text-tool-tip{
@@ -298,7 +353,7 @@
 }
 
 .@{prefix}-reply-popover-content{
-  overflow: hidden; 
+  overflow: hidden;
   display: flex;
   justify-content: center;
   overflow-y: auto;
@@ -314,7 +369,7 @@
     max-width: 320px;
  }
 }
-  
+
 
 
 .@{prefix}-reply-wrapper-top{
@@ -394,3 +449,69 @@
   }
 }
 
+.@{prefix}-chat-history-card {
+  width: 250px;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  padding: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+
+  .@{prefix}-chat-history-title {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 500;
+    color: @yx-text-color-1;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .@{prefix}-chat-history-title-sessionName {
+    display: inline-block;
+    max-width: 180px;
+    font-size: 16px;
+    font-weight: 500;
+    color: @yx-text-color-1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .@{prefix}-chat-history-abstract {
+    margin-bottom: 8px;
+    max-height: 60px;
+    overflow-y: hidden;
+
+    .@{prefix}-chat-history-item {
+      font-size: 14px;
+      color: @yx-text-color-2;
+      line-height: 20px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+
+      .senderNick {
+        display: inline-block;
+        max-width: 40%;
+        line-height: 20px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: bottom;
+      }
+    }
+  }
+
+  .@{prefix}-chat-history-footer {
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
+    font-size: 12px;
+    color: @yx-text-color-2;
+  }
+}

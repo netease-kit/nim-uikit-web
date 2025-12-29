@@ -185,6 +185,11 @@ export interface ChatContainerProps {
    * 是否允许发送视频
    */
   enableSendVideo?: boolean
+  onCallBack?: (params: {
+    accountId: string
+    callType: '1' | '2'
+    msg: V2NIMMessageForUI
+  }) => void
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = observer(
@@ -216,6 +221,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
     strangerTipVisible = true,
     enableSendVideo = true,
     scrollIntoMode,
+    onCallBack,
   }) => {
     const { store, nim } = useStateContext()
 
@@ -240,6 +246,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
       conversationType ===
       V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P ? (
         <P2pChatContainer
+          key={receiverId}
           prefix={prefix}
           commonPrefix={commonPrefix}
           onSendText={onSendText}
@@ -261,10 +268,12 @@ export const ChatContainer: React.FC<ChatContainerProps> = observer(
           strangerTipVisible={strangerTipVisible}
           scrollIntoMode={scrollIntoMode}
           enableSendVideo={enableSendVideo}
+          onCallBack={onCallBack}
         />
       ) : conversationType ===
         V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM ? (
         <TeamChatContainer
+          key={receiverId}
           prefix={prefix}
           commonPrefix={commonPrefix}
           maxUploadFileSize={maxUploadFileSize}

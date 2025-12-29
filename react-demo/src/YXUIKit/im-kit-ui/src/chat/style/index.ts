@@ -14,6 +14,8 @@ import '../components/ChatCollectionList/style'
 import '../components/ChatTopMsg/style'
 import '../components/ChatAISearch/style'
 import '../components/ChatAITranslate/style'
+import '../components/MultiMessageOperation/style'
+import '../components/ChatMergedForwardModal/style'
 
 import '../../common/components/FriendSelect/style'
 import '../../common/components/CreateTeamModal/style'

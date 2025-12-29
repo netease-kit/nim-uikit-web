@@ -28,6 +28,7 @@ import { storeConstants } from '@xkit-yx/im-store-v2'
 import { observer } from 'mobx-react'
 import { GroupItemProps } from '../components/ChatTeamSetting/GroupItem'
 import ChatForwardModal from '../components/ChatForwardModal'
+import MultiMessageOperation from '../components/MultiMessageOperation'
 import { MentionedMember } from '../components/ChatMessageInput/ChatMentionMemberList'
 import GroupTransferModal from '../components/ChatGroupTransferModal'
 import {
@@ -331,6 +332,9 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       V2NIMMessageForUI | undefined
     >(undefined)
     const [translateOpen, setTranslateOpen] = useState(false)
+    const [multiSelecting, setMultiSelecting] = useState(false)
+    const [selectedMsgIds, setSelectedMsgIds] = useState<string[]>([])
+    const [multiForwardVisible, setMultiForwardVisible] = useState(false)
 
     const SETTING_NAV_TITLE_MAP: { [key in ChatAction]: string } = useMemo(
       () => ({
@@ -686,6 +690,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             sendBefore: () => {
               scrollToBottom()
             },
+            progress: () => true,
             onAISend: onAISendHandler,
           })
         } catch (error) {
@@ -924,6 +929,18 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             break
           case 'forward':
             setForwardMessage(msg)
+            break
+          case 'multiSelect':
+            try {
+              document.body.click()
+            } catch {
+              // 点击body失败，不处理
+            }
+
+            setTimeout(() => {
+              setMultiSelecting(true)
+              setSelectedMsgIds([])
+            }, 150)
             break
           case 'top':
             handleTopMessage(msg, true)
@@ -1238,10 +1255,14 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
     const handleForwardModalSend = () => {
       scrollToBottom()
       setForwardMessage(undefined)
+      setMultiForwardVisible(false)
+      setMultiSelecting(false)
+      setSelectedMsgIds([])
     }
 
     const handleForwardModalClose = () => {
       setForwardMessage(undefined)
+      setMultiForwardVisible(false)
     }
 
     const handleGroupActionCancel = () => {
@@ -1742,7 +1763,24 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       return () => {
         nim.V2NIMMessageService.off('onReceiveMessages', onMsgToast)
       }
-    }, [nim, conversationId, myUser.accountId, store.uiStore, t])
+    }, [nim, conversationId, myUser.accountId, store.uiStore, isDiscussion, t])
+
+    // 监听消息列表变化，移除已撤回的选中消息
+    useEffect(() => {
+      if (selectedMsgIds.length > 0) {
+        const validMsgIds = selectedMsgIds.filter((msgId) => {
+          const msg = msgs.find((item) => item.messageClientId === msgId)
+
+          return (
+            msg && !['reCallMsg', 'beReCallMsg'].includes(msg.recallType || '')
+          )
+        })
+
+        if (validMsgIds.length !== selectedMsgIds.length) {
+          setSelectedMsgIds(validMsgIds)
+        }
+      }
+    }, [msgs, selectedMsgIds])
 
     useEffect(() => {
       return () => {
@@ -1828,7 +1866,17 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             renderMessageName={renderMessageName}
             renderMessageInnerContent={renderMessageInnerContent}
             renderMessageOuterContent={renderMessageOuterContent}
+            multiSelectMode={multiSelecting}
+            selectedMsgIds={selectedMsgIds}
+            onSelectChange={(m, checked) => {
+              const id = m.messageClientId
+
+              setSelectedMsgIds((prev) =>
+                checked ? [...prev, id] : prev.filter((i) => i !== id)
+              )
+            }}
           />
+
           <ChatAITranslate
             key={receiverId}
             onClose={() => {
@@ -1839,39 +1887,58 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             visible={translateOpen}
             setInputValue={setInputValue}
           />
-          <MessageInput
-            ref={chatMessageInputRef}
-            prefix={prefix}
-            commonPrefix={commonPrefix}
-            maxUploadFileSize={maxUploadFileSize}
-            enableSendVideo={enableSendVideo}
-            placeholder={
-              renderTeamInputPlaceHolder
-                ? renderTeamInputPlaceHolder({
-                    conversation,
-                    mute: teamMute,
-                  })
-                : teamMute
-                ? t('teamMutePlaceholder')
-                : `${t('sendToText')} ${placeholder}${t('sendUsageText')}`
-            }
-            translateOpen={translateOpen}
-            onTranslate={setTranslateOpen}
-            replyMsg={replyMsg}
-            mentionMembers={mentionMembers}
-            conversationType={conversationType}
-            receiverId={receiverId}
-            actions={actions}
-            inputValue={inputValue}
-            mute={teamMute}
-            allowAtAll={allowAtAll}
-            setInputValue={setInputValue}
-            onRemoveReplyMsg={onRemoveReplyMsg}
-            onSendText={onSendText}
-            onSendFile={onSendFile}
-            onSendImg={onSendImg}
-            onSendVideo={onSendVideo}
-          />
+          {multiSelecting ? (
+            <MultiMessageOperation
+              prefix={prefix}
+              disabled={selectedMsgIds.length === 0}
+              onConfirm={() => setMultiForwardVisible(true)}
+              onCancel={() => {
+                setMultiSelecting(false)
+                setSelectedMsgIds([])
+              }}
+              selectedMsgIds={selectedMsgIds}
+              msgs={msgs}
+              onRemoveSelectedMsgs={(msgIds) => {
+                setSelectedMsgIds((prev) =>
+                  prev.filter((id) => !msgIds.includes(id))
+                )
+              }}
+            />
+          ) : (
+            <MessageInput
+              ref={chatMessageInputRef}
+              prefix={prefix}
+              commonPrefix={commonPrefix}
+              maxUploadFileSize={maxUploadFileSize}
+              enableSendVideo={enableSendVideo}
+              placeholder={
+                renderTeamInputPlaceHolder
+                  ? renderTeamInputPlaceHolder({
+                      conversation,
+                      mute: teamMute,
+                    })
+                  : teamMute
+                  ? t('teamMutePlaceholder')
+                  : `${t('sendToText')} ${placeholder}${t('sendUsageText')}`
+              }
+              translateOpen={translateOpen}
+              onTranslate={setTranslateOpen}
+              replyMsg={replyMsg}
+              mentionMembers={mentionMembers}
+              conversationType={conversationType}
+              receiverId={receiverId}
+              actions={actions}
+              inputValue={inputValue}
+              mute={teamMute}
+              allowAtAll={allowAtAll}
+              setInputValue={setInputValue}
+              onRemoveReplyMsg={onRemoveReplyMsg}
+              onSendText={onSendText}
+              onSendFile={onSendFile}
+              onSendImg={onSendImg}
+              onSendVideo={onSendVideo}
+            />
+          )}
           <ChatAISearch key={conversationId} prefix={prefix} />
           <ChatSettingDrawer
             prefix={prefix}
@@ -1924,8 +1991,13 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
           commonPrefix={commonPrefix}
         />
         <ChatForwardModal
-          visible={!!forwardMessage}
-          msg={forwardMessage}
+          visible={multiForwardVisible || !!forwardMessage}
+          msg={multiForwardVisible ? undefined : forwardMessage}
+          msgs={
+            multiForwardVisible
+              ? msgs.filter((m) => selectedMsgIds.includes(m.messageClientId))
+              : undefined
+          }
           onSend={handleForwardModalSend}
           onCancel={handleForwardModalClose}
           prefix={prefix}

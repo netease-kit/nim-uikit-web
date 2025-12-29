@@ -39,6 +39,14 @@ export interface ChatP2pMessageListProps
     是否展示陌生人提示
   */
   strangerTipVisible?: boolean
+  multiSelectMode?: boolean
+  selectedMsgIds?: string[]
+  onSelectChange?: (msg: V2NIMMessageForUI, checked: boolean) => void
+  onCallBack?: (params: {
+    accountId: string
+    callType: '1' | '2'
+    msg: V2NIMMessageForUI
+  }) => void
 }
 
 const ChatP2pMessageList = observer(
@@ -70,6 +78,10 @@ const ChatP2pMessageList = observer(
         renderMessageName,
         renderMessageOuterContent,
         renderMessageInnerContent,
+        multiSelectMode,
+        selectedMsgIds = [],
+        onSelectChange,
+        onCallBack,
       },
       ref
     ) {
@@ -134,6 +146,10 @@ const ChatP2pMessageList = observer(
                   renderMessageName={renderMessageName}
                   renderMessageInnerContent={renderMessageInnerContent}
                   renderMessageOuterContent={renderMessageOuterContent}
+                  multiSelectMode={multiSelectMode}
+                  selected={selectedMsgIds.includes(msg.messageClientId)}
+                  onSelectChange={onSelectChange}
+                  onCallBack={onCallBack}
                 />
               )
 

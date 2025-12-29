@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Dropdown, Image, Popover, Progress, Tooltip, message } from 'antd'
 import reactStringReplace from 'react-string-replace'
 import CommonIcon from '../CommonIcon'
+import { CloseOutlined, LoadingOutlined } from '@ant-design/icons'
 import {
   getFileType,
   parseFileSize,
@@ -10,10 +11,10 @@ import {
 } from '@xkit-yx/utils'
 import {
   getAIErrorMap,
-  getDownloadUrl,
   handleEmojiTranslate,
   logger,
   EMOJI_ICON_MAP_CONFIG,
+  secondToDate,
 } from '../../../utils'
 import {
   V2NIMMessage,
@@ -23,11 +24,11 @@ import {
   V2NIMMessageLocationAttachment,
   V2NIMMessageVideoAttachment,
   V2NIMMessageNotificationAttachment,
+  V2NIMMessageCallAttachment,
 } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
 import { V2NIMTeam } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
 import { useTranslation, useStateContext } from '../../index'
 import { observer } from 'mobx-react'
-import { getBlobImg } from '../../../urlToBlob'
 import {
   V2NIMMessageForUI,
   YxServerExt,
@@ -35,10 +36,9 @@ import {
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 import { V2NIMError } from 'nim-web-sdk-ng/dist/esm/nim/src/types'
 import { AI_SEARCH_MENU_KEY, fileIconMap } from '../../../constant'
+import ChatMergedForwardModal from '../../../chat/components/ChatMergedForwardModal'
 import Markdown from 'react-markdown'
-import { LoadingOutlined } from '@ant-design/icons'
 import VideoModal from './videoModal'
-import { log } from 'console'
 
 export interface IParseSessionProps {
   prefix?: string
@@ -47,6 +47,11 @@ export interface IParseSessionProps {
   needTextTooltop?: boolean
   showThreadReply?: boolean
   onReeditClick?: (msg: V2NIMMessageForUI) => void
+  onCallBack?: (params: {
+    accountId: string
+    callType: '1' | '2'
+    msg: V2NIMMessageForUI
+  }) => void
 }
 
 export const pauseAllAudio = (): HTMLAudioElement => {
@@ -97,8 +102,8 @@ export const getMsgContentTipByType = (
       })
     }
 
-    // case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CUSTOM:
-    //   return text || `[${t('customMsgText')}]`
+    case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CUSTOM:
+      return text || `[${t('customMsgText')}]`
     case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_AUDIO:
       return `[${t('audioMsgText')}]`
     case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_FILE:
@@ -117,6 +122,7 @@ export const getMsgContentTipByType = (
       return `[${t('tipMsgText')}]`
     case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_VIDEO:
       return `[${t('videoMsgText')}]`
+
     default:
       return `[${t('notSupportMessageText')}]`
   }
@@ -129,25 +135,27 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     replyMsg,
     needTextTooltop = false,
     onReeditClick,
+    onCallBack,
   }) => {
     const _prefix = `${prefix}-parse-session`
     const { nim, store, localOptions } = useStateContext()
     const { t } = useTranslation()
-    const locationDomRef = useRef<HTMLDivElement | null>(null)
-    const audioContainerRef = useRef<HTMLDivElement>(null)
-    const textRef = useRef<HTMLDivElement>(null)
     const notSupportMessageText = t('notSupportMessageText')
+
     const [audioIconType, setAudioIconType] = useState('icon-yuyin3')
     const [imgUrl, setImgUrl] = useState('')
     const [replyImgUrl, setReplyImgUrl] = useState('')
     const [threadReply, setThreadReply] = useState<V2NIMMessage | 'noFind'>()
     const [aiSearchText, setAiSearchText] = useState('')
-    const msgRef = useRef<HTMLDivElement | null>(null)
-
     const [thumbImageUrl, setThumbImageUrl] = useState('')
-
     const [replyThumbImageUrl, setReplyThumbImageUrl] = useState('')
+    const [forwardVisible, setForwardVisible] = useState(false)
+    const [forwardMsgs, setForwardMsgs] = useState<V2NIMMessage[] | null>(null)
 
+    const locationDomRef = useRef<HTMLDivElement | null>(null)
+    const audioContainerRef = useRef<HTMLDivElement>(null)
+    const textRef = useRef<HTMLDivElement>(null)
+    const msgRef = useRef<HTMLDivElement | null>(null)
     const aiSearchDropdownContainerRef = useRef<HTMLDivElement>(null)
 
     const myAccount = store.userStore.myUserInfo.accountId
@@ -544,25 +552,43 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
               .V2NIM_MESSAGE_SENDING_STATE_SENDING &&
           uploadProgress !== void 0 &&
           uploadProgress < 100 ? (
-            <div className={`${_prefix}-upload-mask`}>
-              <div
-                className={`${_prefix}-upload-progress`}
-                onClick={() => {
-                  store.msgStore
-                    .cancelMessageAttachmentUploadActive(msg)
-                    .catch(() => {
-                      message.error(t('cancelUploadFailedText'))
-                    })
-                }}
-              >
-                <Progress
-                  type="circle"
-                  status="exception"
-                  percent={uploadProgress || 0}
-                  width={40}
-                  strokeColor="#899095"
-                  trailColor="rgba(0,0,0,0.5)"
-                />
+            <div
+              className={`${_prefix}-upload-mask`}
+              onClick={() => {
+                store.msgStore
+                  .cancelMessageAttachmentUploadActive(msg)
+                  .catch(() => {
+                    message.error(t('cancelUploadFailedText'))
+                  })
+              }}
+            >
+              <div className={`${_prefix}-upload-progress`}>
+                <div className={`${_prefix}-progress-row`}>
+                  <div className={`${_prefix}-progress-bar`}>
+                    <Progress
+                      percent={uploadProgress || 0}
+                      status="active"
+                      strokeColor="#4096f2ff"
+                      trailColor="rgba(255,255,255,0.35)"
+                      showInfo={false}
+                    />
+                  </div>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className={`${_prefix}-cancel-text`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      store.msgStore
+                        .cancelMessageAttachmentUploadActive(msg)
+                        .catch(() => {
+                          message.error(t('cancelUploadFailedText'))
+                        })
+                    }}
+                  >
+                    <CloseOutlined />
+                  </span>
+                </div>
               </div>
             </div>
           ) : null}
@@ -662,6 +688,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     }
 
     const renderFile = (msg: V2NIMMessageForUI) => {
+      const { uploadProgress, sendingState } = msg
       let downloadHref = ''
 
       try {
@@ -674,7 +701,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       }
 
       return (
-        <div className={`${_prefix}-file-box`}>
+        <div className={`${_prefix}-file-box`} style={{ position: 'relative' }}>
           <CommonIcon
             className={`${_prefix}-file-icon`}
             type={
@@ -704,6 +731,52 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
               )}
             </span>
           </div>
+
+          {sendingState ===
+            V2NIMConst.V2NIMMessageSendingState
+              .V2NIM_MESSAGE_SENDING_STATE_SENDING &&
+          uploadProgress !== void 0 &&
+          uploadProgress < 100 ? (
+            <div
+              className={`${_prefix}-file-upload-mask`}
+              onClick={() => {
+                store.msgStore
+                  .cancelMessageAttachmentUploadActive(msg)
+                  .catch(() => {
+                    message.error(t('cancelUploadFailedText'))
+                  })
+              }}
+            >
+              <div className={`${_prefix}-file-upload-progress`}>
+                <div className={`${_prefix}-progress-row`}>
+                  <div className={`${_prefix}-progress-bar`}>
+                    <Progress
+                      percent={uploadProgress || 0}
+                      status="active"
+                      strokeColor="#4096f2ff"
+                      trailColor="rgba(255,255,255,0.35)"
+                      showInfo={false}
+                    />
+                  </div>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className={`${_prefix}-cancel-text`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      store.msgStore
+                        .cancelMessageAttachmentUploadActive(msg)
+                        .catch(() => {
+                          message.error(t('cancelUploadFailedText'))
+                        })
+                    }}
+                  >
+                    <CloseOutlined />
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
       )
     }
@@ -1134,7 +1207,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       const url = attachment.url
 
       // 被拉黑
-      if (msg.messageStatus.errorCode === 102426) {
+      if (msg.messageStatus?.errorCode === 102426) {
         return (
           <div className={`${_prefix}-video-container`}>
             <div className={`${_prefix}-video-play-btn`} />
@@ -1382,7 +1455,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     const renderReplyMsg = (msg: V2NIMMessageForUI) => {
       // 给数字人发送图片会返回这个错误码，此时直接不渲染，在renderContent 直接提示 格式不支持
 
-      if (msg.messageStatus.errorCode === 107336) {
+      if (msg.messageStatus?.errorCode === 107336) {
         return (
           <span className={`${_prefix}-ai-text-not-support`}>
             {t('tipAIMessageText')}
@@ -1417,12 +1490,90 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
+    const renderChatHistory = (msg: V2NIMMessageForUI) => {
+      let rawAttachment = msg.attachment?.raw as any
+
+      if (typeof rawAttachment === 'string') {
+        try {
+          rawAttachment = JSON.parse(rawAttachment)
+        } catch (error) {
+          rawAttachment = {}
+        }
+      }
+
+      const title = `${
+        rawAttachment?.data?.sessionName || rawAttachment?.data?.sessionId
+      } 的消息`
+
+      const abstracts = rawAttachment?.data?.abstracts || []
+
+      const handleOpen = async () => {
+        try {
+          if (!forwardMsgs && rawAttachment?.data?.url) {
+            const res = await fetch(rawAttachment?.data?.url)
+
+            if (!res.ok) {
+              throw new Error('chatHistory fetch failed')
+            }
+
+            const text = await res.text()
+
+            const deserialized = store.msgStore.deserializeMergeMsgs(text)
+
+            setForwardMsgs(deserialized)
+          }
+
+          setForwardVisible(true)
+        } catch (error) {
+          message.error(t('getHistoryMsgFailedText'))
+          setForwardVisible(false)
+        }
+      }
+
+      return (
+        <>
+          <div className={`${_prefix}-chat-history-card`} onClick={handleOpen}>
+            <div className={`${_prefix}-chat-history-title`}>
+              <span className={`${_prefix}-chat-history-title-sessionName`}>{`${
+                rawAttachment?.data?.sessionName ||
+                rawAttachment?.data?.sessionId
+              }`}</span>
+              <span> {t('messageOfText')}</span>
+            </div>
+            <div className={`${_prefix}-chat-history-abstract`}>
+              {abstracts.map((item: any, index: number) => (
+                <div key={index} className={`${_prefix}-chat-history-item`}>
+                  <span className="senderNick">{item.senderNick} :</span>
+                  <span>{item.content}</span>
+                </div>
+              ))}
+            </div>
+            <div className={`${_prefix}-chat-history-footer`}>
+              {t('chatHistoryText')}
+            </div>
+          </div>
+          {forwardMsgs && (
+            <ChatMergedForwardModal
+              title={title}
+              msgs={forwardMsgs}
+              visible={forwardVisible}
+              onCancel={() => setForwardVisible(false)}
+            />
+          )}
+        </>
+      )
+    }
+
     const renderMsgContent = (msg: V2NIMMessageForUI, isReplyMsg?: boolean) => {
       if (msg.recallType === 'reCallMsg' || msg.recallType === 'beReCallMsg') {
         return renderSpecialMsg()
       }
 
       switch (msg.messageType) {
+        case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CUSTOM:
+          return store.msgStore.isChatMergedForwardMsg(msg)
+            ? renderChatHistory(msg)
+            : `[${t('customMsgText')}，${notSupportMessageText}]`
         case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TEXT:
           getUserInfo(msg.senderId)
           return renderCustomText(msg, isReplyMsg)
@@ -1442,7 +1593,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           // 回复的语音消息应测试要求不要渲染转文字内容
           return renderAudio(msg, !isReplyMsg)
         case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL:
-          return `[${t('callMsgText')}，${notSupportMessageText}]`
+          return renderCall(msg)
         case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_LOCATION:
           getUserInfo(msg.senderId)
           return renderLocation(msg)
@@ -1452,9 +1603,9 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           if (
             Object.keys(aiErrorMap)
               .map((item) => Number(item))
-              .includes(msg.messageStatus.errorCode)
+              .includes(msg.messageStatus?.errorCode)
           ) {
-            return renderTipAI(msg.messageStatus.errorCode)
+            return renderTipAI(msg.messageStatus?.errorCode)
           }
 
           return `[${t('tipMsgText')}，${notSupportMessageText}]`
@@ -1462,6 +1613,52 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         default:
           return renderNotSupportMessage()
       }
+    }
+
+    const renderCall = (msg: V2NIMMessageForUI) => {
+      const attach = msg.attachment as V2NIMMessageCallAttachment
+      let raw: any = attach?.raw
+
+      if (typeof raw === 'string') {
+        try {
+          raw = JSON.parse(raw)
+        } catch {
+          raw = {}
+        }
+      }
+
+      const duration: number | undefined = raw?.durations?.[0]?.duration
+      const status: number = raw?.status
+      const type: number = raw?.type
+      const iconType = type === 1 ? 'icon-yuyin8' : 'icon-shipin8'
+      const statusMap: Record<number, string> = {
+        1: t('callDurationText'),
+        2: t('callCancelText'),
+        3: t('callRejectedText'),
+        4: t('callTimeoutText'),
+        5: t('callBusyText'),
+      }
+      const accountId = msg.isSelf
+        ? (msg.receiverId as string)
+        : (msg.senderId as string)
+      const callType: '1' | '2' = type === 1 ? '1' : '2'
+
+      return (
+        <div
+          className={`${_prefix}-call-box`}
+          onClick={() => onCallBack?.({ accountId, callType, msg })}
+        >
+          <CommonIcon className={`${_prefix}-call-icon`} type={iconType} />
+          <span className={`${_prefix}-call-status`}>
+            {statusMap[status] || t('callMsgText')}
+          </span>
+          {duration ? (
+            <span className={`${_prefix}-call-time`}>
+              {secondToDate(duration)}
+            </span>
+          ) : null}
+        </div>
+      )
     }
 
     const finalRenderMsg = () => {

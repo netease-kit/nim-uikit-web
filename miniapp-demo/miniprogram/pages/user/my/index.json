@@ -1,6 +1,0 @@
-{
-  "navigationBarTitleText": "我的",
-  "usingComponents": {
-    "user-index": "../../../NEUIKit/User/index/index"
-  }
-}

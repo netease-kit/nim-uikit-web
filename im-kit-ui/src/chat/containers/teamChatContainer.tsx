@@ -686,6 +686,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
             sendBefore: () => {
               scrollToBottom()
             },
+            progress: () => true,
             onAISend: onAISendHandler,
           })
         } catch (error) {
@@ -1742,7 +1743,7 @@ const TeamChatContainer: React.FC<TeamChatContainerProps> = observer(
       return () => {
         nim.V2NIMMessageService.off('onReceiveMessages', onMsgToast)
       }
-    }, [nim, conversationId, myUser.accountId, store.uiStore, t])
+    }, [nim, conversationId, myUser.accountId, store.uiStore, isDiscussion, t])
 
     useEffect(() => {
       return () => {

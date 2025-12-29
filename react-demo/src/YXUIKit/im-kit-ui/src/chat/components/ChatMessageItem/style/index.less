@@ -5,6 +5,7 @@
 
 .@{prefix-cls}-wrap {
   display: flex;
+  align-items: flex-start;
   padding: 8px;
 
   .@{ant-prefix}-dropdown-menu-title-content {
@@ -25,11 +26,18 @@
     border-radius: @yx-border-radius-16;
   }
 
-  .@{prefix-cls}-content-box {
-    position: relative;
+  .@{prefix-cls}-select-wrap {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    flex: 1;
+    min-width: 0;
+  }
+
+.@{prefix-cls}-content-box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
 
     .@{prefix-cls}-list {
       display: flex;
@@ -100,7 +108,10 @@
 }
 
 .@{prefix-cls}-self {
-  flex-direction: row-reverse;
+  // 仅反转头像与气泡，不影响最左侧的复选框
+  .@{prefix-cls}-select-wrap {
+    flex-direction: row-reverse;
+  }
 
   .@{prefix-cls}-content-box {
     align-items: flex-end;
@@ -116,4 +127,14 @@
     margin-left: 12px;
     margin-right: 0;
   }
+}
+
+.@{prefix-cls}-checkbox {
+  flex: 0 0 28px;
+  width: 28px;
+  display: flex;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
 }
