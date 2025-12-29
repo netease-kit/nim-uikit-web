@@ -1,0 +1,18 @@
+html {
+  height: 100%;
+  overflow: hidden; /* 阻止默认滚动 */
+  -webkit-text-size-adjust: 100%; /* 保持文字比例 */
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden; /* 阻止默认滚动 */
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: constant(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-top);
+}
