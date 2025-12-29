@@ -1,0 +1,73 @@
+@import '~antd/lib/style/themes/variable.less';
+@import '../../../style/theme.less';
+
+@prefix-cls: ~'@{chat-prefix}-multi-forward';
+
+.@{prefix-cls} {
+  padding: 16px;
+  background: #ecedef;
+
+  &-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+  }
+
+  &-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  &-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid @yx-border-color-4;
+    color: @yx-icon-color-1;
+    background: #fff;
+    transition: all 0.2s ease;
+  }
+
+  &-label {
+    margin-top: 8px;
+    color: @yx-text-color-2;
+    font-size: @yx-primary-font-size;
+  }
+
+  &-item:hover .@{prefix-cls}-icon {
+    color: @yx-primary-button-color;
+    border-color: @yx-primary-button-color;
+  }
+
+  &-item:hover .@{prefix-cls}-label {
+    color: @yx-primary-button-color;
+  }
+
+  &-item-disabled {
+    cursor: not-allowed;
+
+    .@{prefix-cls}-icon {
+      color: @yx-text-color-2;
+      border-color: @yx-border-color-4;
+    }
+
+    .@{prefix-cls}-label {
+      color: @yx-text-color-2;
+    }
+
+    &:hover .@{prefix-cls}-icon {
+      color: @yx-text-color-2;
+      border-color: @yx-border-color-4;
+    }
+
+    &:hover .@{prefix-cls}-label {
+      color: @yx-text-color-2;
+    }
+  }
+}

@@ -9,7 +9,7 @@
   "dependencies": {
     "@xkit-yx/call-kit": "^3.0.0",
     "@xkit-yx/call-kit-react-ui": "^0.6.0",
-    "@xkit-yx/im-kit-ui": "^10.9.0",
+    "@xkit-yx/im-kit-ui": "^10.9.11",
     "nim-web-sdk-ng": "10.9.30",
     "react-dom": "^16.8.0",
     "umi": "^3.5.40"

@@ -1,10 +1,11 @@
 import React, { Fragment, useRef } from 'react'
-import { Dropdown, Menu, Tooltip } from 'antd'
+import { Dropdown, Menu, Tooltip, Checkbox } from 'antd'
 import {
   LoadingOutlined,
   ExclamationCircleFilled,
   RollbackOutlined,
   DeleteOutlined,
+  CheckSquareOutlined,
 } from '@ant-design/icons'
 import classNames from 'classnames'
 import {
@@ -66,6 +67,7 @@ export interface MessageItemProps {
   onMessageItemAvatarClick?: (user: V2NIMUser) => void
   onMessageAction: (key: MenuItemKey, msg: V2NIMMessageForUI) => void
   onMessageAvatarAction?: (key: AvatarMenuItem, msg: V2NIMMessageForUI) => void
+  disableContextMenu?: boolean
   renderMessageAvatar?: (
     msg: V2NIMMessageForUI
   ) => JSX.Element | null | undefined
@@ -78,6 +80,14 @@ export interface MessageItemProps {
   ) => JSX.Element | null | undefined
   prefix?: string
   commonPrefix?: string
+  multiSelectMode?: boolean
+  selected?: boolean
+  onSelectChange?: (msg: V2NIMMessageForUI, checked: boolean) => void
+  onCallBack?: (params: {
+    accountId: string
+    callType: '1' | '2'
+    msg: V2NIMMessageForUI
+  }) => void
 }
 
 export const ChatMessageItem: React.FC<MessageItemProps> = observer(
@@ -99,8 +109,13 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
     renderMessageName,
     renderMessageOuterContent,
     renderMessageInnerContent,
+    disableContextMenu,
     prefix = 'chat',
     commonPrefix = 'common',
+    multiSelectMode,
+    selected,
+    onSelectChange,
+    onCallBack,
   }) => {
     const { t } = useTranslation()
     const { store } = useStateContext()
@@ -143,6 +158,16 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
     const aiErrorMap = getAIErrorMap(t)
 
     // 优先级按照 备注 > 群昵称 > 好友昵称 > 消息上的昵称 > 好友账号
+    let nickFromMsg
+
+    try {
+      const ext = JSON.parse(msg.serverExtension || '{}')
+
+      nickFromMsg = ext.mergedMessageNickKey
+    } catch {
+      nickFromMsg = undefined
+    }
+
     const nick = store.uiStore.getAppellation({
       account: renderSenderId as string,
       teamId:
@@ -150,6 +175,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
         V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
           ? receiverId
           : undefined,
+      nickFromMsg: nickFromMsg || undefined,
     })
 
     const nickWithoutAlias = store.uiStore.getAppellation({
@@ -160,6 +186,7 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
           ? receiverId
           : undefined,
       ignoreAlias: true,
+      nickFromMsg: nickFromMsg || undefined,
     })
 
     // 重发消息
@@ -236,6 +263,17 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
           label: t('forwardText'),
           key: 'forward',
           icon: <CommonIcon type="icon-zhuanfa" />,
+        },
+        {
+          show: [
+            V2NIMConst.V2NIMMessageSendingState
+              .V2NIM_MESSAGE_SENDING_STATE_SENDING,
+          ].includes(sendingState)
+            ? 0
+            : 1,
+          label: t('multiSelect'),
+          key: 'multiSelect',
+          icon: <CheckSquareOutlined />,
         },
         {
           show:
@@ -324,7 +362,18 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
         ? mergeActions(defaultMenuItems, msgOperMenu, 'key')
         : defaultMenuItems
 
-      return menuItems.filter((item) => item.show)
+      const finalMenuItems =
+        messageType === V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL
+          ? menuItems.map((item) => {
+              const allow = ['multiSelect', 'delete'].includes(
+                item.key as string
+              )
+
+              return allow ? item : { ...item, show: 0 }
+            })
+          : menuItems
+
+      return finalMenuItems.filter((item) => item.show)
     }
 
     const renderAvatarMenuItems = () => {
@@ -342,153 +391,188 @@ export const ChatMessageItem: React.FC<MessageItemProps> = observer(
       Object.keys(aiErrorMap)
         .map((item) => Number(item))
         .includes(messageStatus.errorCode) ? (
-      <ParseSession msg={msg} prefix={commonPrefix} />
+      <ParseSession msg={msg} prefix={commonPrefix} onCallBack={onCallBack} />
     ) : recallType === 'reCallMsg' || recallType === 'beReCallMsg' ? (
       <ParseSession
         msg={msg}
         prefix={commonPrefix}
         onReeditClick={onReeditClick}
+        onCallBack={onCallBack}
       />
     ) : messageType ===
       V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_NOTIFICATION ? (
-      <ParseSession replyMsg={replyMsg} msg={msg} prefix={commonPrefix} />
+      <ParseSession
+        replyMsg={replyMsg}
+        msg={msg}
+        prefix={commonPrefix}
+        onCallBack={onCallBack}
+      />
     ) : (
       <div
         className={classNames(`${_prefix}-wrap`, {
           [`${_prefix}-self`]: isSelf,
         })}
       >
-        {renderMessageAvatar?.(msg) ?? (
-          <div className={`${_prefix}-avatar`}>
-            {isSelf ? (
-              <MyAvatarContainer prefix={commonPrefix} canClick={false} />
-            ) : (
-              <Dropdown
-                key={messageClientId}
-                trigger={['contextMenu']}
-                overlay={
-                  onMessageAvatarAction ? (
-                    <Menu
-                      onClick={({ key }) =>
-                        onMessageAvatarAction?.(key as AvatarMenuItem, msg)
-                      }
-                      items={renderAvatarMenuItems()}
-                    />
-                  ) : (
-                    <Fragment />
-                  )
-                }
-                getPopupContainer={(triggerNode) =>
-                  messageAvatarActionDropdownContainerRef.current || triggerNode
-                }
-              >
-                <div
-                  className={`${_prefix}-avatar-wrap`}
-                  ref={messageAvatarActionDropdownContainerRef}
-                >
-                  <ComplexAvatarContainer
-                    onMessageItemAvatarClick={onMessageItemAvatarClick}
-                    prefix={commonPrefix}
-                    account={renderSenderId as string}
-                  />
-                </div>
-              </Dropdown>
-            )}
-          </div>
-        )}
-
-        <Dropdown
-          key={messageClientId}
-          trigger={
-            // 当消息是 AI 消息且正在流式输出时，禁用右键菜单
-            localOptions?.aiStream &&
-            msg.aiConfig?.aiStatus === 2 &&
-            (msg?.aiConfig?.aiStreamStatus === 1 ||
-              msg?.aiConfig?.aiStreamStatus === -1)
-              ? []
-              : ['contextMenu']
-          }
-          overlay={
-            <Menu
-              onClick={({ key }) => onMessageAction(key as MenuItemKey, msg)}
-              items={renderMenuItems()}
+        {multiSelectMode ? (
+          <div className={`${_prefix}-checkbox`}>
+            <Checkbox
+              checked={!!selected}
+              onChange={(e) => onSelectChange?.(msg, e.target.checked)}
+              onClick={(e) => e.stopPropagation()}
             />
-          }
-          getPopupContainer={(triggerNode) =>
-            messageActionDropdownContainerRef.current || triggerNode
-          }
-        >
-          <div
-            className={`${_prefix}-content-box`}
-            ref={messageActionDropdownContainerRef}
-          >
-            {renderMessageName?.(msg) ?? (
-              <div className={`${_prefix}-nick`}>{nick}</div>
-            )}
-            <div className={`${_prefix}-content`}>
-              {isSelf && (
-                <div className={`${_prefix}-status`}>
-                  {renderSendMsgStatus()}
-                </div>
-              )}
+          </div>
+        ) : null}
 
-              {renderMessageOuterContent?.(msg) ?? (
-                <div className={`${_prefix}-body`}>
-                  {renderMessageInnerContent?.(msg) ?? (
-                    // 消息体的主要渲染逻辑都在这个ParseSession里
-                    <ParseSession
-                      replyMsg={replyMsg}
-                      msg={msg}
+        <div className={`${_prefix}-select-wrap`}>
+          {renderMessageAvatar?.(msg) ?? (
+            <div className={`${_prefix}-avatar`}>
+              {isSelf ? (
+                <MyAvatarContainer prefix={commonPrefix} canClick={false} />
+              ) : (
+                <Dropdown
+                  key={messageClientId}
+                  trigger={
+                    disableContextMenu || multiSelectMode ? [] : ['contextMenu']
+                  }
+                  overlay={
+                    onMessageAvatarAction ? (
+                      <Menu
+                        onClick={({ key, domEvent }) => {
+                          domEvent?.preventDefault()
+                          domEvent?.stopPropagation()
+                          onMessageAvatarAction?.(key as AvatarMenuItem, msg)
+                        }}
+                        items={renderAvatarMenuItems()}
+                      />
+                    ) : (
+                      <Fragment />
+                    )
+                  }
+                  getPopupContainer={(triggerNode) =>
+                    messageAvatarActionDropdownContainerRef.current ||
+                    triggerNode
+                  }
+                >
+                  <div
+                    className={`${_prefix}-avatar-wrap`}
+                    ref={messageAvatarActionDropdownContainerRef}
+                  >
+                    <ComplexAvatarContainer
+                      onMessageItemAvatarClick={onMessageItemAvatarClick}
                       prefix={commonPrefix}
+                      account={renderSenderId as string}
                     />
-                  )}
-                </div>
+                  </div>
+                </Dropdown>
               )}
-              {myAccountId === msg?.threadReply?.senderId &&
-                msg.aiConfig?.aiStatus ===
-                  V2NIMConst.V2NIMMessageAIStatus
-                    .V2NIM_MESSAGE_AI_STATUS_RESPONSE && (
-                  <div className={`${_prefix}-ai-stream-icon`}>
-                    {(msg?.aiConfig?.aiStreamStatus ==
-                      V2NIMConst.V2NIMMessageAIStreamStatus
-                        .NIM_MESSAGE_AI_STREAM_STATUS_STREAMING ||
-                      msg?.aiConfig?.aiStreamStatus ==
-                        V2NIMConst.V2NIMMessageAIStreamStatus
-                          .NIM_MESSAGE_AI_STREAM_STATUS_PLACEHOLDER) && (
-                      <div onClick={() => stopAIStreamMessage?.(msg)}>
-                        <CommonIcon
-                          style={{ color: '#656A72' }}
-                          type="icon-tingzhi"
-                        />
-                      </div>
-                    )}
-                    {(msg?.aiConfig?.aiStreamStatus >
-                      V2NIMConst.V2NIMMessageAIStreamStatus
-                        .NIM_MESSAGE_AI_STREAM_STATUS_PLACEHOLDER ||
-                      msg?.aiConfig.aiStreamStatus ==
-                        V2NIMConst.V2NIMMessageAIStreamStatus
-                          .NIM_MESSAGE_AI_STREAM_STATUS_NONE ||
-                      // 非流失输出，也需要重新生成按钮
-                      !localOptions?.aiStream) && (
-                      <div onClick={() => regenAIMessage?.(msg)}>
-                        <CommonIcon
-                          style={{ color: '#656A72' }}
-                          type="icon-zhongxinshengcheng"
-                        />
-                      </div>
+            </div>
+          )}
+
+          <Dropdown
+            key={messageClientId}
+            trigger={
+              disableContextMenu || multiSelectMode
+                ? []
+                : // 当消息是 AI 消息且正在流式输出时，禁用右键菜单
+                localOptions?.aiStream &&
+                  msg.aiConfig?.aiStatus === 2 &&
+                  (msg?.aiConfig?.aiStreamStatus === 1 ||
+                    msg?.aiConfig?.aiStreamStatus === -1)
+                ? []
+                : ['contextMenu']
+            }
+            overlay={
+              <Menu
+                onClick={({ key, domEvent }) => {
+                  domEvent?.preventDefault()
+                  domEvent?.stopPropagation()
+                  onMessageAction(key as MenuItemKey, msg)
+                }}
+                items={renderMenuItems()}
+              />
+            }
+            getPopupContainer={(triggerNode) =>
+              messageActionDropdownContainerRef.current || triggerNode
+            }
+          >
+            <div
+              className={`${_prefix}-content-box`}
+              ref={messageActionDropdownContainerRef}
+              onClick={() => {
+                if (multiSelectMode) {
+                  onSelectChange?.(msg, !selected)
+                }
+              }}
+            >
+              {renderMessageName?.(msg) ?? (
+                <div className={`${_prefix}-nick`}>{nick}</div>
+              )}
+              <div className={`${_prefix}-content`}>
+                {isSelf && (
+                  <div className={`${_prefix}-status`}>
+                    {renderSendMsgStatus()}
+                  </div>
+                )}
+
+                {renderMessageOuterContent?.(msg) ?? (
+                  <div className={`${_prefix}-body`}>
+                    {renderMessageInnerContent?.(msg) ?? (
+                      // 消息体的主要渲染逻辑都在这个ParseSession里
+                      <ParseSession
+                        replyMsg={replyMsg}
+                        msg={msg}
+                        prefix={commonPrefix}
+                        onCallBack={onCallBack}
+                      />
                     )}
                   </div>
                 )}
+                {myAccountId === msg?.threadReply?.senderId &&
+                  msg.aiConfig?.aiStatus ===
+                    V2NIMConst.V2NIMMessageAIStatus
+                      .V2NIM_MESSAGE_AI_STATUS_RESPONSE && (
+                    <div className={`${_prefix}-ai-stream-icon`}>
+                      {(msg?.aiConfig?.aiStreamStatus ==
+                        V2NIMConst.V2NIMMessageAIStreamStatus
+                          .NIM_MESSAGE_AI_STREAM_STATUS_STREAMING ||
+                        msg?.aiConfig?.aiStreamStatus ==
+                          V2NIMConst.V2NIMMessageAIStreamStatus
+                            .NIM_MESSAGE_AI_STREAM_STATUS_PLACEHOLDER) && (
+                        <div onClick={() => stopAIStreamMessage?.(msg)}>
+                          <CommonIcon
+                            style={{ color: '#656A72' }}
+                            type="icon-tingzhi"
+                          />
+                        </div>
+                      )}
+                      {(msg?.aiConfig?.aiStreamStatus >
+                        V2NIMConst.V2NIMMessageAIStreamStatus
+                          .NIM_MESSAGE_AI_STREAM_STATUS_PLACEHOLDER ||
+                        msg?.aiConfig.aiStreamStatus ==
+                          V2NIMConst.V2NIMMessageAIStreamStatus
+                            .NIM_MESSAGE_AI_STREAM_STATUS_NONE ||
+                        // 非流失输出，也需要重新生成按钮
+                        !localOptions?.aiStream) && (
+                        <div onClick={() => regenAIMessage?.(msg)}>
+                          <CommonIcon
+                            style={{ color: '#656A72' }}
+                            type="icon-zhongxinshengcheng"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+              </div>
+              <div
+                className={classNames(`${_prefix}-date`, {
+                  [`${_prefix}-date-self`]: isSelf,
+                })}
+              >
+                {formatDate(createTime)}
+              </div>
             </div>
-            <div
-              className={classNames(`${_prefix}-date`, {
-                [`${_prefix}-date-self`]: isSelf,
-              })}
-            >
-              {formatDate(createTime)}
-            </div>
-          </div>
-        </Dropdown>
+          </Dropdown>
+        </div>
       </div>
     )
   }

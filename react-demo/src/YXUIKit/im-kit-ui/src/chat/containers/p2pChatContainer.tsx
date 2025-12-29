@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, {
   useRef,
   useEffect,
@@ -54,6 +55,7 @@ import { ChatAITranslate } from '../components/ChatAITranslate'
 import { MentionedMember } from '../components/ChatMessageInput/ChatMentionMemberList'
 import { V2NIMLocalConversation } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMLocalConversationService'
 import { V2NIMUser } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService'
+import MultiMessageOperation from '../components/MultiMessageOperation'
 
 export interface P2pChatContainerProps {
   conversationType: V2NIMConversationType
@@ -99,6 +101,11 @@ export interface P2pChatContainerProps {
    * 是否允许发送视频
    */
   enableSendVideo?: boolean
+  onCallBack?: (params: {
+    accountId: string
+    callType: '1' | '2'
+    msg: V2NIMMessageForUI
+  }) => void
 }
 
 const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
@@ -124,6 +131,7 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     strangerTipVisible = true,
     scrollIntoMode,
     enableSendVideo = true,
+    onCallBack,
   }) => {
     const { store, nim, localOptions, locale } = useStateContext()
 
@@ -215,6 +223,9 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       V2NIMMessageForUI | undefined
     >(undefined)
     const [translateOpen, setTranslateOpen] = useState(false)
+    const [multiSelecting, setMultiSelecting] = useState(false)
+    const [selectedMsgIds, setSelectedMsgIds] = useState<string[]>([])
+    const [multiForwardVisible, setMultiForwardVisible] = useState(false)
 
     const resetSettingState = useCallback(() => {
       setAction(undefined)
@@ -690,6 +701,17 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             }
 
             break
+          case 'multiSelect':
+            try {
+              document.body.click()
+              // eslint-disable-next-line no-empty
+            } catch {}
+
+            setTimeout(() => {
+              setMultiSelecting(true)
+              setSelectedMsgIds([])
+            }, 150)
+            break
           case 'reply':
             {
               // const member = mentionMembers.find(
@@ -755,6 +777,8 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
         nim.V2NIMMessageService,
         msgRecallTime,
         t,
+        setMultiSelecting,
+        setSelectedMsgIds,
       ]
     )
 
@@ -792,10 +816,14 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
     const handleForwardModalSend = () => {
       scrollToBottom()
       setForwardMessage(undefined)
+      setMultiForwardVisible(false)
+      setMultiSelecting(false)
+      setSelectedMsgIds([])
     }
 
     const handleForwardModalClose = () => {
       setForwardMessage(undefined)
+      setMultiForwardVisible(false)
     }
 
     const handleCreateModalClose = () => {
@@ -1016,6 +1044,26 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
       }
     }, [msgs, store, nim.V2NIMMessageService, nim.V2NIMConversationIdUtil])
 
+    // 监听消息列表变化，移除已撤回的选中消息
+    useEffect(() => {
+      if (selectedMsgIds.length > 0) {
+        // 检查selectedMsgIds中的每个消息是否已经被撤回
+        const validMsgIds = selectedMsgIds.filter((msgId) => {
+          const msg = msgs.find((item) => item.messageClientId === msgId)
+
+          // 只保留未被撤回的消息（recallType不为'reCallMsg'或'beReCallMsg'）
+          return (
+            msg && !['reCallMsg', 'beReCallMsg'].includes(msg.recallType || '')
+          )
+        })
+
+        // 如果有被撤回的消息，更新selectedMsgIds
+        if (validMsgIds.length !== selectedMsgIds.length) {
+          setSelectedMsgIds(validMsgIds)
+        }
+      }
+    }, [msgs, selectedMsgIds])
+
     useLayoutEffect(() => {
       const onMsg = (msg: V2NIMMessage[]) => {
         if (
@@ -1199,6 +1247,16 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             renderMessageName={renderMessageName}
             renderMessageInnerContent={renderMessageInnerContent}
             renderMessageOuterContent={renderMessageOuterContent}
+            multiSelectMode={multiSelecting}
+            selectedMsgIds={selectedMsgIds}
+            onCallBack={onCallBack}
+            onSelectChange={(m, checked) => {
+              const id = m.messageClientId
+
+              setSelectedMsgIds((prev) =>
+                checked ? [...prev, id] : prev.filter((i) => i !== id)
+              )
+            }}
           />
           <ChatAITranslate
             key={receiverId}
@@ -1210,32 +1268,51 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
             visible={translateOpen}
             setInputValue={setInputValue}
           />
-          <MessageInput
-            ref={chatMessageInputRef}
-            prefix={prefix}
-            placeholder={
-              renderP2pInputPlaceHolder
-                ? renderP2pInputPlaceHolder(conversation)
-                : `${t('sendToText')} ${placeholder}${t('sendUsageText')}`
-            }
-            enableSendVideo={enableSendVideo}
-            translateOpen={translateOpen}
-            maxUploadFileSize={maxUploadFileSize}
-            onTranslate={setTranslateOpen}
-            replyMsg={replyMsg}
-            mentionMembers={mentionMembers}
-            conversationType={conversationType}
-            receiverId={receiverId}
-            actions={actions}
-            inputValue={inputValue}
-            setInputValue={setInputValue}
-            allowAtAll={false}
-            onSendText={onSendText}
-            onSendFile={onSendFile}
-            onSendImg={onSendImg}
-            onSendVideo={onSendVideo}
-            onRemoveReplyMsg={onRemoveReplyMsg}
-          />
+          {multiSelecting ? (
+            <MultiMessageOperation
+              prefix={prefix}
+              disabled={selectedMsgIds.length === 0}
+              onConfirm={() => setMultiForwardVisible(true)}
+              onCancel={() => {
+                setMultiSelecting(false)
+                setSelectedMsgIds([])
+              }}
+              selectedMsgIds={selectedMsgIds}
+              msgs={msgs}
+              onRemoveSelectedMsgs={(msgIds) => {
+                setSelectedMsgIds((prev) =>
+                  prev.filter((id) => !msgIds.includes(id))
+                )
+              }}
+            />
+          ) : (
+            <MessageInput
+              ref={chatMessageInputRef}
+              prefix={prefix}
+              placeholder={
+                renderP2pInputPlaceHolder
+                  ? renderP2pInputPlaceHolder(conversation)
+                  : `${t('sendToText')} ${placeholder}${t('sendUsageText')}`
+              }
+              enableSendVideo={enableSendVideo}
+              translateOpen={translateOpen}
+              maxUploadFileSize={maxUploadFileSize}
+              onTranslate={setTranslateOpen}
+              replyMsg={replyMsg}
+              mentionMembers={mentionMembers}
+              conversationType={conversationType}
+              receiverId={receiverId}
+              actions={actions}
+              inputValue={inputValue}
+              setInputValue={setInputValue}
+              allowAtAll={false}
+              onSendText={onSendText}
+              onSendFile={onSendFile}
+              onSendImg={onSendImg}
+              onSendVideo={onSendVideo}
+              onRemoveReplyMsg={onRemoveReplyMsg}
+            />
+          )}
           <ChatAISearch key={conversationId} prefix={prefix} />
           <ChatSettingDrawer
             prefix={prefix}
@@ -1269,8 +1346,13 @@ const P2pChatContainer: React.FC<P2pChatContainerProps> = observer(
           prefix={commonPrefix}
         />
         <ChatForwardModal
-          visible={!!forwardMessage}
-          msg={forwardMessage}
+          visible={!!forwardMessage || multiForwardVisible}
+          msg={multiForwardVisible ? undefined : forwardMessage}
+          msgs={
+            multiForwardVisible
+              ? msgs.filter((m) => selectedMsgIds.includes(m.messageClientId))
+              : undefined
+          }
           onSend={handleForwardModalSend}
           onCancel={handleForwardModalClose}
           prefix={prefix}

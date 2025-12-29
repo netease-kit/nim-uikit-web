@@ -13,6 +13,7 @@ export const demo_zh = {
   oppositeSide: '对方',
   settingText: '设置',
   logoutConfirmText: '确定退出登录吗?',
+  multiSelect: '多选',
   voiceCallText: '语音通话',
   videoCallText: '视频通话',
   callDurationText: '通话时长',
@@ -41,6 +42,7 @@ export const demo_zh = {
   teamAgreeModeText: '邀请入群时是否需要被邀请人的同意模式',
   needBeInvitedText: '需要被邀请人同意',
   notNeedBeInvitedText: '不需要被邀请人同意',
+  loginErrorText: '当前登录已过期,请重新登录',
 }
 
 export const demo_en = {
@@ -57,6 +59,7 @@ export const demo_en = {
   notNeedVerifyText: 'Not required',
   settingText: 'setting',
   logoutConfirmText: 'Are you sure you log out?',
+  multiSelect: 'Multi-select',
   voiceCallText: 'Voice Call',
   videoCallText: 'Video Call',
   callDurationText: 'call duration',
@@ -87,4 +90,5 @@ export const demo_en = {
   teamAgreeModeText: 'Team agree mode',
   needBeInvitedText: 'Need to be invited by the invitee',
   notNeedBeInvitedText: 'No need to be invited by the invitee',
+  loginErrorText: 'The current login has expired, please log in again',
 }

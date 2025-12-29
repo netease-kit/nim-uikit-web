@@ -1,5 +1,6 @@
 import { logDebug } from '@xkit-yx/utils'
 import moment from 'moment'
+import BMF from 'browser-md5-file'
 import packageJson from '../package.json'
 import {
   V2NIMMessage,
@@ -620,4 +621,62 @@ export const isDiscussionFunc = (serverExtension: string | undefined) => {
     console.warn('parse serverExtension error', error)
     return false
   }
+}
+
+/**
+ * 获取文件 md5
+ */
+export const getFileMd5 = async (file: File): Promise<string> => {
+  return new Promise((res, rej) => {
+    const bmf = new BMF()
+
+    try {
+      bmf.md5(file, (err: unknown, md5: string) => {
+        if (err === 'aborted') {
+          rej('md5 calculate aborted')
+        } else if (err) {
+          /**
+           * 其它原因中断
+           */
+          rej(`md5 calculate error: ${err}`)
+        } else {
+          res(md5)
+        }
+      })
+    } catch (err: unknown) {
+      /**
+       * 如果 file 传入空对象。则会进入到这里的 catch 流程。
+       */
+      rej('md5 calculate error: file is empty')
+    }
+  })
+}
+
+/**
+ * 秒数转换为时间字符串
+ * @param result 秒数
+ * @returns 时间字符串
+ */
+export function secondToDate(result: number): string {
+  let h: number | string = Math.floor(result / 3600)
+  let m: number | string = Math.floor((result / 60) % 60)
+  let s: number | string = Math.floor(result % 60)
+
+  if (s < 10) {
+    s = '0' + s
+  }
+
+  if (m < 10) {
+    m = '0' + m
+  }
+
+  if (h === 0) {
+    return m + ':' + s
+  }
+
+  if (h < 10) {
+    h = '0' + h
+  }
+
+  return h + ':' + m + ':' + s
 }

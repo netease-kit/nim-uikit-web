@@ -11,10 +11,10 @@ import {
 } from '@xkit-yx/utils'
 import {
   getAIErrorMap,
-  getDownloadUrl,
   handleEmojiTranslate,
   logger,
   EMOJI_ICON_MAP_CONFIG,
+  secondToDate,
 } from '../../../utils'
 import {
   V2NIMMessage,
@@ -24,11 +24,11 @@ import {
   V2NIMMessageLocationAttachment,
   V2NIMMessageVideoAttachment,
   V2NIMMessageNotificationAttachment,
+  V2NIMMessageCallAttachment,
 } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService'
 import { V2NIMTeam } from 'nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService'
 import { useTranslation, useStateContext } from '../../index'
 import { observer } from 'mobx-react'
-import { getBlobImg } from '../../../urlToBlob'
 import {
   V2NIMMessageForUI,
   YxServerExt,
@@ -36,6 +36,7 @@ import {
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
 import { V2NIMError } from 'nim-web-sdk-ng/dist/esm/nim/src/types'
 import { AI_SEARCH_MENU_KEY, fileIconMap } from '../../../constant'
+import ChatMergedForwardModal from '../../../chat/components/ChatMergedForwardModal'
 import Markdown from 'react-markdown'
 import VideoModal from './videoModal'
 
@@ -46,6 +47,11 @@ export interface IParseSessionProps {
   needTextTooltop?: boolean
   showThreadReply?: boolean
   onReeditClick?: (msg: V2NIMMessageForUI) => void
+  onCallBack?: (params: {
+    accountId: string
+    callType: '1' | '2'
+    msg: V2NIMMessageForUI
+  }) => void
 }
 
 export const pauseAllAudio = (): HTMLAudioElement => {
@@ -96,8 +102,8 @@ export const getMsgContentTipByType = (
       })
     }
 
-    // case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CUSTOM:
-    //   return text || `[${t('customMsgText')}]`
+    case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CUSTOM:
+      return text || `[${t('customMsgText')}]`
     case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_AUDIO:
       return `[${t('audioMsgText')}]`
     case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_FILE:
@@ -116,6 +122,7 @@ export const getMsgContentTipByType = (
       return `[${t('tipMsgText')}]`
     case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_VIDEO:
       return `[${t('videoMsgText')}]`
+
     default:
       return `[${t('notSupportMessageText')}]`
   }
@@ -128,25 +135,27 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
     replyMsg,
     needTextTooltop = false,
     onReeditClick,
+    onCallBack,
   }) => {
     const _prefix = `${prefix}-parse-session`
     const { nim, store, localOptions } = useStateContext()
     const { t } = useTranslation()
-    const locationDomRef = useRef<HTMLDivElement | null>(null)
-    const audioContainerRef = useRef<HTMLDivElement>(null)
-    const textRef = useRef<HTMLDivElement>(null)
     const notSupportMessageText = t('notSupportMessageText')
+
     const [audioIconType, setAudioIconType] = useState('icon-yuyin3')
     const [imgUrl, setImgUrl] = useState('')
     const [replyImgUrl, setReplyImgUrl] = useState('')
     const [threadReply, setThreadReply] = useState<V2NIMMessage | 'noFind'>()
     const [aiSearchText, setAiSearchText] = useState('')
-    const msgRef = useRef<HTMLDivElement | null>(null)
-
     const [thumbImageUrl, setThumbImageUrl] = useState('')
-
     const [replyThumbImageUrl, setReplyThumbImageUrl] = useState('')
+    const [forwardVisible, setForwardVisible] = useState(false)
+    const [forwardMsgs, setForwardMsgs] = useState<V2NIMMessage[] | null>(null)
 
+    const locationDomRef = useRef<HTMLDivElement | null>(null)
+    const audioContainerRef = useRef<HTMLDivElement>(null)
+    const textRef = useRef<HTMLDivElement>(null)
+    const msgRef = useRef<HTMLDivElement | null>(null)
     const aiSearchDropdownContainerRef = useRef<HTMLDivElement>(null)
 
     const myAccount = store.userStore.myUserInfo.accountId
@@ -1481,12 +1490,90 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
       )
     }
 
+    const renderChatHistory = (msg: V2NIMMessageForUI) => {
+      let rawAttachment = msg.attachment?.raw as any
+
+      if (typeof rawAttachment === 'string') {
+        try {
+          rawAttachment = JSON.parse(rawAttachment)
+        } catch (error) {
+          rawAttachment = {}
+        }
+      }
+
+      const title = `${
+        rawAttachment?.data?.sessionName || rawAttachment?.data?.sessionId
+      } 的消息`
+
+      const abstracts = rawAttachment?.data?.abstracts || []
+
+      const handleOpen = async () => {
+        try {
+          if (!forwardMsgs && rawAttachment?.data?.url) {
+            const res = await fetch(rawAttachment?.data?.url)
+
+            if (!res.ok) {
+              throw new Error('chatHistory fetch failed')
+            }
+
+            const text = await res.text()
+
+            const deserialized = store.msgStore.deserializeMergeMsgs(text)
+
+            setForwardMsgs(deserialized)
+          }
+
+          setForwardVisible(true)
+        } catch (error) {
+          message.error(t('getHistoryMsgFailedText'))
+          setForwardVisible(false)
+        }
+      }
+
+      return (
+        <>
+          <div className={`${_prefix}-chat-history-card`} onClick={handleOpen}>
+            <div className={`${_prefix}-chat-history-title`}>
+              <span className={`${_prefix}-chat-history-title-sessionName`}>{`${
+                rawAttachment?.data?.sessionName ||
+                rawAttachment?.data?.sessionId
+              }`}</span>
+              <span> {t('messageOfText')}</span>
+            </div>
+            <div className={`${_prefix}-chat-history-abstract`}>
+              {abstracts.map((item: any, index: number) => (
+                <div key={index} className={`${_prefix}-chat-history-item`}>
+                  <span className="senderNick">{item.senderNick} :</span>
+                  <span>{item.content}</span>
+                </div>
+              ))}
+            </div>
+            <div className={`${_prefix}-chat-history-footer`}>
+              {t('chatHistoryText')}
+            </div>
+          </div>
+          {forwardMsgs && (
+            <ChatMergedForwardModal
+              title={title}
+              msgs={forwardMsgs}
+              visible={forwardVisible}
+              onCancel={() => setForwardVisible(false)}
+            />
+          )}
+        </>
+      )
+    }
+
     const renderMsgContent = (msg: V2NIMMessageForUI, isReplyMsg?: boolean) => {
       if (msg.recallType === 'reCallMsg' || msg.recallType === 'beReCallMsg') {
         return renderSpecialMsg()
       }
 
       switch (msg.messageType) {
+        case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CUSTOM:
+          return store.msgStore.isChatMergedForwardMsg(msg)
+            ? renderChatHistory(msg)
+            : `[${t('customMsgText')}，${notSupportMessageText}]`
         case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TEXT:
           getUserInfo(msg.senderId)
           return renderCustomText(msg, isReplyMsg)
@@ -1506,7 +1593,7 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
           // 回复的语音消息应测试要求不要渲染转文字内容
           return renderAudio(msg, !isReplyMsg)
         case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL:
-          return `[${t('callMsgText')}，${notSupportMessageText}]`
+          return renderCall(msg)
         case V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_LOCATION:
           getUserInfo(msg.senderId)
           return renderLocation(msg)
@@ -1526,6 +1613,52 @@ export const ParseSession: React.FC<IParseSessionProps> = observer(
         default:
           return renderNotSupportMessage()
       }
+    }
+
+    const renderCall = (msg: V2NIMMessageForUI) => {
+      const attach = msg.attachment as V2NIMMessageCallAttachment
+      let raw: any = attach?.raw
+
+      if (typeof raw === 'string') {
+        try {
+          raw = JSON.parse(raw)
+        } catch {
+          raw = {}
+        }
+      }
+
+      const duration: number | undefined = raw?.durations?.[0]?.duration
+      const status: number = raw?.status
+      const type: number = raw?.type
+      const iconType = type === 1 ? 'icon-yuyin8' : 'icon-shipin8'
+      const statusMap: Record<number, string> = {
+        1: t('callDurationText'),
+        2: t('callCancelText'),
+        3: t('callRejectedText'),
+        4: t('callTimeoutText'),
+        5: t('callBusyText'),
+      }
+      const accountId = msg.isSelf
+        ? (msg.receiverId as string)
+        : (msg.senderId as string)
+      const callType: '1' | '2' = type === 1 ? '1' : '2'
+
+      return (
+        <div
+          className={`${_prefix}-call-box`}
+          onClick={() => onCallBack?.({ accountId, callType, msg })}
+        >
+          <CommonIcon className={`${_prefix}-call-icon`} type={iconType} />
+          <span className={`${_prefix}-call-status`}>
+            {statusMap[status] || t('callMsgText')}
+          </span>
+          {duration ? (
+            <span className={`${_prefix}-call-time`}>
+              {secondToDate(duration)}
+            </span>
+          ) : null}
+        </div>
+      )
     }
 
     const finalRenderMsg = () => {
