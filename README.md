@@ -47,3 +47,4 @@ IM UIKit 提供了多个 UI 组件，您可以自行选择并组合。IM UIKit �
 
 - IM UIKit 的功能清单，请参考 [IM UIKit 功能概览](https://doc.yunxin.163.com/messaging-uikit/concept/zMzMDQ2MTg)。
 - IM UIKit 的集成流程，请参考 [集成 IM UIKit（React）](https://doc.yunxin.163.com/messaging-uikit/guide/TU3MDEwODY?platform=web) 或 [集成 IM UIKit（Vue.js）](https://doc.yunxin.163.com/messaging-uikit/guide/zE4MjQzOTQ?platform=web)。
+- IM UIKit 已支持音视频通话，具体实现流程请参考 [实现音视频通话功能](https://doc.yunxin.163.com/messaging-uikit/guide/jE3MTM5ODA?platform=web)。
