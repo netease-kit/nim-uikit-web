@@ -22,8 +22,9 @@
 <script lang="ts" setup>
 import { getAvatarBackgroundColor } from "../utils";
 import { autorun } from "mobx";
-import { ref, computed, onUnmounted, getCurrentInstance } from "vue";
+import { ref, computed, onUnmounted } from "vue";
 import type { V2NIMUser } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService";
+import { store } from "../utils/init"
 
 const props = withDefaults(
   defineProps<{
@@ -41,10 +42,8 @@ const props = withDefaults(
     gotoUserCard: false,
     fontSize: "12",
     isRedirect: false,
-  }
+  },
 );
-
-const { proxy } = getCurrentInstance()!; // 获取组件实例
 
 const avatarSize = props.size || 42;
 const user = ref<V2NIMUser>();
@@ -52,20 +51,34 @@ const user = ref<V2NIMUser>();
 const appellation = ref();
 
 const uninstallUserInfoWatch = autorun(async () => {
-  proxy?.$UIKitStore?.userStore?.getUserActive(props.account).then((data) => {
+  // 检查store是否存在且未被销毁
+  if (!store || !store.userStore) {
+    return;
+  }
+
+  try {
+    const data = await store?.userStore?.getUserActive(
+      props.account,
+    );
     user.value = data;
-  });
-  appellation.value = proxy?.$UIKitStore?.uiStore
-    .getAppellation({
-      account: props.account,
-      teamId: props.teamId,
-      ignoreAlias: true,
-    })
-    .slice(-2);
+  } catch (error) {
+    console.log("getUserActive error", error);
+  }
+
+  // 检查uiStore是否存在
+  if (store?.uiStore) {
+    appellation.value = store?.uiStore
+      ?.getAppellation({
+        account: props.account,
+        teamId: props.teamId,
+        ignoreAlias: true,
+      })
+      ?.slice(-2);
+  }
 });
 
 const avatarUrl = computed(() => {
-  user.value = proxy?.$UIKitStore?.userStore?.users?.get(props.account);
+  user.value = store?.userStore?.users?.get(props.account);
 
   return props.avatar || user.value?.avatar;
 });

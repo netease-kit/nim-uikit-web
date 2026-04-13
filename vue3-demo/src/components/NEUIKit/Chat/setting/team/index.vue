@@ -32,7 +32,7 @@
           </div>
           <div
             class="member-item"
-            v-for="member in teamMembers"
+            v-for="member in teamMembers.slice(0,10)"
             :key="member.accountId"
           >
             <Avatar
@@ -129,7 +129,7 @@
 /** 群设置组件 */
 import Avatar from "../../../CommonComponents/Avatar.vue";
 import Icon from "../../../CommonComponents/Icon.vue";
-import { ref, computed, getCurrentInstance } from "vue";
+import { ref, computed } from "vue";
 import { t } from "../../../utils/i18n";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import type {
@@ -140,13 +140,12 @@ import type {
   V2NIMConversationForUI,
   V2NIMLocalConversationForUI,
 } from "@xkit-yx/im-store-v2/dist/types/types";
-import RootStore from "@xkit-yx/im-store-v2";
 import Switch from "../../../CommonComponents/Switch.vue";
 import Input from "../../../CommonComponents/Input.vue";
 import AddTeamMemberModal from "./add-team-member-modal.vue";
 import { modal } from "../../../utils/modal";
 import { toast } from "../../../utils/toast";
-import { isDiscussionFunc } from "../../../utils";
+import { nim, store } from "../../../utils/init"
 
 interface Props {
   teamId: string;
@@ -172,11 +171,6 @@ const emit = defineEmits([
   "saveNickInTeam",
   "closeDrawer",
 ]);
-
-const { proxy } = getCurrentInstance()!;
-
-const store = proxy?.$UIKitStore as RootStore;
-const nim = proxy?.$NIM;
 
 // 添加群成员
 const addModalVisible = ref(false);

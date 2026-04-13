@@ -71,7 +71,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, getCurrentInstance, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import Modal from "../../CommonComponents/Modal.vue";
 import Input from "../../CommonComponents/Input.vue";
 import Avatar from "../../CommonComponents/Avatar.vue";
@@ -80,6 +80,7 @@ import { showToast } from "../../utils/toast";
 import { t } from "../../utils/i18n";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import type { V2NIMTeam } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService";
+import { store } from "../../utils/init"
 
 // Props
 interface Props {
@@ -101,10 +102,6 @@ const emit = defineEmits<{
   "update:visible": [value: boolean];
   goChat: [];
 }>();
-
-const { proxy } = getCurrentInstance()!; // 获取组件实例
-const store = proxy?.$UIKitStore;
-const nim = proxy?.$NIM;
 
 // 响应式数据
 const searchValue = ref("");

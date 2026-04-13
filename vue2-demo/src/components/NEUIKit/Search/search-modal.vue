@@ -72,7 +72,7 @@
 </template>
 
 <script>
-import { autorun } from "mobx";
+import { autorun } from "../utils/store";
 import { RecycleScroller } from "vue-virtual-scroller";
 import { t } from "../utils/i18n";
 import { showToast } from "../utils/toast";

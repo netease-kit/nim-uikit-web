@@ -119,7 +119,7 @@
 <script>
 import Icon from "../../CommonComponents/Icon.vue";
 import { events, msgRecallTime } from "../../utils/constants";
-import { autorun } from "mobx";
+import { autorun } from "../../utils/store";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { t } from "../../utils/i18n";
 import emitter from "../../utils/eventBus";

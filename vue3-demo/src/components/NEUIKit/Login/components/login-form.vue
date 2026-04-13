@@ -56,16 +56,15 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, getCurrentInstance } from "vue";
+import { ref, reactive, computed } from "vue";
 import i18n from "../i18n/zh-cn";
 import { getLoginSmsCode, loginRegisterByCode } from "../utils/api";
 import FormInput from "./form-input.vue";
 import { showToast } from "../../utils/toast";
 
-import { init } from "../../utils/init";
+import { initIMUIKit } from "../../utils/init";
 import { useRouter } from "vue-router";
-import { STORAGE_KEY } from "../../utils/constants";
-const app = getCurrentInstance();
+import { STORAGE_KEY, APP_KEY } from "../../utils/constants";
 const router = useRouter();
 
 const mobileInputRule = {
@@ -147,20 +146,15 @@ async function submitLoginForm() {
   }
   try {
     const res = await loginRegisterByCode(loginForm);
-    // 存储登录信息到 sessionStorage
-    sessionStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        account: res.imAccid,
-        token: res.imToken,
-      })
-    );
+    // 存储登录信息到 localStorage（保持登录状态）
+    const loginInfo = JSON.stringify({
+      appkey: APP_KEY,
+      account: res.imAccid,
+      token: res.imToken,
+    });
+    localStorage.setItem(STORAGE_KEY, loginInfo);
 
-    const { nim, store } = init();
-    if (app) {
-      app.appContext.app.config.globalProperties.$NIM = nim;
-      app.appContext.app.config.globalProperties.$UIKitStore = store;
-    }
+    const { nim } = initIMUIKit(APP_KEY);
 
     nim.V2NIMLoginService.login(res.imAccid, res.imToken)
       .then(() => {
@@ -175,7 +169,7 @@ async function submitLoginForm() {
             type: "info",
           });
           // 登录信息无效，清除并跳转到登录页
-          sessionStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(STORAGE_KEY);
           router.push("/login");
         }
       });

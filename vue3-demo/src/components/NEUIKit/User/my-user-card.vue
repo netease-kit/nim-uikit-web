@@ -79,11 +79,11 @@
         <div class="userInfo-item">
           <div class="item-left">{{ t("genderText") }}</div>
           <div class="item-right">
-            <select v-model="editableUserInfo.gender" class="edit-select">
-              <option :value="0">{{ t("unknow") }}</option>
-              <option :value="1">{{ t("man") }}</option>
-              <option :value="2">{{ t("woman") }}</option>
-            </select>
+            <Picker
+              :value="editableUserInfo.gender"
+              :range="genderRange"
+              @change="onGenderChange"
+            />
           </div>
         </div>
 
@@ -130,15 +130,15 @@
 
 <script lang="ts" setup>
 import Avatar from "../CommonComponents/Avatar.vue";
-import { onUnmounted, ref, getCurrentInstance, watch } from "vue";
+import { onUnmounted, ref, watch } from "vue";
 import Modal from "../CommonComponents/Modal.vue";
 import Input from "../CommonComponents/Input.vue";
+import Picker from "../CommonComponents/Picker.vue";
 import { t } from "../utils/i18n";
 import { autorun } from "mobx";
 import type { V2NIMUser } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService";
-import RootStore from "@xkit-yx/im-store-v2";
-import { loading } from "../utils/loading";
 import { showToast } from "../utils/toast";
+import { store } from "../utils/init"
 
 interface Props {
   visible: boolean;
@@ -155,10 +155,6 @@ const emit = defineEmits<{
 
 const myUserInfo = ref<V2NIMUser>();
 
-const { proxy } = getCurrentInstance()!;
-
-const store = proxy?.$UIKitStore as RootStore;
-
 const editableUserInfo = ref({
   name: "",
   accountId: "",
@@ -169,9 +165,21 @@ const editableUserInfo = ref({
   sign: "",
 });
 
+const genderRange = [
+  { label: t("unknow"), value: 0 },
+  { label: t("man"), value: 1 },
+  { label: t("woman"), value: 2 },
+];
+
+const onGenderChange = (e: { detail: { value: string | number } }) => {
+  const v = e.detail.value;
+  editableUserInfo.value.gender = typeof v === "string" ? Number(v) : (v as number);
+};
+
 // 添加临时头像状态
 const tempAvatarUrl = ref<string>("");
 const tempAvatarFile = ref<File | null>(null);
+const isSaving = ref(false);
 
 const uninstallMyUserInfoWatch = autorun(() => {
   myUserInfo.value = store?.userStore.myUserInfo;
@@ -181,6 +189,7 @@ const uninstallMyUserInfoWatch = autorun(() => {
 watch(
   myUserInfo,
   (newUserInfo) => {
+    if (isSaving.value) return;
     if (newUserInfo) {
       editableUserInfo.value = {
         name: newUserInfo.name || newUserInfo.accountId || "",
@@ -258,20 +267,15 @@ const onChangeAvatar = async (event: Event) => {
 
 const handleSave = async () => {
   try {
-    // 如果有临时头像文件，先上传头像
-    if (tempAvatarFile.value) {
-      await store?.userStore.updateSelfUserProfileActive(
-        {
-          ...myUserInfo.value,
-        },
-        tempAvatarFile.value
-      );
-    }
-
-    // 更新其他用户信息
-    await store.userStore.updateSelfUserProfileActive({
+    isSaving.value = true;
+    const payload = {
+      ...(myUserInfo.value || {}),
       ...editableUserInfo.value,
-    });
+    };
+    await store?.userStore.updateSelfUserProfileActive(
+      payload,
+      tempAvatarFile.value || undefined
+    );
 
     showToast({
       message: t("saveSuccessText"),
@@ -279,12 +283,14 @@ const handleSave = async () => {
       duration: 2000,
     });
 
+    isSaving.value = false;
     // 清理临时状态
     tempAvatarUrl.value = "";
     tempAvatarFile.value = null;
 
     emit("update:visible", false);
   } catch (error) {
+    isSaving.value = false;
     showToast({
       message: t("saveFailText"),
       type: "error",
@@ -406,7 +412,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: flex-end;
   color: #a6adb6;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* 邮箱文本 */

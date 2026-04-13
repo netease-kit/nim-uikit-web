@@ -91,7 +91,7 @@ import MessageReadInfo from "./message-read-info.vue";
 import UserCardModal from "../../CommonComponents/UserCardModal.vue";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { t } from "../../utils/i18n";
-import { autorun } from "mobx";
+import { autorun } from "../../utils/store";
 import { nim, uiKitStore } from "../../utils/init";
 const { V2NIMMessageType, V2NIMMessageSendingState, V2NIMConversationType } =
   V2NIMConst;

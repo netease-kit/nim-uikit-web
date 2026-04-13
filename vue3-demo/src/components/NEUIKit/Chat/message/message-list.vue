@@ -30,7 +30,6 @@ import {
   ref,
   onBeforeMount,
   onUnmounted,
-  getCurrentInstance,
   nextTick,
   onMounted,
   watch,
@@ -45,11 +44,13 @@ import { events } from "../../utils/constants";
 
 import type { V2NIMTeam } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService";
 import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import { store } from "../../utils/init";
+import type { V2NIMConversationType } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversationService";
 
 const props = withDefaults(
   defineProps<{
     msgs: V2NIMMessageForUI[];
-    conversationType: V2NIMConst.V2NIMConversationType;
+    conversationType: V2NIMConst.V2NIMConversationType | V2NIMConversationType;
     to: string;
     loadingMore?: boolean;
     noMore?: boolean;
@@ -57,10 +58,9 @@ const props = withDefaults(
       [key: string]: V2NIMMessageForUI;
     };
   }>(),
-  {}
+  {},
 );
 
-const { proxy } = getCurrentInstance()!; // 获取组件实例
 const messageListRef = ref<HTMLElement | null>(null);
 let teamWatch = () => {};
 
@@ -68,7 +68,7 @@ onBeforeMount(() => {
   let team: V2NIMTeam | undefined = undefined;
 
   teamWatch = autorun(() => {
-    team = proxy?.$UIKitStore.teamStore.teams.get(props.to);
+    team = store.teamStore.teams.get(props.to);
   });
 });
 
@@ -97,6 +97,7 @@ const handleScroll = () => {
     clearTimeout(scrollTimer);
   }
 
+  //@ts-ignore
   scrollTimer = setTimeout(() => {
     if (!messageListRef.value) return;
 
@@ -135,7 +136,7 @@ const loadMoreMessages = () => {
         item.messageType ===
           V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CUSTOM &&
         ["beReCallMsg", "reCallMsg"].includes(item.recallType || "")
-      )
+      ),
   )[0];
 
   if (msg) {
@@ -166,7 +167,7 @@ const loadMoreMessages = () => {
             }
           });
         }
-      }
+      },
     );
   }
 };

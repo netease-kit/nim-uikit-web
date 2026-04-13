@@ -181,6 +181,7 @@ import IconWarning from "../static/icons/icon-warning.png";
 import IconMoreWhite from "../static/icons/icon-more-white.png";
 import IconDownArrowWhite from "../static/icons/icon-down-arrow-white.png";
 import IconDownArrow from "../static/icons/icon-down-arrow.png";
+import IconBot from "../static/icons/bot.png";
 
 const props = withDefaults(
   defineProps<{
@@ -193,7 +194,7 @@ const props = withDefaults(
   }>(),
   {
     size: 16,
-  }
+  },
 );
 const urlMap = {
   "icon-a-1": IconA1,
@@ -365,6 +366,7 @@ const urlMap = {
   "icon-warning": IconWarning,
   "icon-down-arrow": IconDownArrow,
   "icon-down-arrow-white": IconDownArrowWhite,
+  "icon-bot": IconBot,
 };
 
 const _url = computed(() => {

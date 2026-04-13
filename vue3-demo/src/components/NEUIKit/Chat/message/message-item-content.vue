@@ -3,12 +3,31 @@
   <div
     v-if="
       props.msg.messageType ===
-      V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TEXT
+        V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TEXT &&
+      props.msg.streamConfig == undefined
     "
   >
     <!-- 回复消息 -->
-    <ReplyMessage v-if="!!replyMsg" :replyMsg="replyMsg"></ReplyMessage>
+    <ReplyMessage
+      :visible="!!props.msg.threadReply && props.showReply"
+      :replyMsg="replyMsg"
+    />
     <MessageText :msg="props.msg"></MessageText>
+  </div>
+
+  <!-- 流式消息（Markdown）格式 -->
+  <div
+    v-else-if="
+      props.msg.aiConfig?.aiStatus ===
+        V2NIMConst.V2NIMMessageAIStatus.V2NIM_MESSAGE_AI_STATUS_RESPONSE ||
+      props.msg.streamConfig !== undefined
+    "
+  >
+    <ReplyMessage
+      :visible="!!props.msg.threadReply && props.showReply"
+      :replyMsg="replyMsg"
+    />
+    <MessageAIMarkdown :msg="props.msg" />
   </div>
   <!-- 图片消息 -->
   <MessageImage
@@ -50,6 +69,7 @@
     "
     :msg="props.msg"
   />
+
   <!-- 未知消息 -->
   <div v-else>
     <div class="unknown-msg">[{{ t("unknownMsgText") }}]</div>
@@ -64,8 +84,9 @@ import MessageText from "./message-text.vue";
 import MessageAudio from "./message-audio.vue";
 import MessageG2 from "./message-g2.vue";
 import MessageImage from "./message-image.vue";
-import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import MessageVideo from "./message-video.vue";
+import MessageAIMarkdown from "./message-ai-markdown.vue";
+import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { t } from "../../utils/i18n";
 import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
 
@@ -73,8 +94,9 @@ const props = withDefaults(
   defineProps<{
     msg: V2NIMMessageForUI & { timeValue?: number };
     replyMsg?: V2NIMMessageForUI;
+    showReply?: boolean;
   }>(),
-  {}
+  { showReply: true },
 );
 </script>
 

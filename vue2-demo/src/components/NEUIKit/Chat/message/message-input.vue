@@ -196,7 +196,7 @@ import Icon from "../../CommonComponents/Icon.vue";
 import MessageOneLine from "../../CommonComponents/MessageOneLine.vue";
 import Appellation from "../../CommonComponents/Appellation.vue";
 import { replaceEmoji } from "../../utils";
-import { autorun } from "mobx";
+import { autorun } from "../../utils/store";
 import emitter from "../../utils/eventBus";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { toast } from "../../utils/toast";

@@ -4,8 +4,8 @@
     :title="t('setText')"
     :confirmText="t('okText')"
     :cancelText="t('cancelText')"
-    :width="420"
-    :height="200"
+    :width="550"
+    :height="280"
     :top="100"
     :showDefaultFooter="true"
     @confirm="onConfirm"
@@ -17,7 +17,26 @@
         <div class="item-right">
           <Switch
             :checked="enableV2CloudConversation"
-            @change="onChangeEnableV2CloudConversation"
+            @change="
+              (value) => {
+                enableV2CloudConversation = value;
+                onChangeSetting('enableV2CloudConversation', value);
+              }
+            "
+          />
+        </div>
+      </div>
+      <div class="setting-item">
+        <div class="item-left">{{ t("teamManagerEnableText") }}</div>
+        <div class="item-right">
+          <Switch
+            :checked="teamManagerVisible"
+            @change="
+              (value) => {
+                teamManagerVisible = value;
+                onChangeSetting('teamManagerVisible', value);
+              }
+            "
           />
         </div>
       </div>
@@ -28,20 +47,10 @@
 <script lang="ts" setup>
 import Modal from "../../../components/NEUIKit/CommonComponents/Modal.vue";
 import { t } from "../../../components/NEUIKit/utils/i18n";
-import { ref, onMounted, getCurrentInstance } from "vue";
+import { ref, onMounted } from "vue";
 import { showToast } from "../../../components/NEUIKit/utils/toast";
 import Switch from "../../../components/NEUIKit/CommonComponents/Switch.vue";
-const enableV2CloudConversation = ref(false);
-const switchToEnglishFlag = ref(false);
-const { proxy } = getCurrentInstance()!;
-const store = proxy?.$UIKitStore;
 
-onMounted(() => {
-  const storedCloudConv = sessionStorage.getItem("enableV2CloudConversation");
-  const storedLanguage = sessionStorage.getItem("switchToEnglishFlag");
-  enableV2CloudConversation.value = storedCloudConv === "on";
-  switchToEnglishFlag.value = storedLanguage === "en";
-});
 interface Props {
   visible: boolean;
 }
@@ -56,6 +65,19 @@ interface Emits {
   (e: "close"): void;
 }
 
+const enableV2CloudConversation = ref(false);
+const teamManagerVisible = ref(false);
+const switchToEnglishFlag = ref(false);
+
+onMounted(() => {
+  teamManagerVisible.value =
+    localStorage.getItem("teamManagerVisible") !== "off";
+  enableV2CloudConversation.value =
+    localStorage.getItem("enableV2CloudConversation") === "on";
+  switchToEnglishFlag.value =
+    localStorage.getItem("switchToEnglishFlag") === "en";
+});
+
 const emit = defineEmits<Emits>();
 
 const onConfirm = () => {};
@@ -64,12 +86,11 @@ const handleClose = () => {
   emit("close");
 };
 
-const onChangeEnableV2CloudConversation = (value) => {
-  enableV2CloudConversation.value = value;
-  sessionStorage.setItem("enableV2CloudConversation", value ? "on" : "off");
+const onChangeSetting = (key, value) => {
+  localStorage.setItem(key, value ? "on" : "off");
   showToast({
     message: "切换后刷新页面生效",
-    type: "warning",
+    type: "info",
   });
   window.location.reload();
   emit("close");
@@ -93,7 +114,7 @@ const onChangeEnableV2CloudConversation = (value) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
+  padding: 10px;
   color: #000;
 }
 

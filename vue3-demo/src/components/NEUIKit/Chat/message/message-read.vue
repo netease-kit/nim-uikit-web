@@ -90,7 +90,7 @@
 <script lang="ts" setup>
 /** 消息已读未读组件 */
 
-import { computed, ref, onMounted, onUnmounted, getCurrentInstance } from "vue";
+import { computed, ref, onMounted, onUnmounted } from "vue";
 import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
 import Icon from "../../CommonComponents/Icon.vue";
 import Popover from "../../CommonComponents/Popover.vue";
@@ -99,6 +99,7 @@ import UserCardModal from "../../CommonComponents/UserCardModal.vue";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { t } from "../../utils/i18n";
 import { autorun } from "mobx";
+import { nim, store } from "../../utils/init"
 
 const props = withDefaults(
   defineProps<{
@@ -107,9 +108,6 @@ const props = withDefaults(
   {}
 );
 
-const { proxy } = getCurrentInstance()!; // 获取组件实例
-const store = proxy?.$UIKitStore;
-const nim = proxy?.$NIM;
 
 /** 是否需要显示群组消息已读未读，默认 false */
 const teamMsgReceiptVisible = store?.localOptions.teamMsgReceiptVisible;

@@ -23,14 +23,14 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, getCurrentInstance } from "vue";
+import { computed } from "vue";
 import Icon from "../CommonComponents/Icon.vue";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import type {
   V2NIMConversationForUI,
   V2NIMLocalConversationForUI,
 } from "@xkit-yx/im-store-v2/dist/types/types";
-const { proxy } = getCurrentInstance()!; // 获取组件实例
+import { nim, store } from "../utils/init"
 
 const props = withDefaults(
   defineProps<{
@@ -41,12 +41,12 @@ const props = withDefaults(
 
 // 是否需要显示 p2p 消息、p2p会话列表消息已读未读，默认 false
 const p2pMsgReceiptVisible =
-  proxy?.$UIKitStore.localOptions.p2pMsgReceiptVisible;
+  store.localOptions.p2pMsgReceiptVisible;
 
 const conversationType =
-  proxy?.$NIM.V2NIMConversationIdUtil.parseConversationType(
+  nim.V2NIMConversationIdUtil.parseConversationType(
     props.conversation.conversationId
-  );
+  ) as unknown as V2NIMConst.V2NIMConversationType
 const p2pMsgRotateDeg = computed(() => {
   return (props?.conversation?.msgReceiptTime || 0) >=
     (props?.conversation?.lastMessage?.messageRefer?.createTime || 0)

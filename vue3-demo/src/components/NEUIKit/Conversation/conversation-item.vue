@@ -18,6 +18,15 @@
             <div class="badge" v-else>{{ unread }}</div>
           </div>
           <Avatar size="36" :account="to" :avatar="teamAvatar" />
+          <!-- 用户在线离线状态 -->
+          <div
+            v-if="
+              loginStateVisible &&
+              conversation.type ===
+                V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
+            "
+            :class="onlineStatus ? 'login-state-icon' : 'unlogin-state-icon'"
+          ></div>
         </div>
         <div class="conversation-item-right">
           <div class="conversation-item-top">
@@ -84,7 +93,8 @@
 import Avatar from "../CommonComponents/Avatar.vue";
 import Appellation from "../CommonComponents/Appellation.vue";
 import Icon from "../CommonComponents/Icon.vue";
-import { computed, getCurrentInstance } from "vue";
+import { computed, ref, onUnmounted } from "vue";
+import { autorun } from "mobx";
 import dayjs from "dayjs";
 import { t } from "../utils/i18n";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
@@ -95,15 +105,15 @@ import type {
 import ConversationItemIsRead from "./conversation-item-read.vue";
 import LastMsgContent from "./conversation-item-last-msg-content.vue";
 import Dropdown from "../CommonComponents/Dropdown.vue";
+import { nim, store } from "../utils/init";
 
 const props = withDefaults(
   defineProps<{
     conversation: V2NIMConversationForUI | V2NIMLocalConversationForUI;
     selectedConversation: string;
   }>(),
-  {}
+  {},
 );
-const { proxy } = getCurrentInstance()!; // 获取组件实例
 
 const emit = defineEmits(["click", "delete", "stickyToTop", "mute"]);
 
@@ -165,8 +175,8 @@ const sessionName = computed(() => {
 });
 
 const to = computed(() => {
-  const res = proxy?.$NIM.V2NIMConversationIdUtil.parseConversationTargetId(
-    props.conversation.conversationId
+  const res = nim.V2NIMConversationIdUtil.parseConversationTargetId(
+    props.conversation.conversationId,
   );
   return res;
 });
@@ -183,7 +193,7 @@ const date = computed(() => {
   const isCurrentDay = _d.isSame(dayjs(), "day");
   const isCurrentYear = _d.isSame(dayjs(), "year");
   return _d.format(
-    isCurrentDay ? "HH:mm" : isCurrentYear ? "MM-DD" : "YYYY-MM"
+    isCurrentDay ? "HH:mm" : isCurrentYear ? "MM-DD" : "YYYY-MM",
   );
 });
 
@@ -206,7 +216,7 @@ const beMentioned = computed(() => {
 });
 
 const showSessionUnread = computed(() => {
-  const myUserAccountId = proxy?.$NIM.V2NIMLoginService.getLoginUser();
+  const myUserAccountId = nim.V2NIMLoginService.getLoginUser();
   if (
     props.conversation.type ===
     V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
@@ -227,6 +237,30 @@ const showSessionUnread = computed(() => {
   } else {
     return false;
   }
+});
+
+// 在线状态
+const loginStateVisible = store?.localOptions?.loginStateVisible ?? false;
+const onlineStatus = ref(false);
+
+const onlineStatusWatch = autorun(() => {
+  if (
+    props.conversation.type ===
+    V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
+  ) {
+    const stateMap = store?.subscriptionStore?.stateMap;
+    if (stateMap?.get(to.value) && loginStateVisible) {
+      onlineStatus.value =
+        stateMap.get(to.value)?.statusType ===
+        V2NIMConst.V2NIMUserStatusType.V2NIM_USER_STATUS_TYPE_LOGIN;
+    } else {
+      onlineStatus.value = false;
+    }
+  }
+});
+
+onUnmounted(() => {
+  onlineStatusWatch();
 });
 
 function handleConversationItemClick() {
@@ -438,5 +472,30 @@ function handleConversationItemClick() {
 .action-name {
   margin-left: 5px;
   font-size: 14px;
+}
+
+/* 在线离线状态 icon */
+.login-state-icon {
+  width: 8px;
+  height: 8px;
+  box-sizing: content-box;
+  background-color: #84ed85;
+  border: 2px solid #fff;
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+}
+
+.unlogin-state-icon {
+  width: 8px;
+  height: 8px;
+  box-sizing: content-box;
+  background-color: #d4d9da;
+  border: 2px solid #fff;
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
 }
 </style>

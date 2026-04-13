@@ -116,7 +116,7 @@
 
 <script lang="ts" setup>
 /** 消息气泡 */
-import { onMounted, onUnmounted, ref, getCurrentInstance, computed } from "vue";
+import { onMounted, onUnmounted, ref, computed } from "vue";
 import Icon from "../../CommonComponents/Icon.vue";
 import { events } from "../../utils/constants";
 import { autorun } from "mobx";
@@ -129,6 +129,8 @@ import { showToast } from "../../utils/toast";
 import MessageIsRead from "./message-read.vue";
 import MessageDropdown from "./message-dropdown.vue";
 import Popover from "../../CommonComponents/Popover.vue";
+import { nim, store } from "../../utils/init"
+
 const props = withDefaults(
   defineProps<{
     msg: V2NIMMessageForUI;
@@ -136,13 +138,8 @@ const props = withDefaults(
     bgVisible?: boolean;
     placement?: string;
   }>(),
-  {}
+  {},
 );
-
-const { proxy } = getCurrentInstance()!; // 获取组件实例
-
-const store = proxy?.$UIKitStore;
-const nim = proxy?.$NIM;
 
 const errorTipText = computed(() => {
   // 消息发送失败时，在感叹号，hover上提示失败原因
@@ -279,8 +276,8 @@ const handleCollectMsg = async () => {
       : store?.localConversationStore?.conversations.get(conversationId);
 
     const conversationType = nim.V2NIMConversationIdUtil.parseConversationType(
-      props.msg.conversationId
-    );
+      props.msg.conversationId,
+    ) as unknown as V2NIMConst.V2NIMConversationType
     const isTeamMessage =
       conversationType ===
       V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM; // V2NIM_CONVERSATION_TYPE_TEAM
@@ -288,15 +285,16 @@ const handleCollectMsg = async () => {
     // 获取teamId（如果是群聊）
     const teamId = isTeamMessage
       ? nim.V2NIMConversationIdUtil.parseConversationTargetId(
-          props.msg.conversationId
+          props.msg.conversationId,
         )
       : undefined;
 
-    await proxy?.$NIM.V2NIMMessageService.addCollection({
+    await nim.V2NIMMessageService.addCollection({
       collectionType: props.msg.messageType + 1000,
       collectionData: JSON.stringify({
-        message: proxy?.$NIM.V2NIMMessageConverter.messageSerialization(
-          props.msg
+        message: nim.V2NIMMessageConverter.messageSerialization(
+          //@ts-ignore
+          props.msg,
         ),
         conversationName: conversation?.name,
         senderName: store?.uiStore.getAppellation({
@@ -322,17 +320,19 @@ const handleCollectMsg = async () => {
 // 重发消息
 const handleResendMsg = async () => {
   const _msg = props.msg as V2NIMMessageForUI;
-  proxy?.$UIKitStore.msgStore.removeMsg(_msg.conversationId, [
+  store.msgStore.removeMsg(_msg.conversationId, [
     _msg.messageClientId,
   ]);
 
   try {
     if (_msg.threadReply) {
       const beReplyMsg =
-        await proxy?.$NIM.V2NIMMessageService.getMessageListByRefers([
+        await nim.V2NIMMessageService.getMessageListByRefers([
+          //@ts-ignore
           _msg.threadReply,
         ]);
       if (beReplyMsg.length > 0) {
+          //@ts-ignore
         store?.msgStore.replyMsgActive(beReplyMsg[0]);
       }
     }
@@ -380,7 +380,7 @@ const handleResendMsg = async () => {
 // 回复消息
 const handleReplyMsg = async () => {
   const _msg = props.msg;
-  proxy?.$UIKitStore.msgStore.replyMsgActive(_msg);
+  store.msgStore.replyMsgActive(_msg);
   emitter.emit(events.REPLY_MSG, props.msg);
   // 在群里回复其他人的消息，也是@被回复人
   if (
@@ -410,7 +410,7 @@ const handleRecallMsg = () => {
     return;
   }
 
-  proxy?.$UIKitStore.msgStore.reCallMsgActive(props.msg).catch(() => {
+  store.msgStore.reCallMsgActive(props.msg).catch(() => {
     showToast({
       message: t("recallMsgFailText"),
       type: "info",
@@ -420,17 +420,17 @@ const handleRecallMsg = () => {
 
 // 删除消息
 const handleDeleteMsg = () => {
-  proxy?.$UIKitStore.msgStore.deleteMsgActive([props.msg]);
-  proxy?.$UIKitStore.msgStore.removeMsg(props.msg.conversationId, [
+  store.msgStore.deleteMsgActive([props.msg]);
+  store.msgStore.removeMsg(props.msg.conversationId, [
     props.msg.messageClientId,
   ]);
 };
 
 const uninstallFriendsWatch = autorun(() => {
-  const _isFriend = proxy?.$UIKitStore.uiStore.friends
+  const _isFriend = store.uiStore.friends
     .filter(
       (item) =>
-        !proxy?.$UIKitStore.relationStore.blacklist.includes(item.accountId)
+        !store.relationStore.blacklist.includes(item.accountId),
     )
     .map((item) => item.accountId)
     .some((item: any) => item.account === props.msg.receiverId);
@@ -610,5 +610,7 @@ onUnmounted(() => {
 .action-name {
   margin-left: 5px;
   font-size: 14px;
+  width: 35px;
+  white-space: nowrap;
 }
 </style>

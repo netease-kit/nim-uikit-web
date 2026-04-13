@@ -67,11 +67,12 @@
 
 <script lang="ts" setup>
 /** 图片消息 */
-import { ref, computed, watch, getCurrentInstance, onMounted } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import PreviewImage from "../../CommonComponents/PreviewImage.vue";
 import type { V2NIMMessageImageAttachment } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
 import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import { nim } from "../../utils/init"
 
 const props = withDefaults(
   defineProps<{
@@ -79,9 +80,6 @@ const props = withDefaults(
   }>(),
   {}
 );
-
-const { proxy } = getCurrentInstance()!;
-const nim = proxy?.$NIM;
 
 // 预览状态
 const isPreviewVisible = ref(false);

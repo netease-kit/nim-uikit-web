@@ -29,6 +29,7 @@ import Icon from "../../CommonComponents/Icon.vue";
 import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
 import type { V2NIMMessageFileAttachment } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
 import { computed } from "vue";
+
 const props = withDefaults(defineProps<{ msg: V2NIMMessageForUI }>(), {});
 // 文件类型图标映射
 const fileIconMap = {

@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import { autorun } from "mobx";
+import { autorun } from "../utils/store";
 import { RecycleScroller } from "vue-virtual-scroller";
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import Empty from "../CommonComponents/Empty.vue";

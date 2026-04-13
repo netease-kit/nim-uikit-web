@@ -118,7 +118,7 @@ import MessageBubble from "./message-bubble.vue";
 import MessageNotification from "./message-notification.vue";
 import MessageItemContent from "./message-item-content.vue";
 import { events, MSG_ID_FLAG } from "../../utils/constants";
-import { autorun } from "mobx";
+import { autorun } from "../../utils/store";
 import { t } from "../../utils/i18n";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import emitter from "../../utils/eventBus";

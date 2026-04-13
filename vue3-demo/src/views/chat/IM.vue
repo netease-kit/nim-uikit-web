@@ -4,7 +4,7 @@
       <!-- IMUIKIT 相关内容 -->
       <div class="header">
         <div class="search">
-          <Search />
+          <Search @goChat="() => (model = 'chat')" />
         </div>
       </div>
       <div class="content">
@@ -30,6 +30,21 @@
           <div
             :class="{
               'contact-icon': true,
+              active: model === 'collection',
+            }"
+            @click="() => (model = 'collection')"
+          >
+            <i
+              :class="{
+                iconfont: true,
+                'icon-daohang-shoucang': true,
+              }"
+            />
+            <div class="icon-label">{{ t("collectionText") }}</div>
+          </div>
+          <div
+            :class="{
+              'contact-icon': true,
               active: model === 'contact',
             }"
             @click="() => (model = 'contact')"
@@ -44,6 +59,34 @@
             <div v-if="totalSysMsgUnreadCount > 0" class="red-dot"></div>
             <div class="icon-label">{{ t("addressText") }}</div>
           </div>
+          <div
+            :class="{
+              'contact-icon': true,
+              active: model === 'qchat',
+            }"
+            @click="() => (model = 'qchat')"
+          >
+            <i
+              :style="{
+                fontSize: '18px',
+              }"
+              :class="{
+                iconfont: true,
+                'icon-a-Vector3': true,
+              }"
+            />
+            <div class="icon-label">{{ t("qchatText") }}</div>
+          </div>
+          <SettingsMenu>
+            <div class="setting-menu-icon">
+              <i
+                :class="{
+                  iconfont: true,
+                  'icon-zhankai': true,
+                }"
+              />
+            </div>
+          </SettingsMenu>
         </div>
         <div class="right">
           <!-- 网络连接提示 && 安全提示横幅 -->
@@ -56,6 +99,9 @@
               <MessageList />
             </div>
           </div>
+          <div class="collection-container" v-if="model === 'collection'">
+            <CollectionList />
+          </div>
           <div v-if="model === 'contact'">
             <Concat
               @afterSendMsgClick="() => (model = 'chat')"
@@ -63,8 +109,16 @@
               @onBlackItemClick="() => (model = 'chat')"
             />
           </div>
+          <div class="qchat-container" v-if="model === 'qchat'">
+            <keep-alive>
+              <QChat />
+            </keep-alive>
+          </div>
         </div>
       </div>
+    </div>
+    <div class="app-info">
+      ©1997 - {{ new Date().getFullYear() }} 网易公司版权所有 IMUIKit（vue3）
     </div>
   </div>
 </template>
@@ -75,16 +129,16 @@ import MessageList from "../../components/NEUIKit/Chat/index.vue";
 import Search from "../../components/NEUIKit/Search/index.vue";
 import Concat from "../../components/NEUIKit/Contact/index.vue";
 import UserAvatar from "../../components/NEUIKit/User/index.vue";
+import CollectionList from "../../components/NEUIKit/Chat/collection/index.vue";
 import { t } from "../../components/NEUIKit/utils/i18n";
 import "./iconfont.css";
-import { ref, getCurrentInstance, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { autorun } from "mobx";
 import SettingsMenu from "./components/setting.vue";
 import Tip from "./components/tip.vue";
 
-// 获取组件实例和store
-const { proxy } = getCurrentInstance()!;
-const store = proxy?.$UIKitStore;
+import QChat from "./qchat/index.vue";
+import { store } from "../../components/NEUIKit/utils/init";
 
 // 响应式数据
 const model = ref("chat");
@@ -199,7 +253,7 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  width: 36px;
+  width: 38px;
   position: relative;
 }
 
@@ -225,6 +279,7 @@ onUnmounted(() => {
 .icon-label {
   font-size: 12px;
   text-align: center;
+  width: 60px;
 }
 
 .right {
@@ -252,8 +307,21 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
 }
-.collect-right {
+.collection-container {
   width: 100%;
   height: 100%;
+}
+
+.qchat-container {
+  width: 100%;
+  height: 100%;
+}
+
+.app-info {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
 }
 </style>

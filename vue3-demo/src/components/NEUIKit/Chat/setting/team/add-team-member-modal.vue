@@ -80,10 +80,11 @@ import PersonSelect, {
 } from "../../../CommonComponents/PersonSelect.vue";
 import Avatar from "../../../CommonComponents/Avatar.vue";
 import Appellation from "../../../CommonComponents/Appellation.vue";
-import { ref, computed, onMounted, getCurrentInstance, watch } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { t } from "../../../utils/i18n";
 import { toast } from "../../../utils/toast";
 import { debounce } from "@xkit-yx/utils";
+import { store } from "../../../utils/init"
 
 // Props
 interface Props {
@@ -103,9 +104,6 @@ interface Emits {
 }
 
 const emit = defineEmits<Emits>();
-
-const { proxy } = getCurrentInstance()!;
-const store = proxy?.$UIKitStore;
 
 // 响应式数据
 const friendList = ref<PersonSelectItem[]>([]);
@@ -411,6 +409,8 @@ onMounted(() => {
 .selected-friend-name {
   font-size: 14px;
   color: #333;
+  max-width: 300px;
+  display: inline-block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -88,19 +88,20 @@ import Picker from "../../../../CommonComponents/Picker.vue";
 import Switch from "../../../../CommonComponents/Switch.vue";
 import UserCardModal from "../../../../CommonComponents/UserCardModal.vue";
 import { showToast } from "../../../../utils/toast";
-import { ref, computed, onMounted, onUnmounted, getCurrentInstance } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { autorun } from "mobx";
 import { t } from "../../../../utils/i18n";
 import { ALLOW_AT } from "../../../../utils/constants";
-import {
+import type {
   V2NIMTeam,
   V2NIMTeamMember,
 } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService";
-import { YxServerExt } from "@xkit-yx/im-store-v2/dist/types/types";
+import type { YxServerExt } from "@xkit-yx/im-store-v2/dist/types/types";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import RootStore from "@xkit-yx/im-store-v2";
 import AddTeamManagerModal from "./add-team-manager-modal.vue";
 import { toast } from "../../../../utils/toast";
+import { store } from "../../../../utils/init"
 
 interface Props {
   teamId: string;
@@ -109,11 +110,7 @@ interface Props {
 }
 const props = defineProps<Props>();
 
-const { proxy } = getCurrentInstance()!;
-
-const store = proxy?.$UIKitStore as RootStore;
-
-const teamManagerVisible = proxy?.$UIKitStore.localOptions.teamManagerVisible;
+const teamManagerVisible = store.localOptions.teamManagerVisible;
 
 const rangeArr = [
   {

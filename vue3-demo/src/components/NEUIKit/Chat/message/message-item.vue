@@ -120,7 +120,7 @@
 
 <script lang="ts" setup>
 /** 消息项 */
-import { ref, computed, onUnmounted, getCurrentInstance } from "vue";
+import { ref, computed, onUnmounted } from "vue";
 import MessageAvatar from "./message-avatar.vue";
 import MessageBubble from "./message-bubble.vue";
 import MessageNotification from "./message-notification.vue";
@@ -131,6 +131,8 @@ import { t } from "../../utils/i18n";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import emitter from "../../utils/eventBus";
 import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import { nim, store } from "../../utils/init"
+
 
 const props = withDefaults(
   defineProps<{
@@ -143,7 +145,6 @@ const props = withDefaults(
   {}
 );
 
-const { proxy } = getCurrentInstance()!; // 获取组件实例
 
 // 回复消息
 const replyMsg = computed(() => {
@@ -155,11 +156,11 @@ const appellation = ref("");
 
 // 会话类型
 const conversationType =
-  proxy?.$NIM.V2NIMConversationIdUtil.parseConversationType(
+  nim?.V2NIMConversationIdUtil.parseConversationType(
     props.msg.conversationId
   ) as unknown as V2NIMConst.V2NIMConversationType;
 // 会话对象
-const to = proxy?.$NIM.V2NIMConversationIdUtil.parseConversationTargetId(
+const to = nim?.V2NIMConversationIdUtil.parseConversationTargetId(
   props.msg.conversationId
 );
 
@@ -210,7 +211,7 @@ const formatMessageTime = (timestamp: number) => {
 const uninstallAppellationWatch = autorun(() => {
   // 昵称展示顺序 群昵称 > 备注 > 个人昵称 > 帐号
   // 断网重联下，若群成员修改昵称，可以通过拉取群成员接口，触发此函数执行，获取最新的群昵称
-  appellation.value = proxy?.$UIKitStore.uiStore.getAppellation({
+  appellation.value = store.uiStore?.getAppellation({
     account: props.msg.senderId,
     teamId:
       conversationType ===

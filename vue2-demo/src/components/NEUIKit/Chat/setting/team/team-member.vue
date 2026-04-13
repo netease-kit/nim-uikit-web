@@ -107,7 +107,7 @@
 import Avatar from "../../../CommonComponents/Avatar.vue";
 import UserCardModal from "../../../CommonComponents/UserCardModal.vue";
 import { RecycleScroller } from "vue-virtual-scroller";
-import { autorun } from "mobx";
+import { autorun } from "../../../utils/store";
 import { t } from "../../../utils/i18n";
 import Appellation from "../../../CommonComponents/Appellation.vue";
 import Icon from "../../../CommonComponents/Icon.vue";

@@ -88,7 +88,7 @@ import Picker from "../../../../CommonComponents/Picker.vue";
 import NEUIKitSwitch from "../../../../CommonComponents/Switch.vue";
 import UserCardModal from "../../../../CommonComponents/UserCardModal.vue";
 import { showToast } from "../../../../utils/toast";
-import { autorun } from "mobx";
+import { autorun } from "../../../../utils/store";
 import { t } from "../../../../utils/i18n";
 import { ALLOW_AT } from "../../../../utils/constants";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";

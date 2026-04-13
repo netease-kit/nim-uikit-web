@@ -92,7 +92,7 @@ import FriendList from "./friend-list.vue";
 import TeamList from "./team-list.vue";
 import BlackList from "./black-list.vue";
 import ValidList from "./valid-list.vue";
-import { autorun } from "mobx";
+import { autorun } from "../utils/store";
 import { t } from "../utils/i18n";
 import { trackInit } from "../utils/reporter";
 import Welcome from "../CommonComponents/Welcome.vue";

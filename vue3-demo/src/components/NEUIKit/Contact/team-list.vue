@@ -29,39 +29,35 @@
 <script lang="ts" setup>
 /** 群列表组件 */
 import { autorun } from "mobx";
-import { onUnmounted, ref, getCurrentInstance } from "vue";
+import { onUnmounted, ref } from "vue";
 import { RecycleScroller } from "vue-virtual-scroller";
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import Empty from "../CommonComponents/Empty.vue";
 import Avatar from "../CommonComponents/Avatar.vue";
 import { t } from "../utils/i18n";
 import type { V2NIMTeam } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService";
-import RootStore from "@xkit-yx/im-store-v2";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
+import { store } from "../utils/init";
 
 const teamList = ref<V2NIMTeam[]>([]);
-
-const { proxy } = getCurrentInstance()!;
-
-const store = proxy?.$UIKitStore as RootStore;
 
 const emit = defineEmits<{
   onGroupItemClick: [];
 }>();
 
 const handleClick = async (team: V2NIMTeam) => {
+  emit("onGroupItemClick");
   if (store.sdkOptions?.enableV2CloudConversation) {
     await store.conversationStore?.insertConversationActive(
       V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
-      team.teamId
+      team.teamId,
     );
   } else {
     await store.localConversationStore?.insertConversationActive(
       V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM,
-      team.teamId
+      team.teamId,
     );
   }
-  emit("onGroupItemClick");
 };
 
 /** 群列表监听 */

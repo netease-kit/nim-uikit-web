@@ -169,6 +169,7 @@ onUnmounted(() => {
   cursor: pointer;
   font-size: 14px;
   color: #333;
+  text-align: left;
 }
 .picker-option:hover {
   background-color: #f5f5f5;

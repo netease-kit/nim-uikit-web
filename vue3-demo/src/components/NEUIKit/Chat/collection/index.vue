@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, getCurrentInstance, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import { debounce } from "@xkit-yx/utils";
 import CollectionItem from "./collection-item.vue";
 import Empty from "../../CommonComponents/Empty.vue";
@@ -44,13 +44,13 @@ import ChatForwardModal from "../message/message-forward-modal.vue";
 import { modal } from "../../utils/modal";
 import { toast } from "../../utils/toast";
 import { t } from "../../utils/i18n";
-import {
+import type {
   V2NIMCollection,
   V2NIMCollectionOption,
   V2NIMMessage,
 } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
-const { proxy } = getCurrentInstance()!;
-const nim = proxy?.$NIM;
+import { nim } from "../../utils/init"
+
 
 // 定义事件
 const emit = defineEmits<{
@@ -69,7 +69,7 @@ const containerRef = ref<HTMLElement>();
 const LIMIT = 20;
 
 // 获取收藏列表
-const getCollectionList = async (options: V2NIMCollectionOption) => {
+const getCollectionList = async (options) => {
   try {
     const data = await nim.V2NIMMessageService.getCollectionListExByOption(
       options

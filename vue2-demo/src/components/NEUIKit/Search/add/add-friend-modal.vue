@@ -76,7 +76,7 @@ import Modal from "../../CommonComponents/Modal.vue";
 import Icon from "../../CommonComponents/Icon.vue";
 import { t } from "../../utils/i18n";
 import Button from "../../CommonComponents/Button.vue";
-import { autorun } from "mobx";
+import { autorun } from "../../utils/store";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import Input from "../../CommonComponents/Input.vue";
 import { showToast } from "../../utils/toast";

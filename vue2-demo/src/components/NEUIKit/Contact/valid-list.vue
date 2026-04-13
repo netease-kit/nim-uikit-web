@@ -109,7 +109,7 @@
 </template>
 
 <script>
-import { autorun } from "mobx";
+import { autorun } from "../utils/store";
 import Empty from "../CommonComponents/Empty.vue";
 import Avatar from "../CommonComponents/Avatar.vue";
 import Icon from "../CommonComponents/Icon.vue";

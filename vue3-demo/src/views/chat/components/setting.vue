@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, getCurrentInstance } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import type { CSSProperties } from "vue";
 import Icon from "../../../components/NEUIKit/CommonComponents/Icon.vue";
 import { showModal } from "../../../components/NEUIKit/utils/modal";
@@ -67,10 +67,9 @@ import { useRouter } from "vue-router";
 import { STORAGE_KEY } from "../../../components/NEUIKit/utils/constants";
 import { t } from "../../../components/NEUIKit/utils/i18n";
 import SettingModal from "./setting-modal.vue";
+import { nim, store } from "../../../components/NEUIKit/utils/init"
 
 const router = useRouter();
-const { proxy } = getCurrentInstance()!;
-const store = proxy?.$UIKitStore;
 
 const visible = ref(false);
 const showLanguageSubmenu = ref(false);
@@ -80,7 +79,7 @@ const settingModalVisible = ref(false);
 
 // 动态获取当前语言显示文本
 const currentLanguage = computed(() => {
-  const lang = sessionStorage.getItem("switchToEnglishFlag");
+  const lang = localStorage.getItem("switchToEnglishFlag");
   return lang === "en" ? t("enText") : t("zhText");
 });
 
@@ -119,7 +118,7 @@ const toggleLanguageSubmenu = () => {
 };
 
 const switchLanguage = (lang: string) => {
-  sessionStorage.setItem("switchToEnglishFlag", lang);
+  localStorage.setItem("switchToEnglishFlag", lang);
   // 语言变化处理逻辑
   hideMenu();
   window.location.reload();
@@ -142,11 +141,29 @@ const logout = () => {
     cancelText: t("cancelText") || "取消",
     width: 400,
     height: 140,
-    onConfirm: () => {
-      sessionStorage.removeItem(STORAGE_KEY);
-      store?.destroy();
-      proxy?.$NIM.V2NIMLoginService.logout();
-      router.push("/login");
+    onConfirm: async () => {
+      try {
+        // 首先执行NIM登出
+        await nim.V2NIMLoginService.logout();
+
+        // 然后清理本地存储
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem("nimConfig");
+
+        // 销毁store
+        store?.destroy();
+
+        // 跳转到登录页
+        router.push("/login");
+        window.location.reload();
+      } catch (error) {
+        console.error("Logout error:", error);
+        // 即使登出失败，也要清理本地数据
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(STORAGE_KEY);
+        store?.destroy();
+        router.push("/login");
+      }
     },
     onCancel: () => {
       console.log("取消退出登录");
@@ -270,7 +287,9 @@ onUnmounted(() => {
 /* 动画效果 */
 .settings-menu-enter-active,
 .settings-menu-leave-active {
-  transition: opacity 0.2s, transform 0.2s;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
 }
 
 .settings-menu-enter-from,

@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import { autorun } from "mobx";
+import { autorun } from "../../utils/store";
 import { ALLOW_AT } from "../../utils/constants";
 import { t } from "../../utils/i18n";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
@@ -68,8 +68,8 @@ export default {
                 V2NIMConst.V2NIMTeamInviteMode.V2NIM_TEAM_INVITE_MODE_ALL
                   ? t("teamAll")
                   : this.teamManagerVisible
-                  ? t("teamOwnerAndManagerText")
-                  : t("teamOwner")
+                    ? t("teamOwnerAndManagerText")
+                    : t("teamOwner")
               }”`
             );
           }
@@ -81,8 +81,8 @@ export default {
                   .V2NIM_TEAM_UPDATE_INFO_MODE_ALL
                   ? t("teamAll")
                   : this.teamManagerVisible
-                  ? t("teamOwnerAndManagerText")
-                  : t("teamOwner")
+                    ? t("teamOwnerAndManagerText")
+                    : t("teamOwner")
               }”`
             );
           }

@@ -47,12 +47,25 @@
           <Icon iconClassName="menu-icon" :size="36" type="icon-team2" />
           <span class="menu-text">{{ t("teamMenuText") }}</span>
         </div>
+        <div
+          class="menu-item"
+          :class="{ active: activeTab === 'robots' }"
+          @click="setActiveTab('robots')"
+        >
+          <div class="menu-icon-bot">
+            <Icon :size="21" type="icon-bot" />
+          </div>
+          <span class="menu-text">{{ t("myRobotsText") }}</span>
+        </div>
       </div>
     </div>
 
     <!-- 右侧内容区域 -->
     <div class="content-area">
-      <div v-if="getContentTitle()" class="content-header">
+      <div
+        v-if="getContentTitle() && activeTab !== 'robots'"
+        class="content-header"
+      >
         <h3>{{ getContentTitle() }}</h3>
         <span class="black-list-sub-title" v-if="activeTab === 'blacklist'">
           {{ "(" + t("blacklistSubTitle") + ")" }}
@@ -76,8 +89,13 @@
           v-else-if="activeTab === 'groups'"
           @onGroupItemClick="emit('onGroupItemClick')"
         />
-        <!-- 默认欢迎页面 -->
-        <div v-else class="welcome-content">
+        <!-- 我的机器人 -->
+        <BotList
+          v-else-if="activeTab === 'robots'"
+          @afterSendMsgClick="emit('afterSendMsgClick')"
+        />
+        <!-- 默认占位内容 -->
+        <div v-else class="placeholder-content">
           <Welcome />
         </div>
       </div>
@@ -93,18 +111,14 @@ import FriendList from "./friend-list.vue";
 import TeamList from "./team-list.vue";
 import BlackList from "./black-list.vue";
 import ValidList from "./valid-list.vue";
-import { onUnmounted, ref, getCurrentInstance } from "vue";
+import BotList from "./bot-list.vue";
+import Welcome from "../CommonComponents/Welcome.vue";
+import { onUnmounted, ref } from "vue";
 import { autorun } from "mobx";
 import { t } from "../utils/i18n";
 import { onMounted } from "vue";
-import RootStore from "@xkit-yx/im-store-v2";
 import { trackInit } from "../utils/reporter";
-import Welcome from "../CommonComponents/Welcome.vue";
-
-const { proxy } = getCurrentInstance()!;
-
-const store = proxy?.$UIKitStore as RootStore;
-const nim = proxy?.$NIM;
+import { nim, store } from "../utils/init";
 
 const unreadSysMsgCount = ref(0);
 
@@ -113,7 +127,7 @@ let unreadWatch = () => {};
 
 const activeTab = ref("");
 
-trackInit("ContactUIKit", nim.options.appkey);
+trackInit("ContactUIKit", nim?.options?.appkey);
 
 const emit = defineEmits<{
   afterSendMsgClick: [];
@@ -145,6 +159,7 @@ const getContentTitle = () => {
     blacklist: t("blacklistText"),
     friends: t("myFriendsText"),
     groups: t("teamMenuText"),
+    robots: t("myRobotsText"),
   };
   return titleMap[activeTab.value];
 };
@@ -263,8 +278,8 @@ onUnmounted(() => {
   overflow: auto;
 }
 
-/* 欢迎内容 */
-.welcome-content {
+/* 占位内容 */
+.placeholder-content {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -273,17 +288,26 @@ onUnmounted(() => {
   width: 100%;
 }
 
-.welcome-illustration {
-  margin-bottom: 20px;
-}
-
-.welcome-text {
+.placeholder-text {
   font-size: 16px;
-  margin: 0;
+  color: #999;
+  text-align: center;
 }
 
 .menu-icon-friend {
   background-color: #537ff4;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-right: 12px;
+}
+
+.menu-icon-bot {
+  background-color: #f7a438;
   border-radius: 50%;
   width: 36px;
   height: 36px;

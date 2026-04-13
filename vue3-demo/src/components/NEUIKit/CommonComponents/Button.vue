@@ -4,17 +4,19 @@
     :class="[
       `ne-button--${type}`,
       {
-        'ne-button--disabled': disabled,
+        'ne-button--disabled': disabled || loading,
         'ne-button--block': block,
         'ne-button--round': round,
         'ne-button--plain': plain,
+        'ne-button--loading': loading,
       },
       customClass,
     ]"
     :style="customStyle"
-    :disabled="disabled"
+    :disabled="disabled || loading"
     @click="handleClick"
   >
+    <span v-if="loading" class="ne-button-loading-icon"></span>
     <slot></slot>
   </button>
 </template>
@@ -24,6 +26,7 @@ const props = withDefaults(
   defineProps<{
     type?: "default" | "primary" | "success" | "warning" | "danger";
     disabled?: boolean;
+    loading?: boolean;
     block?: boolean;
     round?: boolean;
     plain?: boolean;
@@ -33,12 +36,13 @@ const props = withDefaults(
   {
     type: "default",
     disabled: false,
+    loading: false,
     block: false,
     round: false,
     plain: false,
     customStyle: () => ({}),
     customClass: "",
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -46,7 +50,7 @@ const emit = defineEmits<{
 }>();
 
 const handleClick = (event: MouseEvent) => {
-  if (!props.disabled) {
+  if (!props.disabled && !props.loading) {
     emit("click", event);
   }
 };
@@ -74,8 +78,6 @@ const handleClick = (event: MouseEvent) => {
   font-size: 14px;
   border-radius: 4px;
 }
-
-
 
 .ne-button--primary {
   color: #fff;
@@ -163,5 +165,34 @@ const handleClick = (event: MouseEvent) => {
 
 .ne-button--plain.ne-button--danger {
   color: #f56c6c;
+}
+
+.ne-button--loading {
+  cursor: not-allowed;
+}
+
+.ne-button-loading-icon {
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  animation: button-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+.ne-button--default .ne-button-loading-icon {
+  border-color: rgba(0, 0, 0, 0.15);
+  border-top-color: #606266;
+}
+
+@keyframes button-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

@@ -219,7 +219,7 @@
 import Avatar from "../../CommonComponents/Avatar.vue";
 import Appellation from "../../CommonComponents/Appellation.vue";
 import { t } from "../../utils/i18n";
-import { autorun } from "mobx";
+import { autorun } from "../../utils/store";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { toast } from "../../utils/toast";
 import Modal from "../../CommonComponents/Modal.vue";

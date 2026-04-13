@@ -1,5 +1,5 @@
 <template>
-  <div v-if="props.replyMsg?.messageClientId" class="reply-msg-wrapper">
+  <div v-if="visible" class="reply-msg-wrapper">
     <!-- replyMsg 不存在 说明回复的消息被删除或者撤回 -->
     <div v-if="props.replyMsg?.messageClientId == 'noFind'">
       <span>{{ t("replyNotFindText") }}</span>
@@ -9,7 +9,14 @@
       trigger="click"
       placement="top"
       :maxWidth="500"
-      :bodyStyle="{ padding: '0', maxHeight: '300px', overflow: 'auto' }"
+      :bodyStyle="{
+        padding: '0',
+        maxHeight: '300px',
+        overflow: 'auto',
+      }"
+      :wrapperStyle="{
+        width: '100%',
+      }"
       v-model="popoverVisible"
     >
       <!-- 移除 @click 事件，让 Popover 自己处理点击 -->
@@ -17,7 +24,8 @@
         <div class="reply-msg-name-wrapper">
           <div class="reply-msg-name-content">
             <Appellation
-              :account="replyMsg?.senderId"
+              :key="replyMsg?.senderId"
+              :account="replyMsg?.senderId || ''"
               :teamId="replyMsg?.receiverId"
               :fontSize="13"
               color="#666666"
@@ -46,10 +54,11 @@
       </div>
       <template #content>
         <div
+          v-if="replyMsg"
           @click="(e) => e.stopPropagation()"
           class="popover-message-content"
         >
-          <MessageItemContent :msg="replyMsg" />
+          <MessageItemContent :msg="replyMsg" :showReply="false" />
         </div>
       </template>
     </Popover>
@@ -69,7 +78,10 @@ import MessageOneLine from "../../CommonComponents/MessageOneLine.vue";
 import Popover from "../../CommonComponents/Popover.vue";
 import MessageItemContent from "./message-item-content.vue";
 
-const props = withDefaults(defineProps<{ replyMsg: V2NIMMessageForUI }>(), {});
+const props = withDefaults(
+  defineProps<{ replyMsg?: V2NIMMessageForUI; visible: boolean }>(),
+  {}
+);
 
 // Popover 显示状态
 const popoverVisible = ref(false);

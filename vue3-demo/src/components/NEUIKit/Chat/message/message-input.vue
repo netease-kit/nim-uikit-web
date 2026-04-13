@@ -80,6 +80,10 @@
             @blur="handleInputBlur"
             @focus="handleInputFocus"
             @input="handleInputChange"
+            @paste="handlePaste"
+            @compositionstart="handleCompositionStart"
+            @compositionend="handleCompositionEnd"
+            @keydown="handleKeyDown"
           >
           </Textarea>
 
@@ -172,9 +176,12 @@
         <MentionChooseList
           :teamId="to"
           :allowAtAll="allowAtAll"
+          :searchKeyword="mentionSearchKeyword"
+          :selectedIndex="selectedMentionIndex"
           @handleMemberClick="handleMentionSelect"
           @item-click="handleMentionSelect"
           @close-popup="handleCloseMention"
+          @update:selectedIndex="selectedMentionIndex = $event"
         />
       </template>
     </Popover>
@@ -185,15 +192,7 @@
 /** 消息输入框 */
 import Face from "./face.vue";
 import Icon from "../../CommonComponents/Icon.vue";
-import {
-  ref,
-  getCurrentInstance,
-  computed,
-  onUnmounted,
-  onMounted,
-  nextTick,
-  watch,
-} from "vue";
+import { ref, computed, onUnmounted, onMounted, nextTick, watch } from "vue";
 import {
   ALLOW_AT,
   events,
@@ -223,9 +222,8 @@ import type {
   YxAitMsg,
 } from "@xkit-yx/im-store-v2/dist/types/types";
 import Textarea from "../../CommonComponents/Textarea.vue";
-
-const { proxy } = getCurrentInstance()!; // 获取组件实例
-const store = proxy?.$UIKitStore;
+import { store, nim } from "../../utils/init";
+import type { V2NIMMessage } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
 
 const props = withDefaults(
   defineProps<{
@@ -237,7 +235,7 @@ const props = withDefaults(
     };
     inputPlaceholder?: string;
   }>(),
-  {}
+  {},
 );
 
 // 输入框内容
@@ -275,6 +273,9 @@ const inputWrapperRef = ref();
 // @时使用 在现有的 ref 定义附近添加
 const cursorPosition = ref(0); // 记录光标位置
 const atPosition = ref(0); // 记录@符号的位置
+const mentionSearchKeyword = ref(""); // @后面的搜索关键词
+const isComposing = ref(false); // 是否正在使用输入法
+const selectedMentionIndex = ref(0); // 当前选中的mention成员索引
 
 // 发送图片消息 触发图片选择
 const imageInput = ref<HTMLInputElement | null>(null);
@@ -346,6 +347,18 @@ const handleInputBlur = () => {
   }
 };
 
+// 处理输入法开始
+const handleCompositionStart = () => {
+  isComposing.value = true;
+};
+
+// 处理输入法结束
+const handleCompositionEnd = (event) => {
+  isComposing.value = false;
+  // 输入法结束后，触发一次输入处理
+  handleInputChange(event);
+};
+
 // 处理输入框内容变化
 const handleInputChange = (event) => {
   // 获取当前光标位置
@@ -360,9 +373,42 @@ const handleInputChange = (event) => {
       V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
   ) {
     atPosition.value = cursorPosition.value - 1; // 记录@符号的位置
+    mentionSearchKeyword.value = ""; // 重置搜索关键词
+    selectedMentionIndex.value = 0; // 重置选中索引
     mentionPopoverVisible.value = true;
-  } else {
-    mentionPopoverVisible.value = false;
+  } else if (mentionPopoverVisible.value && !isComposing.value) {
+    // 如果弹窗已显示且不在输入法状态，检查@符号是否还存在
+    const currentText = inputText.value;
+    const atPos = atPosition.value;
+
+    // 如果@符号被删除了，关闭弹窗
+    if (
+      atPos < 0 ||
+      atPos >= currentText.length ||
+      currentText[atPos] !== "@"
+    ) {
+      mentionPopoverVisible.value = false;
+      mentionSearchKeyword.value = "";
+    } else {
+      // 提取@符号后到光标位置之间的搜索词
+      const newKeyword = currentText.slice(atPos + 1, cursorPosition.value);
+
+      // 如果关键词发生变化，重置选中索引到0
+      if (newKeyword !== mentionSearchKeyword.value) {
+        selectedMentionIndex.value = 0;
+      }
+
+      mentionSearchKeyword.value = newKeyword;
+      console.log(
+        "📝 提取搜索关键词:",
+        `'${mentionSearchKeyword.value}'`,
+        "atPos:",
+        atPos,
+        "cursorPos:",
+        cursorPosition.value,
+      );
+    }
+    // 否则保持弹窗打开，让 MentionChooseList 组件处理过滤
   }
 };
 
@@ -371,15 +417,16 @@ const handleMentionSelect = (member) => {
   const nickInTeam = member.appellation;
   selectedAtMembers.value = [
     ...selectedAtMembers.value.filter(
-      (item) => item.accountId !== member.accountId
+      (item) => item.accountId !== member.accountId,
     ),
     member,
   ];
 
-  // 在@符号位置插入@xxx，而不是追加到末尾
+  // 在@符号位置插入@xxx，替换掉@符号和之后已输入的内容
   const currentText = inputText.value;
   const beforeAt = currentText.substring(0, atPosition.value);
-  const afterAt = currentText.substring(atPosition.value + 1); // +1 跳过@符号
+  // 使用cursorPosition而不是atPosition+1，这样可以跳过用户已经输入的搜索关键词
+  const afterAt = currentText.substring(cursorPosition.value);
   const newInputText = beforeAt + "@" + nickInTeam + " " + afterAt;
 
   // 更新input框的内容
@@ -393,7 +440,7 @@ const handleMentionSelect = (member) => {
       const newCursorPos = atPosition.value + nickInTeam.length + 2; // @xxx + 空格
       msgInputRef.value.textareaRef.setSelectionRange(
         newCursorPos,
-        newCursorPos
+        newCursorPos,
       );
       msgInputRef.value.focus();
     }
@@ -403,6 +450,32 @@ const handleMentionSelect = (member) => {
 // 关闭mention弹窗
 const handleCloseMention = () => {
   mentionPopoverVisible.value = false;
+  selectedMentionIndex.value = 0; // 重置选中索引
+};
+
+// 处理键盘导航
+const handleKeyDown = (event: KeyboardEvent) => {
+  // 只在mention弹窗显示时处理键盘事件
+  if (!mentionPopoverVisible.value) {
+    return;
+  }
+
+  const key = event.key;
+
+  // 阻止默认行为
+  if (key === "ArrowUp" || key === "ArrowDown" || key === "Enter") {
+    event.preventDefault();
+  }
+
+  // 触发mention列表组件的键盘导航事件
+  if (key === "ArrowUp") {
+    selectedMentionIndex.value = Math.max(0, selectedMentionIndex.value - 1);
+  } else if (key === "ArrowDown") {
+    selectedMentionIndex.value = selectedMentionIndex.value + 1;
+  } else if (key === "Enter") {
+    // Enter键选中当前高亮的成员
+    // 这个事件会被mention-choose-list组件监听
+  }
 };
 
 // 滚动到底部
@@ -480,7 +553,9 @@ const handleSendTextMsg = () => {
   if (inputText.value.trim() === "") return;
   if (isTeamMute.value) return;
   let text = replaceEmoji(inputText.value);
-  const textMsg = proxy?.$NIM.V2NIMMessageCreator.createTextMessage(text);
+  const textMsg = nim.V2NIMMessageCreator.createTextMessage(
+    text,
+  ) as unknown as V2NIMMessage;
   const ext = onAtMembersExtHandler();
   isReplyMsg.value = false;
   store?.msgStore
@@ -505,13 +580,14 @@ const handleSendTextMsg = () => {
       }
     });
 
+  // 重置状态
   inputText.value = "";
 };
 
 // 移除回复消息
 const removeReplyMsg = () => {
   store?.msgStore.removeReplyMsgActive(
-    replyMsg?.value?.conversationId as string
+    replyMsg?.value?.conversationId as string,
   );
   isReplyMsg.value = false;
 };
@@ -546,7 +622,7 @@ const handleEmoji = (emoji: { key: string; type: string }) => {
       const newCursorPos = currentCursorPos + emoji.key.length;
       msgInputRef.value.textareaRef.setSelectionRange(
         newCursorPos,
-        newCursorPos
+        newCursorPos,
       );
       msgInputRef.value.focus();
       // 更新记录的光标位置
@@ -634,7 +710,9 @@ const onFileSelected = async (event: Event) => {
   }
 
   try {
-    const fileMsg = proxy?.$NIM.V2NIMMessageCreator.createFileMessage(file);
+    const fileMsg = nim.V2NIMMessageCreator.createFileMessage(
+      file,
+    ) as unknown as V2NIMMessage;
 
     await store?.msgStore.sendMessageActive({
       msg: fileMsg,
@@ -670,7 +748,9 @@ const onVideoSelected = async (event: Event) => {
   const previewImg = await getVideoFirstFrameDataUrl(file);
 
   try {
-    const fileMsg = proxy?.$NIM.V2NIMMessageCreator.createVideoMessage(file);
+    const fileMsg = nim.V2NIMMessageCreator.createVideoMessage(
+      file,
+    ) as unknown as V2NIMMessage;
 
     await store?.msgStore.sendMessageActive({
       msg: fileMsg,
@@ -711,7 +791,9 @@ const onImageSelected = async (event: Event) => {
   try {
     const previewImg = await getImgDataUrl(file);
 
-    const imgMsg = proxy?.$NIM.V2NIMMessageCreator.createImageMessage(file);
+    const imgMsg = nim.V2NIMMessageCreator.createImageMessage(
+      file,
+    ) as unknown as V2NIMMessage;
 
     await store?.msgStore.sendMessageActive({
       msg: imgMsg,
@@ -738,6 +820,102 @@ const onImageSelected = async (event: Event) => {
   }
 };
 
+// 处理粘贴事件
+const handlePaste = async (event: ClipboardEvent) => {
+  if (isTeamMute.value) return;
+
+  const clipboardData = event.clipboardData;
+  if (!clipboardData) return;
+
+  const items = clipboardData.items;
+
+  // 遍历剪贴板项目
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+
+    // 处理文件类型（图片、视频等）
+    if (item.kind === "file") {
+      event.preventDefault(); // 阻止默认粘贴行为
+
+      const file = item.getAsFile();
+      if (!file) continue;
+
+      // 检查文件大小
+      const isFileSizeValid = checkFileSize(file);
+      if (!isFileSizeValid) {
+        return;
+      }
+
+      try {
+        // 根据文件类型处理
+        if (file.type.startsWith("image/")) {
+          // 处理图片
+          const previewImg = await getImgDataUrl(file);
+          const imgMsg = nim.V2NIMMessageCreator.createImageMessage(
+            file,
+          ) as unknown as V2NIMMessage;
+
+          await store?.msgStore.sendMessageActive({
+            msg: imgMsg,
+            conversationId: props.conversationId,
+            previewImg,
+            progress: () => true,
+            sendBefore: () => {
+              scrollBottom();
+            },
+          });
+
+          toast.success("图片发送成功");
+        } else if (file.type.startsWith("video/")) {
+          // 处理视频
+          const previewImg = await getVideoFirstFrameDataUrl(file);
+          const videoMsg = nim.V2NIMMessageCreator.createVideoMessage(
+            file,
+          ) as unknown as V2NIMMessage;
+
+          await store?.msgStore.sendMessageActive({
+            msg: videoMsg,
+            conversationId: props.conversationId,
+            previewImg,
+            progress: () => true,
+            sendBefore: () => {
+              scrollBottom();
+            },
+          });
+
+          toast.success("视频发送成功");
+        } else {
+          // 处理其他文件类型
+          const fileMsg = nim.V2NIMMessageCreator.createFileMessage(
+            file,
+          ) as unknown as V2NIMMessage;
+
+          await store?.msgStore.sendMessageActive({
+            msg: fileMsg,
+            conversationId: props.conversationId,
+            progress: () => true,
+            sendBefore: () => {
+              scrollBottom();
+            },
+          });
+
+          toast.success("文件发送成功");
+        }
+
+        scrollBottom();
+      } catch (err: any) {
+        console.error("粘贴发送文件失败:", err);
+        handleSendMsgError(err?.code);
+      }
+
+      return; // 发现文件后直接返回，不处理文本
+    }
+  }
+
+  // 如果没有文件，继续正常的文本粘贴流程
+  // 这里不需要额外处理，让默认行为继续
+};
+
 let teamWatch = () => {};
 
 watch(
@@ -760,11 +938,11 @@ watch(
           V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
         ) {
           const _team: V2NIMTeam = store?.teamStore.teams.get(
-            props.to
+            props.to,
           ) as V2NIMTeam;
 
           teamMembers.value = store?.teamMemberStore.getTeamMember(
-            props.to
+            props.to,
           ) as V2NIMTeamMember[];
 
           const myUser = store?.userStore.myUserInfo;
@@ -773,10 +951,10 @@ watch(
             .filter(
               (item) =>
                 item.memberRole ===
-                V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
+                V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER,
             )
             .some(
-              (member) => member.accountId === (myUser ? myUser.accountId : "")
+              (member) => member.accountId === (myUser ? myUser.accountId : ""),
             );
           team.value = _team;
 
@@ -785,7 +963,7 @@ watch(
       });
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 onMounted(() => {
@@ -829,7 +1007,7 @@ onMounted(() => {
     const beReplyMember = member as { accountId: string; appellation: string };
     selectedAtMembers.value = [
       ...selectedAtMembers.value.filter(
-        (item) => item.accountId !== beReplyMember.accountId
+        (item) => item.accountId !== beReplyMember.accountId,
       ),
       beReplyMember,
     ];

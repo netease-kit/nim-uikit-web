@@ -6,6 +6,9 @@
     <div class="login-card" v-show="step === 1">
       <LoginForm />
     </div>
+    <div class="login-card" v-show="step === 2">
+      <ConfigForm />
+    </div>
   </div>
 </template>
 
@@ -13,17 +16,22 @@
 import { onMounted, onUnmounted, ref } from "vue";
 import LoginForm from "./components/login-form.vue";
 import Welcome from "./components/welcome.vue";
+import ConfigForm from "./components/config-form.vue";
 import emitter from "../utils/eventBus";
 
-const step = ref(0); // 0: 欢迎页 1: 登录页
+const step = ref(0); // 0: 欢迎页 1: 短信登录页 2: 账号登录页
 onMounted(() => {
   emitter.on("login", () => {
     step.value = 1;
+  });
+  emitter.on("configLogin", () => {
+    step.value = 2;
   });
 });
 
 onUnmounted(() => {
   emitter.off("login");
+  emitter.off("configLogin");
 });
 </script>
 

@@ -70,7 +70,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onUnmounted, ref, getCurrentInstance } from "vue";
+import { onUnmounted, ref } from "vue";
 import Avatar from "../../CommonComponents/Avatar.vue";
 import Modal from "../../CommonComponents/Modal.vue";
 import Icon from "../../CommonComponents/Icon.vue";
@@ -82,6 +82,7 @@ import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import type { V2NIMUser } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService";
 import Input from "../../CommonComponents/Input.vue";
 import { showToast } from "../../utils/toast";
+import { nim, store } from "../../utils/init"
 
 // 添加 Modal 相关的 props
 interface Props {
@@ -109,8 +110,6 @@ const handleUpdateVisible = (value: boolean) => {
   emit("update:visible", value);
 };
 
-const { proxy } = getCurrentInstance()!; // 获取组件实例
-const store = proxy?.$UIKitStore;
 
 // 搜索结果状态
 const searchResState = ref<"beginSearch" | "searchEmpty" | "searchResult">(

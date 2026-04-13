@@ -4,14 +4,16 @@ import V2NIM from "nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK";
 import type { V2NIMMessage } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
 // 是否开启云端会话，实际根据您的业务调整
 const enableV2CloudConversation =
-  sessionStorage.getItem("enableV2CloudConversation") === "on";
-const teamManagerVisible =
-  sessionStorage.getItem("teamManagerVisible") !== "off";
+  localStorage.getItem("enableV2CloudConversation") === "on";
+const teamManagerVisible = localStorage.getItem("teamManagerVisible") !== "off";
 
-export const init = () => {
-  const nim = V2NIM.getInstance(
+let store: RootStore;
+let nim: V2NIM;
+
+export const initIMUIKit = (appkey: string, lbsUrls?: string, linkUrl?: string) => {
+  nim = V2NIM.getInstance(
     {
-      appkey: "",
+      appkey: appkey,
       needReconnect: true,
       debugLevel: "debug",
       apiVersion: "v2",
@@ -19,13 +21,13 @@ export const init = () => {
     },
     {
       V2NIMLoginServiceConfig: {
-        lbsUrls: ["https://lbs.netease.im/lbs/webconf.jsp"],
-        linkUrl: "weblink.netease.im",
+        lbsUrls: lbsUrls ? [lbsUrls] : ["https://lbs.netease.im/lbs/webconf.jsp"],
+        linkUrl: linkUrl || "weblink.netease.im",
       },
-    }
+    },
   );
 
-  const store = new RootStore(
+  store = new RootStore(
     // @ts-ignore
     nim,
     {
@@ -42,6 +44,7 @@ export const init = () => {
       teamManagerVisible,
       // 发送消息前回调, 可对消息体进行修改，添加自定义参数
       aiVisible: false,
+      loginStateVisible: true,
       sendMsgBefore: async (options: {
         msg: V2NIMMessage;
         conversationId: string;
@@ -50,10 +53,12 @@ export const init = () => {
         return { ...options };
       },
     },
-    "Web"
+    "Web",
   );
   return {
     nim,
     store,
   };
 };
+
+export { store, nim };

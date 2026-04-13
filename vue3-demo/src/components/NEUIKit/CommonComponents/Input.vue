@@ -115,7 +115,14 @@ watch(
 
 const handleInput = (event: Event) => {
   const target = event.target as HTMLInputElement;
-  emit("update:modelValue", target.value);
+  const value =
+    props.maxlength && target.value.length > props.maxlength
+      ? target.value.slice(0, props.maxlength)
+      : target.value;
+  if (value !== target.value) {
+    target.value = value;
+  }
+  emit("update:modelValue", value);
   emit("input", event);
 };
 

@@ -92,3 +92,5 @@ export const g2StatusMap: any = {
 };
 
 export const msgRecallTime = 2 * 60 * 1000;
+
+export const APP_KEY = "";

@@ -94,14 +94,14 @@ import PersonSelect, {
 import Input from "../../../../CommonComponents/Input.vue";
 import Avatar from "../../../../CommonComponents/Avatar.vue";
 import Appellation from "../../../../CommonComponents/Appellation.vue";
-import { ref, computed, onMounted, onUnmounted, getCurrentInstance } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { autorun } from "mobx";
 import { debounce } from "@xkit-yx/utils";
 import { t } from "../../../../utils/i18n";
 import { toast } from "../../../../utils/toast";
-import RootStore from "@xkit-yx/im-store-v2";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import type { V2NIMTeamMember } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService";
+import { store } from "../../../../utils/init"
 
 interface Props {
   visible: boolean;
@@ -114,9 +114,6 @@ const emit = defineEmits<{
   close: [];
   success: [];
 }>();
-
-const { proxy } = getCurrentInstance()!;
-const store = proxy?.$UIKitStore as RootStore;
 
 // 原始成员列表（不含 checked）
 const personListRaw = ref<PersonSelectItem[]>([]);
@@ -373,6 +370,8 @@ onUnmounted(() => {
 }
 
 .selected-friend-name {
+  max-width: 300px;
+  display: inline-block;
   font-size: 14px;
   color: #333;
   overflow: hidden;

@@ -29,7 +29,7 @@ import MessageItem from "./message-item.vue";
 import emitter from "../../utils/eventBus";
 import { t } from "../../utils/i18n";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
-import { autorun } from "mobx";
+import { autorun } from "../../utils/store";
 import { events } from "../../utils/constants";
 import { uiKitStore } from "../../utils/init";
 

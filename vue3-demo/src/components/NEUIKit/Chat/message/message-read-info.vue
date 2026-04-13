@@ -101,8 +101,8 @@ import Appellation from "../../CommonComponents/Appellation.vue";
 import Empty from "../../CommonComponents/Empty.vue";
 import { RecycleScroller } from "vue-virtual-scroller";
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
-import { getCurrentInstance } from "vue";
 import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import { nim, store } from "../../utils/init"
 
 const props = withDefaults(
   defineProps<{
@@ -113,9 +113,6 @@ const props = withDefaults(
   {}
 );
 
-const { proxy } = getCurrentInstance()!;
-const store = proxy?.$UIKitStore;
-const nim = proxy?.$NIM;
 
 // 定义事件 - 向父组件传递头像点击事件
 const emit = defineEmits<{
@@ -167,7 +164,7 @@ onMounted(() => {
     // 如果有 props.msg，直接使用；否则从 store 获取
     const targetMsg =
       props.msg ||
-      (store && store.msgStore.getMsg(conversationId, [messageClientId])?.[0]);
+      store.msgStore.getMsg(conversationId, [messageClientId])?.[0]
 
     if (targetMsg) {
       // 获取当前消息的已读未读详情

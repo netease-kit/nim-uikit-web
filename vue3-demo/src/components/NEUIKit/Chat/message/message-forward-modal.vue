@@ -87,7 +87,7 @@
                   selectItem(
                     conversation.conversationId,
                     conversation.type,
-                    conversation
+                    conversation,
                   )
               "
             >
@@ -140,7 +140,8 @@
                 () =>
                   selectItem(
                     friend.accountId,
-                    V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
+                    V2NIMConst.V2NIMConversationType
+                      .V2NIM_CONVERSATION_TYPE_P2P,
                   )
               "
             >
@@ -179,7 +180,7 @@
                   selectItem(
                     team.teamId,
                     V2NIMConst.V2NIMConversationType
-                      .V2NIM_CONVERSATION_TYPE_TEAM
+                      .V2NIM_CONVERSATION_TYPE_TEAM,
                   )
               "
             >
@@ -224,7 +225,7 @@
 
 <script lang="ts" setup>
 /** 消息转发弹窗 */
-import { ref, computed, getCurrentInstance } from "vue";
+import { ref, computed } from "vue";
 import Avatar from "../../CommonComponents/Avatar.vue";
 import Appellation from "../../CommonComponents/Appellation.vue";
 import { t } from "../../utils/i18n";
@@ -239,6 +240,7 @@ import Input from "../../CommonComponents/Input.vue";
 import Icon from "../../CommonComponents/Icon.vue";
 import Empty from "../../CommonComponents/Empty.vue";
 import { RecycleScroller } from "vue-virtual-scroller";
+import { nim, store } from "../../utils/init";
 
 const props = defineProps<{
   visible: boolean;
@@ -254,12 +256,8 @@ const emit = defineEmits<{
   (e: "send"): void;
 }>();
 
-const { proxy } = getCurrentInstance()!;
-const store = proxy?.$UIKitStore;
-const nim = proxy?.$NIM;
-
 const forwardConversationType = ref<V2NIMConst.V2NIMConversationType>(
-  V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
+  V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
 );
 
 const currentTab = ref<"recent" | "friend" | "team">("recent");
@@ -279,21 +277,23 @@ const recentList = ref<any[]>([]);
 const filteredFriendList = computed(() => {
   if (!searchKeyword.value) return friendList.value;
   return friendList.value.filter((friend) =>
-    friend.appellation.toLowerCase().includes(searchKeyword.value.toLowerCase())
+    friend.appellation
+      .toLowerCase()
+      .includes(searchKeyword.value.toLowerCase()),
   );
 });
 
 const filteredTeamList = computed(() => {
   if (!searchKeyword.value) return teamList.value;
   return teamList.value.filter((team) =>
-    team.name.toLowerCase().includes(searchKeyword.value.toLowerCase())
+    team.name.toLowerCase().includes(searchKeyword.value.toLowerCase()),
   );
 });
 
 const filteredRecentList = computed(() => {
   if (!searchKeyword.value) return recentList.value;
   return recentList.value.filter((conversation) =>
-    conversation.name.toLowerCase().includes(searchKeyword.value.toLowerCase())
+    conversation.name.toLowerCase().includes(searchKeyword.value.toLowerCase()),
   );
 });
 
@@ -312,7 +312,7 @@ const handleForwardConfirm = () => {
     .forwardMsgActive(
       props.msg,
       forwardConversationId.value,
-      forwardComment.value
+      forwardComment.value,
     )
     .then(() => {
       toast.success(t("forwardSuccessText"));
@@ -369,7 +369,7 @@ const recentConversationListWatch = autorun(() => {
       type: item.type,
       conversationId: item.conversationId,
       accountId: nim.V2NIMConversationIdUtil.parseConversationTargetId(
-        item.conversationId
+        item.conversationId,
       ),
     }));
   }
@@ -386,7 +386,7 @@ const forwardConversationId = ref<string>("");
 const selectItem = (
   targetId: string,
   conversationType?: V2NIMConst.V2NIMConversationType,
-  conversation?: any
+  conversation?: any,
 ) => {
   selectedId.value = targetId;
 

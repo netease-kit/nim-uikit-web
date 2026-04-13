@@ -76,7 +76,7 @@
 
 <script>
 import { trackInit } from "../utils/reporter";
-import { autorun } from "mobx";
+import { autorun } from "../utils/store";
 import ChatHeader from "./message/chat-header.vue";
 import MessageList from "./message/message-list.vue";
 import MessageInput from "./message/message-input.vue";

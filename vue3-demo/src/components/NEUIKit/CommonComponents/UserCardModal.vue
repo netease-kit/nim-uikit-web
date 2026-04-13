@@ -60,7 +60,10 @@
           </div>
         </div>
         <div class="user-details">
-          <div class="detail-item" v-if="relation !== 'stranger'">
+          <div
+            class="detail-item"
+            v-if="relation !== 'stranger' && relation !== 'ai' && relation !== 'aiBot'"
+          >
             <span class="label">{{ t("remarkText") }}</span>
             <div class="value-container">
               <Input
@@ -80,23 +83,23 @@
             <span class="label">{{ t("accountText") }}</span>
             <span class="value">{{ props.account }}</span>
           </div>
-          <div class="detail-item">
+          <div class="detail-item" v-if="relation !== 'ai' && relation !== 'aiBot'">
             <span class="label">{{ t("genderText") }}</span>
             <span class="value">
               {{
                 userInfo && userInfo.gender === 0
                   ? t("unknow")
                   : userInfo && userInfo.gender === 1
-                  ? t("man")
-                  : t("woman")
+                    ? t("man")
+                    : t("woman")
               }}
             </span>
           </div>
-          <div class="detail-item">
+          <div class="detail-item" v-if="relation !== 'ai' && relation !== 'aiBot'">
             <span class="label">{{ t("mobile") }}</span>
             <span class="value">{{ (userInfo && userInfo.mobile) || "" }}</span>
           </div>
-          <div class="detail-item">
+          <div class="detail-item" v-if="relation !== 'ai' && relation !== 'aiBot'">
             <span class="label">{{ t("email") }}</span>
             <span class="value">{{ (userInfo && userInfo.email) || "" }}</span>
           </div>
@@ -129,7 +132,7 @@ import Avatar from "./Avatar.vue";
 import Icon from "./Icon.vue";
 import Modal from "./Modal.vue";
 import Dropdown from "./Dropdown.vue";
-import { onUnmounted, ref, onMounted, getCurrentInstance, watch } from "vue";
+import { onUnmounted, ref, onMounted } from "vue";
 import { autorun } from "mobx";
 import { t } from "../utils/i18n";
 import type { Relation } from "@xkit-yx/im-store-v2";
@@ -138,6 +141,8 @@ import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { toast } from "../utils/toast";
 import { modal } from "../utils/modal";
 import Input from "./Input.vue";
+import { nim, store } from "../utils/init";
+import type { V2NIMConversationType } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversationService";
 
 const props = withDefaults(
   defineProps<{
@@ -147,13 +152,11 @@ const props = withDefaults(
   {
     account: "",
     visible: false,
-  }
+  },
 );
 
-const { proxy } = getCurrentInstance()!; // 获取组件实例
-
 const userInfo = ref<V2NIMUser>();
-const relation = ref<Relation>("stranger");
+const relation = ref<Relation | "aiBot">("stranger");
 const isInBlacklist = ref(false);
 
 const emit = defineEmits<{
@@ -161,7 +164,6 @@ const emit = defineEmits<{
   footClick: [];
   "update:visible": [value: boolean];
 }>();
-const store = proxy?.$UIKitStore;
 
 let uninstallFriendsWatch = () => {};
 let uninstallFriendWatch = () => {};
@@ -187,16 +189,19 @@ onMounted(() => {
     alias.value = friend ? friend.alias : "";
   });
 
-  store?.userStore.getUserListFromCloudActive([account]).then((res) => {
-    if (res.length) {
-      userInfo.value = res[0];
-    }
-  });
-
   uninstallFriendWatch = autorun(() => {
     store?.friendStore.getFriendByIdsActive([account]).then((res) => {
       if (res.length) {
         alias.value = res[0].alias || "";
+      } else {
+        // 如果没有找到好友信息，可能是AI机器人，尝试获取AI机器人信息
+        store.aiUserStore?.getUserAIBotActive({
+          accid: account,
+        }).catch((error) => {
+          if (error.code === 102310) {
+            relation.value = "aiBot";
+          }
+        })
       }
     });
   });
@@ -206,9 +211,17 @@ onMounted(() => {
       store?.uiStore.getRelation(account) as {
         relation: Relation;
         isInBlacklist: boolean;
-      };
+      };    
+
     relation.value = _relation;
     isInBlacklist.value = _isInBlacklist;
+  });
+
+  store?.userStore.getUserListFromCloudActive([account]).then((res) => {
+  
+    if (res.length) {
+      userInfo.value = res[0];
+    }
   });
 });
 
@@ -228,19 +241,21 @@ const addFriend = async () => {
 };
 
 const gotoChat = async () => {
-  const account = userInfo.value?.accountId || "";
+  const account = userInfo?.value?.accountId || "";
 
   if (store?.sdkOptions?.enableV2CloudConversation) {
     await store.conversationStore?.insertConversationActive(
-      V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
+      V2NIMConst.V2NIMConversationType
+        .V2NIM_CONVERSATION_TYPE_P2P as V2NIMConversationType,
       account,
-      true
+      true,
     );
   } else {
     await store?.localConversationStore?.insertConversationActive(
-      V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P,
+      V2NIMConst.V2NIMConversationType
+        .V2NIM_CONVERSATION_TYPE_P2P as V2NIMConversationType,
       account,
-      true
+      true,
     );
   }
   emit("footClick");
@@ -263,7 +278,7 @@ const handleBlacklistFriend = async () => {
     }
   } catch (error) {
     toast.error(
-      isInBlacklist.value ? t("unblacklistFailText") : t("blacklistFailText")
+      isInBlacklist.value ? t("unblacklistFailText") : t("blacklistFailText"),
     );
   }
 };
@@ -416,6 +431,7 @@ onUnmounted(() => {
   transition: background-color 0.2s;
   font-size: 14px;
   color: #333;
+  white-space: nowrap;
 }
 
 .menu-item:hover {
@@ -469,7 +485,9 @@ onUnmounted(() => {
   outline: none;
   width: 100%;
   max-width: 200px;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .alias-input:focus {

@@ -4,7 +4,8 @@
       src="https://yx-web-nosdn.netease.im/common/da126b0fcc419b142224ced81456e179/yx-welcome.png"
       class="welcome-img"
     />
-    <button class="login-btn" @click="onClick">注册/登录</button>
+    <button class="login-btn" @click="onSmsLogin">注册/登录</button>
+    <button class="config-login-btn" @click="onConfigLogin">账号登录</button>
     <div class="bottom-box">
       <img
         src="https://yx-web-nosdn.netease.im/common/9303d9be2ea5f90c48397326ae5dfd45/welcome-bottom.png"
@@ -17,8 +18,12 @@
 <script lang="ts" setup>
 import emitter from "../../utils/eventBus";
 
-const onClick = () => {
+const onSmsLogin = () => {
   emitter.emit("login");
+};
+
+const onConfigLogin = () => {
+  emitter.emit("configLogin");
 };
 </script>
 
@@ -42,6 +47,27 @@ const onClick = () => {
   left: 50%;
   transform: translateX(-50%);
   font-size: 16px;
+}
+
+.config-login-btn {
+  height: 50px;
+  width: 90%;
+  background: #f5f5f5;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  color: #666;
+  margin-top: 16px;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.config-login-btn:hover {
+  background: #e6f7ff;
+  border-color: #1890ff;
+  color: #1890ff;
 }
 
 .bottom-box {

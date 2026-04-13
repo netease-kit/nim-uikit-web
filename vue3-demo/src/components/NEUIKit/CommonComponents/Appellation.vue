@@ -8,18 +8,18 @@
 
 <script lang="ts" setup>
 import { autorun } from "mobx";
-import { onUnmounted, ref, getCurrentInstance } from "vue";
-const { proxy } = getCurrentInstance()!;
+import { onUnmounted, ref } from "vue";
+import { store } from "../utils/init"
 
 const appellation = ref();
 
-const { 
-  account, 
-  teamId = undefined, 
-  ignoreAlias = false, 
+const {
+  account,
+  teamId = undefined,
+  ignoreAlias = false,
   nickFromMsg = undefined,
   color = "#000",
-  fontSize = 14
+  fontSize = 14,
 } = defineProps<{
   account: string;
   teamId?: string;
@@ -30,7 +30,7 @@ const {
 }>();
 
 const uninstallAppellationWatch = autorun(() => {
-  appellation.value = proxy?.$UIKitStore.uiStore.getAppellation({
+  appellation.value = store.uiStore.getAppellation({
     account,
     teamId,
     ignoreAlias,

@@ -15,14 +15,11 @@
           {{ item.title }}
         </div>
         <!-- 好友项 -->
-        <div
+        <FriendItem
           v-else
-          class="friend-item"
+          :friend="item.data"
           @click="handleFriendItemClick(item.data)"
-        >
-          <Avatar :account="item.data.accountId" />
-          <div class="friend-name">{{ item.data.appellation }}</div>
-        </div>
+        />
       </div>
     </RecycleScroller>
 
@@ -47,20 +44,16 @@
 
 <script lang="ts" setup>
 /** 好友列表组件 */
-import Avatar from "../CommonComponents/Avatar.vue";
 import UserCardModal from "../CommonComponents/UserCardModal.vue";
 import { RecycleScroller } from "vue-virtual-scroller";
 import { autorun } from "mobx";
-import { onUnmounted, ref, getCurrentInstance, computed } from "vue";
+import { onUnmounted, onMounted, ref, computed, watch } from "vue";
 import { friendGroupByPy } from "../utils/friend";
 import Empty from "../CommonComponents/Empty.vue";
-
 import { t } from "../utils/i18n";
-import RootStore from "@xkit-yx/im-store-v2";
-
-const { proxy } = getCurrentInstance()!;
-
-const store = proxy?.$UIKitStore as RootStore;
+import { store } from "../utils/init";
+import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
+import FriendItem from "./friend/friend-item.vue";
 
 const emit = defineEmits<{
   afterSendMsgClick: [];
@@ -143,12 +136,58 @@ const friendListWatch = autorun(() => {
     {
       firstKey: "appellation",
     },
-    false
+    false,
   );
+});
+
+/** 获取所有好友 accountId 的扁平数组 */
+const friendListWithAccount = computed(() =>
+  friendGroupList.value.flatMap((group) =>
+    group.data.map((friend) => friend.accountId),
+  ),
+);
+
+const loginStateVisible = store?.localOptions?.loginStateVisible ?? false;
+
+/** 订阅好友在线离线状态 */
+const subscribeUserStatus = (friends: string[]) => {
+  if (!loginStateVisible) return;
+  const chunkSize = 100;
+  for (let i = 0; i < friends.length; i += chunkSize) {
+    const chunk = friends.slice(i, i + chunkSize);
+    if (chunk.length > 0) {
+      store?.subscriptionStore?.subscribeUserStatusActive(chunk);
+    }
+  }
+};
+
+/** 连接状态监听：断网重连后重新订阅 */
+const connectWatch = autorun(() => {
+  if (
+    store?.connectStore?.connectStatus ===
+    V2NIMConst.V2NIMConnectStatus.V2NIM_CONNECT_STATUS_CONNECTED
+  ) {
+    subscribeUserStatus(friendListWithAccount.value);
+  }
+});
+
+// 监听好友列表长度变化，补订新增好友
+watch(
+  () => friendGroupList.value.length,
+  () => {
+    subscribeUserStatus(friendListWithAccount.value);
+  },
+);
+
+onMounted(() => {
+  if (friendListWithAccount.value.length) {
+    subscribeUserStatus(friendListWithAccount.value);
+  }
 });
 
 onUnmounted(() => {
   friendListWatch();
+  connectWatch();
 });
 </script>
 
@@ -211,3 +250,4 @@ onUnmounted(() => {
   line-height: 1.4;
 }
 </style>
+./friend/friend-item.vue

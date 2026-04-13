@@ -19,16 +19,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, getCurrentInstance, onUnmounted } from "vue";
+import { ref, computed, onUnmounted } from "vue";
 import Avatar from "../CommonComponents/Avatar.vue";
 import MyUserCard from "./my-user-card.vue";
 import { autorun } from "mobx";
 import type { V2NIMUser } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMUserService";
-import RootStore from "@xkit-yx/im-store-v2";
-
-// 获取store实例
-const instance = getCurrentInstance();
-const store = instance?.proxy?.$UIKitStore as RootStore;
+import { store } from "../utils/init"
 
 // 响应式数据
 const showUserCard = ref(false);

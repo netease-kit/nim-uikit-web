@@ -79,7 +79,7 @@
 
 <script lang="ts" setup>
 /** 聊天设置 */
-import { ref, computed, getCurrentInstance, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { t } from "../../utils/i18n";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import TeamSetting from "./team/index.vue";
@@ -102,22 +102,18 @@ import type {
 import { autorun } from "mobx";
 import { toast } from "../../utils/toast";
 import { isDiscussionFunc } from "../../utils";
+import { nim, store } from "../../utils/init";
 
 interface Props {
   visible: boolean;
   to: string;
-  conversationType: V2NIMConversationType;
+  conversationType: V2NIMConversationType | V2NIMConst.V2NIMConversationType;
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
   "update:visible": [value: boolean];
 }>();
-
-const { proxy } = getCurrentInstance()!;
-
-const store = proxy?.$UIKitStore as RootStore;
-const nim = proxy?.$NIM;
 
 // 抽屉可见性
 const drawerVisible = computed({
@@ -175,7 +171,7 @@ const isTeamManager = computed(() => {
       (item) =>
         //@ts-ignore
         item.memberRole ===
-        V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER
+        V2NIMConst.V2NIMTeamMemberRole.V2NIM_TEAM_MEMBER_ROLE_MANAGER,
     )
     .some((member) => member.accountId === (myUser ? myUser.accountId : ""));
 });
@@ -187,7 +183,7 @@ const conversation = ref<
 
 // 切换子路径
 const onChangeSubPath = (
-  value: "team-setting" | "team-info" | "team-member"
+  value: "team-setting" | "team-info" | "team-member",
 ) => {
   path.value = value;
   if (path.value == "team-setting") {
@@ -233,7 +229,7 @@ const changeTeamMute = (value) => {
       V2NIMConst.V2NIMTeamType.V2NIM_TEAM_TYPE_ADVANCED,
       checked
         ? V2NIMConst.V2NIMTeamMessageMuteMode.V2NIM_TEAM_MESSAGE_MUTE_MODE_ON
-        : V2NIMConst.V2NIMTeamMessageMuteMode.V2NIM_TEAM_MESSAGE_MUTE_MODE_OFF
+        : V2NIMConst.V2NIMTeamMessageMuteMode.V2NIM_TEAM_MESSAGE_MUTE_MODE_OFF,
     )
     .then(() => {
       teamMuteMode.value = checked

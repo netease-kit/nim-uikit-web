@@ -83,7 +83,7 @@ import TeamManagement from "./team/management/index.vue";
 import Drawer from "../../CommonComponents/Drawer.vue";
 import Icon from "../../CommonComponents/Icon.vue";
 import P2pSetting from "./p2p/index.vue";
-import { autorun } from "mobx";
+import { autorun } from "../../utils/store";
 import { toast } from "../../utils/toast";
 import { isDiscussionFunc } from "../../utils";
 import { nim, uiKitStore } from "../../utils/init";

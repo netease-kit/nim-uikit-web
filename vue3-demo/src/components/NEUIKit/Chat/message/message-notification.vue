@@ -6,7 +6,7 @@
 
 <script lang="ts" setup>
 /** 消息通知 */
-import { onUnmounted, ref, getCurrentInstance } from "vue";
+import { onUnmounted, ref } from "vue";
 import { autorun } from "mobx";
 import { ALLOW_AT } from "../../utils/constants";
 import { t } from "../../utils/i18n";
@@ -17,10 +17,10 @@ import type {
   V2NIMMessageForUI,
   YxServerExt,
 } from "@xkit-yx/im-store-v2/dist/types/types";
+import { nim, store } from "../../utils/init"
 
 const props = withDefaults(defineProps<{ msg: V2NIMMessageForUI }>(), {});
 
-const { proxy } = getCurrentInstance()!; // 获取组件实例
 // 群id
 const teamId =
   props.msg.conversationType ===
@@ -28,7 +28,7 @@ const teamId =
     ? props.msg.receiverId
     : "";
 
-const teamManagerVisible = proxy?.$UIKitStore.localOptions.teamManagerVisible;
+const teamManagerVisible = store.localOptions.teamManagerVisible;
 
 // 通知消息内容
 const notificationContent = ref("");
@@ -108,7 +108,7 @@ const notificationContentWatch = autorun(() => {
           }
         }
         return content.length
-          ? `${proxy?.$UIKitStore.uiStore.getAppellation({
+          ? `${store.uiStore.getAppellation({
               account: props.msg.senderId,
               teamId,
             })} ${content.join("、")}`
@@ -118,7 +118,7 @@ const notificationContentWatch = autorun(() => {
         .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_APPLY_PASS:
       case V2NIMConst.V2NIMMessageNotificationType
         .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_INVITE_ACCEPT: {
-        return `${proxy?.$UIKitStore.uiStore.getAppellation({
+        return `${store.uiStore.getAppellation({
           account: props.msg.senderId,
           teamId,
         })} ${t("joinTeamText")}`;
@@ -127,11 +127,11 @@ const notificationContentWatch = autorun(() => {
         .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_INVITE: {
         const accounts: string[] = attachment?.targetIds || [];
         accounts.map(async (item) => {
-          await proxy?.$UIKitStore.userStore.getUserActive(item);
+          await store.userStore.getUserActive(item);
         });
         const nicks = accounts
           .map((item) => {
-            return proxy?.$UIKitStore.uiStore.getAppellation({
+            return store.uiStore.getAppellation({
               account: item,
               teamId,
             });
@@ -145,11 +145,11 @@ const notificationContentWatch = autorun(() => {
         .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_KICK: {
         const accounts: string[] = attachment?.targetIds || [];
         accounts.map(async (item) => {
-          await proxy?.$UIKitStore.userStore.getUserActive(item);
+          await store.userStore.getUserActive(item);
         });
         const nicks = accounts
           .map((item) => {
-            return proxy?.$UIKitStore.uiStore.getAppellation({
+            return store.uiStore.getAppellation({
               account: item,
               teamId,
             });
@@ -163,11 +163,11 @@ const notificationContentWatch = autorun(() => {
         .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_ADD_MANAGER: {
         const accounts: string[] = attachment?.targetIds || [];
         accounts.map(async (item) => {
-          await proxy?.$UIKitStore.userStore.getUserActive(item);
+          await store.userStore.getUserActive(item);
         });
         const nicks = accounts
           .map((item) => {
-            return proxy?.$UIKitStore.uiStore.getAppellation({
+            return store.uiStore.getAppellation({
               account: item,
               teamId,
             });
@@ -181,11 +181,11 @@ const notificationContentWatch = autorun(() => {
         .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_REMOVE_MANAGER: {
         const accounts: string[] = attachment?.targetIds || [];
         accounts.map(async (item) => {
-          await proxy?.$UIKitStore.userStore.getUserActive(item);
+          await store.userStore.getUserActive(item);
         });
         const nicks = accounts
           .map((item) => {
-            return proxy?.$UIKitStore.uiStore.getAppellation({
+            return store.uiStore.getAppellation({
               account: item,
               teamId,
             });
@@ -197,14 +197,14 @@ const notificationContentWatch = autorun(() => {
       }
       case V2NIMConst.V2NIMMessageNotificationType
         .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_LEAVE: {
-        return `${proxy?.$UIKitStore.uiStore.getAppellation({
+        return `${store.uiStore.getAppellation({
           account: props.msg.senderId,
           teamId,
         })} ${t("leaveTeamText")}`;
       }
       case V2NIMConst.V2NIMMessageNotificationType
         .V2NIM_MESSAGE_NOTIFICATION_TYPE_TEAM_OWNER_TRANSFER: {
-        return `${proxy?.$UIKitStore.uiStore.getAppellation({
+        return `${store.uiStore.getAppellation({
           account: (attachment?.targetIds || [])[0],
           teamId,
         })} ${t("newGroupOwnerText")}`;

@@ -135,7 +135,7 @@ import Avatar from "./Avatar.vue";
 import Icon from "./Icon.vue";
 import Modal from "./Modal.vue";
 import Dropdown from "./Dropdown.vue";
-import { autorun } from "mobx";
+import { autorun } from "../utils/store";
 import { t } from "../utils/i18n";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { toast } from "../utils/toast";

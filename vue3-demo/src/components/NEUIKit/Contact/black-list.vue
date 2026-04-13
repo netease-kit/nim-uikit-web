@@ -49,15 +49,15 @@
 <script lang="ts" setup>
 /** 通讯录 黑名单列表组件 */
 import { autorun } from "mobx";
-import { onUnmounted, ref, getCurrentInstance } from "vue";
+import { onUnmounted, ref } from "vue";
 import { RecycleScroller } from "vue-virtual-scroller";
 import Empty from "../CommonComponents/Empty.vue";
 import Avatar from "../CommonComponents/Avatar.vue";
 import Appellation from "../CommonComponents/Appellation.vue";
-import RootStore from "@xkit-yx/im-store-v2";
 import { t } from "../utils/i18n";
 import { toast } from "../utils/toast";
 import UserCardModal from "../CommonComponents/UserCardModal.vue";
+import { store } from "../utils/init"
 
 const emit = defineEmits<{
   onBlackItemClick: [];
@@ -65,10 +65,6 @@ const emit = defineEmits<{
 
 const blacklist = ref<{ accountId: string }[]>([]);
 const users = ref();
-
-const { proxy } = getCurrentInstance()!;
-
-const store = proxy?.$UIKitStore as RootStore;
 
 /** 移除黑名单 */
 const handleClick = async (e, account: string) => {
@@ -100,7 +96,7 @@ function handleUpdateVisible(visible: boolean) {
 }
 
 const handleItemClick = (item) => {
-  selectedAccount.value = item;
+  selectedAccount.value = item.accountId;
   showUserCard.value = true;
 };
 

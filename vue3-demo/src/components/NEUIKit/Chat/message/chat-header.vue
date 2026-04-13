@@ -8,6 +8,7 @@
             ? 'pointer'
             : '',
       }"
+      :key="to"
       @click="onAvatarClick"
     >
       <Avatar size="36" :account="to" :avatar="avatar" />
@@ -35,10 +36,11 @@
 
 <script lang="ts" setup>
 // 聊天头组件
-import { ref, watch } from "vue";
+import { ref } from "vue";
 import Avatar from "../../CommonComponents/Avatar.vue";
 import UserCardModal from "../../CommonComponents/UserCardModal.vue";
-import { V2NIMConst } from "nim-web-sdk-ng";
+import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
+import type { V2NIMConversationType } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversationService";
 
 const props = withDefaults(
   defineProps<{
@@ -47,12 +49,12 @@ const props = withDefaults(
     backgroundColor?: string;
     to: string;
     avatar?: string;
-    conversationType: V2NIMConst.V2NIMConversationType;
+    conversationType: V2NIMConversationType | V2NIMConst.V2NIMConversationType;
   }>(),
   {
     subTitle: "",
     backgroundColor: "",
-  }
+  },
 );
 
 const showUserCardModal = ref(false);

@@ -44,7 +44,7 @@
 </template>
 
 <script>
-import { autorun } from "mobx";
+import { autorun } from "../utils/store";
 import { RecycleScroller } from "vue-virtual-scroller";
 import Empty from "../CommonComponents/Empty.vue";
 import Avatar from "../CommonComponents/Avatar.vue";

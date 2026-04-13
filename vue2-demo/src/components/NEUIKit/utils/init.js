@@ -1,9 +1,13 @@
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import RootStore from "./store";
 import V2NIM from "nim-web-sdk-ng/dist/v2/NIM_BROWSER_SDK";
+import { handlePush } from "./msg";
 import { IM_UIKIT_VERSION } from "./constants";
+
+
 let uiKitStore = null;
 let nim = null;
+
 /**
  * 初始化NIM SDK实例和UI Kit Store
  * @returns {Object} 包含NIM实例和Store的对象
@@ -46,7 +50,8 @@ export const initIMUIKit = (appkey) => {
       // 发送消息前回调, 可对消息体进行修改，添加自定义参数
       aiVisible: false,
       sendMsgBefore: async (options) => {
-        return { ...options };
+        const finalMsg = handlePush(options);
+        return { ...finalMsg };
       },
     },
     "Web"

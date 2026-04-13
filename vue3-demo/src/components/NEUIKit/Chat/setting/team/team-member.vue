@@ -106,7 +106,7 @@
 /** 群成员列表组件 */
 import Avatar from "../../../CommonComponents/Avatar.vue";
 import UserCardModal from "../../../CommonComponents/UserCardModal.vue";
-import { ref, computed, onUnmounted, onMounted, getCurrentInstance } from "vue";
+import { ref, computed, onUnmounted, onMounted } from "vue";
 import { RecycleScroller } from "vue-virtual-scroller";
 import { autorun } from "mobx";
 import { t } from "../../../utils/i18n";
@@ -120,6 +120,7 @@ import type {
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { showModal } from "../../../utils/modal";
 import { showToast } from "../../../utils/toast";
+import { nim, store } from "../../../utils/init"
 
 interface Props {
   teamId: string;
@@ -129,8 +130,6 @@ const props = defineProps<Props>();
 
 const emit = defineEmits(["onChangeSubPath"]);
 
-const { proxy } = getCurrentInstance()!; // 获取组件实例
-const store = proxy?.$UIKitStore;
 const teamMembers = ref<V2NIMTeamMember[]>([]);
 const team = ref<V2NIMTeam>();
 const searchKeyword = ref<string>("");
@@ -278,7 +277,7 @@ const isShowRemoveBtn = (target: V2NIMTeamMember) => {
 
 // 群成员点击
 const handleTeamMemberClick = (accountId: string) => {
-  const myUserAccountId = proxy?.$NIM.V2NIMLoginService.getLoginUser();
+  const myUserAccountId = nim.V2NIMLoginService.getLoginUser();
   if (myUserAccountId !== accountId) {
     selectedAccount.value = accountId;
   }

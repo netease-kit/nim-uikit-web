@@ -71,7 +71,7 @@
 
 <script lang="ts" setup>
 import { autorun } from "mobx";
-import { ref, onUnmounted, computed, onMounted, getCurrentInstance } from "vue";
+import { ref, onUnmounted, computed, onMounted } from "vue";
 import { RecycleScroller } from "vue-virtual-scroller";
 import { t } from "../utils/i18n";
 import { showToast } from "../utils/toast";
@@ -82,6 +82,8 @@ import Input from "../CommonComponents/Input.vue";
 import Modal from "../CommonComponents/Modal.vue";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { isDiscussionFunc } from "../utils";
+import { nim, store } from "../utils/init"
+
 // 新增props和emits
 interface Props {
   visible: boolean;
@@ -100,8 +102,6 @@ const emit = defineEmits<{
 const inputFocus = ref(false);
 const searchText = ref("");
 const searchList = ref<{ id: string; list: any }[]>([]);
-const { proxy } = getCurrentInstance()!; // 获取组件实例
-const store = proxy?.$UIKitStore;
 
 // 新增关闭处理函数
 const handleClose = () => {
@@ -114,10 +114,10 @@ const searchListWatch = autorun(() => {
     store?.uiStore.friends
       .filter(
         (item) =>
-          !proxy?.$UIKitStore.relationStore.blacklist.includes(item.accountId)
+          !store.relationStore.blacklist.includes(item.accountId)
       )
       .map((item) => {
-        const user = proxy?.$UIKitStore.userStore.users.get(item.accountId) || {
+        const user = store.userStore.users.get(item.accountId) || {
           accountId: "",
           name: "",
           createTime: Date.now(),
@@ -136,6 +136,8 @@ const searchListWatch = autorun(() => {
         } catch (e) {
           return true;
         }
+      } else {
+        return true;
       }
     }) || [];
 

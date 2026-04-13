@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, getCurrentInstance, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import Icon from "../CommonComponents/Icon.vue";
 import Add from "./add/index.vue";
 import { t } from "../utils/i18n";
@@ -30,12 +30,9 @@ import SearchModal from "./search-modal.vue";
 import { showToast } from "../utils/toast";
 import { STORAGE_KEY } from "../utils/constants";
 import { useRouter } from "vue-router";
+import { nim, store } from "../utils/init"
 
 const searchModalVisible = ref(false);
-
-const { proxy } = getCurrentInstance()!;
-const store = proxy?.$UIKitStore;
-const nim = proxy?.$NIM;
 const router = useRouter();
 
 const handelKickedOffline = () => {
@@ -44,7 +41,10 @@ const handelKickedOffline = () => {
     type: "info",
   });
 
-  sessionStorage.removeItem(STORAGE_KEY);
+  // 清除所有登录相关的缓存信息
+  localStorage.removeItem(STORAGE_KEY);
+
+  // 跳转到登录页面（会自动显示配置页面，因为localStorage中没有配置信息）
   router.push("/login");
   store?.destroy();
   nim.V2NIMLoginService.off("onKickedOffline", handelKickedOffline);

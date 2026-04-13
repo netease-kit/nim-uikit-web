@@ -45,7 +45,7 @@
 
 <script>
 import { t } from "../../utils/i18n";
-import { autorun } from "mobx";
+import { autorun } from "../../utils/store";
 import Avatar from "../../CommonComponents/Avatar.vue";
 import Icon from "../../CommonComponents/Icon.vue";
 import { ALLOW_AT, AT_ALL_ACCOUNT } from "../../utils/constants";

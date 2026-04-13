@@ -114,7 +114,7 @@
 <script lang="ts" setup>
 /** 验证消息页面 */
 import { autorun } from "mobx";
-import { onUnmounted, getCurrentInstance, ref } from "vue";
+import { onUnmounted, ref } from "vue";
 import Empty from "../CommonComponents/Empty.vue";
 import Avatar from "../CommonComponents/Avatar.vue";
 import Icon from "../CommonComponents/Icon.vue";
@@ -123,16 +123,12 @@ import type { V2NIMFriendAddApplicationForUI } from "@xkit-yx/im-store-v2/dist/t
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import Appellation from "../CommonComponents/Appellation.vue";
 import type { V2NIMMessage } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
-import RootStore from "@xkit-yx/im-store-v2";
 import { toast } from "../utils/toast";
+import { nim, store } from "../utils/init"
 
 const validMsg = ref<V2NIMFriendAddApplicationForUI[]>([]);
 const applyFriendLoading = ref(false);
 
-const { proxy } = getCurrentInstance()!;
-
-const store = proxy?.$UIKitStore as RootStore;
-const nim = proxy?.$NIM;
 /** 是否是我发起的申请 */
 const isMeApplicant = (data: V2NIMFriendAddApplicationForUI) => {
   return data.applicantAccountId === store.userStore.myUserInfo.accountId;

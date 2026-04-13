@@ -92,7 +92,7 @@ import PersonSelect from "../../../../CommonComponents/PersonSelect.vue";
 import Input from "../../../../CommonComponents/Input.vue";
 import Avatar from "../../../../CommonComponents/Avatar.vue";
 import Appellation from "../../../../CommonComponents/Appellation.vue";
-import { autorun } from "mobx";
+import { autorun } from "../../../../utils/store";
 import { debounce } from "@xkit-yx/utils";
 import { t } from "../../../../utils/i18n";
 import { toast } from "../../../../utils/toast";

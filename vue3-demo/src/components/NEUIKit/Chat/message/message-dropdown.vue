@@ -1,6 +1,10 @@
 <template>
   <div class="nim-dropdown" ref="dropdownRef">
-    <div class="nim-dropdown-trigger" @contextmenu.prevent="handleContextMenu" @click="handleClick">
+    <div
+      class="nim-dropdown-trigger"
+      @contextmenu.prevent="handleContextMenu"
+      @click="handleClick"
+    >
       <slot></slot>
     </div>
     <Transition name="dropdown" v-if="visible">
@@ -59,17 +63,22 @@ const showDropdown = () => {
   if (globalActiveDropdown && globalActiveDropdown !== hideDropdown) {
     globalActiveDropdown();
   }
-  
+  document.dispatchEvent(
+    new CustomEvent("nim-dropdown-open", {
+      detail: { source: dropdownRef.value },
+    })
+  );
+
   // 设置当前dropdown为活跃状态
   globalActiveDropdown = hideDropdown;
-  
+
   visible.value = true;
   hasBeenShown.value = true;
 };
 
 const hideDropdown = () => {
   visible.value = false;
-  
+
   // 清除全局活跃dropdown引用
   if (globalActiveDropdown === hideDropdown) {
     globalActiveDropdown = null;
@@ -86,9 +95,18 @@ const handleClick = (event: MouseEvent) => {
 
 // 处理右键菜单事件
 const handleContextMenu = async (event: MouseEvent) => {
-  if (props.trigger === "contextmenu" || props.trigger === "click"  || props.trigger === "both") {
+  if (
+    props.trigger === "contextmenu" ||
+    props.trigger === "click" ||
+    props.trigger === "both"
+  ) {
     event.preventDefault();
     event.stopPropagation();
+    document.dispatchEvent(
+      new CustomEvent("nim-dropdown-open", {
+        detail: { source: dropdownRef.value },
+      })
+    );
 
     // 先显示菜单以获取其高度
     showDropdown();
@@ -193,14 +211,29 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 };
 
+const handleGlobalDropdownOpen = (event: any) => {
+  const source = event?.detail?.source;
+  if (source !== dropdownRef.value && visible.value) {
+    hideDropdown();
+  }
+};
+
 onMounted(() => {
   document.addEventListener("click", handleClickOutside);
   document.addEventListener("contextmenu", handleClickOutside);
+  document.addEventListener(
+    "nim-dropdown-open",
+    handleGlobalDropdownOpen as any
+  );
 });
 
 onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
   document.removeEventListener("contextmenu", handleClickOutside);
+  document.removeEventListener(
+    "nim-dropdown-open",
+    handleGlobalDropdownOpen as any
+  );
 });
 </script>
 

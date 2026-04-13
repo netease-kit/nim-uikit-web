@@ -53,7 +53,7 @@
       />
     </div>
   </div>
-  <div class="welcome-wrapper" v-else>
+  <div class="no-conversation-selected" v-else>
     <Welcome />
   </div>
   <MessageForwardModal
@@ -74,15 +74,7 @@
 <script lang="ts" setup>
 import { trackInit } from "../utils/reporter";
 import { autorun } from "mobx";
-import {
-  ref,
-  onMounted,
-  onUnmounted,
-  getCurrentInstance,
-  computed,
-  nextTick,
-  watch,
-} from "vue";
+import { ref, onMounted, onUnmounted, computed, nextTick, watch } from "vue";
 import ChatHeader from "./message/chat-header.vue";
 import MessageList from "./message/message-list.vue";
 import MessageInput from "./message/message-input.vue";
@@ -91,11 +83,11 @@ import NewMessageTip from "./message/new-message-tip.vue";
 import NotFriendTip from "./message/not-friend-tip.vue";
 import MessageForwardModal from "./message/message-forward-modal.vue";
 import UserCardModal from "../CommonComponents/UserCardModal.vue";
-import { HISTORY_LIMIT, events } from "../utils/constants";
+import Welcome from "../CommonComponents/Welcome.vue";
+import { HISTORY_LIMIT, events, MSG_ID_FLAG } from "../utils/constants";
 import { t } from "../utils/i18n";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { showToast, toast } from "../utils/toast";
-import Welcome from "../CommonComponents/Welcome.vue";
 import Icon from "../CommonComponents/Icon.vue";
 import emitter from "../utils/eventBus";
 import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
@@ -103,20 +95,21 @@ import type {
   V2NIMMessage,
   V2NIMMessageRefer,
 } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
+
 import { isDiscussionFunc } from "../utils";
+import { store, nim } from "../utils/init";
+import type { V2NIMConversationType } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversationService";
+import { log } from "console";
+
 export interface YxReplyMsg {
   messageClientId: string;
-  scene: V2NIMConst.V2NIMConversationType;
+  scene: V2NIMConversationType;
   from: string;
   receiverId: string;
   to: string;
   idServer: string;
   time: number;
 }
-
-const { proxy } = getCurrentInstance()!;
-const store = proxy?.$UIKitStore;
-const nim = proxy?.$NIM;
 
 // 聊天标题
 const title = ref("");
@@ -142,22 +135,22 @@ const selectedConversation = ref("");
 
 /**会话类型 */
 const conversationType = computed(() => {
-  return proxy?.$NIM.V2NIMConversationIdUtil.parseConversationType(
-    selectedConversation.value
-  );
+  return nim.V2NIMConversationIdUtil.parseConversationType(
+    selectedConversation.value,
+  ) as unknown as V2NIMConst.V2NIMConversationType | V2NIMConversationType;
 });
 
 /**对话方 */
 const to = computed(() => {
-  return proxy?.$NIM.V2NIMConversationIdUtil.parseConversationTargetId(
-    selectedConversation.value
+  return nim.V2NIMConversationIdUtil.parseConversationTargetId(
+    selectedConversation.value,
   );
 });
 
 /**群头像 */
 const teamAvatar = ref<string>("");
 
-trackInit("ChatUIKit", nim.options.appkey);
+trackInit("ChatUIKit", nim?.options?.appkey);
 
 /**是否需要显示群组消息已读未读，默认 false */
 const teamMsgReceiptVisible = store?.localOptions.teamMsgReceiptVisible;
@@ -177,6 +170,40 @@ const msgs = ref<V2NIMMessage[]>([]);
 
 /**回复消息map，用于回复消息的解析处理 */
 const replyMsgsMap = ref<Record<string, V2NIMMessage>>();
+
+/**
+ * 等待消息内容（包括图片和代码块）加载完成后滚动到底部
+ * 使用 Promise + MutationObserver + 图片加载监听，替代固定延迟
+ */
+const waitForContentAndScroll = async () => {
+  if (!messageListRef.value?.messageListRef) return;
+
+  // 立即滚动一次，让用户看到内容
+  messageListRef.value.scrollToBottom();
+
+  // 检查是否有 AI 消息或流式消息（只有这些类型需要特殊处理）
+  const aiOrStreamMessages = msgs.value.filter(
+    (msg) =>
+      msg.aiConfig?.aiStatus ===
+        V2NIMConst.V2NIMMessageAIStatus.V2NIM_MESSAGE_AI_STATUS_RESPONSE ||
+      msg.streamConfig !== undefined,
+  );
+
+  // 如果没有 AI 或流式消息，快速滚动即可
+  if (aiOrStreamMessages.length === 0) {
+    await nextTick();
+    messageListRef.value.scrollToBottom();
+    return;
+  }
+  const timer = setTimeout(() => {
+    messageListRef.value?.scrollToBottom();
+    clearTimeout(timer);
+  }, 100);
+
+  // 最终滚动到底部
+  await nextTick();
+  messageListRef.value.scrollToBottom();
+};
 
 /** 新消息提醒 */
 const showNewMsgTip = ref(false);
@@ -204,6 +231,7 @@ const checkStrangerRelation = () => {
     const { relation } = store?.uiStore.getRelation(to.value) || {
       relation: "stranger",
     };
+
     appellation.value = store?.uiStore.getAppellation({
       account: to.value,
     }) as string;
@@ -241,7 +269,17 @@ const setChatHeaderAndPlaceholder = () => {
     title.value = store?.uiStore.getAppellation({
       account: to.value,
     }) as string;
-    subTitle.value = "";
+    if (loginStateVisible) {
+      const stateMap = store?.subscriptionStore?.stateMap;
+      const isOnline =
+        stateMap?.get(to.value)?.statusType ===
+        V2NIMConst.V2NIMUserStatusType.V2NIM_USER_STATUS_TYPE_LOGIN;
+      subTitle.value = isOnline
+        ? `(${t("userOnlineText")})`
+        : `(${t("userOfflineText")})`;
+    } else {
+      subTitle.value = "";
+    }
 
     let userNickOrAccount =
       store?.uiStore.getAppellation({
@@ -344,12 +382,12 @@ const handleHistoryMsgReceipt = (msgs: V2NIMMessage[]) => {
       V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P &&
     p2pMsgReceiptVisible
   ) {
-    const myUserAccountId = proxy?.$NIM.V2NIMLoginService.getLoginUser();
+    const myUserAccountId = nim.V2NIMLoginService.getLoginUser();
     const othersMsgs = msgs
       .filter(
         (item: V2NIMMessage) =>
           // @ts-ignore
-          !["beReCallMsg", "reCallMsg"].includes(item.recallType || "")
+          !["beReCallMsg", "reCallMsg"].includes(item.recallType || ""),
       )
       .filter((item: V2NIMMessage) => item.senderId !== myUserAccountId);
 
@@ -364,12 +402,12 @@ const handleHistoryMsgReceipt = (msgs: V2NIMMessage[]) => {
       V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM &&
     teamMsgReceiptVisible
   ) {
-    const myUserAccountId = proxy?.$NIM.V2NIMLoginService.getLoginUser();
+    const myUserAccountId = nim.V2NIMLoginService.getLoginUser();
     const myMsgs = msgs
       .filter(
         (item: V2NIMMessage) =>
           // @ts-ignore
-          !["beReCallMsg", "reCallMsg"].includes(item.recallType || "")
+          !["beReCallMsg", "reCallMsg"].includes(item.recallType || ""),
       )
       .filter((item: V2NIMMessage) => item.senderId === myUserAccountId);
 
@@ -381,7 +419,7 @@ const handleHistoryMsgReceipt = (msgs: V2NIMMessage[]) => {
       .filter(
         (item: V2NIMMessage) =>
           // @ts-ignore
-          !["beReCallMsg", "reCallMsg"].includes(item.recallType || "")
+          !["beReCallMsg", "reCallMsg"].includes(item.recallType || ""),
       )
       .filter((item: V2NIMMessage) => item.senderId !== myUserAccountId);
 
@@ -430,7 +468,7 @@ const getHistory = async (endTime: number, lastMsgId?: string) => {
       case 109404:
         toast.info(t("onDismissTeamText"));
         store?.conversationStore?.deleteConversationActive(
-          selectedConversation.value
+          selectedConversation.value,
         );
         break;
 
@@ -450,6 +488,8 @@ const loadMoreMsgs = (lastMsg) => {
   }
 };
 
+const loginStateVisible = store?.localOptions?.loginStateVisible ?? false;
+
 /** 监听聊天标题 */
 const chatHeaderWatch = autorun(() => {
   if (
@@ -459,7 +499,17 @@ const chatHeaderWatch = autorun(() => {
     title.value = store?.uiStore.getAppellation({
       account: to.value,
     }) as string;
-    subTitle.value = "";
+    if (loginStateVisible) {
+      const stateMap = store?.subscriptionStore?.stateMap;
+      const isOnline =
+        stateMap?.get(to.value)?.statusType ===
+        V2NIMConst.V2NIMUserStatusType.V2NIM_USER_STATUS_TYPE_LOGIN;
+      subTitle.value = isOnline
+        ? `(${t("userOnlineText")})`
+        : `(${t("userOfflineText")})`;
+    } else {
+      subTitle.value = "";
+    }
   } else if (
     conversationType.value ===
     V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
@@ -467,6 +517,12 @@ const chatHeaderWatch = autorun(() => {
     const team = store?.teamStore.teams.get(to.value);
     subTitle.value = `(${team?.memberCount || 0}${t("personUnit")})`;
     title.value = team?.name || "";
+  } else if (
+    conversationType.value ===
+    V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_UNKNOWN
+  ) {
+    strangerTipVisible.value =
+      store?.uiStore.getRelation(to.value) === "stranger";
   }
 });
 
@@ -490,7 +546,7 @@ const getTeamMember = () => {
   ) {
     const team = store?.teamStore.teams.get(to.value);
 
-    proxy?.$UIKitStore.teamMemberStore.getTeamMemberActive({
+    store.teamMemberStore.getTeamMemberActive({
       teamId: to.value,
       queryOption: {
         limit: Math.max(team?.memberLimit || 0, 200),
@@ -516,7 +572,7 @@ const handleReplyMsgs = (messages: V2NIMMessage[]) => {
           if (yxReplyMsg) {
             // 从消息列表中找到被回复消息，replyMsg 为被回复的消息
             const beReplyMsg = msgs.value.find(
-              (item) => item.messageClientId === yxReplyMsg.idClient
+              (item) => item.messageClientId === yxReplyMsg.idClient,
             );
             // 如果直接找到，存储在map中
             if (beReplyMsg) {
@@ -564,7 +620,7 @@ const handleReplyMsgs = (messages: V2NIMMessage[]) => {
       if (msg.threadReply) {
         //找到被回复的消息
         const beReplyMsg = msgs.value.find(
-          (item) => item.messageServerId === msg.threadReply?.messageServerId
+          (item) => item.messageServerId === msg.threadReply?.messageServerId,
         ) as V2NIMMessageForUI;
 
         if (beReplyMsg) {
@@ -601,7 +657,7 @@ const handleReplyMsgs = (messages: V2NIMMessage[]) => {
           createTime: item.time,
           conversationType: item.scene,
           conversationId: item.to,
-        }))
+        })),
       )
         .then((res) => {
           if (res?.length > 0) {
@@ -622,7 +678,7 @@ const handleReplyMsgs = (messages: V2NIMMessage[]) => {
     if (threadReplyReqMsgs.length > 0) {
       nim.V2NIMMessageService.getMessageListByRefers(
         //@ts-ignore
-        threadReplyReqMsgs
+        threadReplyReqMsgs,
       )
         .then((res) => {
           if (res?.length > 0) {
@@ -662,6 +718,8 @@ const selectedConversationWatch = autorun(() => {
     selectedConversation.value = newConversationId;
 
     if (selectedConversation.value) {
+      // 订阅新会话对象的在线状态
+      subscribeCurrentUserStatus();
       // 重置加载状态
       noMore.value = false;
       loadingMore.value = false;
@@ -670,8 +728,12 @@ const selectedConversationWatch = autorun(() => {
       if (isFirstLoad.value) {
         getHistory(Date.now()).then(async () => {
           await nextTick();
+          // 等待内容加载并滚动到底部
+          const timer = setTimeout(() => {
+            waitForContentAndScroll();
+            clearTimeout(timer);
+          }, 0);
           isFirstLoad.value = false;
-          emitter.emit(events.ON_SCROLL_BOTTOM);
         });
         getTeamMember();
       }
@@ -680,25 +742,28 @@ const selectedConversationWatch = autorun(() => {
     }
   }
 
-  const to = proxy?.$NIM.V2NIMConversationIdUtil.parseConversationTargetId(
-    selectedConversation.value
+  const to = nim.V2NIMConversationIdUtil.parseConversationTargetId(
+    selectedConversation.value,
   );
 
-  const conversationType =
-    proxy?.$NIM.V2NIMConversationIdUtil.parseConversationType(
-      selectedConversation.value
-    );
+  const conversationType = nim.V2NIMConversationIdUtil.parseConversationType(
+    selectedConversation.value,
+  ) as unknown as V2NIMConst.V2NIMConversationType;
 
   if (
     conversationType ===
     V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
   ) {
-    store?.teamStore.getTeamActive(to).then((res) => {
-      teamAvatar.value = res.avatar;
-    });
+    store?.teamStore
+      .getTeamActive(to)
+      .then((res) => {
+        teamAvatar.value = res?.avatar || "";
+      })
+      .catch((err) => {});
   } else {
     teamAvatar.value = "";
   }
+
   setChatHeaderAndPlaceholder();
 });
 
@@ -725,7 +790,7 @@ const removeMsgs = () => {
     if (allMsgs.length > 20) {
       // 按时间排序，确保获取到最旧的消息
       const sortedMsgs = [...allMsgs].sort(
-        (a, b) => a.createTime - b.createTime
+        (a, b) => a.createTime - b.createTime,
       );
 
       // 计算需要删除的消息数量
@@ -746,18 +811,48 @@ watch(
   () => selectedConversation.value,
   () => {
     handleHistoryMsgReceipt(msgs.value);
-  }
+  },
 );
 
+/** 订阅当前聊天对象在线离线状态（仅单聊） */
+const subscribeCurrentUserStatus = () => {
+  if (
+    loginStateVisible &&
+    conversationType.value ===
+      V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P &&
+    to.value
+  ) {
+    store?.subscriptionStore?.subscribeUserStatusActive([to.value]);
+  }
+};
+
 onMounted(() => {
+  subscribeCurrentUserStatus();
   setChatHeaderAndPlaceholder();
+  waitForContentAndScroll();
 
   /** 收到消息 */
-  proxy?.$NIM.V2NIMMessageService.on("onReceiveMessages", onReceiveMessages);
+  //@ts-ignore
+  nim.V2NIMMessageService.on("onReceiveMessages", onReceiveMessages);
   /** 解散群组回调 */
-  proxy?.$NIM.V2NIMTeamService.on("onTeamDismissed", onTeamDismissed);
+  nim.V2NIMTeamService.on("onTeamDismissed", onTeamDismissed);
   /** 自己主动离开群组或被管理员踢出回调 */
-  proxy?.$NIM.V2NIMTeamService.on("onTeamLeft", onTeamLeft);
+  nim.V2NIMTeamService.on("onTeamLeft", onTeamLeft);
+
+  nim.V2NIMMessageService.on("onReceiveMessagesModified", () => {
+    // 检查滚动位置，如果距离底部小于200px，则自动滚动到底部
+    if (messageListRef.value) {
+      const scrollInfo = messageListRef.value.getScrollInfo();
+      // distanceFromBottom 表示距离底部的距离
+      if (scrollInfo.distanceFromBottom < 200) {
+        // 距离底部小于200px，直接调用滚动方法
+        const timer = setTimeout(() => {
+          messageListRef.value?.scrollToBottom();
+          clearTimeout(timer);
+        }, 100);
+      }
+    }
+  });
 
   // 加载历史消息
   emitter.on(events.GET_HISTORY_MSG, loadMoreMsgs);
@@ -775,7 +870,7 @@ onMounted(() => {
 
   //消息头像点击
   emitter.on(events.AVATAR_CLICK, (account) => {
-    const myUserAccountId = proxy?.$NIM.V2NIMLoginService.getLoginUser();
+    const myUserAccountId = nim.V2NIMLoginService.getLoginUser();
     if (account !== myUserAccountId) {
       userCardAccount.value = account as string;
       showUserCardModal.value = true;
@@ -784,9 +879,10 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  proxy?.$NIM.V2NIMTeamService.off("onTeamDismissed", onTeamDismissed);
-  proxy?.$NIM.V2NIMTeamService.off("onTeamLeft", onTeamLeft);
-  proxy?.$NIM.V2NIMMessageService.off("onReceiveMessages", onReceiveMessages);
+  nim.V2NIMTeamService.off("onTeamDismissed", onTeamDismissed);
+  nim.V2NIMTeamService.off("onTeamLeft", onTeamLeft);
+  //@ts-ignore
+  nim.V2NIMMessageService.off("onReceiveMessages", onReceiveMessages);
 
   emitter.off(events.GET_HISTORY_MSG, loadMoreMsgs);
   emitter.off(events.ON_SCROLL_BOTTOM);
@@ -884,5 +980,30 @@ onUnmounted(() => {
 
 .setting-icon:hover {
   background-color: #f0f0f0;
+}
+
+.no-conversation-selected {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  height: 200px;
+  color: #999;
+}
+
+.placeholder-text {
+  font-size: 16px;
+  color: #999;
+  text-align: center;
 }
 </style>

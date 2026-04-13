@@ -95,7 +95,7 @@
 
 <script lang="ts" setup>
 /** 群设置组件 */
-import { ref, onUnmounted, getCurrentInstance, onMounted, computed } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { autorun } from "mobx";
 import { t } from "../../../utils/i18n";
 import type {
@@ -103,15 +103,12 @@ import type {
   V2NIMTeamMember,
 } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
-import type {
-  V2NIMConversationForUI,
-  V2NIMLocalConversationForUI,
-} from "@xkit-yx/im-store-v2/dist/types/types";
 import Input from "../../../CommonComponents/Input.vue";
-import RootStore from "@xkit-yx/im-store-v2";
 import { toast } from "../../../utils/toast";
 import Popover from "../../../CommonComponents/Popover.vue";
 import Avatar from "../../../CommonComponents/Avatar.vue";
+import { store } from "../../../utils/init"
+
 
 interface Props {
   teamId: string;
@@ -121,9 +118,6 @@ interface Props {
   teamMembers: V2NIMTeamMember[];
   isDiscussion: boolean;
 }
-
-const { proxy } = getCurrentInstance()!;
-const store = proxy?.$UIKitStore as RootStore;
 
 const props = defineProps<Props>();
 

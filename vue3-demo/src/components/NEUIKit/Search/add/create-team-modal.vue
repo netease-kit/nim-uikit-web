@@ -112,11 +112,12 @@ import PersonSelect, {
 } from "../../CommonComponents/PersonSelect.vue";
 import Avatar from "../../CommonComponents/Avatar.vue";
 import Appellation from "../../CommonComponents/Appellation.vue";
-import { ref, computed, onMounted, getCurrentInstance, watch } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { t } from "../../utils/i18n";
 import { toast } from "../../utils/toast";
 import Input from "../../CommonComponents/Input.vue";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
+import { store } from "../../utils/init"
 
 // Props
 interface Props {
@@ -134,9 +135,6 @@ const emit = defineEmits<{
   goChat: [];
   "update:visible": [value: boolean];
 }>();
-
-const { proxy } = getCurrentInstance()!;
-const store = proxy?.$UIKitStore;
 
 // 响应式数据
 const friendList = ref<PersonSelectItem[]>([]);
@@ -546,6 +544,8 @@ onMounted(() => {
 }
 
 .selected-friend-name {
+  max-width: 300px;
+  display: inline-block;
   font-size: 14px;
   color: #333;
   overflow: hidden;
