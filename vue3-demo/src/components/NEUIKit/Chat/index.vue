@@ -84,7 +84,7 @@ import NotFriendTip from "./message/not-friend-tip.vue";
 import MessageForwardModal from "./message/message-forward-modal.vue";
 import UserCardModal from "../CommonComponents/UserCardModal.vue";
 import Welcome from "../CommonComponents/Welcome.vue";
-import { HISTORY_LIMIT, events, MSG_ID_FLAG } from "../utils/constants";
+import { HISTORY_LIMIT, events } from "../utils/constants";
 import { t } from "../utils/i18n";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { showToast, toast } from "../utils/toast";
@@ -99,7 +99,6 @@ import type {
 import { isDiscussionFunc } from "../utils";
 import { store, nim } from "../utils/init";
 import type { V2NIMConversationType } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversationService";
-import { log } from "console";
 
 export interface YxReplyMsg {
   messageClientId: string;
@@ -269,7 +268,8 @@ const setChatHeaderAndPlaceholder = () => {
     title.value = store?.uiStore.getAppellation({
       account: to.value,
     }) as string;
-    if (loginStateVisible) {
+    const isAIUser = store?.aiUserStore?.isAIUser?.(to.value) ?? false;
+    if (loginStateVisible && !isAIUser) {
       const stateMap = store?.subscriptionStore?.stateMap;
       const isOnline =
         stateMap?.get(to.value)?.statusType ===
@@ -522,9 +522,29 @@ const chatHeaderWatch = autorun(() => {
     V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_UNKNOWN
   ) {
     strangerTipVisible.value =
-      store?.uiStore.getRelation(to.value) === "stranger";
+      store?.uiStore.getRelation(to.value).relation === "stranger";
   }
 });
+
+/** 订阅当前聊天对象在线离线状态（仅单聊，数字人不订阅） */
+const subscribeCurrentUserStatus = () => {
+  const isAIUser = store?.aiUserStore?.isAIUser?.(to.value) ?? false;
+  if (
+    loginStateVisible &&
+    !isAIUser &&
+    conversationType.value ===
+      V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P &&
+    to.value
+  ) {
+    store?.subscriptionStore?.subscribeUserStatusActive([to.value]);
+  }
+};
+
+/**
+ * 被回复消息的结果缓存：serverId → 实际消息（null 表示已请求但服务端未返回）
+ * 用于：1.避免重复请求同一条被回复消息触发频控；2.历史消息加载时复用已拉取的结果
+ */
+const fetchedReplyMsgCache = new Map<string, any>();
 
 const resetState = () => {
   replyMsgsMap.value = {};
@@ -536,6 +556,7 @@ const resetState = () => {
   loadingMore.value = false;
   title.value = "";
   subTitle.value = "";
+  fetchedReplyMsgCache.clear();
 };
 
 // 获取群成员
@@ -563,7 +584,8 @@ const handleReplyMsgs = (messages: V2NIMMessage[]) => {
     const replyMsgsMapForThreadReply: any = {};
     const extReqMsgs: YxReplyMsg[] = [];
     const threadReplyReqMsgs: V2NIMMessageRefer[] = [];
-    const messageClientIds: Record<string, string> = {};
+    // serverId → clientId[]，支持多条消息回复同一条原消息的场景
+    const messageClientIds: Record<string, string[]> = {};
     msgs.value.forEach((msg) => {
       if (msg.serverExtension) {
         try {
@@ -579,9 +601,6 @@ const handleReplyMsgs = (messages: V2NIMMessage[]) => {
               replyMsgsMapForExt[msg.messageClientId] = beReplyMsg;
               // 如果没找到，说明被回复的消息可能有三种情况：1.被删除 2.被撤回 3.不在当前消息列表中（一次性没拉到，在之前的消息中）
             } else {
-              replyMsgsMapForExt[msg.messageClientId] = {
-                messageClientId: "noFind",
-              };
               const {
                 scene,
                 from,
@@ -601,16 +620,35 @@ const handleReplyMsgs = (messages: V2NIMMessage[]) => {
                 time &&
                 receiverId
               ) {
-                extReqMsgs.push({
-                  scene,
-                  from,
-                  to,
-                  idServer,
-                  messageClientId,
-                  time,
-                  receiverId,
-                });
-                messageClientIds[idServer] = msg.messageClientId;
+                if (fetchedReplyMsgCache.has(idServer)) {
+                  // 已请求过：直接用缓存结果
+                  const cached = fetchedReplyMsgCache.get(idServer);
+                  replyMsgsMapForExt[msg.messageClientId] = cached
+                    ? cached
+                    : { messageClientId: "noFind" };
+                } else {
+                  // 未请求过：加入请求列表，提前占位防重
+                  replyMsgsMapForExt[msg.messageClientId] = {
+                    messageClientId: "noFind",
+                  };
+                  fetchedReplyMsgCache.set(idServer, null);
+                  extReqMsgs.push({
+                    scene,
+                    from,
+                    to,
+                    idServer,
+                    messageClientId,
+                    time,
+                    receiverId,
+                  });
+                  if (!messageClientIds[idServer])
+                    messageClientIds[idServer] = [];
+                  messageClientIds[idServer].push(msg.messageClientId);
+                }
+              } else {
+                replyMsgsMapForExt[msg.messageClientId] = {
+                  messageClientId: "noFind",
+                };
               }
             }
           }
@@ -635,12 +673,25 @@ const handleReplyMsgs = (messages: V2NIMMessage[]) => {
             replyMsgsMapForThreadReply[msg.messageClientId] = beReplyMsg;
           }
         } else {
-          replyMsgsMapForThreadReply[msg.messageClientId] = {
-            messageClientId: "noFind",
-          };
-          messageClientIds[msg.threadReply.messageServerId] =
-            msg.messageClientId;
-          threadReplyReqMsgs.push(msg.threadReply);
+          const serverId = msg.threadReply.messageServerId;
+          if (fetchedReplyMsgCache.has(serverId)) {
+            // 已请求过：直接用缓存结果
+            const cached = fetchedReplyMsgCache.get(serverId);
+            replyMsgsMapForThreadReply[msg.messageClientId] = cached
+              ? cached
+              : { messageClientId: "noFind" };
+          } else {
+            // 未请求过：加入请求列表，提前占位防重
+            replyMsgsMapForThreadReply[msg.messageClientId] = {
+              messageClientId: "noFind",
+            };
+            fetchedReplyMsgCache.set(serverId, null);
+            if (!messageClientIds[serverId]) {
+              messageClientIds[serverId] = [];
+            }
+            messageClientIds[serverId].push(msg.messageClientId);
+            threadReplyReqMsgs.push(msg.threadReply);
+          }
         }
       }
     });
@@ -660,33 +711,56 @@ const handleReplyMsgs = (messages: V2NIMMessage[]) => {
         })),
       )
         .then((res) => {
+          // 将所有请求的 serverId 标为已处理（null = 未找到），防止无限重试
+          extReqMsgs.forEach((req) => {
+            if (!fetchedReplyMsgCache.has(req.idServer)) {
+              fetchedReplyMsgCache.set(req.idServer, null);
+            }
+          });
           if (res?.length > 0) {
             res.forEach((item) => {
               if (item.messageServerId) {
-                replyMsgsMapForExt[messageClientIds[item.messageServerId]] =
-                  item;
+                fetchedReplyMsgCache.set(item.messageServerId, item);
+                const clientIds = messageClientIds[item.messageServerId] || [];
+                clientIds.forEach((clientId) => {
+                  replyMsgsMapForExt[clientId] = item;
+                });
               }
             });
           }
           replyMsgsMap.value = { ...replyMsgsMapForExt };
         })
         .catch(() => {
+          extReqMsgs.forEach((req) => {
+            if (!fetchedReplyMsgCache.has(req.idServer)) {
+              fetchedReplyMsgCache.set(req.idServer, null);
+            }
+          });
           replyMsgsMap.value = { ...replyMsgsMapForExt };
         });
     }
 
     if (threadReplyReqMsgs.length > 0) {
+      // threadReplyReqMsgs 在循环时已通过 messageClientIds 去重，每个 serverId 只有一条
       nim.V2NIMMessageService.getMessageListByRefers(
         //@ts-ignore
         threadReplyReqMsgs,
       )
         .then((res) => {
+          // 先把所有请求的 serverId 标为 null，拉到的再覆盖
+          threadReplyReqMsgs.forEach((ref) => {
+            if (!fetchedReplyMsgCache.has(ref.messageServerId)) {
+              fetchedReplyMsgCache.set(ref.messageServerId, null);
+            }
+          });
           if (res?.length > 0) {
             res.forEach((item) => {
               if (item.messageServerId) {
-                replyMsgsMapForThreadReply[
-                  messageClientIds[item.messageServerId]
-                ] = item;
+                fetchedReplyMsgCache.set(item.messageServerId, item);
+                const clientIds = messageClientIds[item.messageServerId] || [];
+                clientIds.forEach((clientId) => {
+                  replyMsgsMapForThreadReply[clientId] = item;
+                });
               }
             });
           }
@@ -696,6 +770,11 @@ const handleReplyMsgs = (messages: V2NIMMessage[]) => {
           };
         })
         .catch(() => {
+          threadReplyReqMsgs.forEach((ref) => {
+            if (!fetchedReplyMsgCache.has(ref.messageServerId)) {
+              fetchedReplyMsgCache.set(ref.messageServerId, null);
+            }
+          });
           replyMsgsMap.value = {
             ...replyMsgsMapForExt,
             ...replyMsgsMapForThreadReply,
@@ -717,28 +796,24 @@ const selectedConversationWatch = autorun(() => {
   if (newConversationId !== selectedConversation.value) {
     selectedConversation.value = newConversationId;
 
-    if (selectedConversation.value) {
-      // 订阅新会话对象的在线状态
-      subscribeCurrentUserStatus();
-      // 重置加载状态
-      noMore.value = false;
-      loadingMore.value = false;
-      resetState(); // 在确认会话改变后再重置
+    // 订阅新会话对象的在线状态
+    subscribeCurrentUserStatus();
+    // 重置加载状态
+    noMore.value = false;
+    loadingMore.value = false;
+    resetState(); // 在确认会话改变后再重置
 
-      if (isFirstLoad.value) {
-        getHistory(Date.now()).then(async () => {
-          await nextTick();
-          // 等待内容加载并滚动到底部
-          const timer = setTimeout(() => {
-            waitForContentAndScroll();
-            clearTimeout(timer);
-          }, 0);
-          isFirstLoad.value = false;
-        });
-        getTeamMember();
-      }
-    } else {
-      msgs.value = [];
+    if (isFirstLoad.value) {
+      getHistory(Date.now()).then(async () => {
+        await nextTick();
+        // 等待内容加载并滚动到底部
+        const timer = setTimeout(() => {
+          waitForContentAndScroll();
+          clearTimeout(timer);
+        }, 0);
+        isFirstLoad.value = false;
+      });
+      getTeamMember();
     }
   }
 
@@ -814,22 +889,9 @@ watch(
   },
 );
 
-/** 订阅当前聊天对象在线离线状态（仅单聊） */
-const subscribeCurrentUserStatus = () => {
-  if (
-    loginStateVisible &&
-    conversationType.value ===
-      V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P &&
-    to.value
-  ) {
-    store?.subscriptionStore?.subscribeUserStatusActive([to.value]);
-  }
-};
-
 onMounted(() => {
   subscribeCurrentUserStatus();
   setChatHeaderAndPlaceholder();
-  waitForContentAndScroll();
 
   /** 收到消息 */
   //@ts-ignore

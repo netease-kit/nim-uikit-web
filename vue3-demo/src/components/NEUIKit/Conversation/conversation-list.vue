@@ -1,5 +1,7 @@
 <template>
   <div class="conversation-wrapper">
+    <!-- 会话列表上方固定展示置顶数字人 -->
+    <PinAIList v-if="aiVisible" />
     <div class="conversation-empty" v-if="!conversationList.length">
       <Empty
         v-if="!conversationList || conversationList.length === 0"
@@ -37,6 +39,7 @@
 
 import { onUnmounted, onMounted, ref, watch } from "vue";
 import { autorun } from "mobx";
+import PinAIList from "./PinAIList.vue";
 import { RecycleScroller } from "vue-virtual-scroller";
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
@@ -50,6 +53,8 @@ import type {
   V2NIMLocalConversationForUI,
 } from "@xkit-yx/im-store-v2/dist/types/types";
 import { nim, store } from "../utils/init";
+
+const aiVisible = store?.localOptions?.aiVisible !== false;
 
 const conversationList = ref<
   (V2NIMConversationForUI | V2NIMLocalConversationForUI)[]
@@ -324,11 +329,14 @@ onUnmounted(() => {
   overflow: hidden;
   background-color: #fff;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 /* 虚拟滚动容器样式 */
 .conversation-list-wrapper {
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   box-sizing: border-box;
   width: 100%;
 }
@@ -393,11 +401,16 @@ onUnmounted(() => {
 }
 
 .conversation-list-wrapper {
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   box-sizing: border-box;
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+.conversation-list-wrapper::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .logo-box {
@@ -476,6 +489,7 @@ onUnmounted(() => {
   position: absolute;
   top: 10%;
   left: 50%;
+  margin-top: 100px;
   transform: translateX(-50%);
 }
 </style>

@@ -16,7 +16,7 @@
         </div>
         <!-- 好友项 -->
         <FriendItem
-          v-else
+          v-else-if="item.data"
           :friend="item.data"
           @click="handleFriendItemClick(item.data)"
         />

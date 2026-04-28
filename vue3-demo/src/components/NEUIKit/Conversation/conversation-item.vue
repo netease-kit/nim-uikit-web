@@ -18,10 +18,11 @@
             <div class="badge" v-else>{{ unread }}</div>
           </div>
           <Avatar size="36" :account="to" :avatar="teamAvatar" />
-          <!-- 用户在线离线状态 -->
+          <!-- 用户在线离线状态（数字人不展示） -->
           <div
             v-if="
               loginStateVisible &&
+              !isAIUser &&
               conversation.type ===
                 V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P
             "
@@ -95,7 +96,7 @@ import Appellation from "../CommonComponents/Appellation.vue";
 import Icon from "../CommonComponents/Icon.vue";
 import { computed, ref, onUnmounted } from "vue";
 import { autorun } from "mobx";
-import dayjs from "dayjs";
+import { formatDate } from "../utils/date";
 import { t } from "../utils/i18n";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import type {
@@ -189,12 +190,7 @@ const date = computed(() => {
   if (!time) {
     return "";
   }
-  const _d = dayjs(time);
-  const isCurrentDay = _d.isSame(dayjs(), "day");
-  const isCurrentYear = _d.isSame(dayjs(), "year");
-  return _d.format(
-    isCurrentDay ? "HH:mm" : isCurrentYear ? "MM-DD" : "YYYY-MM",
-  );
+  return formatDate(time);
 });
 
 const max = 99;
@@ -238,6 +234,9 @@ const showSessionUnread = computed(() => {
     return false;
   }
 });
+
+// 数字人判断
+const isAIUser = store?.aiUserStore?.isAIUser?.(to.value) ?? false;
 
 // 在线状态
 const loginStateVisible = store?.localOptions?.loginStateVisible ?? false;

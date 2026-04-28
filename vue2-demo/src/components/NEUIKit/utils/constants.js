@@ -93,6 +93,6 @@ export const g2StatusMap = {
 
 export const msgRecallTime = 2 * 60 * 1000;
 
-export const APP_KEY = "3e215d27b6a6a9e27dad7ef36dd5b65c";
+export const APP_KEY = "''";
 
 export const IM_UIKIT_VERSION = "10.0.0";

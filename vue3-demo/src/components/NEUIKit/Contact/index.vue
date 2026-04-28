@@ -57,13 +57,25 @@
           </div>
           <span class="menu-text">{{ t("myRobotsText") }}</span>
         </div>
+        <div
+          class="menu-item"
+          :class="{ active: activeTab === 'aiList' }"
+          @click="setActiveTab('aiList')"
+        >
+          <div class="menu-icon-ai">
+            <Icon :size="21" type="icon-bot" />
+          </div>
+          <span class="menu-text">{{ t("myAIUserText") }}</span>
+        </div>
       </div>
     </div>
 
     <!-- 右侧内容区域 -->
     <div class="content-area">
       <div
-        v-if="getContentTitle() && activeTab !== 'robots'"
+        v-if="
+          getContentTitle() && activeTab !== 'robots' && activeTab !== 'aiList'
+        "
         class="content-header"
       >
         <h3>{{ getContentTitle() }}</h3>
@@ -94,6 +106,12 @@
           v-else-if="activeTab === 'robots'"
           @afterSendMsgClick="emit('afterSendMsgClick')"
         />
+        <!-- 我的数字人 -->
+        <AIList
+          v-else-if="activeTab === 'aiList'"
+          @afterSendMsgClick="emit('afterSendMsgClick')"
+          @onAIItemClick="(id) => emit('onAIItemClick', id)"
+        />
         <!-- 默认占位内容 -->
         <div v-else class="placeholder-content">
           <Welcome />
@@ -112,6 +130,7 @@ import TeamList from "./team-list.vue";
 import BlackList from "./black-list.vue";
 import ValidList from "./valid-list.vue";
 import BotList from "./bot-list.vue";
+import AIList from "./ai-list.vue";
 import Welcome from "../CommonComponents/Welcome.vue";
 import { onUnmounted, ref } from "vue";
 import { autorun } from "mobx";
@@ -133,6 +152,7 @@ const emit = defineEmits<{
   afterSendMsgClick: [];
   onGroupItemClick: [];
   onBlackItemClick: [];
+  onAIItemClick: [accountId: string];
 }>();
 
 onMounted(() => {
@@ -160,6 +180,7 @@ const getContentTitle = () => {
     friends: t("myFriendsText"),
     groups: t("teamMenuText"),
     robots: t("myRobotsText"),
+    aiList: t("myAIUserText"),
   };
   return titleMap[activeTab.value];
 };
@@ -308,6 +329,18 @@ onUnmounted(() => {
 
 .menu-icon-bot {
   background-color: #f7a438;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-right: 12px;
+}
+
+.menu-icon-ai {
+  background-color: #f5786a;
   border-radius: 50%;
   width: 36px;
   height: 36px;

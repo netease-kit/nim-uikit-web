@@ -1,5 +1,4 @@
 import { emojiRegExp } from "./emoji";
-import { marked } from "marked";
 
 export interface Match {
   type: "link" | "emoji" | "text" | "Ait" | "markdown";
@@ -8,11 +7,7 @@ export interface Match {
   html?: string; // 用于 markdown 类型存储渲染后的 HTML
 }
 
-// 配置 marked 选项
-marked.setOptions({
-  breaks: true, // 支持换行
-  gfm: true, // 支持 GitHub Flavored Markdown
-});
+
 
 /**
  * 检测文本是否包含 markdown 语法

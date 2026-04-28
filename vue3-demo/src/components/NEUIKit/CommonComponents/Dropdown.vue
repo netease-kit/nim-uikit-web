@@ -39,7 +39,7 @@ const props = withDefaults(
     lazy: true,
     dropdownStyle: () => ({}),
     placement: "bottom",
-  }
+  },
 );
 
 const visible = ref(false);
@@ -51,7 +51,7 @@ const contentStyle = computed<CSSProperties>(() => ({
   position: "fixed",
   left: `${position.value.x}px`,
   top: `${position.value.y}px`,
-  zIndex: 2000,
+  zIndex: 99999999,
   transformOrigin: props.placement === "top" ? "bottom" : "top",
   ...props.dropdownStyle,
 }));
@@ -90,7 +90,7 @@ const handleClick = async (event: MouseEvent) => {
 
       // 获取下拉菜单元素的高度
       const dropdownContent = document.querySelector(
-        ".nim-dropdown-content"
+        ".nim-dropdown-content",
       ) as HTMLElement;
       const dropdownHeight = dropdownContent ? dropdownContent.offsetHeight : 0;
 
@@ -118,7 +118,7 @@ const handleContextMenu = async (event: MouseEvent) => {
 
     // 获取下拉菜单元素的高度
     const dropdownContent = document.querySelector(
-      ".nim-dropdown-content"
+      ".nim-dropdown-content",
     ) as HTMLElement;
     const dropdownHeight = dropdownContent ? dropdownContent.offsetHeight : 0;
 

@@ -59,24 +59,6 @@
             <div v-if="totalSysMsgUnreadCount > 0" class="red-dot"></div>
             <div class="icon-label">{{ t("addressText") }}</div>
           </div>
-          <div
-            :class="{
-              'contact-icon': true,
-              active: model === 'qchat',
-            }"
-            @click="() => (model = 'qchat')"
-          >
-            <i
-              :style="{
-                fontSize: '18px',
-              }"
-              :class="{
-                iconfont: true,
-                'icon-a-Vector3': true,
-              }"
-            />
-            <div class="icon-label">{{ t("qchatText") }}</div>
-          </div>
           <SettingsMenu>
             <div class="setting-menu-icon">
               <i
@@ -109,11 +91,6 @@
               @onBlackItemClick="() => (model = 'chat')"
             />
           </div>
-          <div class="qchat-container" v-if="model === 'qchat'">
-            <keep-alive>
-              <QChat />
-            </keep-alive>
-          </div>
         </div>
       </div>
     </div>
@@ -137,7 +114,6 @@ import { autorun } from "mobx";
 import SettingsMenu from "./components/setting.vue";
 import Tip from "./components/tip.vue";
 
-import QChat from "./qchat/index.vue";
 import { store } from "../../components/NEUIKit/utils/init";
 
 // 响应式数据
@@ -308,11 +284,6 @@ onUnmounted(() => {
   height: 100%;
 }
 .collection-container {
-  width: 100%;
-  height: 100%;
-}
-
-.qchat-container {
   width: 100%;
   height: 100%;
 }

@@ -21,9 +21,17 @@
               t("friendText")
             }}</span>
           </div>
+          <!-- 搜索框 -->
+          <div class="search-wrapper">
+            <input
+              v-model="searchKeyword"
+              class="search-input"
+              :placeholder="t('searchText')"
+            />
+          </div>
           <div class="person-select-container">
             <PersonSelect
-              :personList="friendList"
+              :personList="filteredFriendList"
               :selected="selectedAccounts"
               @update:selected="onSelectedUpdate"
               @checkboxChange="onSelectedUpdate"
@@ -84,7 +92,7 @@ import { ref, computed, onMounted } from "vue";
 import { t } from "../../../utils/i18n";
 import { toast } from "../../../utils/toast";
 import { debounce } from "@xkit-yx/utils";
-import { store } from "../../../utils/init"
+import { store } from "../../../utils/init";
 
 // Props
 interface Props {
@@ -107,6 +115,22 @@ const emit = defineEmits<Emits>();
 
 // 响应式数据
 const friendList = ref<PersonSelectItem[]>([]);
+const searchKeyword = ref("");
+
+// 按关键字过滤好友列表
+const filteredFriendList = computed(() => {
+  const kw = searchKeyword.value.trim().toLowerCase();
+  if (!kw) return friendList.value;
+  return friendList.value.filter((item) => {
+    const appellation = store?.uiStore
+      .getAppellation({ account: item.accountId })
+      ?.toLowerCase();
+    return (
+      item.accountId.toLowerCase().includes(kw) ||
+      (appellation && appellation.includes(kw))
+    );
+  });
+});
 // 受控选中集合
 const selectedAccounts = ref<string[]>([]);
 // 右侧“已选择”列表直接基于受控集合
@@ -170,7 +194,7 @@ const addTeamMember = debounce(() => {
 onMounted(() => {
   const list =
     store?.uiStore.friends.filter(
-      (item) => !store?.relationStore.blacklist.includes(item.accountId)
+      (item) => !store?.relationStore.blacklist.includes(item.accountId),
     ) || [];
 
   const currentTeamMembers =
@@ -306,10 +330,32 @@ onMounted(() => {
   border-bottom: 1px solid #f0f0f0;
 }
 
+.search-wrapper {
+  padding: 8px 18px;
+  flex-shrink: 0;
+}
+
+.search-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 6px;
+  background-color: #f3f5f7;
+  font-size: 13px;
+  color: #333;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: #a6adb6;
+}
+
 .person-select-container {
   flex: 1;
   overflow-y: auto;
-  max-height: calc(100% - 60px);
+  max-height: calc(100% - 100px);
 }
 
 .selected-count {

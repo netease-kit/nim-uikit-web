@@ -10,7 +10,11 @@ const teamManagerVisible = localStorage.getItem("teamManagerVisible") !== "off";
 let store: RootStore;
 let nim: V2NIM;
 
-export const initIMUIKit = (appkey: string, lbsUrls?: string, linkUrl?: string) => {
+export const initIMUIKit = (
+  appkey: string,
+  lbsUrls?: string,
+  linkUrl?: string,
+) => {
   nim = V2NIM.getInstance(
     {
       appkey: appkey,
@@ -21,7 +25,9 @@ export const initIMUIKit = (appkey: string, lbsUrls?: string, linkUrl?: string) 
     },
     {
       V2NIMLoginServiceConfig: {
-        lbsUrls: lbsUrls ? [lbsUrls] : ["https://lbs.netease.im/lbs/webconf.jsp"],
+        lbsUrls: lbsUrls
+          ? [lbsUrls]
+          : ["https://lbs.netease.im/lbs/webconf.jsp"],
         linkUrl: linkUrl || "weblink.netease.im",
       },
     },
@@ -43,7 +49,7 @@ export const initIMUIKit = (appkey: string, lbsUrls?: string, linkUrl?: string) 
       // 是否展示群管理员
       teamManagerVisible,
       // 发送消息前回调, 可对消息体进行修改，添加自定义参数
-      aiVisible: false,
+      aiVisible: true,
       loginStateVisible: true,
       sendMsgBefore: async (options: {
         msg: V2NIMMessage;

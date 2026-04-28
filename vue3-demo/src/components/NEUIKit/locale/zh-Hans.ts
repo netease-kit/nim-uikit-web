@@ -245,6 +245,9 @@ export default {
   onRemoveDiscussionText: "您已离开讨论组",
   receiveText: "您收到了新消息",
   selectSessionFailText: "选择会话失败",
+  aiConversationSelectFailed: "打开数字人会话失败",
+  myAIUserText: "我的数字人",
+  noAIUserText: "暂无数字人",
   discussionText: "讨论组资料",
 
   noExistUser: "该用户不存在",
@@ -507,7 +510,7 @@ export default {
   189449: "并发操作收藏失败",
   // 群相关
   109432: "没有权限",
-  
+
   // 机器人相关
   myRobotsText: "我的机器人",
   createRobotText: "创建机器人",

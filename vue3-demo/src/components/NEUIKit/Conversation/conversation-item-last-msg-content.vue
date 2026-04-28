@@ -116,6 +116,10 @@
         </template>
       </template>
     </div>
+    <!-- 兜底：不支持的消息类型（对标 React 的 default 分支） -->
+    <div v-else>
+      {{ translateMsg("unknownMsgText") }}
+    </div>
   </div>
 </template>
 
@@ -130,7 +134,7 @@ const props = withDefaults(
   defineProps<{
     lastMessage: V2NIMLastMessage;
   }>(),
-  {}
+  {},
 );
 
 // 筛选出文本和表情

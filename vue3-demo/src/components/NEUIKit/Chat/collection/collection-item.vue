@@ -41,13 +41,13 @@ import { computed } from "vue";
 import Dropdown from "../message/message-dropdown.vue";
 import Icon from "../../CommonComponents/Icon.vue";
 import { t } from "../../utils/i18n";
-import dayjs from "dayjs";
+import { formatDate } from "../../utils/date";
 import type {
   V2NIMCollection,
   V2NIMMessage,
 } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
 import MessageItemContent from "../message/message-item-content.vue";
-import { nim } from "../../utils/init"
+import { nim } from "../../utils/init";
 interface MenuItem {
   key: string;
   label: string;
@@ -66,23 +66,10 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {});
 
-
-const formatDate = (time) => {
-  if (!time) {
-    return "";
-  }
-  const _d = dayjs(time);
-  const isCurrentDay = _d.isSame(dayjs(), "day");
-  const isCurrentYear = _d.isSame(dayjs(), "year");
-  return _d.format(
-    isCurrentDay ? "HH:mm" : isCurrentYear ? "MM-DD" : "YYYY-MM"
-  );
-};
-
 // 定义事件
 const emit = defineEmits<{
   "menu-click": [
-    params: { key: string; collection: V2NIMCollection; msg: V2NIMMessage }
+    params: { key: string; collection: V2NIMCollection; msg: V2NIMMessage },
   ];
 }>();
 
@@ -100,8 +87,8 @@ const collectionData = computed(() => {
 // 转换消息对象
 const msg = computed(() => {
   return nim.V2NIMMessageConverter.messageDeserialization(
-    collectionData.value?.message
-  ) as unknown as V2NIMMessage
+    collectionData.value?.message,
+  ) as unknown as V2NIMMessage;
 });
 
 // 菜单项

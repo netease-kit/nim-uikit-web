@@ -62,7 +62,11 @@
         <div class="user-details">
           <div
             class="detail-item"
-            v-if="relation !== 'stranger' && relation !== 'ai' && relation !== 'aiBot'"
+            v-if="
+              relation !== 'stranger' &&
+              relation !== 'ai' &&
+              relation !== 'aiBot'
+            "
           >
             <span class="label">{{ t("remarkText") }}</span>
             <div class="value-container">
@@ -83,7 +87,10 @@
             <span class="label">{{ t("accountText") }}</span>
             <span class="value">{{ props.account }}</span>
           </div>
-          <div class="detail-item" v-if="relation !== 'ai' && relation !== 'aiBot'">
+          <div
+            class="detail-item"
+            v-if="relation !== 'ai' && relation !== 'aiBot'"
+          >
             <span class="label">{{ t("genderText") }}</span>
             <span class="value">
               {{
@@ -95,11 +102,17 @@
               }}
             </span>
           </div>
-          <div class="detail-item" v-if="relation !== 'ai' && relation !== 'aiBot'">
+          <div
+            class="detail-item"
+            v-if="relation !== 'ai' && relation !== 'aiBot'"
+          >
             <span class="label">{{ t("mobile") }}</span>
             <span class="value">{{ (userInfo && userInfo.mobile) || "" }}</span>
           </div>
-          <div class="detail-item" v-if="relation !== 'ai' && relation !== 'aiBot'">
+          <div
+            class="detail-item"
+            v-if="relation !== 'ai' && relation !== 'aiBot'"
+          >
             <span class="label">{{ t("email") }}</span>
             <span class="value">{{ (userInfo && userInfo.email) || "" }}</span>
           </div>
@@ -141,7 +154,7 @@ import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { toast } from "../utils/toast";
 import { modal } from "../utils/modal";
 import Input from "./Input.vue";
-import { nim, store } from "../utils/init";
+import { store } from "../utils/init";
 import type { V2NIMConversationType } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversationService";
 
 const props = withDefaults(
@@ -195,13 +208,15 @@ onMounted(() => {
         alias.value = res[0].alias || "";
       } else {
         // 如果没有找到好友信息，可能是AI机器人，尝试获取AI机器人信息
-        store.aiUserStore?.getUserAIBotActive({
-          accid: account,
-        }).catch((error) => {
-          if (error.code === 102310) {
-            relation.value = "aiBot";
-          }
-        })
+        store.aiUserStore
+          ?.getUserAIBotActive({
+            accid: account,
+          })
+          .catch((error) => {
+            if (error.code === 102310) {
+              relation.value = "aiBot";
+            }
+          });
       }
     });
   });
@@ -211,14 +226,13 @@ onMounted(() => {
       store?.uiStore.getRelation(account) as {
         relation: Relation;
         isInBlacklist: boolean;
-      };    
+      };
 
     relation.value = _relation;
     isInBlacklist.value = _isInBlacklist;
   });
 
   store?.userStore.getUserListFromCloudActive([account]).then((res) => {
-  
     if (res.length) {
       userInfo.value = res[0];
     }

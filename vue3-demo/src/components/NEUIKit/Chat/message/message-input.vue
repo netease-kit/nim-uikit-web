@@ -76,6 +76,7 @@
             :autoResize="true"
             :minRows="1"
             :maxRows="4"
+            :suppressEnter="mentionPopoverVisible"
             @confirm="handleSendTextMsg"
             @blur="handleInputBlur"
             @focus="handleInputFocus"

@@ -97,6 +97,10 @@ const props = defineProps({
     type: Number,
     default: 4,
   },
+  suppressEnter: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits([
@@ -142,7 +146,7 @@ watch(
       textareaRef.value.focus();
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // 自动调整高度
@@ -241,7 +245,10 @@ const handleKeydown = (event: KeyboardEvent) => {
     !event.metaKey
   ) {
     event.preventDefault();
-    emit("confirm", props.modelValue);
+    // suppressEnter 为 true 时（如 @mention 弹窗打开），不触发发送
+    if (!props.suppressEnter) {
+      emit("confirm", props.modelValue);
+    }
     return;
   }
 
@@ -271,7 +278,7 @@ watch(
       adjustHeight();
     });
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 defineExpose({
