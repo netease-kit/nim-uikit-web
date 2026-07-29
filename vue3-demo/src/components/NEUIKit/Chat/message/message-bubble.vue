@@ -1,5 +1,9 @@
 <template>
-  <MessageDropdown placement="bottom" trigger="contextmenu">
+  <MessageDropdown
+    placement="bottom"
+    trigger="contextmenu"
+    :disabled="props.readonly"
+  >
     <div
       class="msg-bubble"
       :style="{ justifyContent: !msg.isSelf ? 'flex-start' : 'flex-end' }"
@@ -8,6 +12,7 @@
         <MessageIsRead
           v-if="
             props.msg.isSelf &&
+            isNormalMsg &&
             props.msg.sendingState ===
               V2NIMConst.V2NIMMessageSendingState
                 .V2NIM_MESSAGE_SENDING_STATE_SUCCEEDED
@@ -30,14 +35,7 @@
         </div>
       </div>
       <div
-        v-if="
-          props.msg.sendingState ===
-            V2NIMConst.V2NIMMessageSendingState
-              .V2NIM_MESSAGE_SENDING_STATE_SUCCEEDED ||
-          props.msg.sendingState ===
-            V2NIMConst.V2NIMMessageSendingState
-              .V2NIM_MESSAGE_SENDING_STATE_SENDING
-        "
+        v-if="isNormalMsg"
       >
         <div
           v-if="bgVisible"
@@ -59,19 +57,18 @@
       </div>
 
       <div
-        v-else-if="
-          props.msg.sendingState ===
-            V2NIMConst.V2NIMMessageSendingState
-              .V2NIM_MESSAGE_SENDING_STATE_FAILED ||
-          props.msg.messageStatus.errorCode === 102426 ||
-          props.msg.messageStatus.errorCode === 104404
-        "
+        v-else-if="isFailedMsg"
         class="msg-failed-wrapper"
       >
         <div class="msg-failed">
           <Popover trigger="hover" placement="top" :align="'center'">
             <div class="msg-status-wrapper" @click="handleResendMsg">
-              <div class="icon-fail">!</div>
+              <div
+                class="icon-fail"
+                :class="{ 'icon-fail-antispam': isAntispamMsg }"
+              >
+                !
+              </div>
             </div>
             <template #content>
               <div>{{ errorTipText }}</div>
@@ -116,20 +113,30 @@
 
 <script lang="ts" setup>
 /** 消息气泡 */
-import { onMounted, onUnmounted, ref, computed } from "vue";
+import { onMounted, onUnmounted, ref, computed, nextTick } from "vue";
 import Icon from "../../CommonComponents/Icon.vue";
 import { events } from "../../utils/constants";
 import { autorun } from "mobx";
-import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/src/types";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { msgRecallTime } from "../../utils/constants";
 import { t } from "../../utils/i18n";
 import emitter from "../../utils/eventBus";
 import { showToast } from "../../utils/toast";
+import { copyText } from "../../utils";
 import MessageIsRead from "./message-read.vue";
 import MessageDropdown from "./message-dropdown.vue";
 import Popover from "../../CommonComponents/Popover.vue";
-import { nim, store } from "../../utils/init"
+import { nim, store } from "../../utils/init";
+import {
+  getAntispamLabelLocaleKey,
+  getAntispamReasonFromMessage,
+  getMessageErrorCode,
+  isAntispamMessage,
+  isFailedMessage,
+  isNormalMessage,
+  isStructuredAntispamReason,
+} from "./message-status";
 
 const props = withDefaults(
   defineProps<{
@@ -137,17 +144,91 @@ const props = withDefaults(
     tooltipVisible?: boolean;
     bgVisible?: boolean;
     placement?: string;
+    readonly?: boolean;
   }>(),
-  {},
+  {
+    readonly: false,
+  },
+);
+
+const messageErrorCode = computed(() => getMessageErrorCode(props.msg));
+const isNormalMsg = computed(() =>
+  isNormalMessage(
+    props.msg,
+    V2NIMConst.V2NIMMessageSendingState
+      .V2NIM_MESSAGE_SENDING_STATE_SUCCEEDED,
+    V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_SENDING,
+    V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_UNKNOWN,
+  ),
+);
+const isFailedMsg = computed(() =>
+  isFailedMessage(
+    props.msg,
+    V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_FAILED,
+  ),
+);
+
+const getAntispamReason = () => {
+  const messageReason = getAntispamReasonFromMessage(props.msg);
+
+  if (messageReason) {
+    return messageReason;
+  }
+
+  const msgStore = store?.msgStore as unknown as {
+    getAntispamReason?: (msg: V2NIMMessageForUI) => string | null;
+  };
+
+  return msgStore?.getAntispamReason?.(props.msg) || "";
+};
+
+const formatAntispamReason = (reason: string) => {
+  const labelKey = getAntispamLabelLocaleKey(reason);
+
+  if (labelKey) {
+    return t("messageStoreAntispamTipWithType").replace("{type}", t(labelKey));
+  }
+
+  return isStructuredAntispamReason(reason)
+    ? t("messageStoreAntispamTip")
+    : reason;
+};
+
+const antispamReason = computed(() => getAntispamReason());
+const isAntispamMsg = computed(
+  () => isAntispamMessage(props.msg) || !!antispamReason.value,
+);
+const isPendingOrFailedMsg = computed(() =>
+  [
+    V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_SENDING,
+    V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_FAILED,
+  ].includes(props.msg.sendingState),
+);
+const isTextMsg = computed(
+  () =>
+    props.msg.messageType ===
+    V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_TEXT,
+);
+const isLimitedActionMessage = computed(
+  () =>
+    props.msg.messageType ===
+      V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL ||
+    isUnknownMsg.value ||
+    isAntispamMsg.value ||
+    isPendingOrFailedMsg.value,
 );
 
 const errorTipText = computed(() => {
   // 消息发送失败时，在感叹号，hover上提示失败原因
-  if (props.msg.messageStatus.errorCode === 102426) {
+  if (messageErrorCode.value === 102426) {
     return t("sendFailWithInBlackText");
-  } else if (props.msg.messageStatus.errorCode === 104404) {
+  } else if (messageErrorCode.value === 104404) {
     return t("sendFailWithDeleteText");
-  } else if (props.msg.messageStatus.errorCode === 108306) {
+  } else if (isAntispamMsg.value) {
+    return antispamReason.value
+      ? formatAntispamReason(antispamReason.value)
+      : t("messageStoreAntispamTip");
+  } else if (messageErrorCode.value === 108306) {
     return t("teamBannedText");
   } else {
     return t("msgNetworkErrorText");
@@ -162,6 +243,13 @@ const isUnknownMsg = ref(false);
 const msgActions = computed(() => {
   return [
     {
+      name: t("copyText"),
+      class: "action-copy",
+      key: "action-copy",
+      show: isTextMsg.value,
+      iconType: "icon-fuzhi1",
+    },
+    {
       name: t("deleteText"),
       class: "action-delete",
       key: "action-delete",
@@ -173,15 +261,11 @@ const msgActions = computed(() => {
       class: "action-recall",
       key: "action-recall",
       show:
-        props.msg.messageType !==
-          V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL &&
+        !isLimitedActionMessage.value &&
         props.msg.isSelf &&
-        ![
+        props.msg.sendingState ===
           V2NIMConst.V2NIMMessageSendingState
-            .V2NIM_MESSAGE_SENDING_STATE_SENDING,
-          V2NIMConst.V2NIMMessageSendingState
-            .V2NIM_MESSAGE_SENDING_STATE_FAILED,
-        ].includes(props.msg.sendingState),
+            .V2NIM_MESSAGE_SENDING_STATE_SUCCEEDED,
 
       iconType: "icon-recall",
     },
@@ -190,15 +274,7 @@ const msgActions = computed(() => {
       class: "action-reply",
       key: "action-reply",
       iconType: "icon-reply",
-      show:
-        props.msg.messageType !==
-          V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL &&
-        ![
-          V2NIMConst.V2NIMMessageSendingState
-            .V2NIM_MESSAGE_SENDING_STATE_SENDING,
-          V2NIMConst.V2NIMMessageSendingState
-            .V2NIM_MESSAGE_SENDING_STATE_FAILED,
-        ].includes(props.msg.sendingState),
+      show: !isLimitedActionMessage.value,
     },
     {
       name: t("forwardText"),
@@ -206,35 +282,48 @@ const msgActions = computed(() => {
       key: "action-forward",
       iconType: "icon-forward",
       show:
+        !isLimitedActionMessage.value &&
         props.msg.messageType !==
-          V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL &&
-        props.msg.messageType !==
-          V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_AUDIO &&
-        ![
-          V2NIMConst.V2NIMMessageSendingState
-            .V2NIM_MESSAGE_SENDING_STATE_SENDING,
-          V2NIMConst.V2NIMMessageSendingState
-            .V2NIM_MESSAGE_SENDING_STATE_FAILED,
-        ].includes(props.msg.sendingState),
+          V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_AUDIO,
     },
     {
       name: t("collectionText"),
       class: "action-collect",
       key: "action-collect",
       show:
-        props.msg.messageType !==
-          V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL &&
+        !isLimitedActionMessage.value &&
         props.msg &&
         props.msg.sendingState ===
           V2NIMConst.V2NIMMessageSendingState
             .V2NIM_MESSAGE_SENDING_STATE_SUCCEEDED,
       iconType: "icon-collection",
     },
+    {
+      name: t("voiceToText"),
+      class: "action-voice-to-text",
+      key: "action-voice-to-text",
+      show:
+        !isLimitedActionMessage.value &&
+        props.msg.messageType ===
+          V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_AUDIO &&
+        !props.msg.textOfVoice,
+      iconType: "icon-zhuanwenzi",
+    },
+    {
+      name: t("multiSelectText"),
+      class: "action-multi-select",
+      key: "action-multi-select",
+      show: true,
+      iconType: "icon-duoxuan",
+    },
   ];
 });
 
 const handleActionItemClick = (key: string) => {
   switch (key) {
+    case "action-copy":
+      handleCopyMsg();
+      break;
     case "action-delete":
       handleDeleteMsg();
       break;
@@ -250,13 +339,54 @@ const handleActionItemClick = (key: string) => {
     case "action-collect":
       handleCollectMsg();
       break;
+    case "action-voice-to-text":
+      handleVoiceToTextMsg();
+      break;
+    case "action-multi-select":
+      handleMultiSelectMsg();
+      break;
     default:
       break;
   }
 };
 
+const handleMultiSelectMsg = () => {
+  store.uiStore.setMultiSelectMode(true);
+
+  if (props.msg.messageClientId) {
+    store.uiStore.selectMessage(props.msg.messageClientId);
+    nextTick(() => {
+      emitter.emit(events.SCROLL_MSG_INTO_VIEW, props.msg.messageClientId);
+    });
+  }
+};
+
 const handleForwardMsg = () => {
   emitter.emit(events.CONFIRM_FORWARD_MSG, props.msg);
+};
+
+const handleCopyMsg = () => {
+  copyText(props.msg.text || "");
+  showToast({
+    message: t("copySuccessText"),
+    type: "success",
+  });
+};
+
+const handleVoiceToTextMsg = async () => {
+  try {
+    showToast({
+      message: t("voiceToTextLoadingText"),
+      type: "info",
+      duration: 1000,
+    });
+    await store.msgStore.voiceToTextActive(props.msg);
+  } catch {
+    showToast({
+      message: t("voiceToTextFailedText"),
+      type: "error",
+    });
+  }
 };
 
 const scrollBottom = async () => {
@@ -319,6 +449,10 @@ const handleCollectMsg = async () => {
 
 // 重发消息
 const handleResendMsg = async () => {
+  if (isAntispamMsg.value) {
+    return;
+  }
+
   const _msg = props.msg as V2NIMMessageForUI;
   store.msgStore.removeMsg(_msg.conversationId, [
     _msg.messageClientId,
@@ -584,6 +718,11 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
+.icon-fail-antispam {
+  background: #a8b0bd;
+  cursor: default;
+}
+
 .msg-failed {
   display: flex;
   flex-direction: row;
@@ -610,7 +749,7 @@ onUnmounted(() => {
 .action-name {
   margin-left: 5px;
   font-size: 14px;
-  width: 35px;
+  min-width: 35px;
   white-space: nowrap;
 }
 </style>

@@ -1,10 +1,5 @@
 import { APP_KEY } from "../../utils/constants";
-// const baseUrl = "https://yiyong-user-center-qa.netease.im";
-const baseUrl = "https://yiyong-user-center.netease.im";
-// // @ts-ignore
-// BUILD_ENV === 'prod'
-//   ? 'https://yiyong-user-center.netease.im/'
-//   : 'https://yiyong-user-center-qa.netease.im'
+const baseUrl = import.meta.env.VITE_USER_CENTER_BASE_URL;
 
 const loginByCodeHeader = {
   appKey: APP_KEY,

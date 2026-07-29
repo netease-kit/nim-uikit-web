@@ -120,7 +120,12 @@ import IconSifenzhiyiyidu from "../static/icons/icon-sifenzhiyiyidu.png";
 import IconSousuo from "../static/icons/icon-sousuo.png";
 import IconTeam from "../static/icons/icon-team.png";
 import IconZuojiantou from "../static/icons/icon-zuojiantou.png";
+import IconCallInput from "../static/icons/icon-call-input.png";
+import IconCallAudio from "../static/icons/icon-call-audio.png";
+import IconCallVideo from "../static/icons/icon-call-video.png";
+import IconCallRecordVideo from "../static/icons/icon-call-record-video.png";
 import IconZhuanfa from "../static/icons/icon-zhuanfa.png";
+import IconZhuanwenzi from "../static/icons/icon-zhuanwenzi.png";
 import IconZhongyingwen from "../static/icons/icon-zhongyingwen.png";
 import IconZhankai from "../static/icons/icon-zhankai.png";
 import IconYinle from "../static/icons/icon-yinle.png";
@@ -169,6 +174,7 @@ import IconCollection from "../static/icons/add-collection.png";
 import IconBlueCollection from "../static/icons/collection.png";
 import IconSend from "../static/icons/sending.png";
 import IconSendSelected from "../static/icons/icon-send-selected.png";
+import IconDuoxuan from "../static/icons/icon-duoxuan.png";
 import IconTop from "../static/icons/icon-top.png";
 import IconCancelTop from "../static/icons/icon-cancel-top.png";
 import IconMute from "../static/icons/icon-mute.png";
@@ -299,13 +305,18 @@ const urlMap = {
   "icon-shezhi1": IconShezhi1,
   "icon-shipin": IconShipin,
   "icon-shipin8": IconShipin8,
+  "icon-call-record-video": IconCallRecordVideo,
   "icon-shipinyuyin": IconShipinyuyin,
   "icon-sifenzhisanyidu": IconSifenzhisanyidu,
   "icon-sifenzhiyiyidu": IconSifenzhiyiyidu,
   "icon-sousuo": IconSousuo,
   "icon-team": IconTeam,
   "icon-zuojiantou": IconZuojiantou,
+  "icon-call-input": IconCallInput,
+  "icon-call-audio": IconCallAudio,
+  "icon-call-video": IconCallVideo,
   "icon-forward": IconZhuanfa,
+  "icon-zhuanwenzi": IconZhuanwenzi,
   "icon-zhongyingwen": IconZhongyingwen,
   "icon-zhankai": IconZhankai,
   "icon-yinle": IconYinle,
@@ -354,6 +365,7 @@ const urlMap = {
   "blue-collection": IconBlueCollection,
   "icon-send-default": IconSend,
   "icon-send-selected": IconSendSelected,
+  "icon-duoxuan": IconDuoxuan,
   "icon-top": IconTop,
   "icon-cancel-top": IconCancelTop,
   "icon-mute": IconMute,

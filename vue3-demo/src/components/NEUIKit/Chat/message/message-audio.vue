@@ -1,17 +1,27 @@
 <template>
+  <div v-if="readonly" class="unknown-msg">
+    [{{ t("audioMsgText") }}]
+  </div>
   <div
-    :class="!msg.isSelf ? 'audio-in' : 'audio-out'"
-    :style="{ width: audioContainerWidth + 'px' }"
-    @click="togglePlay"
+    v-else
+    class="audio-container"
+    :class="!msg.isSelf ? 'audio-container-in' : 'audio-container-out'"
     ref="audioContainerRef"
   >
-    <div class="audio-dur">{{ duration }}s</div>
     <div
-      class="audio-icon-wrapper"
-      :class="!msg.isSelf ? 'audio-icon-in' : 'audio-icon-out'"
+      :class="!msg.isSelf ? 'audio-in' : 'audio-out'"
+      :style="{ width: audioContainerWidth + 'px' }"
+      @click="togglePlay"
     >
-      <Icon :size="24" :key="audioIconType" :type="audioIconType" />
+      <div class="audio-dur">{{ duration }}s</div>
+      <div
+        class="audio-icon-wrapper"
+        :class="!msg.isSelf ? 'audio-icon-in' : 'audio-icon-out'"
+      >
+        <Icon :size="24" :key="audioIconType" :type="audioIconType" />
+      </div>
     </div>
+    <div v-if="msg.textOfVoice" class="audio-text">{{ msg.textOfVoice }}</div>
   </div>
 </template>
 
@@ -19,14 +29,18 @@
 /** 音频消息 */
 import { ref, computed } from "vue";
 import Icon from "../../CommonComponents/Icon.vue";
-import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import { t } from "../../utils/i18n";
+import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/src/types";
 import type { V2NIMMessageAudioAttachment } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
 
 const props = withDefaults(
   defineProps<{
     msg: V2NIMMessageForUI;
+    readonly?: boolean;
   }>(),
-  {}
+  {
+    readonly: false,
+  }
 );
 
 // 音频图标类型 用于音频动态播放
@@ -123,6 +137,25 @@ const pauseAllAudio = (): HTMLAudioElement => {
 </script>
 
 <style scoped>
+.unknown-msg {
+  font-size: 14px;
+  color: #000000;
+}
+
+.audio-container {
+  display: flex;
+  flex-direction: column;
+  max-width: 260px;
+}
+
+.audio-container-in {
+  align-items: flex-start;
+}
+
+.audio-container-out {
+  align-items: flex-end;
+}
+
 .audio-dur {
   height: 24px;
   line-height: 24px;
@@ -159,6 +192,15 @@ const pauseAllAudio = (): HTMLAudioElement => {
 
 .audio-icon-in {
   transform: rotateY(180deg);
+}
+
+.audio-text {
+  margin-top: 8px;
+  color: #333;
+  font-size: 14px;
+  line-height: 20px;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .popover-message-content > .audio-in {

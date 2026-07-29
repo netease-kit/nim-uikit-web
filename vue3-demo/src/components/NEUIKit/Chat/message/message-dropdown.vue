@@ -35,12 +35,14 @@ const props = withDefaults(
     lazy?: boolean;
     dropdownStyle?: CSSProperties;
     placement?: "top" | "bottom";
+    disabled?: boolean;
   }>(),
   {
     trigger: "contextmenu",
     lazy: true,
     dropdownStyle: () => ({}),
     placement: "bottom",
+    disabled: false,
   }
 );
 
@@ -95,6 +97,10 @@ const handleClick = (event: MouseEvent) => {
 
 // 处理右键菜单事件
 const handleContextMenu = async (event: MouseEvent) => {
+  if (props.disabled) {
+    event.preventDefault();
+    return;
+  }
   if (
     props.trigger === "contextmenu" ||
     props.trigger === "click" ||

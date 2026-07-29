@@ -157,6 +157,35 @@
               />
               <Icon @click="handleSendFileMsg" :size="19" type="icon-file" />
             </div>
+            <div v-if="callActionVisible" class="input-icon">
+              <Popover
+                trigger="click"
+                placement="top"
+                v-model="callPopoverVisible"
+                :offset="8"
+                :bodyStyle="{ padding: '4px', width: '106px' }"
+              >
+                <Icon :size="20" type="icon-call-input" />
+                <template #content>
+                  <div class="call-popover-menu">
+                    <div
+                      class="call-popover-item"
+                      @click="() => handleCall('1')"
+                    >
+                      <Icon type="icon-call-audio" :size="15"></Icon>
+                      <span class="action-name">{{ t("voiceCallText") }}</span>
+                    </div>
+                    <div
+                      class="call-popover-item"
+                      @click="() => handleCall('2')"
+                    >
+                      <Icon type="icon-call-video" :size="15"></Icon>
+                      <span class="action-name">{{ t("videoCallText") }}</span>
+                    </div>
+                  </div>
+                </template>
+              </Popover>
+            </div>
             <div class="input-icon">
               <Icon
                 v-if="!inputText.length"
@@ -221,10 +250,11 @@ import type {
   V2NIMMessageForUI,
   YxServerExt,
   YxAitMsg,
-} from "@xkit-yx/im-store-v2/dist/types/types";
+} from "@xkit-yx/im-store-v2/dist/types/src/types";
 import Textarea from "../../CommonComponents/Textarea.vue";
 import { store, nim } from "../../utils/init";
 import type { V2NIMMessage } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
+import { call } from "@xkit-yx/call-kit-vue3-ui";
 
 const props = withDefaults(
   defineProps<{
@@ -247,6 +277,9 @@ const sendMoreVisible = ref(false);
 
 // 表情面板显示状态
 const emojiPopoverVisible = ref(false);
+
+// 呼叫面板显示状态
+const callPopoverVisible = ref(false);
 
 // mention面板显示状态
 const mentionPopoverVisible = ref(false);
@@ -298,6 +331,37 @@ const allowAtAll = computed(() => {
   }
   return true;
 });
+
+const callActionVisible = computed(() => {
+  const { relation } = store?.uiStore.getRelation(props.to) || {};
+  return (
+    props.conversationType ===
+      V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_P2P &&
+    relation !== "ai"
+  );
+});
+
+const handleCall = async (callType: "1" | "2") => {
+  try {
+    await call({
+      accId: props.to,
+      callType,
+    });
+    callPopoverVisible.value = false;
+  } catch (error: any) {
+    switch (String(error?.code || "")) {
+      case "105":
+        toast.error(t("inCallText"));
+        break;
+      case "Error_Internet_Disconnected":
+        toast.error(t("networkDisconnectText"));
+        break;
+      default:
+        toast.error(t("callFailed"));
+        break;
+    }
+  }
+};
 
 // 更新群禁言
 const updateTeamMute = (teamMute) => {
@@ -492,6 +556,10 @@ const handleSendMsgError = (errCode) => {
       break;
     case 104404:
       toast.error(t("sendFailWithDeleteText"));
+      break;
+    case 195001:
+    case 195002:
+      toast.error(t("messageStoreAntispamTip"));
       break;
     default:
       toast.error(t("sendMsgFailedText"));
@@ -1283,7 +1351,8 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.img-popover-item {
+.img-popover-item,
+.call-popover-item {
   display: flex;
   align-items: center;
   padding: 4px;
@@ -1293,12 +1362,14 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.img-popover-item:hover {
+.img-popover-item:hover,
+.call-popover-item:hover {
   background-color: #f5f5f5;
   cursor: pointer;
 }
 
-.img-popover-item .action-name {
+.img-popover-item .action-name,
+.call-popover-item .action-name {
   margin-left: 8px;
   font-size: 14px;
   white-space: nowrap;
@@ -1306,6 +1377,13 @@ onUnmounted(() => {
   cursor: pointer;
   color: #333;
   z-index: 999999;
+}
+
+.call-popover-menu {
+  width: 102px;
+  max-width: 102px;
+  padding: 4px;
+  cursor: pointer;
 }
 
 .msg-textarea {

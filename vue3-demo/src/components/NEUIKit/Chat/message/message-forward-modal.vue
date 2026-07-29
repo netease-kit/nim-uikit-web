@@ -225,7 +225,7 @@
 
 <script lang="ts" setup>
 /** 消息转发弹窗 */
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import Avatar from "../../CommonComponents/Avatar.vue";
 import Appellation from "../../CommonComponents/Appellation.vue";
 import { t } from "../../utils/i18n";
@@ -242,10 +242,17 @@ import Empty from "../../CommonComponents/Empty.vue";
 import { RecycleScroller } from "vue-virtual-scroller";
 import { nim, store } from "../../utils/init";
 
-const props = defineProps<{
-  visible: boolean;
-  msg?: V2NIMMessage; // 转发的消息对象
-}>();
+const props = withDefaults(
+  defineProps<{
+    visible: boolean;
+    msg?: V2NIMMessage; // 转发的消息对象
+    isMergeForward?: boolean;
+  }>(),
+  {
+    visible: false,
+    isMergeForward: false,
+  },
+);
 
 const emit = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
@@ -305,6 +312,35 @@ const handleForwardConfirm = () => {
 
   if (!props.msg) {
     toast.info(t("getForwardMessageFailed"));
+    return;
+  }
+
+  if (props.isMergeForward) {
+    store?.msgStore
+      .sendMessageActive({
+        msg: props.msg,
+        conversationId: forwardConversationId.value,
+      })
+      .then(async () => {
+        if (forwardComment.value) {
+          const textMsg = nim.V2NIMMessageCreator.createTextMessage(
+            forwardComment.value,
+          ) as unknown as V2NIMMessage;
+          await store?.msgStore.sendMessageActive({
+            msg: textMsg,
+            conversationId: forwardConversationId.value,
+          });
+        }
+
+        toast.success(t("forwardSuccessText"));
+        emit("send");
+      })
+      .catch(() => {
+        toast.error(t("forwardFailedText"));
+      })
+      .finally(() => {
+        emit("close");
+      });
     return;
   }
 
@@ -449,6 +485,33 @@ onUnmounted(() => {
   teamListWatch();
   recentConversationListWatch();
 });
+
+const resetState = () => {
+  selectedId.value = "";
+  selectedItem.value = null;
+  forwardComment.value = "";
+  searchKeyword.value = "";
+  currentTab.value = "recent";
+  forwardConversationId.value = "";
+};
+
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      resetState();
+    }
+  },
+);
+
+watch(
+  () => props.msg,
+  () => {
+    if (props.visible) {
+      resetState();
+    }
+  },
+);
 </script>
 
 <style scoped>

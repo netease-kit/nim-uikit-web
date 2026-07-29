@@ -102,7 +102,7 @@ import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import type {
   V2NIMConversationForUI,
   V2NIMLocalConversationForUI,
-} from "@xkit-yx/im-store-v2/dist/types/types";
+} from "@xkit-yx/im-store-v2/dist/types/src/types";
 import ConversationItemIsRead from "./conversation-item-read.vue";
 import LastMsgContent from "./conversation-item-last-msg-content.vue";
 import Dropdown from "../CommonComponents/Dropdown.vue";

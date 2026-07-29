@@ -139,7 +139,7 @@ import type {
 import type {
   V2NIMConversationForUI,
   V2NIMLocalConversationForUI,
-} from "@xkit-yx/im-store-v2/dist/types/types";
+} from "@xkit-yx/im-store-v2/dist/types/src/types";
 import Switch from "../../../CommonComponents/Switch.vue";
 import Input from "../../../CommonComponents/Input.vue";
 import AddTeamMemberModal from "./add-team-member-modal.vue";

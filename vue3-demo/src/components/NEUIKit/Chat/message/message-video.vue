@@ -94,7 +94,7 @@
 <script lang="ts" setup>
 /** 消息视频组件 */
 import { ref, computed } from "vue";
-import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/src/types";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import Modal from "../../CommonComponents/Modal.vue";
 import { t } from "../../utils/i18n";

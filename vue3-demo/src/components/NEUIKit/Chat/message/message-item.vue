@@ -86,32 +86,64 @@
 
     <div
       v-else
-      class="msg-common"
-      :style="{ flexDirection: !msg.isSelf ? 'row' : 'row-reverse' }"
+      class="msg-common-container"
+      :class="{ 'is-multi-select': isMultiSelectMode && !props.readonly }"
     >
-      <MessageAvatar :account="msg.senderId" :to="to" />
       <div
-        class="msg-content"
-        :style="{ alignItems: !msg.isSelf ? 'flex-start' : 'flex-end' }"
+        v-if="isMultiSelectMode && !props.readonly"
+        class="msg-checkbox-wrapper"
+        @click.stop="toggleSelection"
       >
+        <input
+          type="checkbox"
+          :checked="isSelected"
+          class="msg-checkbox-input"
+        />
+      </div>
+      <div
+        class="msg-common"
+        :style="{
+          flexDirection: !msg.isSelf ? 'row' : 'row-reverse',
+          flex: 1,
+        }"
+      >
+        <MessageAvatar
+          :account="msg.senderId"
+          :to="to"
+          :readonly="props.readonly"
+        />
         <div
-          class="msg-name"
-          :class="{
-            'msg-name-left': !msg.isSelf,
-            'msg-name-right': msg.isSelf,
-          }"
+          class="msg-content"
+          :style="{ alignItems: !msg.isSelf ? 'flex-start' : 'flex-end' }"
         >
-          {{ appellation }}
-        </div>
-        <MessageBubble :msg="msg" :bg-visible="true">
-          <MessageItemContent :msg="msg" :replyMsg="replyMsg" />
-        </MessageBubble>
-        <!-- 消息时间 -->
-        <div
-          class="msg-timestamp"
-          :class="{ 'msg-timestamp-self': msg.isSelf }"
-        >
-          {{ formatMessageTime?.(msg.createTime) }}
+          <div
+            class="msg-name"
+            :class="{
+              'msg-name-left': !msg.isSelf,
+              'msg-name-right': msg.isSelf,
+            }"
+          >
+            {{ appellation }}
+          </div>
+          <MessageBubble
+            :msg="msg"
+            :bg-visible="true"
+            :readonly="props.readonly"
+          >
+            <MessageItemContent
+              :msg="msg"
+              :replyMsg="replyMsg"
+              :readonly="props.readonly"
+              :showReply="!props.readonly"
+            />
+          </MessageBubble>
+          <!-- 消息时间 -->
+          <div
+            class="msg-timestamp"
+            :class="{ 'msg-timestamp-self': msg.isSelf }"
+          >
+            {{ formatMessageTime?.(msg.createTime) }}
+          </div>
         </div>
       </div>
     </div>
@@ -130,21 +162,45 @@ import { autorun } from "mobx";
 import { t } from "../../utils/i18n";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import emitter from "../../utils/eventBus";
-import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
-import { nim, store } from "../../utils/init"
+import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/src/types";
+import { nim, store } from "../../utils/init";
 
 
 const props = withDefaults(
   defineProps<{
-    msg: V2NIMMessageForUI & { timeValue?: number };
+    msg: V2NIMMessageForUI & { timeValue?: number; senderName?: string };
     index: number;
     replyMsgsMap?: {
       [key: string]: V2NIMMessageForUI;
     };
+    readonly?: boolean;
   }>(),
-  {}
+  {
+    readonly: false,
+  },
 );
 
+const isMultiSelectMode = ref(false);
+const isSelected = ref(false);
+
+const multiSelectStateWatch = autorun(() => {
+  isMultiSelectMode.value = store.uiStore.isMultiSelectMode;
+  if (props.msg.messageClientId) {
+    isSelected.value = store.uiStore.selectedMessageIds.includes(
+      props.msg.messageClientId,
+    );
+  }
+});
+
+const toggleSelection = () => {
+  if (!props.msg.messageClientId) return;
+
+  if (isSelected.value) {
+    store.uiStore.unselectMessage(props.msg.messageClientId);
+  } else {
+    store.uiStore.selectMessage(props.msg.messageClientId);
+  }
+};
 
 // 回复消息
 const replyMsg = computed(() => {
@@ -209,26 +265,58 @@ const formatMessageTime = (timestamp: number) => {
 
 // 监听昵称变化
 const uninstallAppellationWatch = autorun(() => {
-  // 昵称展示顺序 群昵称 > 备注 > 个人昵称 > 帐号
-  // 断网重联下，若群成员修改昵称，可以通过拉取群成员接口，触发此函数执行，获取最新的群昵称
-  appellation.value = store.uiStore?.getAppellation({
-    account: props.msg.senderId,
-    teamId:
-      conversationType ===
-      V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
-        ? to
-        : "",
-  }) as string;
+  if (props.readonly) {
+    // 合并转发详情等只读场景：昵称展示优先使用消息快照里的昵称。
+    appellation.value = store.uiStore?.getAppellation({
+      account: props.msg.senderId,
+      ignoreAlias: true,
+      nickFromMsg: props.msg.senderName || "",
+    }) as string;
+  } else {
+    // 昵称展示顺序 群昵称 > 备注 > 个人昵称 > 帐号
+    // 断网重联下，若群成员修改昵称，可以通过拉取群成员接口，触发此函数执行，获取最新的群昵称
+    appellation.value = store.uiStore?.getAppellation({
+      account: props.msg.senderId,
+      teamId:
+        conversationType ===
+        V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
+          ? to
+          : "",
+    }) as string;
+  }
 });
 
 onUnmounted(() => {
   uninstallAppellationWatch();
+  multiSelectStateWatch();
 });
 </script>
 
 <style scoped>
 .msg-item-wrapper {
   padding: 0 10px 10px 10px;
+}
+
+.msg-common-container {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.msg-checkbox-wrapper {
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.msg-checkbox-input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }
 
 .msg-common {

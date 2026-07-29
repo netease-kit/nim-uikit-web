@@ -11,14 +11,21 @@
         {{ t("loadingText") }}
       </div>
       <div class="msg-tip" v-show="noMore">{{ t("noMoreText") }}</div>
-      <div v-for="(item, index) in msgs" :key="item.messageClientId">
+      <div
+        v-for="(item, index) in msgs"
+        :key="[item.messageClientId, item.textOfVoice || ''].join('-')"
+        :data-msg-id="item.messageClientId"
+      >
         <MessageItem
           :msg="item"
           :index="index"
-          :key="item.messageClientId"
+          :key="[item.messageClientId, item.textOfVoice || ''].join('-')"
           :reply-msgs-map="replyMsgsMap"
         >
         </MessageItem>
+        <div v-if="getAntispamTip(item)" class="antispam-tip">
+          {{ getAntispamTip(item) }}
+        </div>
       </div>
     </div>
   </div>
@@ -43,9 +50,16 @@ import { autorun } from "mobx";
 import { events } from "../../utils/constants";
 
 import type { V2NIMTeam } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService";
-import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/src/types";
 import { store } from "../../utils/init";
 import type { V2NIMConversationType } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversationService";
+import {
+  getAntispamLabelLocaleKey,
+  getAntispamReasonFromMessage,
+  isAntispamMessage,
+  isFailedMessage,
+  isStructuredAntispamReason,
+} from "./message-status";
 
 const props = withDefaults(
   defineProps<{
@@ -73,6 +87,52 @@ onBeforeMount(() => {
 });
 
 const scrollTop = ref(0);
+
+const getAntispamReason = (msg: V2NIMMessageForUI) => {
+  const messageReason = getAntispamReasonFromMessage(msg);
+
+  if (messageReason) {
+    return messageReason;
+  }
+
+  const msgStore = store?.msgStore as unknown as {
+    getAntispamReason?: (msg: V2NIMMessageForUI) => string | null;
+  };
+
+  return msgStore?.getAntispamReason?.(msg) || "";
+};
+
+const formatAntispamReason = (reason: string) => {
+  const labelKey = getAntispamLabelLocaleKey(reason);
+
+  if (labelKey) {
+    return t("messageStoreAntispamTipWithType").replace("{type}", t(labelKey));
+  }
+
+  return isStructuredAntispamReason(reason)
+    ? t("messageStoreAntispamTip")
+    : reason;
+};
+
+const getAntispamTip = (msg: V2NIMMessageForUI) => {
+  const reason = getAntispamReason(msg);
+  const isFailedOutgoingMessage =
+    msg.isSelf &&
+    isFailedMessage(
+      msg,
+      V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_FAILED,
+    );
+
+  if (!isFailedOutgoingMessage) {
+    return "";
+  }
+
+  if (reason) {
+    return formatAntispamReason(reason);
+  }
+
+  return isAntispamMessage(msg) ? t("messageStoreAntispamTip") : "";
+};
 
 // 消息滑动到底部
 const scrollToBottom = () => {
@@ -206,9 +266,29 @@ defineExpose({
   messageListRef,
 });
 
+const handleScrollMsgIntoView = (messageClientId: unknown) => {
+  if (!messageClientId || !messageListRef.value) return;
+
+  nextTick(() => {
+    const messageId = String(messageClientId);
+    const msgEl = Array.from(
+      messageListRef.value?.querySelectorAll<HTMLElement>("[data-msg-id]") ||
+        [],
+    ).find((item) => item.dataset.msgId === messageId);
+
+    if (msgEl) {
+      (msgEl as HTMLElement).scrollIntoView({
+        block: "center",
+        behavior: "smooth",
+      });
+    }
+  });
+};
+
 onMounted(() => {
   // 监听滚动到底部
   emitter.on(events.ON_SCROLL_BOTTOM, scrollToBottom);
+  emitter.on(events.SCROLL_MSG_INTO_VIEW, handleScrollMsgIntoView);
 
   // 添加滚动监听器，实现向上滚动加载更多
   nextTick(() => {
@@ -220,6 +300,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   emitter.off(events.ON_SCROLL_BOTTOM, scrollToBottom);
+  emitter.off(events.SCROLL_MSG_INTO_VIEW, handleScrollMsgIntoView);
   emitter.off(events.AUDIO_URL_CHANGE);
 
   teamWatch();
@@ -255,6 +336,17 @@ onUnmounted(() => {
   font-size: 14px;
   margin-top: 10px;
   width: 100%;
+}
+
+.antispam-tip {
+  max-width: 92%;
+  box-sizing: border-box;
+  margin: 8px auto 18px;
+  padding: 0 4px;
+  color: #b3b7bc;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
 }
 
 .block {

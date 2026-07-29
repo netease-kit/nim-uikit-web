@@ -23,7 +23,7 @@
 import { computed } from 'vue'
 import MarkdownRender from 'markstream-vue'
 import { V2NIMConst } from 'nim-web-sdk-ng/dist/esm/nim'
-import type { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/types'
+import type { V2NIMMessageForUI } from '@xkit-yx/im-store-v2/dist/types/src/types'
 
 const props = defineProps<{
   msg: V2NIMMessageForUI
