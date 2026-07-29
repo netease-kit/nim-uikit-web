@@ -101,7 +101,7 @@ import Appellation from "../../CommonComponents/Appellation.vue";
 import Empty from "../../CommonComponents/Empty.vue";
 import { RecycleScroller } from "vue-virtual-scroller";
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
-import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/src/types";
 import { nim, store } from "../../utils/init"
 
 const props = withDefaults(

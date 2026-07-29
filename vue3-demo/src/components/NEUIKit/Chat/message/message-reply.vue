@@ -70,7 +70,7 @@
 import { t } from "../../utils/i18n";
 import { ref } from "vue";
 import { REPLY_MSG_TYPE_MAP } from "../../utils/constants";
-import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/src/types";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 
 import Appellation from "../../CommonComponents/Appellation.vue";

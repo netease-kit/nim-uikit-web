@@ -98,7 +98,7 @@ import type {
 import type {
   V2NIMConversationForUI,
   V2NIMLocalConversationForUI,
-} from "@xkit-yx/im-store-v2/dist/types/types";
+} from "@xkit-yx/im-store-v2/dist/types/src/types";
 import { autorun } from "mobx";
 import { toast } from "../../utils/toast";
 import { isDiscussionFunc } from "../../utils";

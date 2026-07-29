@@ -26,7 +26,7 @@
 /** 文件消息 */
 import { getFileType, parseFileSize } from "@xkit-yx/utils";
 import Icon from "../../CommonComponents/Icon.vue";
-import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/src/types";
 import type { V2NIMMessageFileAttachment } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
 import { computed } from "vue";
 

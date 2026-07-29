@@ -91,7 +91,7 @@
 /** 消息已读未读组件 */
 
 import { computed, ref, onMounted, onUnmounted } from "vue";
-import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/src/types";
 import Icon from "../../CommonComponents/Icon.vue";
 import Popover from "../../CommonComponents/Popover.vue";
 import MessageReadInfo from "./message-read-info.vue";

@@ -71,7 +71,7 @@ import { ref, computed, watch, onMounted } from "vue";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import PreviewImage from "../../CommonComponents/PreviewImage.vue";
 import type { V2NIMMessageImageAttachment } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMMessageService";
-import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/src/types";
 import { nim } from "../../utils/init"
 
 const props = withDefaults(

@@ -32,7 +32,14 @@
         @click="scrollToBottomAndHideNewMsgTip"
       />
       <!-- 消息输入框 -->
+      <MultiMessageOperation
+        v-if="isMultiSelectMode"
+        @cancel="handleMergeCancel"
+        @forward="handleMergeForward"
+        @delete="handleMergeDelete"
+      />
       <MessageInput
+        v-else
         :reply-msgs-map="replyMsgsMap"
         :conversation-type="conversationType"
         :to="to"
@@ -60,7 +67,9 @@
     v-if="showForwardModal"
     :visible="showForwardModal"
     :msg="forwardMsg"
-    @close="showForwardModal = false"
+    :isMergeForward="isMergeForward"
+    @close="handleForwardModalClose"
+    @send="handleForwardSendSuccess"
   />
   <!-- 好友名片 组件 -->
   <UserCardModal
@@ -78,6 +87,7 @@ import { ref, onMounted, onUnmounted, computed, nextTick, watch } from "vue";
 import ChatHeader from "./message/chat-header.vue";
 import MessageList from "./message/message-list.vue";
 import MessageInput from "./message/message-input.vue";
+import MultiMessageOperation from "./forward/multi-message-operation.vue";
 import ChatSettingDrawer from "./setting/index.vue";
 import NewMessageTip from "./message/new-message-tip.vue";
 import NotFriendTip from "./message/not-friend-tip.vue";
@@ -88,9 +98,11 @@ import { HISTORY_LIMIT, events } from "../utils/constants";
 import { t } from "../utils/i18n";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { showToast, toast } from "../utils/toast";
+import { modal } from "../utils/modal";
 import Icon from "../CommonComponents/Icon.vue";
 import emitter from "../utils/eventBus";
-import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import { getMsgContentTipByType } from "../utils/msg";
+import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/src/types";
 import type {
   V2NIMMessage,
   V2NIMMessageRefer,
@@ -99,6 +111,8 @@ import type {
 import { isDiscussionFunc } from "../utils";
 import { store, nim } from "../utils/init";
 import type { V2NIMConversationType } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMConversationService";
+import { isAntispamMessage } from "./message/message-status";
+import { getFileMd5 } from "../utils/file-md5";
 
 export interface YxReplyMsg {
   messageClientId: string;
@@ -244,6 +258,215 @@ const checkStrangerRelation = () => {
 const showForwardModal = ref(false);
 /** 转发消息 */
 const forwardMsg = ref<V2NIMMessage>();
+const isMergeForward = ref(false);
+const isMultiSelectMode = ref(false);
+
+const multiSelectWatch = autorun(() => {
+  isMultiSelectMode.value = store.uiStore.isMultiSelectMode;
+});
+
+const handleMergeCancel = () => {
+  store.uiStore.setMultiSelectMode(false);
+};
+
+const getSelectedMessagesForCurrentContext = (
+  selectedIds: string[],
+): V2NIMMessageForUI[] => {
+  const conversationId = store?.uiStore.selectedConversation;
+  if (!conversationId) {
+    return [];
+  }
+
+  return store?.msgStore.getMsg(conversationId, selectedIds) || [];
+};
+
+const isUnforwardableMessage = (msg: V2NIMMessageForUI) => {
+  const errorCode = msg.messageStatus?.errorCode;
+  const msgStore = store?.msgStore as unknown as {
+    getAntispamReason?: (msg: V2NIMMessageForUI) => string | null;
+  };
+  const antispamReason = msgStore?.getAntispamReason?.(msg);
+
+  return (
+    msg.sendingState ===
+      V2NIMConst.V2NIMMessageSendingState.V2NIM_MESSAGE_SENDING_STATE_FAILED ||
+    isAntispamMessage(msg) ||
+    !!antispamReason ||
+    (errorCode !== undefined && errorCode !== 0 && errorCode !== 200)
+  );
+};
+
+const buildMergeForwardAbstracts = (msgsToForward: V2NIMMessageForUI[]) => {
+  return [...msgsToForward]
+    .sort((a, b) => (a.createTime || 0) - (b.createTime || 0))
+    .slice(0, 3)
+    .map((msg) => {
+      const senderId = (msg as any).__kit__senderId || msg.senderId;
+      const senderNick = store?.uiStore.getAppellation({
+        account: senderId,
+        ignoreAlias: true,
+      });
+      const tip = getMsgContentTipByType({
+        messageType: msg.messageType,
+        text: store?.msgStore.isChatMergedForwardMsg(msg)
+          ? `[${t("chatHistoryText")}]`
+          : msg.text || "",
+      });
+
+      return {
+        senderNick,
+        content: typeof tip === "string" ? tip : msg.text || "",
+        userAccId: senderId,
+      };
+    });
+};
+
+const handleMergeForward = async () => {
+  const selectedIds = store.uiStore.selectedMessageIds;
+  if (!selectedIds || selectedIds.length === 0) {
+    toast.error(t("pleaseSelectMsg"));
+    return;
+  }
+
+  if (selectedIds.length > 100) {
+    toast.error(t("forwardMsgMax100Text"));
+    return;
+  }
+
+  const msgsToForward = getSelectedMessagesForCurrentContext(selectedIds);
+  if (!msgsToForward.length) {
+    return;
+  }
+
+  const invalidMsgIds = msgsToForward
+    .filter(isUnforwardableMessage)
+    .map((msg) => msg.messageClientId)
+    .filter(Boolean);
+
+  if (invalidMsgIds.length > 0) {
+    invalidMsgIds.forEach((id) => store.uiStore.unselectMessage(id));
+    toast.error(t("forwardMsgHasUnforwardableText"));
+    return;
+  }
+
+  const isConnected =
+    store?.connectStore?.connectStatus ===
+    V2NIMConst.V2NIMConnectStatus.V2NIM_CONNECT_STATUS_CONNECTED;
+  if (!isConnected) {
+    toast.error(t("networkError"));
+    return;
+  }
+
+  const sortedMsgs = [...msgsToForward].sort(
+    (a, b) => (a.createTime || 0) - (b.createTime || 0),
+  );
+  const { content: mergedMsgsTxt, depth } = store.msgStore.serializeMergeMsgs(
+    sortedMsgs,
+    {
+      appVersion: "0.0.0",
+      sdkVersion: "10.9.81",
+    },
+  );
+
+  if (depth > 3) {
+    toast.error(t("mergeForwardDepthLimitText"));
+    return;
+  }
+
+  const mergedMsgsFile = new File([mergedMsgsTxt], "mergedMsgs.txt", {
+    type: "text/plain",
+  });
+  let fileUrl = "";
+  let md5 = "";
+  try {
+    md5 = await getFileMd5(mergedMsgsFile);
+    fileUrl = await store.storageStore.uploadFileActive(mergedMsgsFile);
+  } catch (error) {
+    console.error("合并转发上传失败:", error);
+    toast.error(t("networkError"));
+    return;
+  }
+
+  const sourceConversationId = sortedMsgs[0]?.conversationId || "";
+  const sourceConversationType = Number(
+    nim.V2NIMConversationIdUtil.parseConversationType(sourceConversationId),
+  );
+  const sessionId =
+    nim.V2NIMConversationIdUtil.parseConversationTargetId(
+      sourceConversationId,
+    ) || "";
+  const sessionName =
+    sourceConversationType ===
+    V2NIMConst.V2NIMConversationType.V2NIM_CONVERSATION_TYPE_TEAM
+      ? store.teamStore.teams.get(sessionId)?.name || sessionId
+      : store.uiStore.getAppellation({
+          account: sessionId,
+          ignoreAlias: true,
+        });
+
+  const customForwardMsg = nim.V2NIMMessageCreator.createCustomMessage(
+    `[${t("chatHistoryText")}]`,
+    JSON.stringify({
+      type: 101,
+      data: {
+        abstracts: buildMergeForwardAbstracts(sortedMsgs),
+        depth,
+        md5,
+        sessionId,
+        sessionName,
+        url: fileUrl,
+      },
+    }),
+  );
+
+  forwardMsg.value = customForwardMsg as unknown as V2NIMMessage;
+  isMergeForward.value = true;
+  showForwardModal.value = true;
+};
+
+const handleMergeDelete = () => {
+  const selectedIds = store.uiStore.selectedMessageIds;
+  if (!selectedIds || selectedIds.length === 0) {
+    toast.error(t("pleaseSelectMsg"));
+    return;
+  }
+
+  if (selectedIds.length > 50) {
+    toast.error(t("deleteMsgMax50Text"));
+    return;
+  }
+
+  const msgsToDelete = getSelectedMessagesForCurrentContext(selectedIds);
+  if (!msgsToDelete.length) {
+    return;
+  }
+
+  modal.confirm({
+    title: t("deleteText"),
+    content: t("deleteMsgConfirmText"),
+    onConfirm: async () => {
+      try {
+        await store?.msgStore.deleteMsgActive(msgsToDelete);
+        store.uiStore.setMultiSelectMode(false);
+        toast.success(t("deleteMsgSuccessText"));
+      } catch (error) {
+        toast.error(t("deleteMsgFailText"));
+      }
+    },
+  });
+};
+
+const handleForwardModalClose = () => {
+  showForwardModal.value = false;
+  isMergeForward.value = false;
+};
+
+const handleForwardSendSuccess = () => {
+  if (isMergeForward.value) {
+    store.uiStore.setMultiSelectMode(false);
+    isMergeForward.value = false;
+  }
+};
 
 /** 个人名片 */
 const showUserCardModal = ref(false);
@@ -557,6 +780,7 @@ const resetState = () => {
   title.value = "";
   subTitle.value = "";
   fetchedReplyMsgCache.clear();
+  store.uiStore.setMultiSelectMode(false);
 };
 
 // 获取群成员
@@ -923,10 +1147,10 @@ onMounted(() => {
   emitter.on(events.ON_SCROLL_BOTTOM, () => {
     showNewMsgTip.value = false;
   });
-
   //转发消息
   emitter.on(events.CONFIRM_FORWARD_MSG, (msg) => {
     forwardMsg.value = msg as V2NIMMessage;
+    isMergeForward.value = false;
     showForwardModal.value = true;
   });
 
@@ -954,6 +1178,7 @@ onUnmounted(() => {
   msgsWatch();
   chatHeaderWatch();
   selectedConversationWatch();
+  multiSelectWatch();
   resetState();
   removeMsgs();
 });

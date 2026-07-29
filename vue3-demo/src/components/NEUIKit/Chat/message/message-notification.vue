@@ -16,7 +16,7 @@ import type { V2NIMTeam } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService
 import type {
   V2NIMMessageForUI,
   YxServerExt,
-} from "@xkit-yx/im-store-v2/dist/types/types";
+} from "@xkit-yx/im-store-v2/dist/types/src/types";
 import { nim, store } from "../../utils/init"
 
 const props = withDefaults(defineProps<{ msg: V2NIMMessageForUI }>(), {});

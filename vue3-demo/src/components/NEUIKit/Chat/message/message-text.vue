@@ -40,7 +40,7 @@ import { parseText } from "../../utils/parseText";
 import { EMOJI_ICON_MAP_CONFIG } from "../../utils/emoji";
 import MessageAIMarkdown from "./message-ai-markdown.vue";
 
-import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/src/types";
 
 const props = withDefaults(
   defineProps<{

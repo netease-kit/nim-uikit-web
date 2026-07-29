@@ -59,6 +59,8 @@ export const events: { [key: string]: string } = {
   CLOSE_NEW_MSG_TIP: "closeNewMsgTip",
   // 头像点击
   AVATAR_CLICK: "avatarClick",
+  // 滚动指定消息到视野内
+  SCROLL_MSG_INTO_VIEW: "scrollMsgIntoView",
 };
 
 export const HISTORY_LIMIT = 15;

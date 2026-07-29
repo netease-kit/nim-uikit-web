@@ -52,6 +52,7 @@
       V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CALL
     "
     :msg="props.msg"
+    :readonly="props.readonly"
   />
   <!-- 文件消息 -->
   <MessageFile
@@ -68,7 +69,23 @@
       V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_AUDIO
     "
     :msg="props.msg"
+    :readonly="props.readonly"
   />
+
+  <!-- 合并转发消息 -->
+  <div
+    v-else-if="
+      props.msg.messageType ===
+        V2NIMConst.V2NIMMessageType.V2NIM_MESSAGE_TYPE_CUSTOM &&
+      store?.msgStore?.isChatMergedForwardMsg(props.msg)
+    "
+  >
+    <ReplyMessage
+      :visible="!!props.msg.threadReply && props.showReply"
+      :replyMsg="replyMsg"
+    />
+    <MessageMergeForward :msg="props.msg" />
+  </div>
 
   <!-- 未知消息 -->
   <div v-else>
@@ -86,17 +103,23 @@ import MessageG2 from "./message-g2.vue";
 import MessageImage from "./message-image.vue";
 import MessageVideo from "./message-video.vue";
 import MessageAIMarkdown from "./message-ai-markdown.vue";
+import MessageMergeForward from "../forward/message-merge-forward.vue";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import { t } from "../../utils/i18n";
-import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/types";
+import { store } from "../../utils/init";
+import type { V2NIMMessageForUI } from "@xkit-yx/im-store-v2/dist/types/src/types";
 
 const props = withDefaults(
   defineProps<{
     msg: V2NIMMessageForUI & { timeValue?: number };
     replyMsg?: V2NIMMessageForUI;
     showReply?: boolean;
+    readonly?: boolean;
   }>(),
-  { showReply: true },
+  {
+    showReply: true,
+    readonly: false,
+  },
 );
 </script>
 

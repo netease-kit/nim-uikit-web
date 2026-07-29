@@ -11,9 +11,11 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
-    "@xkit-yx/im-store-v2": "^0.9.0",
+    "@xkit-yx/call-kit": "^4.8.3",
+    "@xkit-yx/call-kit-vue3-ui": "^4.4.4",
+    "@xkit-yx/im-store-v2": "^0.9.4",
     "@xkit-yx/utils": "^0.7.2",
-    "markstream-vue": "^0.0.13-beta.0",
+    "markstream-vue": "^0.0.13",
     "mitt": "^3.0.1",
     "mobx": "^6.6.1",
     "nim-web-sdk-ng": "^10.9.81",

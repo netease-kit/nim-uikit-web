@@ -96,7 +96,7 @@ import type {
   V2NIMTeam,
   V2NIMTeamMember,
 } from "nim-web-sdk-ng/dist/esm/nim/src/V2NIMTeamService";
-import type { YxServerExt } from "@xkit-yx/im-store-v2/dist/types/types";
+import type { YxServerExt } from "@xkit-yx/im-store-v2/dist/types/src/types";
 import { V2NIMConst } from "nim-web-sdk-ng/dist/esm/nim";
 import RootStore from "@xkit-yx/im-store-v2";
 import AddTeamManagerModal from "./add-team-manager-modal.vue";

@@ -189,7 +189,7 @@ const addTeamMember = debounce(() => {
     .finally(() => {
       handleClose();
     });
-}, 800);
+}, 100);
 
 onMounted(() => {
   const list =
